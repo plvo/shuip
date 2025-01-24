@@ -12,29 +12,52 @@
     "type": "git",
     "url": "git+https://github.com/plvo/shuip"
   },
+  "type": "module",
   "files": [
     "dist"
   ],
   "engines": {
-    "node": ">=16"
+    "node": ">=18"
   },
-  "type": "module",
   "main": "./dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "format": "prettier --write .",
     "clean": "rimraf dist/",
     "build": "pnpm run clean && tsc",
+    "build2": "pnpm run clean && tsup",
     "check-exports": "attw --pack . --ignore-rules=cjs-resolves-to-esm",
     "ci": "pnpm run format && pnpm run build && pnpm run check-exports",
     "prepublish": "pnpm run ci"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.17.3",
+    "@types/babel__core": "^7.20.5",
+    "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.10.10",
+    "@types/prompts": "^2.4.9",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
+    "tsup": "^6.6.3",
     "typescript": "^5.7.3",
     "vitest": "^3.0.4"
+  },
+  "dependencies": {
+    "@antfu/ni": "^23.2.0",
+    "@babel/core": "^7.26.7",
+    "@babel/parser": "^7.26.7",
+    "@babel/plugin-transform-typescript": "^7.26.7",
+    "chalk": "^5.4.1",
+    "cosmiconfig": "^9.0.0",
+    "execa": "^9.5.2",
+    "fs-extra": "^11.3.0",
+    "https-proxy-agent": "^7.0.6",
+    "node-fetch": "^3.3.2",
+    "ora": "^8.1.1",
+    "prompts": "^2.4.2",
+    "recast": "^0.23.9",
+    "ts-morph": "^25.0.0",
+    "type-fest": "^4.33.0",
+    "zod": "^3.24.1"
   }
 }
