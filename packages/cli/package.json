@@ -12,6 +12,12 @@
     "type": "git",
     "url": "git+https://github.com/plvo/shuip"
   },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "dist/index.d.ts",
