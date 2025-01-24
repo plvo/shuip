@@ -11,18 +11,16 @@ const buildRegistry = (code: string, filename: string): RegistryEntry => {
   }
 
   const name = filename.replace('.tsx', '');
-
-  const escapedCode = code.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/"/g, '\\"');
-
+  // const escapedCode = code.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/"/g, '\\"');
   const registrySchema: RegistryEntry = {
     name,
     type: 'registry:ui',
     files: [
       {
-        path: `shuip/${filename}`,
-        content: escapedCode,
+        path: filename,
+        content: code,
         type: 'registry:ui',
-        target: '',
+        target: `./components/ui/shuip/${filename}`,
       },
     ],
   };
@@ -44,7 +42,7 @@ async function main() {
         const componentCode = fs.readFileSync(componentDir, 'utf-8');
         const componentRegistry = buildRegistry(componentCode, file);
 
-        const outputPath = path.join(REGISTRY_C_PATH, `${file.replace('.tsx', '.json')}`);
+        const outputPath = path.join(REGISTRY_C_PATH, file.replace('.tsx', '.json'));
         await fs.promises.writeFile(outputPath, JSON.stringify(componentRegistry, null, 2));
 
         console.log(`Generated registry for ${file}`);
