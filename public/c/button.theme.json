@@ -1,6 +1,10 @@
 {
   "name": "button.theme",
   "type": "registry:ui",
+  "dependencies": [
+    "lucide-react",
+    "next-themes"
+  ],
   "files": [
     {
       "path": "button.theme.tsx",
@@ -8,5 +12,8 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/button.theme.tsx"
     }
+  ],
+  "registryDependencies": [
+    "button"
   ]
 }

@@ -1,6 +1,7 @@
 {
   "name": "hover.item",
   "type": "registry:ui",
+  "dependencies": [],
   "files": [
     {
       "path": "hover.item.tsx",
@@ -8,5 +9,8 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/hover.item.tsx"
     }
+  ],
+  "registryDependencies": [
+    "hover-card"
   ]
 }

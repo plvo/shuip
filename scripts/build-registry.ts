@@ -10,32 +10,8 @@ interface Dependencies {
   registryDependencies: string[];
 }
 
-const buildRegistry = (code: string, filename: string, dependencies: Dependencies): RegistryEntry => {
-  if (!filename.endsWith('.tsx')) {
-    throw new Error(`Invalid file extension for ${filename}. Expected .tsx file`);
-  }
-
-  const name = filename.replace('.tsx', '');
-  const registrySchema: RegistryEntry = {
-    name,
-    type: 'registry:ui',
-    dependencies: dependencies.dependencies || [],
-    files: [
-      {
-        path: filename,
-        content: code,
-        type: 'registry:ui',
-        target: `./components/ui/shuip/${filename}`,
-      },
-    ],
-    registryDependencies: dependencies.registryDependencies || [],
-  };
-
-  return registrySchema;
-};
-
 const parseDependencies = (sourceCode: string): Dependencies => {
-  const excludeDeps = ['react', 'react-dom'];
+  const excludeDeps = ['react', 'react-dom', 'next'];
   
   const importRegex = /import\s+(?:type\s+)?(?:{[^}]+}|\*\s+as\s+\w+|\w+)\s+from\s+['"](.*?)['"];?/g;
   const npmDependencies = new Set<string>();
@@ -68,6 +44,28 @@ const parseDependencies = (sourceCode: string): Dependencies => {
   };
 };
 
+const buildRegistry = (code: string, filename: string, dependencies: Dependencies): RegistryEntry => {
+  if (!filename.endsWith('.tsx')) {
+    throw new Error(`Invalid file extension for ${filename}. Expected .tsx file`);
+  }
+  const name = filename.replace('.tsx', '');
+
+  return {
+    name,
+    type: 'registry:ui',
+    dependencies: dependencies.dependencies || [],
+    files: [
+      {
+        path: filename,
+        content: code,
+        type: 'registry:ui',
+        target: `./components/ui/shuip/${filename}`,
+      },
+    ],
+    registryDependencies: dependencies.registryDependencies || [],
+  } as RegistryEntry;
+};
+
 async function main() {
   try {
     if (!fs.existsSync(REGISTRY_COMPONENTS_PATH)) {
@@ -81,7 +79,7 @@ async function main() {
         const componentDir = path.join(REGISTRY_COMPONENTS_PATH, file);
         const componentCode = fs.readFileSync(componentDir, 'utf-8');
         const componentDeps = parseDependencies(componentCode)
-        console.log("File deps : ", componentDeps);
+        console.log(file,"deps : ", componentDeps);
         const componentRegistry = buildRegistry(componentCode, file, componentDeps);
 
         const outputPath = path.join(REGISTRY_C_PATH, file.replace('.tsx', '.json'));
