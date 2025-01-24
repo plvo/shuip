@@ -1,0 +1,19 @@
+{
+  "name": "button.signout",
+  "type": "registry:ui",
+  "dependencies": [
+    "next-auth",
+    "lucide-react"
+  ],
+  "files": [
+    {
+      "path": "button.signout.tsx",
+      "content": "'use client';\n\n// import { signOut } from \"next-auth/react\";\nimport { Button } from '@/components/ui/button';\nimport { LogOut } from 'lucide-react';\nimport { DialogConfirmation } from './dialog.confirmation';\n\nexport default function ButtonLogout({ withLogo, onConfirm }: { withLogo?: boolean; onConfirm?: () => void }) {\n  return (\n    <DialogConfirmation\n      trigger={\n        <Button variant=\"outline\" className=\"text-destructive\" size={withLogo ? 'icon' : 'default'}>\n          {withLogo ? <LogOut /> : 'Sign out'}\n        </Button>\n      }\n      title=\"Sign out\"\n      description=\"Are you sure you want to sign out?\"\n      labelConfirmButton=\"Sign out\"\n      onConfirm={() => onConfirm}\n      //   onConfirm={() => signOut()}\n    />\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/button.signout.tsx"
+    }
+  ],
+  "registryDependencies": [
+    "button"
+  ]
+}
