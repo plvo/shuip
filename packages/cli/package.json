@@ -1,0 +1,34 @@
+{
+  "name": "shuip",
+  "version": "0.1.0",
+  "description": "🚀 Ship fast with sh(ui)p components, a collection of UI components for your next.js project, built with shadcn/ui.",
+  "author": "plvo <plvoo@proton.me>",
+  "license": "MIT",
+  "homepage": "https://shuip.xyz",
+  "bugs": {
+    "url": "https://github.com/plvo/shuip/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/plvo/shuip"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "format": "prettier --write .",
+    "clean": "rimraf dist/",
+    "build": "pnpm run clean && tsc",
+    "check-exports": "attw --pack . --ignore-rules=cjs-resolves-to-esm",
+    "ci": "pnpm run format && pnpm run build && pnpm run check-exports",
+    "prepublish": "pnpm run ci"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.17.3",
+    "@types/node": "^22.10.10",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.4"
+  }
+}
