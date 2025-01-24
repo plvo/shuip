@@ -1,11 +1,10 @@
 import indexComponentsRegistry from '@/../public/c/index.json';
-import { Button } from '@/components/ui/button';
 
 export default function Home() {
   return (
     <main className="flex flex-col items-center justify-center h-screen gap-8">
       <h1 className="text-4xl">
-        <b>sh(ui)p</b> components
+        <b>sh<span className='text-yellow-500'>ui</span>p</b> components
       </h1>
       <ul>
         {indexComponentsRegistry.map((component) => (
