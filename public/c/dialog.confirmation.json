@@ -1,6 +1,7 @@
 {
   "name": "dialog.confirmation",
   "type": "registry:ui",
+  "dependencies": [],
   "files": [
     {
       "path": "dialog.confirmation.tsx",
@@ -8,5 +9,9 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/dialog.confirmation.tsx"
     }
+  ],
+  "registryDependencies": [
+    "button",
+    "dialog"
   ]
 }

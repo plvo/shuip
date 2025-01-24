@@ -5,16 +5,21 @@ import path from 'path';
 const REGISTRY_COMPONENTS_PATH = path.join(process.cwd(), 'registry/c/');
 const REGISTRY_C_PATH = path.join(process.cwd(), 'public/c');
 
-const buildRegistry = (code: string, filename: string): RegistryEntry => {
+interface Dependencies {
+  dependencies: string[];
+  registryDependencies: string[];
+}
+
+const buildRegistry = (code: string, filename: string, dependencies: Dependencies): RegistryEntry => {
   if (!filename.endsWith('.tsx')) {
     throw new Error(`Invalid file extension for ${filename}. Expected .tsx file`);
   }
 
   const name = filename.replace('.tsx', '');
-  // const escapedCode = code.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/"/g, '\\"');
   const registrySchema: RegistryEntry = {
     name,
     type: 'registry:ui',
+    dependencies: dependencies.dependencies || [],
     files: [
       {
         path: filename,
@@ -23,9 +28,44 @@ const buildRegistry = (code: string, filename: string): RegistryEntry => {
         target: `./components/ui/shuip/${filename}`,
       },
     ],
+    registryDependencies: dependencies.registryDependencies || [],
   };
 
   return registrySchema;
+};
+
+const parseDependencies = (sourceCode: string): Dependencies => {
+  const excludeDeps = ['react', 'react-dom'];
+  
+  const importRegex = /import\s+(?:type\s+)?(?:{[^}]+}|\*\s+as\s+\w+|\w+)\s+from\s+['"](.*?)['"];?/g;
+  const npmDependencies = new Set<string>();
+  const registryDependencies = new Set<string>();
+  let match;
+
+  while ((match = importRegex.exec(sourceCode)) !== null) {
+    const dep = match[1];
+    
+    if (
+      !dep.startsWith('@/') && 
+      !dep.startsWith('.') && 
+      !excludeDeps.includes(dep)
+    ) {
+      const packageName = dep.split('/')[0].replace(/^@/, '');
+      npmDependencies.add(packageName);
+    }
+    
+    if (dep.startsWith('@/components/ui/')) {
+      const componentName = dep.split('/').pop();
+      if (componentName) {
+        registryDependencies.add(componentName);
+      }
+    }
+  }
+
+  return {
+    dependencies: Array.from(npmDependencies),
+    registryDependencies: Array.from(registryDependencies),
+  };
 };
 
 async function main() {
@@ -40,7 +80,9 @@ async function main() {
       componentsFiles.map(async (file) => {
         const componentDir = path.join(REGISTRY_COMPONENTS_PATH, file);
         const componentCode = fs.readFileSync(componentDir, 'utf-8');
-        const componentRegistry = buildRegistry(componentCode, file);
+        const componentDeps = parseDependencies(componentCode)
+        console.log("File deps : ", componentDeps);
+        const componentRegistry = buildRegistry(componentCode, file, componentDeps);
 
         const outputPath = path.join(REGISTRY_C_PATH, file.replace('.tsx', '.json'));
         await fs.promises.writeFile(outputPath, JSON.stringify(componentRegistry, null, 2));

@@ -1,6 +1,9 @@
 {
   "name": "button.submit",
   "type": "registry:ui",
+  "dependencies": [
+    "radix-ui"
+  ],
   "files": [
     {
       "path": "button.submit.tsx",
@@ -8,5 +11,8 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/button.submit.tsx"
     }
+  ],
+  "registryDependencies": [
+    "button"
   ]
 }
