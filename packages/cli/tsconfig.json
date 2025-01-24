@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
-    "declarationMap": true,
+    "module": "ESNext",
+    "target": "ESNext",
     "moduleResolution": "node",
+
+    "declarationMap": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": false,

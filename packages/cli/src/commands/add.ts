@@ -1,5 +1,5 @@
 import { existsSync, promises as fs } from 'fs';
-import path from 'path';
+import path from 'node:path';
 import { getConfig } from '@/src/utils/get-config';
 import { getPackageManager } from '@/src/utils/get-package-manager';
 import { handleError } from '@/src/utils/handle-error';
