@@ -12,7 +12,7 @@ interface Dependencies {
 
 const parseDependencies = (sourceCode: string): Dependencies => {
   const excludeDeps = ['react', 'react-dom', 'next'];
-  
+
   const importRegex = /import\s+(?:type\s+)?(?:{[^}]+}|\*\s+as\s+\w+|\w+)\s+from\s+['"](.*?)['"];?/g;
   const npmDependencies = new Set<string>();
   const registryDependencies = new Set<string>();
@@ -20,16 +20,12 @@ const parseDependencies = (sourceCode: string): Dependencies => {
 
   while ((match = importRegex.exec(sourceCode)) !== null) {
     const dep = match[1];
-    
-    if (
-      !dep.startsWith('@/') && 
-      !dep.startsWith('.') && 
-      !excludeDeps.includes(dep)
-    ) {
+
+    if (!dep.startsWith('@/') && !dep.startsWith('.') && !excludeDeps.includes(dep)) {
       const packageName = dep.split('/')[0].replace(/^@/, '');
       npmDependencies.add(packageName);
     }
-    
+
     if (dep.startsWith('@/components/ui/')) {
       const componentName = dep.split('/').pop();
       if (componentName) {
@@ -66,7 +62,7 @@ const buildRegistry = (code: string, filename: string, dependencies: Dependencie
   } as RegistryEntry;
 };
 
-async function main() {
+async function writeComponenstRegistry() {
   try {
     if (!fs.existsSync(REGISTRY_COMPONENTS_PATH)) {
       throw new Error(`Components directory not found: ${REGISTRY_COMPONENTS_PATH}`);
@@ -74,26 +70,36 @@ async function main() {
 
     const componentsFiles = fs.readdirSync(REGISTRY_COMPONENTS_PATH, { recursive: true }) as string[];
 
+    const indexRegistry = new Set<RegistryEntry>();
+
     await Promise.all(
       componentsFiles.map(async (file) => {
         const componentDir = path.join(REGISTRY_COMPONENTS_PATH, file);
         const componentCode = fs.readFileSync(componentDir, 'utf-8');
-        const componentDeps = parseDependencies(componentCode)
-        console.log(file,"deps : ", componentDeps);
+        const componentDeps = parseDependencies(componentCode);
         const componentRegistry = buildRegistry(componentCode, file, componentDeps);
 
         const outputPath = path.join(REGISTRY_C_PATH, file.replace('.tsx', '.json'));
         await fs.promises.writeFile(outputPath, JSON.stringify(componentRegistry, null, 2));
 
-        console.log(`Generated registry for ${file}`);
+        indexRegistry.add(componentRegistry);
+
+        console.log(`🚀 ${file}`);
       }),
     );
 
-    console.log('Registry build completed successfully');
+    const indexComponentPath = path.join(REGISTRY_C_PATH, 'index.json');
+    await fs.promises
+      .writeFile(indexComponentPath, JSON.stringify(Array.from(indexRegistry), null, 2))
+      .catch((error) => {
+        throw new Error(`Failed to write index.json: ${error}`);
+      });
+
+    console.log('✅ Registry build completed successfully');
   } catch (error) {
-    console.error('Failed to build registry:', error instanceof Error ? error.message : error);
+    console.error('❌ Failed to build registry:', (error as Error).message);
     process.exit(1);
   }
 }
 
-main();
+writeComponenstRegistry();
