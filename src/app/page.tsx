@@ -1,5 +1,6 @@
 "use client"
-import { ButtonSubmit } from '@r/c/button.submit';
+
+import { ButtonSubmit } from "@/components/ui/shuip/button.submit";
 
 export default function Home() {
   return (
