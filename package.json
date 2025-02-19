@@ -19,6 +19,7 @@
     "start": "next start",
     "lint": "next lint",
     "registry:build": "shadcn build",
+    "content:generate": "bun ./scripts/generate-contents.ts",
     "format": "prettier --write .",
     "prepare": "husky"
   },
