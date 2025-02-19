@@ -7,13 +7,14 @@ interface DocPageProps {
   }>;
 }
 
-export async function generateMetadata({ params }: DocPageProps): Promise<Metadata> {
-  if (!use(params).slug) {
-    return {
-      title: 'Documentation',
-      description: 'Documentation for the project',
-    };
-  }
+export function generateMetadata({ params }: DocPageProps): Metadata {
+  // const { slug } = use(params);
+  // if (!slug) {
+  //   return {
+  //     title: 'Documentation',
+  //     description: 'Documentation for the project',
+  //   };
+  // }
 
   return {
     title: 'Documentation',
@@ -21,8 +22,9 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
   };
 }
 
-export default async function Page({ params }: DocPageProps) {
-  if (!use(params).slug) {
+export default function Page({ params }: DocPageProps) {
+  const { slug } = use(params);
+  if (!slug) {
     <main className="relative py-6 lg:gap-10 lg:py-8 px-32 xl:grid xl:grid-cols-[1fr_300px]">
       {JSON.stringify(params)}
     </main>;
