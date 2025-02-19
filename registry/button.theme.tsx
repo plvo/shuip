@@ -26,9 +26,7 @@ export default function ButtonTheme({ withText }: { withText?: boolean }) {
       {currentTheme === 'light' && <Sun className="h-[1.2rem] w-[1.2rem]" />}
       {currentTheme === 'dark' && <Moon className="h-[1.2rem] w-[1.2rem]" />}
       {withText && (
-        <span className="ml-2 capitalize">
-          {currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}
-        </span>
+        <span className="ml-2 capitalize">{currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}</span>
       )}
       <span className="sr-only">Toggle theme</span>
     </Button>
