@@ -4,6 +4,8 @@ import path from 'path';
 export const getComponentsGroups = (): Array<string> => {
   const dirPath = path.join(process.cwd(), 'public/r');
 
+  console.log(dirPath);
+
   if (!fs.existsSync(dirPath)) {
     return [];
   }
