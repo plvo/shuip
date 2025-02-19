@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "skeleton.text",
+  "type": "registry:ui",
+  "registryDependencies": [
+    "skeleton"
+  ],
+  "files": [
+    {
+      "path": "./registry/skeleton.text.tsx",
+      "content": "'use client';\n\nimport { Skeleton } from '@/components/ui/skeleton';\n\nexport interface SkeletonTextProps {\n  text: string | undefined;\n}\n\nexport const SkeletonText = ({ text }: SkeletonTextProps) => {\n  if (!text) return <Skeleton className=\"w-20 h-4\" />;\n  return text;\n};\n",
+      "type": "registry:component",
+      "target": "./components/ui/shuip/skeleton.text.tsx"
+    }
+  ]
+}

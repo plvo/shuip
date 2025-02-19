@@ -61,6 +61,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@content-collections/mdx": "^0.2.0",
     "@eslint/eslintrc": "^3.2.0",
     "@types/node": "^20.17.19",
     "@types/react": "^19.0.9",

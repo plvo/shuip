@@ -1,0 +1,13 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "div.title-section",
+  "type": "registry:ui",
+  "files": [
+    {
+      "path": "./registry/div.title-section.tsx",
+      "content": "'use client';\n\nimport type { JSX } from 'react';\n\nexport interface TitleSectionProps {\n  title: string;\n  description: string | JSX.Element;\n}\n\nexport default function TitleSection({ title, description }: TitleSectionProps) {\n  return (\n    <div className=\"text-center -space-y-2 my-6 max-md:text-sm\">\n      <h1 className=\"text-4xl md:text-5xl font-bold\">{title}</h1>\n      <p className=\"opacity-80 text-center\">{description}</p>\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "./components/ui/shuip/div.title-section.tsx"
+    }
+  ]
+}
