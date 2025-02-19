@@ -1,8 +1,110 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
-  "name": "acme",
-  "homepage": "https://acme.com",
+  "name": "shuip",
+  "homepage": "https://shuip.xyz",
   "items": [
-    // TODO: Add items here
+    {
+      "name": "button.signout",
+      "type": "registry:ui",
+      "dependencies": ["next-auth", "lucide-react"],
+      "files": [
+        {
+          "path": "./registry/button.signout.tsx",
+          "type": "registry:component",
+          "target": "./components/ui/shuip/button.signout.tsx"
+        }
+      ]
+    },
+    {
+      "name": "button.submit",
+      "type": "registry:ui",
+      "dependencies": ["radix-ui"],
+      "files": [
+        {
+          "path": "./registry/button.submit.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/button.submit.tsx"
+        }
+      ],
+      "registryDependencies": ["button"]
+    },
+    {
+      "name": "button.theme",
+      "type": "registry:ui",
+      "dependencies": ["radix-ui", "next-themes", "lucide-react"],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "./registry/button.theme.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/button.theme.tsx"
+        }
+      ]
+    },
+    {
+      "name": "dialog.confirmation",
+      "type": "registry:ui",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "./registry/dialog.confirmation.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/dialog.confirmation.tsx"
+        }
+      ],
+      "registryDependencies": ["button", "dialog"]
+    },
+    {
+      "name": "hover.item",
+      "type": "registry:ui",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "./registry/hover.item.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/hover.item.tsx"
+        }
+      ],
+      "registryDependencies": ["hover-card"]
+    },
+    {
+      "name": "input.form-field",
+      "type": "registry:ui",
+      "dependencies": ["react-hook-form"],
+      "files": [
+        {
+          "path": "./registry/input.form-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/input.form-field.tsx"
+        }
+      ],
+      "registryDependencies": ["form", "input"]
+    },
+    {
+      "name": "radio.form-field",
+      "type": "registry:ui",
+      "dependencies": ["react-hook-form"],
+      "files": [
+        {
+          "path": "./registry/radio.form-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/radio.form-field.tsx"
+        }
+      ],
+      "registryDependencies": ["form", "radio-group"]
+    },
+    {
+      "name": "select.form-field",
+      "type": "registry:ui",
+      "dependencies": ["react-hook-form"],
+      "files": [
+        {
+          "path": "./registry/select.form-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/select.form-field.tsx"
+        }
+      ],
+      "registryDependencies": ["form", "select"]
+    }
   ]
 }

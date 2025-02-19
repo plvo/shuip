@@ -1,18 +1,19 @@
 {
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "button.submit",
   "type": "registry:ui",
   "dependencies": [
     "radix-ui"
   ],
+  "registryDependencies": [
+    "button"
+  ],
   "files": [
     {
-      "path": "button.submit.tsx",
+      "path": "./registry/button.submit.tsx",
       "content": "import { ReloadIcon } from '@radix-ui/react-icons';\nimport { Button, ButtonProps } from '@/components/ui/button';\nimport type { JSX, MouseEventHandler } from 'react';\nimport { cn } from '@/lib/utils';\n\nexport interface ButtonSubmitProps {\n  onClick: MouseEventHandler<HTMLButtonElement>;\n  label: JSX.Element | string;\n  disabled?: boolean;\n  loading?: boolean;\n}\n\nexport function ButtonSubmit({ onClick, label, disabled, loading, ...props }: ButtonSubmitProps & ButtonProps) {\n  return (\n    <Button\n      type=\"submit\"\n      variant={'default'}\n      onClick={onClick}\n      disabled={disabled || loading}\n      className={cn('w-full', ...(props?.className ? [props.className] : []))}\n      {...props}\n    >\n      {loading && <ReloadIcon className=\"mr-2 h-4 w-4 animate-spin\" />}\n      {label}\n    </Button>\n  );\n}\n",
       "type": "registry:ui",
       "target": "./components/ui/shuip/button.submit.tsx"
     }
-  ],
-  "registryDependencies": [
-    "button"
   ]
 }

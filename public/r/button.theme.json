@@ -1,19 +1,21 @@
 {
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "button.theme",
   "type": "registry:ui",
   "dependencies": [
-    "lucide-react",
-    "next-themes"
+    "radix-ui",
+    "next-themes",
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "button"
   ],
   "files": [
     {
-      "path": "button.theme.tsx",
+      "path": "./registry/button.theme.tsx",
       "content": "'use client';\n\nimport * as React from 'react';\nimport { Laptop, Moon, Sun } from 'lucide-react';\nimport { useTheme } from 'next-themes';\nimport { Button } from '@/components/ui/button';\n\nexport default function ButtonTheme({ withText }: { withText?: boolean }) {\n  const { theme, setTheme } = useTheme();\n  const [currentTheme, setCurrentTheme] = React.useState<'system' | 'light' | 'dark'>('system');\n\n  React.useEffect(() => {\n    setCurrentTheme(theme as 'system' | 'light' | 'dark');\n  }, [theme]);\n\n  const cycleTheme = () => {\n    const themes: ('system' | 'light' | 'dark')[] = ['system', 'light', 'dark'];\n    const currentIndex = themes.indexOf(currentTheme);\n    const nextIndex = (currentIndex + 1) % themes.length;\n    setTheme(themes[nextIndex]);\n  };\n\n  return (\n    <Button variant=\"outline\" size={withText ? 'default' : 'icon'} onClick={cycleTheme}>\n      {currentTheme === 'system' && <Laptop className=\"h-[1.2rem] w-[1.2rem]\" />}\n      {currentTheme === 'light' && <Sun className=\"h-[1.2rem] w-[1.2rem]\" />}\n      {currentTheme === 'dark' && <Moon className=\"h-[1.2rem] w-[1.2rem]\" />}\n      {withText && (\n        <span className=\"ml-2 capitalize\">\n          {currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}\n        </span>\n      )}\n      <span className=\"sr-only\">Toggle theme</span>\n    </Button>\n  );\n}\n",
       "type": "registry:ui",
       "target": "./components/ui/shuip/button.theme.tsx"
     }
-  ],
-  "registryDependencies": [
-    "button"
   ]
 }

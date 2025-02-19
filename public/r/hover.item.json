@@ -1,16 +1,17 @@
 {
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "hover.item",
   "type": "registry:ui",
   "dependencies": [],
+  "registryDependencies": [
+    "hover-card"
+  ],
   "files": [
     {
-      "path": "hover.item.tsx",
+      "path": "./registry/hover.item.tsx",
       "content": "import type React from 'react';\nimport { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';\n\nexport default function HoverItem({\n  trigger,\n  content,\n}: {\n  trigger: string | React.JSX.Element | React.ReactNode; // can be used as children\n  content: string | React.JSX.Element;\n}) {\n  return (\n    <HoverCard>\n      <HoverCardTrigger className=\"cursor-pointer\">{trigger}</HoverCardTrigger>\n      <HoverCardContent className=\"text-sm w-full\">{content}</HoverCardContent>\n    </HoverCard>\n  );\n}\n",
       "type": "registry:ui",
       "target": "./components/ui/shuip/hover.item.tsx"
     }
-  ],
-  "registryDependencies": [
-    "hover-card"
   ]
 }
