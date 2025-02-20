@@ -18,19 +18,17 @@ export const getComponentsByGroup = (group: string): Array<string> => {
 };
 
 async function main() {
-  const groups = getComponentsGroups();
+  const groups: Array<string> = getComponentsGroups();
 
-  const obj = {
-    ...groups.reduce(
-      (acc, group) => {
-        acc[group] = getComponentsByGroup(group);
-        return acc;
-      },
-      {} as { [key: string]: string[] },
-    ),
-  };
+  const res = [
+    ...groups.map((g) => {
+      const comps = getComponentsByGroup(g);
 
-  fs.writeFileSync('./src/content/comp-groups.json', JSON.stringify(obj, null, 2));
+      return { [g]: comps };
+    }),
+  ];
+
+  fs.writeFileSync('./src/content/comp-groups.json', JSON.stringify(res, null, 2));
 }
 
 main().catch((error) => {

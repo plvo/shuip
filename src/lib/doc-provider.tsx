@@ -12,21 +12,18 @@ const components = {
 
 export interface DocsProviderProps {
   children: React.ReactNode;
-  compGroups: Array<string>;
 }
 
-export default function DocsProvider({ children, compGroups }: DocsProviderProps) {
+export default function DocsProvider({ children }: DocsProviderProps) {
   return (
-    <>
-      <SidebarProvider>
-        <DocSidebar compGroups={compGroups} />
-        <MDXProvider components={components}>
-          <main>
-            <SidebarTrigger />
-            {children}
-          </main>
-        </MDXProvider>
-      </SidebarProvider>
-    </>
+    <SidebarProvider>
+      <DocSidebar />
+      <MDXProvider components={components}>
+        <main>
+          <SidebarTrigger />
+          {children}
+        </main>
+      </MDXProvider>
+    </SidebarProvider>
   );
 }

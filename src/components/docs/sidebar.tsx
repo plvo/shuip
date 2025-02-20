@@ -11,8 +11,9 @@ import {
 import Link from 'next/link';
 import { cn, stringToUppercase } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
+import compGroups from '@/content/comp-groups.json';
 
-export function DocSidebar({ compGroups }: { compGroups: Array<string> }) {
+export function DocSidebar() {
   const pathname = usePathname();
 
   return (
@@ -29,8 +30,9 @@ export function DocSidebar({ compGroups }: { compGroups: Array<string> }) {
                 return (
                   <SidebarMenuItem key={i}>
                     <SidebarMenuButton asChild>
+                      <pre>{JSON.stringify(group)}</pre>
                       <Link href={pathPage} className={cn(isPathActive ? 'bg-muted font-bold' : 'text-gray-600')}>
-                        <span>{stringToUppercase(group)}</span>
+                        {/* <span>{stringToUppercase(group)}</span> */}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

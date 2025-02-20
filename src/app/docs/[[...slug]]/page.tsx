@@ -25,14 +25,14 @@ export function generateMetadata({ params }: DocPageProps): Metadata {
 export default function Page({ params }: DocPageProps) {
   const { slug } = use(params);
   if (!slug) {
-    <main className="relative py-6 lg:gap-10 lg:py-8 px-32 xl:grid xl:grid-cols-[1fr_300px]">
+    <div className="relative py-6 lg:gap-10 lg:py-8 px-32 xl:grid xl:grid-cols-[1fr_300px]">
       {JSON.stringify(params)}
-    </main>;
+    </div>;
   }
 
   return (
-    <main className="relative py-6 lg:gap-10 lg:py-8 px-32 xl:grid xl:grid-cols-[1fr_300px]">
+    <div className="relative py-6 lg:gap-10 lg:py-8 px-32 xl:grid xl:grid-cols-[1fr_300px]">
       {JSON.stringify(params)}
-    </main>
+    </div>
   );
 }
