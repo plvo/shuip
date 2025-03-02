@@ -1,5 +1,5 @@
 import { ReloadIcon } from '@radix-ui/react-icons';
-import { Button, ButtonProps } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import type { JSX, MouseEventHandler } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -10,7 +10,13 @@ export interface ButtonSubmitProps {
   loading?: boolean;
 }
 
-export function ButtonSubmit({ onClick, label, disabled, loading, ...props }: ButtonSubmitProps & ButtonProps) {
+export function ButtonSubmit({
+  onClick,
+  label,
+  disabled,
+  loading,
+  ...props
+}: ButtonSubmitProps & React.ComponentProps<'button'>) {
   return (
     <Button
       type="submit"

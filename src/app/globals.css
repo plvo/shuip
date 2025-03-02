@@ -103,3 +103,8 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+main {
+  @apply min-h-[70vh] w-full;
+  @apply p-2 md:px-4 mx-auto;
+}

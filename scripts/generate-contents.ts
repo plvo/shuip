@@ -28,7 +28,7 @@ async function main() {
     }),
   ];
 
-  fs.writeFileSync('./src/content/comp-groups.json', JSON.stringify(res, null, 2));
+  fs.writeFileSync('./content/comp-groups.json', JSON.stringify(res, null, 2));
 }
 
 main().catch((error) => {

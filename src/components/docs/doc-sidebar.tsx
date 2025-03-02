@@ -13,7 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import compGroups from '@/content/comp-groups.json';
+import compGroups from '#/content/comp-groups.json';
 import { cn, stringToUppercase } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import ButtonTheme from '../ui/shuip/button.theme';
