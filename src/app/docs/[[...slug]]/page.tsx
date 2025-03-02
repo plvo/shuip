@@ -1,9 +1,10 @@
 import { use } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { stringToUppercase } from '@/lib/utils';
+import { cn, stringToUppercase } from '@/lib/utils';
 import { getMDXComponent } from 'next-contentlayer2/hooks';
 import { allDocs } from 'contentlayer/generated';
+import { MdxContent } from '@/lib/mdx-components';
 
 interface DocPageProps {
   params: Promise<{ slug?: string[] }>;
@@ -37,9 +38,12 @@ export default function Page({ params }: DocPageProps) {
   const Content = getMDXComponent(doc.body.code);
 
   return (
-    <div className=" bg-red-500 relative">
-      <h1>{doc.title}</h1>
-      <Content />
+    <div className="relative">
+      <div className="space-y-2 mb-4">
+        <h1 className={cn('scroll-m-20 text-3xl font-bold tracking-tight')}>{doc.title}</h1>
+        {doc.description && <p className="text-base text-muted-foreground">{doc.description}</p>}
+      </div>
+      <MdxContent code={doc.body.code} />
     </div>
   );
 }
