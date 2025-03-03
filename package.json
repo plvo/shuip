@@ -15,7 +15,8 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build && registry:generate && registry:build && docs:build",
+    "build": "next build",
+    "build:full": "next build && registry:generate && registry:build && docs:build",
     "start": "next start",
     "lint": "next lint",
     "clean": "rimraf .next node_modules .contentlayer",
