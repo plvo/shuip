@@ -37,7 +37,7 @@ export default function InstallationCmd({ name }: { name: string }) {
     <Tabs
       value={value}
       onValueChange={(v) => setValue(v as ValueCmd)}
-      className="relative mt-6 bg-foreground/5 w-fit p-2 rounded-xl"
+      className="relative bg-foreground/5 w-fit p-2 rounded-xl"
     >
       <TabsList>
         <TabsTrigger value="npm">npm</TabsTrigger>

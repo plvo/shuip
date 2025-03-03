@@ -74,12 +74,10 @@ export const registryIndex: Record<string, RegistryComponent> = {
 
   index += '};';
 
-  console.log(componentsCat);
-
   index += `
   // [category]: { [key: registry/ui]: [key: registry/examples][] } 
   // TODO: Need to improve this structure
-  export const COMPONENT_CATEGORIES:Record<string, Record<string, string[]>>[] = ${JSON.stringify(componentsCat, null, 2)};
+  export const COMPONENT_CATEGORIES:Record<string, Record<string, string[]>> = ${JSON.stringify(componentsCat, null, 2)};
   `;
 
   fs.writeFileSync('./registry/__index__.ts', index);

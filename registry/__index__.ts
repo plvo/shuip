@@ -140,7 +140,7 @@ export const registryIndex: Record<string, RegistryComponent> = {
 };
 // [category]: { [key: registry/ui]: [key: registry/examples][] }
 // TODO: Need to improve this structure
-export const COMPONENT_CATEGORIES: Record<string, Record<string, string[]>>[] = {
+export const COMPONENT_CATEGORIES: Record<string, Record<string, string[]>> = {
   button: {
     'button.signout': ['button.signout'],
     'button.theme': ['button.theme'],

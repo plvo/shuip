@@ -108,3 +108,62 @@ main {
   @apply min-h-[70vh] w-full;
   @apply p-2 md:px-4 mx-auto;
 }
+
+.h1-mdx {
+  @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
+}
+
+.h2-mdx {
+  @apply scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0;
+}
+
+.h3-mdx {
+  @apply scroll-m-20 pb-1 text-2xl font-semibold tracking-tight;
+}
+
+.h4-mdx {
+  @apply scroll-m-20 text-xl font-semibold tracking-tight;
+}
+
+.h6-mdx {
+  @apply mt-8 scroll-m-20 text-base font-semibold tracking-tight;
+}
+
+.a-mdx {
+  @apply font-medium underline underline-offset-4;
+}
+
+.p-mdx {
+  @apply leading-7 [&:not(:first-child)]:mt-6;
+}
+
+.ul-mdx {
+  @apply my-6 ml-6 list-disc;
+}
+
+.ol-mdx {
+  @apply my-6 ml-6 list-decimal;
+}
+
+.li-mdx {
+  @apply mt-2;
+}
+
+.blockquote-mdx {
+  @apply mt-6 border-l-2 pl-6 italic;
+}
+
+.img-mdx {
+  @apply rounded-md;
+}
+
+.hr-mdx {
+  @apply my-4 md:my-8;
+}
+.code-mdx {
+  @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold;
+}
+
+.small-mdx {
+  @apply text-sm font-medium leading-none;
+}
