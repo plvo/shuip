@@ -2,9 +2,8 @@ import { use } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cn, stringToUppercase } from '@/lib/utils';
-import { getMDXComponent } from 'next-contentlayer2/hooks';
 import { allDocs } from 'contentlayer/generated';
-import { MdxContent } from '@/lib/mdx-components';
+import { MdxContent } from '@/components/docs/mdx-components';
 
 interface DocPageProps {
   params: Promise<{ slug?: string[] }>;
@@ -17,7 +16,7 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
 
   if (!doc) {
     return {
-      title: 'Documentation introuvable',
+      title: 'Not Found',
     };
   }
 
@@ -35,15 +34,13 @@ export default function Page({ params }: DocPageProps) {
     notFound();
   }
 
-  const Content = getMDXComponent(doc.body.code);
-
   return (
     <div className="relative">
       <div className="space-y-2 mb-4">
         <h1 className={cn('scroll-m-20 text-3xl font-bold tracking-tight')}>{doc.title}</h1>
         {doc.description && <p className="text-base text-muted-foreground">{doc.description}</p>}
       </div>
-      <MdxContent code={doc.body.code} />
+      <MdxContent category={slugPath} code={doc.body.code} />
     </div>
   );
 }

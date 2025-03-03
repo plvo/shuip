@@ -1,26 +1,26 @@
 [
   {
-    "input": ["input.form-field.json"]
-  },
-  {
-    "dialog": ["dialog.confirmation.json"]
-  },
-  {
-    "select": ["select.form-field.json"]
-  },
-  {
-    "button": ["button.submit.json", "button.signout.json", "button.theme.json"]
-  },
-  {
-    "skeleton": ["skeleton.text.json"]
+    "button": ["button.theme.json", "button.signout.json", "button.submit.json"]
   },
   {
     "div": ["div.title-section.json"]
   },
   {
-    "radio": ["radio.form-field.json"]
+    "skeleton": ["skeleton.text.json"]
   },
   {
     "hover": ["hover.item.json"]
+  },
+  {
+    "dialog": ["dialog.confirmation.json"]
+  },
+  {
+    "radio": ["radio.form-field.json"]
+  },
+  {
+    "input": ["input.form-field.json"]
+  },
+  {
+    "select": ["select.form-field.json"]
   }
 ]

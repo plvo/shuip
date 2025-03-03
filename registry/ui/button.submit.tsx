@@ -10,7 +10,7 @@ export interface ButtonSubmitProps {
   loading?: boolean;
 }
 
-export function ButtonSubmit({
+export default function ButtonSubmit({
   onClick,
   label,
   disabled,
