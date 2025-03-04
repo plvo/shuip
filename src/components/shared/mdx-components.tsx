@@ -1,12 +1,11 @@
 'use client';
 import React from 'react';
 import { useMDXComponent } from 'next-contentlayer2/hooks';
+import { COMPONENT_CATEGORIES } from '#/registry/__index__';
 import { cn } from '@/lib/utils';
-import { COMPONENT_CATEGORIES, registryIndex } from '#/registry/__index__';
-import ComponentSections from './component.section';
+import ComponentSections from '@/components/docs/component.section';
 
 interface MdxComponentsProps {
-  category: string;
   code: string;
   className?: string;
 }
@@ -54,18 +53,12 @@ const components = {
   ),
 };
 
-export function MdxContent({ category, code, className }: MdxComponentsProps) {
+export function MdxContent({ code, className }: MdxComponentsProps) {
   const Component = useMDXComponent(code);
-  const componentsCategory = COMPONENT_CATEGORIES[category] || null;
 
   return (
     <div className={cn('mdx', className)}>
       <Component components={components} />
-
-      <div className="space-y-8">
-        {componentsCategory &&
-          Object.entries(componentsCategory).map((c, i) => <ComponentSections component={c} key={i} />)}
-      </div>
     </div>
   );
 }

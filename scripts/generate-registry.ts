@@ -1,8 +1,10 @@
 import fs from 'fs';
 import path from 'path';
+import matter from 'gray-matter';
 
 const REGISTRY_UI_PATH = path.join(process.cwd(), 'registry', 'ui');
 const REGISTRY_EXAMPLES_PATH = path.join(process.cwd(), 'registry', 'examples');
+const CONTENT_COMPONENTS_PATH = path.join(process.cwd(), 'content', 'components');
 
 async function main() {
   let index = `// @ts-nocheck
@@ -14,6 +16,7 @@ interface RegistryComponent {
     name: string;
     category: string;
     path: string;
+    code: string;
     component: any;
 }
 
@@ -38,11 +41,15 @@ export const registryIndex: Record<string, RegistryComponent> = {
 
     componentsCat[category][fullname] = [];
 
+    const fileContent = fs.readFileSync(path.join(REGISTRY_UI_PATH, file), 'utf-8');
+    const { content } = matter(fileContent);
+
     index += `
     "${fullname}": {
       name: "${fullname}",
       category: "${category}",
       path: "#/registry/ui/${fullname}.tsx",
+      code: ${JSON.stringify(content)},
       component: React.lazy(() => import("#/registry/ui/${fullname}.tsx")),
       },`;
   }
@@ -60,14 +67,17 @@ export const registryIndex: Record<string, RegistryComponent> = {
     if (!componentsCat[category]) {
       componentsCat[category] = {};
     }
-
     componentsCat[category][`${category}.${name}`].push(fullname);
+
+    const fileContent = fs.readFileSync(path.join(REGISTRY_EXAMPLES_PATH, file), 'utf-8');
+    const { content } = matter(fileContent);
 
     index += `
     "${fullname}.example": {
       name: "${fullname}.example",
       category: "${category}",
       path: "#/registry/examples/${fullname}.tsx",
+      code: ${JSON.stringify(content)},
       component: React.lazy(() => import("#/registry/examples/${fullname}.tsx")),
       },`;
   }
@@ -75,8 +85,10 @@ export const registryIndex: Record<string, RegistryComponent> = {
   index += '};';
 
   index += `
-  // [category]: { [key: registry/ui]: [key: registry/examples][] } 
-  // TODO: Need to improve this structure
+  /**
+   * [category]: { [key: registry/ui]: [key: registry/examples][] } 
+   * TODO: Need to improve this structure
+   */ 
   export const COMPONENT_CATEGORIES:Record<string, Record<string, string[]>> = ${JSON.stringify(componentsCat, null, 2)};
   `;
 

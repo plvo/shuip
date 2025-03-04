@@ -1,9 +1,9 @@
 import { defineDocumentType, makeSource } from 'contentlayer2/source-files';
 import rehypePrettyCode from 'rehype-pretty-code'; // Ajoutez cette importation
 
-const Doc = defineDocumentType(() => ({
-  name: 'Doc',
-  filePathPattern: `**/*.mdx`,
+const Docs = defineDocumentType(() => ({
+  name: 'Docs',
+  filePathPattern: `docs/**/*.mdx`,
   contentType: 'mdx',
   fields: {
     title: {
@@ -27,9 +27,25 @@ const Doc = defineDocumentType(() => ({
   },
 }));
 
+const Component = defineDocumentType(() => ({
+  name: 'Component',
+  filePathPattern: `components/**/*.mdx`,
+  contentType: 'mdx',
+  fields: {
+    title: {
+      type: 'string',
+      description: 'The title of the component',
+      required: true,
+    },
+  },
+  computedFields: {
+    slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath },
+  },
+}));
+
 export default makeSource({
-  contentDirPath: 'content/docs',
-  documentTypes: [Doc],
+  contentDirPath: './content',
+  documentTypes: [Docs, Component],
   mdx: {
     rehypePlugins: [
       [
