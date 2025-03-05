@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { DialogConfirmation } from '@/components/ui/shuip/dialog.confirmation';
 
-export function DialogConfirmationExample() {
+export default function DialogConfirmationExample() {
   return (
     <DialogConfirmation
       trigger={<Button>Open confirmation dialog</Button>}
