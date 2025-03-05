@@ -1,19 +1,38 @@
-import { use } from 'react';
 import type { Metadata } from 'next';
-import { cn, findDocContent, stringToUppercase } from '@/lib/utils';
-import { allDocs } from 'contentlayer/generated';
+import { cn, stringToUppercase } from '@/lib/utils';
 import { MdxContent } from '@/components/shared/mdx-components';
 import ComponentSections from '@/components/docs/component.section';
 import { COMPONENT_CATEGORIES } from '#/registry/__index__';
+import { getTableOfContents } from '@/lib/toc';
+import { allDocs } from 'contentlayer/generated';
+import { SidebarTableOfContents } from '@/components/docs/toc';
 
-interface DocPageProps {
-  params: Promise<{ slug?: string[] }>;
+export interface DocPageProps {
+  params: {
+    slug: string[];
+  };
+}
+
+/**
+ * TODO: need to change this it's horrible
+ * @param slugPath: path of the page
+ * @returns the doc object
+ */
+export function getDocAndSlugFromParams({ params }: DocPageProps) {
+  const slug = params.slug?.join('/') || '';
+
+  const doc = allDocs.find((doc) => {
+    if (doc.slug.startsWith('docs/')) {
+      return doc.slug.slice(5) === slug;
+    }
+    return doc.slug.slice(4) === slug;
+  });
+
+  return { doc, slug };
 }
 
 export async function generateMetadata({ params }: DocPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const slugPath = slug ? slug.join('/') : '';
-  const doc = allDocs.find((doc) => doc.slug === slugPath);
+  const { doc } = getDocAndSlugFromParams({ params });
 
   if (!doc) {
     return {
@@ -23,35 +42,45 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
 
   return {
     title: stringToUppercase(doc.title),
+    description: doc.description,
   };
 }
 
-export default function Page({ params }: DocPageProps) {
-  const { slug } = use(params);
-  const slugPath = slug ? slug.join('/') : '';
+export default async function Page({ params }: DocPageProps) {
+  const { doc, slug } = getDocAndSlugFromParams({ params });
+  const componentsCategory = COMPONENT_CATEGORIES[slug] || null;
 
-  const doc = findDocContent(slugPath);
-  const componentsCategory = COMPONENT_CATEGORIES[slugPath] || null;
+  const toc = doc ? await getTableOfContents(doc.body.raw) : null;
 
   return (
-    <div className="relative">
-      {doc && (
-        <>
-          <div className="space-y-2 mb-4">
-            <h1 className={cn('scroll-m-20 text-3xl font-bold tracking-tight')}>{doc.title}</h1>
-            <p className="text-base text-muted-foreground">{doc.description}</p>
-          </div>
-          <MdxContent code={doc.body.code} />
-        </>
-      )}
+    <main className="xl:grid xl:grid-cols-[1fr_350px]">
+      <div>
+        {doc && (
+          <>
+            <div className="space-y-2 mb-10">
+              <h1 className={cn('scroll-m-20 text-4xl font-bold tracking-tight')}>{doc.title}</h1>
+              <p className="text-base text-muted-foreground">{doc.description}</p>
+            </div>
+            <MdxContent code={doc.body.code} />
+          </>
+        )}
 
-      {componentsCategory && (
-        <div className="space-y-8">
-          {Object.entries(componentsCategory).map((c, i) => (
-            <ComponentSections component={c} key={i} />
-          ))}
+        {componentsCategory && (
+          <div className="space-y-8">
+            {Object.entries(componentsCategory).map((c, i) => (
+              <ComponentSections component={c} key={i} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="hidden text-sm xl:block border-l px-8 ml-8">
+        <div className="sticky top-20 -mt-6 pt-4">
+          <div className="h-full overflow-auto">
+            <SidebarTableOfContents {...(toc && toc)} componentsCategory={componentsCategory} />
+          </div>
         </div>
-      )}
-    </div>
+      </div>
+    </main>
   );
 }

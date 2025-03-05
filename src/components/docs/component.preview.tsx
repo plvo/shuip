@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ButtonCopy from '../shared/button.copy';
 import { registryIndex } from '#/registry/__index__';
-import CodePreview from './code-preview';
+import CodePreview from '../shared/code-preview';
 
 interface ComponentPreviewProps extends React.HTMLAttributes<HTMLDivElement> {
   name: string;
@@ -56,16 +56,10 @@ export function ComponentPreview({
       <Tabs defaultValue="preview" className="relative mr-auto w-full">
         <div className="flex items-center justify-between pb-2">
           <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
-            <TabsTrigger
-              value="preview"
-              className="relative h-9 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
-            >
+            <TabsTrigger value="preview" className="table-trigger">
               Preview
             </TabsTrigger>
-            <TabsTrigger
-              value="code"
-              className="relative h-9 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
-            >
+            <TabsTrigger value="code" className="table-trigger">
               Code
             </TabsTrigger>
           </TabsList>
@@ -81,7 +75,7 @@ export function ComponentPreview({
             </div>
           </div>
           <div
-            className={cn('preview flex min-h-[350px] w-full justify-center p-10', {
+            className={cn('preview flex min-h-[300px] w-full justify-center p-8', {
               'items-center': align === 'center',
               'items-start': align === 'start',
               'items-end': align === 'end',

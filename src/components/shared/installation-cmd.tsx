@@ -5,10 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 
 type ValueCmd = 'npm' | 'pnpm' | 'bun' | 'yarn';
 
-export default function InstallationCmd({ name }: { name: string }) {
+export default function InstallationCmd({ filename }: { filename: string }) {
   const [value, setValue] = React.useState<ValueCmd>('npm');
 
-  const url = `https://shuip.xyz/r/${name}.json`;
+  const url = `https://shuip.xyz/r/${filename}.json`;
 
   const CmdCode = () => {
     const cmd = (() => {

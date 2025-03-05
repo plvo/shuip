@@ -1,9 +1,7 @@
 'use client';
 import React from 'react';
 import { useMDXComponent } from 'next-contentlayer2/hooks';
-import { COMPONENT_CATEGORIES } from '#/registry/__index__';
 import { cn } from '@/lib/utils';
-import ComponentSections from '@/components/docs/component.section';
 
 interface MdxComponentsProps {
   code: string;

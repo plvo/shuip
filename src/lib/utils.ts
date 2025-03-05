@@ -1,5 +1,5 @@
 import { clsx, type ClassValue } from 'clsx';
-import { allComponents, allDocs, Component, Docs } from 'contentlayer/generated';
+import { allComponents, type Component } from 'contentlayer/generated';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
@@ -12,21 +12,6 @@ export function absoluteUrl(path: string) {
 
 export function stringToUppercase(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-/**
- * TODO: need to change this
- * it's horrible
- * @param slugPath: path of the page
- * @returns the doc object
- */
-export function findDocContent(slugPath: string): Docs | undefined {
-  return allDocs.find((doc) => {
-    if (doc.slug.startsWith('docs/')) {
-      return doc.slug.slice(5) === slugPath;
-    }
-    return doc.slug.slice(4) === slugPath;
-  });
 }
 
 export function findComponentContent(slugPath: string): Component | undefined {
