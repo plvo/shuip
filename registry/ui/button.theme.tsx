@@ -1,11 +1,13 @@
-'use client';
-
 import * as React from 'react';
 import { Laptop, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 
-export default function ButtonTheme({ withText }: { withText?: boolean }) {
+export interface ButtonThemeProps {
+  withText?: boolean;
+}
+
+export default function ButtonTheme({ withText }: ButtonThemeProps) {
   const { theme, setTheme } = useTheme();
   const [currentTheme, setCurrentTheme] = React.useState<'system' | 'light' | 'dark'>('system');
 

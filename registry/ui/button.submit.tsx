@@ -4,13 +4,13 @@ import type { JSX, MouseEventHandler } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface ButtonSubmitProps {
-  onClick: MouseEventHandler<HTMLButtonElement>;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
   label: JSX.Element | string;
   disabled?: boolean;
   loading?: boolean;
 }
 
-export function ButtonSubmit({
+export default function ButtonSubmit({
   onClick,
   label,
   disabled,
@@ -21,7 +21,7 @@ export function ButtonSubmit({
     <Button
       type="submit"
       variant={'default'}
-      onClick={onClick}
+      {...(onClick && { onClick })}
       disabled={disabled || loading}
       className={cn('w-full', ...(props?.className ? [props.className] : []))}
       {...props}

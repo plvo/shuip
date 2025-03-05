@@ -1,5 +1,3 @@
-'use client';
-
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Control, Path, PathValue } from 'react-hook-form';

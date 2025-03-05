@@ -10,19 +10,21 @@ import {
 } from '@/components/ui/dialog';
 import type { JSX } from 'react';
 
+export interface DialogConfirmationProps {
+  trigger: JSX.Element;
+  title: string;
+  description: string;
+  labelConfirmButton: string;
+  onConfirm: () => void;
+}
+
 export function DialogConfirmation({
   trigger,
   title,
   description,
   labelConfirmButton,
   onConfirm,
-}: {
-  trigger: JSX.Element;
-  title: string;
-  description: string;
-  labelConfirmButton: string;
-  onConfirm: () => void;
-}) {
+}: DialogConfirmationProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>{trigger}</DialogTrigger>

@@ -8,7 +8,7 @@
       "type": "registry:ui",
       "files": [
         {
-          "path": "./registry/div.title-section.tsx",
+          "path": "./registry/ui/div.title-section.tsx",
           "type": "registry:component",
           "target": "./components/ui/shuip/div.title-section.tsx"
         }
@@ -20,7 +20,7 @@
       "registryDependencies": ["skeleton"],
       "files": [
         {
-          "path": "./registry/skeleton.text.tsx",
+          "path": "./registry/ui/skeleton.text.tsx",
           "type": "registry:component",
           "target": "./components/ui/shuip/skeleton.text.tsx"
         }
@@ -32,7 +32,7 @@
       "dependencies": ["next-auth", "lucide-react"],
       "files": [
         {
-          "path": "./registry/button.signout.tsx",
+          "path": "./registry/ui/button.signout.tsx",
           "type": "registry:component",
           "target": "./components/ui/shuip/button.signout.tsx"
         }
@@ -44,7 +44,7 @@
       "dependencies": ["radix-ui"],
       "files": [
         {
-          "path": "./registry/button.submit.tsx",
+          "path": "./registry/ui/button.submit.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/button.submit.tsx"
         }
@@ -58,7 +58,7 @@
       "registryDependencies": ["button"],
       "files": [
         {
-          "path": "./registry/button.theme.tsx",
+          "path": "./registry/ui/button.theme.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/button.theme.tsx"
         }
@@ -70,7 +70,7 @@
       "dependencies": [],
       "files": [
         {
-          "path": "./registry/dialog.confirmation.tsx",
+          "path": "./registry/ui/dialog.confirmation.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/dialog.confirmation.tsx"
         }
@@ -83,7 +83,7 @@
       "dependencies": [],
       "files": [
         {
-          "path": "./registry/hover.item.tsx",
+          "path": "./registry/ui/hover.item.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/hover.item.tsx"
         }
@@ -96,7 +96,7 @@
       "dependencies": ["react-hook-form"],
       "files": [
         {
-          "path": "./registry/input.form-field.tsx",
+          "path": "./registry/ui/input.form-field.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/input.form-field.tsx"
         }
@@ -109,7 +109,7 @@
       "dependencies": ["react-hook-form"],
       "files": [
         {
-          "path": "./registry/radio.form-field.tsx",
+          "path": "./registry/ui/radio.form-field.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/radio.form-field.tsx"
         }
@@ -122,7 +122,7 @@
       "dependencies": ["react-hook-form"],
       "files": [
         {
-          "path": "./registry/select.form-field.tsx",
+          "path": "./registry/ui/select.form-field.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/select.form-field.tsx"
         }

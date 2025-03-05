@@ -13,10 +13,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import compGroups from '#/content/comp-groups.json';
 import { cn, stringToUppercase } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import ButtonTheme from '../ui/shuip/button.theme';
+import { COMPONENT_CATEGORIES } from '#/registry/__index__';
 
 const dataGettingStarted = [
   {
@@ -75,16 +75,15 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
             Components
           </SidebarGroupLabel>
           <SidebarMenu>
-            {compGroups.map((group, i) => {
-              const keyComp = Object.keys(group)[0];
-              const pathPage = `/docs/${keyComp}`;
+            {Object.entries(COMPONENT_CATEGORIES).map(([group], i) => {
+              const pathPage = `/docs/${group}`;
               const isPathActive = pathname === pathPage;
 
               return (
                 <SidebarMenuItem key={i}>
                   <SidebarMenuButton asChild>
                     <a href={pathPage} className={cn(isPathActive ? 'bg-muted font-bold' : '')}>
-                      <span>{stringToUppercase(keyComp)}</span>
+                      <span>{stringToUppercase(group)}</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

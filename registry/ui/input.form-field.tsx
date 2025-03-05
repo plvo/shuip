@@ -1,8 +1,13 @@
-'use client';
-
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { Control, Path } from 'react-hook-form';
+
+export interface InputFieldProps<TFieldValues extends Record<string, string>> {
+  control: Control<TFieldValues>;
+  name: Path<TFieldValues>;
+  label: string;
+  description?: string;
+}
 
 const InputField = <TFieldValues extends Record<string, string>>({
   control,
@@ -10,12 +15,7 @@ const InputField = <TFieldValues extends Record<string, string>>({
   label,
   description,
   ...props
-}: {
-  control: Control<TFieldValues>;
-  name: Path<TFieldValues>;
-  label: string;
-  description?: string;
-} & React.ComponentProps<typeof Input>) => {
+}: InputFieldProps<TFieldValues> & React.ComponentProps<typeof Input>) => {
   return (
     <FormField
       control={control}
