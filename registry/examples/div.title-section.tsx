@@ -1,12 +1,4 @@
-'use client';
-
-import type { JSX } from 'react';
-import TitleSection from '../ui/div.title-section';
-
-export interface TitleSectionProps {
-  title: string;
-  description: string | JSX.Element;
-}
+import TitleSection from '@/components/ui/shuip/div.title-section';
 
 export default function TitleSectionExample() {
   return <TitleSection title="Title" description="Lorem ipsum dolor sit amet consectetur, adipisicing elit." />;

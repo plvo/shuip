@@ -1,6 +1,3 @@
-'use client';
-
-// import { signOut } from "next-auth/react";
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { DialogConfirmation } from './dialog.confirmation';
@@ -22,7 +19,6 @@ export default function ButtonSignout({ withLogo, onConfirm }: ButtonSignoutProp
       description="Are you sure you want to sign out?"
       labelConfirmButton="Sign out"
       onConfirm={() => onConfirm}
-      //   onConfirm={() => signOut()}
     />
   );
 }

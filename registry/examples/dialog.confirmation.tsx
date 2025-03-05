@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { DialogConfirmation } from '../ui/dialog.confirmation';
+import { DialogConfirmation } from '@/components/ui/shuip/dialog.confirmation';
 
 export function DialogConfirmationExample() {
   return (
