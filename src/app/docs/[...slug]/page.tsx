@@ -8,9 +8,7 @@ import { allDocs } from 'contentlayer/generated';
 import { SidebarTableOfContents } from '@/components/docs/toc';
 
 export interface DocPageProps {
-  params: {
-    slug: string[];
-  };
+  params: Promise<{ slug: string[] }>;
 }
 
 /**
@@ -18,21 +16,22 @@ export interface DocPageProps {
  * @param slugPath: path of the page
  * @returns the doc object
  */
-export function getDocAndSlugFromParams({ params }: DocPageProps) {
-  const slug = params.slug?.join('/') || '';
+async function getDocAndSlugFromParams({ params }: DocPageProps) {
+  const { slug } = await params;
+  const slugPath = slug ? slug.join('/') : '';
 
   const doc = allDocs.find((doc) => {
     if (doc.slug.startsWith('docs/')) {
-      return doc.slug.slice(5) === slug;
+      return doc.slug.slice(5) === slugPath;
     }
-    return doc.slug.slice(4) === slug;
+    return doc.slug.slice(4) === slugPath;
   });
 
-  return { doc, slug };
+  return { doc, slug: slugPath };
 }
 
 export async function generateMetadata({ params }: DocPageProps): Promise<Metadata> {
-  const { doc } = getDocAndSlugFromParams({ params });
+  const { doc } = await getDocAndSlugFromParams({ params });
 
   if (!doc) {
     return {
@@ -47,7 +46,7 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
 }
 
 export default async function Page({ params }: DocPageProps) {
-  const { doc, slug } = getDocAndSlugFromParams({ params });
+  const { doc, slug } = await getDocAndSlugFromParams({ params });
   const componentsCategory = COMPONENT_CATEGORIES[slug] || null;
 
   const toc = doc ? await getTableOfContents(doc.body.raw) : null;
