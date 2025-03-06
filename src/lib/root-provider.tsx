@@ -9,7 +9,7 @@ export interface DocsProviderProps extends ThemeProviderProps {
 
 export default function RootProvider({ children, ...props }: DocsProviderProps) {
   return (
-    <NextThemesProvider defaultTheme="system" {...props}>
+    <NextThemesProvider enableSystem defaultTheme="system" {...props}>
       {children}
     </NextThemesProvider>
   );

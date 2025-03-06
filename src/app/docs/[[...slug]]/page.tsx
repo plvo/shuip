@@ -49,7 +49,7 @@ export default async function Page({ params }: DocPageProps) {
   const { doc, slug } = await getDocAndSlugFromParams({ params });
   const componentsCategory = COMPONENT_CATEGORIES[slug] || null;
 
-  const toc = doc ? await getTableOfContents(doc.body.raw) : null;
+  const toc = doc ? await getTableOfContents(doc.body.raw) : undefined;
 
   return (
     <main className="xl:grid xl:grid-cols-[1fr_350px]">
@@ -76,7 +76,7 @@ export default async function Page({ params }: DocPageProps) {
       <div className="hidden text-sm xl:block border-l px-8 ml-8">
         <div className="sticky top-20 -mt-6 pt-4">
           <div className="h-full overflow-auto">
-            <SidebarTableOfContents {...(toc && toc)} componentsCategory={componentsCategory} />
+            <SidebarTableOfContents toc={toc} componentsCategory={componentsCategory} />
           </div>
         </div>
       </div>

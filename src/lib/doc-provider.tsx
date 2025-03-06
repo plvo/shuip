@@ -15,7 +15,7 @@ export default function DocsProvider({ children }: DocsProviderProps) {
       <DocSidebar />
       <SidebarInset>
         <Header />
-        <main>{children}</main>
+        {children}
       </SidebarInset>
     </SidebarProvider>
   );
