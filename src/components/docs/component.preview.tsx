@@ -1,43 +1,20 @@
 'use client';
 
 import * as React from 'react';
-// import fs from 'fs';
+import { ReloadIcon } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
-// import { useConfig } from '@/hooks/use-config';
-// import { CopyButton } from '@/components/copy-button';
-// import { Icons } from '@/components/icons';
-// import { StyleSwitcher } from '@/components/style-switcher';
-// import { ThemeWrapper } from '@/components/theme-wrapper';
-// import { V0Button } from '@/components/v0-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ButtonCopy from '../shared/button.copy';
+import ButtonCopy from '@/components/shared/button.copy';
+import CodePreview from '@/components/shared/code-preview';
 import { registryIndex } from '#/registry/__index__';
-import CodePreview from '../shared/code-preview';
 
 interface ComponentPreviewProps extends React.HTMLAttributes<HTMLDivElement> {
-  name: string;
-  extractClassname?: boolean;
-  extractedClassNames?: string;
-  align?: 'center' | 'start' | 'end';
-  description?: string;
-  type?: 'block' | 'component' | 'example';
+  filename: string;
 }
 
-export function ComponentPreview({
-  name,
-  type,
-  children,
-  className,
-  extractClassname,
-  extractedClassNames,
-  align = 'center',
-  description,
-  ...props
-}: ComponentPreviewProps) {
-  //   const [config] = useConfig();
-
+export function ComponentPreview({ filename, children, ...props }: ComponentPreviewProps) {
   const Preview = React.useMemo(() => {
-    const Comp = registryIndex[name]?.component;
+    const Comp = registryIndex[filename]?.component;
 
     if (!Comp) {
       return (
@@ -51,8 +28,18 @@ export function ComponentPreview({
     return <Comp />;
   }, []);
 
+  const code = React.useMemo(() => {
+    const codeSource = registryIndex[filename]?.code;
+
+    if (!codeSource) {
+      return null;
+    }
+
+    return codeSource;
+  }, [filename]);
+
   return (
-    <div className={cn('group relative my-4 flex flex-col space-y-2', className)} {...props}>
+    <div className={cn('group relative flex flex-col space-y-2')} {...props}>
       <Tabs defaultValue="preview" className="relative mr-auto w-full">
         <div className="flex items-center justify-between pb-2">
           <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
@@ -65,26 +52,15 @@ export function ComponentPreview({
           </TabsList>
         </div>
         <TabsContent value="preview" className="relative rounded-md border">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-2">
-              {/* {description ? <V0Button name={name} /> : null} */}
-              {/* <ButtonCopy
-                value={'azdaz'}
-                className="h-7 w-7 text-foreground opacity-100 hover:bg-muted hover:text-foreground [&_svg]:h-3.5 [&_svg]:w-3.5"
-              /> */}
-            </div>
+          <div className="flex items-center justify-between p-2 border-b">
+            {/* TODO V0 */}
+            <ButtonCopy value={code || ''} />
           </div>
-          <div
-            className={cn('preview flex min-h-[300px] w-full justify-center p-8', {
-              'items-center': align === 'center',
-              'items-start': align === 'start',
-              'items-end': align === 'end',
-            })}
-          >
+          <div className={cn('preview w-full min-h-[150px] flex items-center justify-center p-8')}>
             <React.Suspense
               fallback={
                 <div className="flex w-full items-center justify-center text-sm text-muted-foreground">
-                  {/* <Icons.spinner className="mr-2 h-4 w-4 animate-spin" /> */}
+                  <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
                   Loading...
                 </div>
               }
@@ -94,7 +70,7 @@ export function ComponentPreview({
           </div>
         </TabsContent>
         <TabsContent value="code">
-          <CodePreview filename={name} />
+          <CodePreview code={code || ''} />
         </TabsContent>
       </Tabs>
     </div>

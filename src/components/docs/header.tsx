@@ -4,14 +4,21 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator } from 
 import { SidebarTrigger } from '../ui/sidebar';
 import { usePathname } from 'next/navigation';
 import React from 'react';
-import { stringToUppercase } from '@/lib/utils';
+import { cn, stringToUppercase } from '@/lib/utils';
+import Link from 'next/link';
+import { GitHubLogoIcon } from '@radix-ui/react-icons';
 
 export function Header() {
   const pathname = usePathname().split('/').filter(Boolean);
 
   return (
-    <header className="flex h-16 p-2 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-      <div className="flex items-center gap-2 px-4">
+    <header
+      className={cn(
+        'h-16 w-full flex max-md:justify-between items-center gap-2 p-2 mb-4 border-b',
+        'shrink-0 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12',
+      )}
+    >
+      <div className="flex items-center gap-2">
         <SidebarTrigger className="z-50" />
         <Breadcrumb>
           <BreadcrumbList>
@@ -27,6 +34,9 @@ export function Header() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
+      <Link href={'https://github.com/plvo/shuip'} passHref className="lg:hidden">
+        <GitHubLogoIcon className="size-5" />
+      </Link>
     </header>
   );
 }

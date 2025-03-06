@@ -65,7 +65,7 @@ export default async function Page({ params }: DocPageProps) {
         )}
 
         {componentsCategory && (
-          <div className="space-y-8">
+          <div className="space-y-16">
             {Object.entries(componentsCategory).map((c, i) => (
               <ComponentSections component={c} key={i} />
             ))}
@@ -73,8 +73,8 @@ export default async function Page({ params }: DocPageProps) {
         )}
       </div>
 
-      <div className="hidden text-sm xl:block border-l px-8 ml-8">
-        <div className="sticky top-20 -mt-6 pt-4">
+      <div className="hidden text-sm xl:block border-l p-8 ml-8">
+        <div className="sticky top-20 -mt-6">
           <div className="h-full overflow-auto">
             <SidebarTableOfContents toc={toc} componentsCategory={componentsCategory} />
           </div>

@@ -18,3 +18,10 @@ export function findComponentContent(slugPath: string): Component | undefined {
   const completeSlugPath = `components/${slugPath}`;
   return allComponents.find((doc) => doc.slug === completeSlugPath);
 }
+
+export function filenameToTitle(filename: string) {
+  return filename
+    .split('.')
+    .map((w) => stringToUppercase(w))
+    .join(' ');
+}

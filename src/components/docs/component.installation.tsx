@@ -9,7 +9,7 @@ interface ComponentInstallationProps {
 
 export default function ComponentInstallation({ filename }: ComponentInstallationProps) {
   return (
-    <div className={cn('group relative my-4 flex flex-col space-y-2')}>
+    <div className={cn('group relative flex flex-col space-y-2')}>
       <Tabs defaultValue="cli" className="relative mr-auto w-full">
         <div className="flex items-center justify-between pb-2">
           <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">

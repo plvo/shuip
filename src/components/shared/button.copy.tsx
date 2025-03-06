@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckIcon, ClipboardIcon } from 'lucide-react';
+import { CheckIcon, Copy } from 'lucide-react';
 
 export async function copyToClipboardWithMeta(value: string) {
   navigator.clipboard.writeText(value);
@@ -28,7 +28,7 @@ export default function ButtonCopy({ value }: { value: string }) {
       }}
     >
       <span className="sr-only">Copy</span>
-      {hasCopied ? <CheckIcon /> : <ClipboardIcon />}
+      {hasCopied ? <CheckIcon /> : <Copy />}
     </Button>
   );
 }

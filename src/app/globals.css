@@ -114,19 +114,15 @@ main {
 }
 
 .h2-mdx {
-  @apply scroll-m-20 border-b pb-2 mt-4 text-3xl font-semibold tracking-tight first:mt-0;
+  @apply scroll-m-20 text-3xl font-semibold tracking-tight first:mt-0 pb-2;
 }
 
 .h3-mdx {
-  @apply scroll-m-20 py-4 text-2xl font-semibold tracking-tight;
+  @apply scroll-m-20 text-2xl font-semibold tracking-tight border-b pb-1 mb-4;
 }
 
 .h4-mdx {
   @apply scroll-m-20 text-xl font-semibold tracking-tight;
-}
-
-.h6-mdx {
-  @apply mt-8 scroll-m-20 text-base font-semibold tracking-tight;
 }
 
 .a-mdx {
@@ -134,7 +130,7 @@ main {
 }
 
 .p-mdx {
-  @apply leading-7 [&:not(:first-child)]:mt-6;
+  @apply leading-4 [&:not(:first-child)]:mt-6;
 }
 
 .ul-mdx {

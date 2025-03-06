@@ -17,6 +17,9 @@ import { cn, stringToUppercase } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import ButtonTheme from '../ui/shuip/button.theme';
 import { COMPONENT_CATEGORIES } from '#/registry/__index__';
+import Link from 'next/link';
+import { GitHubLogoIcon } from '@radix-ui/react-icons';
+import { Button } from '../ui/button';
 
 const dataGettingStarted = [
   {
@@ -42,7 +45,11 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/docs">shuip docs</a>
+              <a href="/docs">
+                <b className="text-3xl">
+                  sh<span className="text-yellow-500">ui</span>p
+                </b>
+              </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -94,7 +101,12 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
       </SidebarContent>
 
       <SidebarFooter>
-        v1.0.0
+        <Link href={'https://github.com/plvo/shuip'} passHref>
+          <Button className="w-full cursor-pointer" variant={'outline'}>
+            <GitHubLogoIcon className="size-5" />
+            Github
+          </Button>
+        </Link>
         <ButtonTheme withText />
       </SidebarFooter>
     </Sidebar>
