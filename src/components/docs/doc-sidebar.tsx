@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Component, Flame } from 'lucide-react';
+import { Component, Flame, Minus, Plus } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -12,14 +12,18 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
-import { cn, stringToUppercase } from '@/lib/utils';
+import { cn, filenameToTitle, stringToUppercase } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import ButtonTheme from '../ui/shuip/button.theme';
 import { COMPONENT_CATEGORIES } from '#/registry/__index__';
 import Link from 'next/link';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
 import { Button } from '../ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
 
 const dataGettingStarted = [
   {
@@ -82,17 +86,35 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
             Components
           </SidebarGroupLabel>
           <SidebarMenu>
-            {Object.entries(COMPONENT_CATEGORIES).map(([group], i) => {
+            {Object.entries(COMPONENT_CATEGORIES).map(([group, components], i) => {
               const pathPage = `/docs/${group}`;
-              const isPathActive = pathname === pathPage;
+              const isGroupPathActive = pathname.startsWith(pathPage);
 
               return (
                 <SidebarMenuItem key={i}>
-                  <SidebarMenuButton asChild>
-                    <a href={pathPage} className={cn(isPathActive ? 'bg-muted font-bold' : '')}>
-                      <span>{stringToUppercase(group)}</span>
-                    </a>
-                  </SidebarMenuButton>
+                  <Collapsible className="group/collapsible" defaultOpen={isGroupPathActive}>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton>
+                        {stringToUppercase(group)}
+                        <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
+                        <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {Object.keys(components).map((c, i) => {
+                          return (
+                            <SidebarMenuSubItem key={i}>
+                              <SidebarMenuSubButton asChild isActive={pathname === `${pathPage}/${c}`}>
+                                <a href={`${pathPage}/${c}`}>{filenameToTitle(c)}</a>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </SidebarMenuItem>
               );
             })}

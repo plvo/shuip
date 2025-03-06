@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckIcon, Copy } from 'lucide-react';
 
-export async function copyToClipboardWithMeta(value: string) {
+async function copyToClipboardWithMeta(value: string) {
   navigator.clipboard.writeText(value);
 }
 

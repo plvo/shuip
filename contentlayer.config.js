@@ -1,9 +1,9 @@
 import { defineDocumentType, makeSource } from 'contentlayer2/source-files';
-import rehypePrettyCode from 'rehype-pretty-code'; // Ajoutez cette importation
+// import rehypePrettyCode from 'rehype-pretty-code';
 
 const Docs = defineDocumentType(() => ({
   name: 'Docs',
-  filePathPattern: `docs/**/*.mdx`,
+  filePathPattern: `**/*.mdx`,
   contentType: 'mdx',
   fields: {
     title: {
@@ -27,38 +27,38 @@ const Docs = defineDocumentType(() => ({
   },
 }));
 
-const Component = defineDocumentType(() => ({
-  name: 'Component',
-  filePathPattern: `components/**/*.mdx`,
-  contentType: 'mdx',
-  fields: {
-    title: {
-      type: 'string',
-      description: 'The title of the component',
-      required: true,
-    },
-  },
-  computedFields: {
-    slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath },
-  },
-}));
+// const Component = defineDocumentType(() => ({
+//   name: 'Component',
+//   filePathPattern: `components/**/*.mdx`,
+//   contentType: 'mdx',
+//   fields: {
+//     title: {
+//       type: 'string',
+//       description: 'The title of the component',
+//       required: true,
+//     },
+//   },
+//   computedFields: {
+//     slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath },
+//   },
+// }));
 
 export default makeSource({
-  contentDirPath: './content',
-  documentTypes: [Docs, Component],
-  mdx: {
-    rehypePlugins: [
-      [
-        rehypePrettyCode,
-        {
-          theme: 'github-dark',
-          onVisitLine(node) {
-            if (node.children.length === 0) {
-              node.children = [{ type: 'text', value: ' ' }];
-            }
-          },
-        },
-      ],
-    ],
-  },
+  contentDirPath: 'content/docs',
+  documentTypes: [Docs],
+  // mdx: {
+  //   rehypePlugins: [
+  //     [
+  //       rehypePrettyCode,
+  //       {
+  //         theme: 'github-dark',
+  //         onVisitLine(node) {
+  //           if (node.children.length === 0) {
+  //             node.children = [{ type: 'text', value: ' ' }];
+  //           }
+  //         },
+  //       },
+  //     ],
+  //   ],
+  // },
 });
