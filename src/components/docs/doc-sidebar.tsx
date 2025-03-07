@@ -49,9 +49,9 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/docs">
+              <a href="/">
                 <b className="text-3xl">
-                  sh<span className="text-amber-400">ui</span>p
+                  sh<span className="text-primary">ui</span>p
                 </b>
               </a>
             </SidebarMenuButton>
@@ -61,8 +61,8 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>
-            <Flame className="mr-1 size-5" />
+          <SidebarGroupLabel className="text-primary">
+            <Flame className="mr-1.5 size-5" />
             Getting Started
           </SidebarGroupLabel>
           <SidebarMenu>
@@ -79,8 +79,8 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>
-            <Component className="mr-1 size-5" />
+          <SidebarGroupLabel className="text-primary">
+            <Component className="mr-1.5 size-5" />
             Components
           </SidebarGroupLabel>
           <SidebarMenu>

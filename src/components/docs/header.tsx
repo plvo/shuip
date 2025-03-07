@@ -24,10 +24,14 @@ export function Header() {
           <BreadcrumbList>
             {pathname.map((path, index) => {
               const isLast = index === pathname.length - 1;
+              const href = `/${pathname.slice(0, index + 1).join('/')}`;
+
               return (
                 <React.Fragment key={path}>
-                  <BreadcrumbItem className={isLast ? 'font-bold' : ''}>{stringToUppercase(path)}</BreadcrumbItem>
-                  {!isLast && <BreadcrumbSeparator />}
+                  <Link href={href} className="flex items-center gap-2 underline-offset-4 hover:underline">
+                    <BreadcrumbItem className={isLast ? 'font-bold' : ''}>{stringToUppercase(path)}</BreadcrumbItem>
+                    {!isLast && <BreadcrumbSeparator />}
+                  </Link>
                 </React.Fragment>
               );
             })}

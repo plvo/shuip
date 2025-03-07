@@ -18,18 +18,24 @@ export default function ComponentSection({ componentName, examples }: ComponentS
       <ComponentPreview filename={componentNameExample} />
 
       <div>
-        <h2 className={cn('h2-mdx')}>Installation</h2>
+        <h2 id="installation" className={cn('h2-mdx')}>
+          Installation
+        </h2>
         <ComponentInstallation filename={componentName} />
       </div>
 
       <div>
-        <h2 className={cn('h2-mdx')}>Usage</h2>
+        <h2 id="usage" className={cn('h2-mdx')}>
+          Usage
+        </h2>
         <CodePreview filename={componentNameExample} />
       </div>
 
       {exampleComponents.length > 0 && (
         <div>
-          <h2 className={cn('h2-mdx')}>Examples</h2>
+          <h2 id="examples" className={cn('h2-mdx')}>
+            Examples
+          </h2>
           {exampleComponents.map((example) => (
             <ComponentPreview key={example} filename={componentNameExample} />
           ))}

@@ -6,7 +6,7 @@ import { COMPONENT_CATEGORIES } from '#/registry/__index__';
 import { getTableOfContents } from '@/lib/toc';
 import { allDocs } from 'contentlayer/generated';
 import { SidebarTableOfContents } from '@/components/docs/toc';
-import Link from 'next/link';
+import CardComponent from '@/components/docs/card.component';
 
 export interface DocPageProps {
   params: Promise<{ slug: string[] }>;
@@ -50,8 +50,10 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
 export default async function Page({ params }: DocPageProps) {
   const { doc, slugArray } = await getDocAndSlugFromParams({ params });
   const { group, name, components, examples } = getComponentFromSlug(slugArray);
-
   const toc = doc ? await getTableOfContents(doc.body.raw) : undefined;
+
+  const isComponentPage = !!name && !!examples;
+  const hasExamples = examples ? examples.length > 1 : false;
 
   return (
     <main className="xl:grid xl:grid-cols-[1fr_350px]">
@@ -66,42 +68,21 @@ export default async function Page({ params }: DocPageProps) {
           </>
         )}
 
-        {name && examples ? (
+        {isComponentPage ? (
           <ComponentSection componentName={name} examples={examples} />
         ) : (
           components && (
             <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {Object.entries(components).map(([componentName, examples]) => {
                 const doc = allDocs.find((doc) => doc.slug === componentName);
-
-                return (
-                  <Link
-                    href={`/docs/${group}/${componentName}`}
-                    passHref
-                    className="bg-muted/50 rounded-lg flex flex-col justify-between gap-1 cursor-pointer p-6 hover:text-amber-400 transition-colors"
-                    key={componentName}
-                  >
-                    <h4 className="h4-mdx">{doc ? doc.title : filenameToTitle(componentName)}</h4>
-                    <p className="text-muted-foreground">{doc && doc.description}</p>
-                    <p className="text-sm text-foreground/25">
-                      {examples && examples.length + (examples.length > 1 ? ' examples' : ' example') + ' available'}
-                    </p>
-                  </Link>
-                );
+                return <CardComponent key={componentName} {...{ componentName, group, doc, examples }} />;
               })}
             </section>
           )
         )}
       </div>
 
-      <div className="hidden text-sm xl:block border-l p-8 ml-8">
-        <div className="sticky top-20 -mt-6">
-          <div className="h-full overflow-auto">
-            TODO
-            {/* <SidebarTableOfContents toc={toc} componentsCategory={componentsCategory} /> */}
-          </div>
-        </div>
-      </div>
+      <SidebarTableOfContents {...{ toc, isComponentPage, hasExamples }} />
     </main>
   );
 }

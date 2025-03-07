@@ -10,10 +10,11 @@ import { useMounted } from '@/hooks/use-mounted';
 
 interface TocProps {
   toc?: TableOfContents;
-  componentsCategory?: Record<string, string[]>;
+  isComponentPage?: boolean;
+  hasExamples?: boolean;
 }
 
-export function SidebarTableOfContents({ toc, componentsCategory }: TocProps) {
+export function SidebarTableOfContents({ toc, isComponentPage, hasExamples }: TocProps) {
   const itemIds = React.useMemo(() => {
     if (!toc?.items) return [];
     return toc.items
@@ -26,21 +27,47 @@ export function SidebarTableOfContents({ toc, componentsCategory }: TocProps) {
   const activeHeading = useActiveItem(itemIds);
   const mounted = useMounted();
 
-  if (!toc?.items?.length && !componentsCategory) {
+  const docToc: TableOfContents | undefined = isComponentPage
+    ? {
+        items: [
+          {
+            title: 'Installation',
+            url: '#installation',
+          },
+          {
+            title: 'Usage',
+            url: '#usage',
+          },
+          {
+            ...(hasExamples && {
+              title: 'Examples',
+              url: '#examples',
+            }),
+          },
+        ],
+      }
+    : toc;
+
+  if (!docToc?.items?.length) {
     return null;
   }
 
   return (
-    <div className="space-y-2">
-      <p className="font-bold text-lg">On This Page</p>
-      {toc && <TreeToc tree={toc} activeItem={activeHeading} />}
-      {componentsCategory && <TreeComponent componentsCategory={componentsCategory} />}
+    <div className="hidden text-sm xl:block border-l p-8 ml-8">
+      <div className="sticky top-20 -mt-6">
+        <div className="h-full overflow-auto">
+          <div className="space-y-2">
+            <p className="font-bold text-lg">On This Page</p>
+            {docToc && <TreeToc tree={docToc} activeItem={activeHeading} />}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
 function useActiveItem(itemIds: string[]) {
-  const [activeId, setActiveId] = React.useState(null);
+  const [activeId, setActiveId] = React.useState<string | undefined>(undefined);
 
   React.useEffect(() => {
     const observer = new IntersectionObserver(
@@ -71,7 +98,7 @@ function useActiveItem(itemIds: string[]) {
     };
   }, [itemIds]);
 
-  return activeId;
+  return activeId ?? undefined;
 }
 
 interface TreeTocProps {
@@ -101,16 +128,4 @@ function TreeToc({ tree, level = 1, activeItem }: TreeTocProps) {
       })}
     </ul>
   ) : null;
-}
-
-function TreeComponent({ componentsCategory }: { componentsCategory: Record<string, string[]> }) {
-  return Object.entries(componentsCategory).map(([key, examples], i) => {
-    return (
-      <ul key={i}>
-        <li key={i}>
-          <a href={`#${key}`}>{key}</a>
-        </li>
-      </ul>
-    );
-  });
 }

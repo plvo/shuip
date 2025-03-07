@@ -6,8 +6,7 @@ import ButtonCopy from '../shared/button.copy';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import CodePreview from '../shared/code-preview';
-
-type PackageManager = 'npm' | 'pnpm' | 'bun' | 'yarn';
+import { getCmd, type PackageManager } from '@/lib/cmd';
 
 interface ComponentInstallationProps {
   filename: string;
@@ -39,29 +38,15 @@ export default function ComponentInstallation({ filename }: ComponentInstallatio
   );
 }
 
-export function InstallationCmd({ filename }: { filename: string }) {
+export function InstallationCmd({ filename }: { filename: string | string[] }) {
   const [value, setValue] = React.useState<PackageManager>('npm');
-  const url = `https://shuip.xyz/r/${filename}.json`;
 
-  const getCmd = (value: PackageManager) => {
-    switch (value) {
-      case 'npm':
-        return `npx shadcn@latest add ${url}`;
-      case 'pnpm':
-        return `pnpm dlx shadcn@latest add ${url}`;
-      case 'bun':
-        return `bunx --bun shadcn@latest add ${url}`;
-      case 'yarn':
-        return `npx shadcn@latest add ${url}`;
-      default:
-        return '';
-    }
-  };
+  const code = filename instanceof Array ? filename.map((f) => getCmd(value, f)).join('\n') : getCmd(value, filename);
 
   const CmdCode: React.FC = () => (
     <pre className="flex items-center">
       <Terminal className="size-4 mr-2 mt-0.5 text-muted-foreground" />
-      <code className="overflow-x-auto pb-2">{getCmd(value)}</code>
+      <code className="overflow-x-auto pb-2">{code}</code>
     </pre>
   );
 
@@ -82,7 +67,7 @@ export function InstallationCmd({ filename }: { filename: string }) {
             </TabsTrigger>
           ))}
         </div>
-        <ButtonCopy value={getCmd(value)} />
+        <ButtonCopy value={getCmd(value, code)} />
       </TabsList>
 
       {(['npm', 'pnpm', 'bun', 'yarn'] as PackageManager[]).map((cmd) => (

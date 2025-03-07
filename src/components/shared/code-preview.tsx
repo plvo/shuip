@@ -45,7 +45,7 @@ export function CodeHighlight({ code, language = 'tsx' }: CodeHighlightProps) {
     <div>
       <div className="flex items-center justify-between p-2 border-b">
         {/* TODO V0 */}
-        <ButtonCopy value={code || ''} />
+        <ButtonCopy value={code} />
       </div>
       <Highlight theme={themes.vsDark} code={code} language={language}>
         {({ style, tokens, getLineProps, getTokenProps }) => (

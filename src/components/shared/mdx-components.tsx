@@ -2,6 +2,7 @@
 import React from 'react';
 import { useMDXComponent } from 'next-contentlayer2/hooks';
 import { cn } from '@/lib/utils';
+import CodeAllCli from '../docs/code.all-cli';
 
 interface MdxComponentsProps {
   code: string;
@@ -49,6 +50,7 @@ const components = {
   small: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
     <small className={cn('small-mdx', className)} {...props} />
   ),
+  CodeAllCli: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => <CodeAllCli />,
 };
 
 export function MdxContent({ code, className }: MdxComponentsProps) {
