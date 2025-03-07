@@ -16,7 +16,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
-import { cn, filenameToTitle, stringToUppercase } from '@/lib/utils';
+import { filenameToTitle, stringToUppercase } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import ButtonTheme from '../ui/shuip/button.theme';
 import { COMPONENT_CATEGORIES } from '#/registry/__index__';
@@ -51,7 +51,7 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
             <SidebarMenuButton size="lg" asChild>
               <a href="/docs">
                 <b className="text-3xl">
-                  sh<span className="text-yellow-500">ui</span>p
+                  sh<span className="text-amber-400">ui</span>p
                 </b>
               </a>
             </SidebarMenuButton>
@@ -69,10 +69,8 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
             {dataGettingStarted.map((item, i) => {
               return (
                 <SidebarMenuItem key={i}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.href} className={cn('hover:bg-muted', 'hover:font-bold')}>
-                      {item.title}
-                    </a>
+                  <SidebarMenuButton asChild isActive={pathname === item.href}>
+                    <a href={item.href}>{item.title}</a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               );
@@ -88,14 +86,17 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
           <SidebarMenu>
             {Object.entries(COMPONENT_CATEGORIES).map(([group, components], i) => {
               const pathPage = `/docs/${group}`;
+              const isGroupePage = pathname === pathPage;
               const isGroupPathActive = pathname.startsWith(pathPage);
 
               return (
                 <SidebarMenuItem key={i}>
                   <Collapsible className="group/collapsible" defaultOpen={isGroupPathActive}>
                     <CollapsibleTrigger asChild>
-                      <SidebarMenuButton>
-                        {stringToUppercase(group)}
+                      <SidebarMenuButton isActive={isGroupePage}>
+                        <a href={`/docs/${group}`} className="hover:underline underline-offset-4">
+                          {stringToUppercase(group)}
+                        </a>
                         <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
                         <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
                       </SidebarMenuButton>

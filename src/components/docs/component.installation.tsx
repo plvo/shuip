@@ -61,7 +61,7 @@ export function InstallationCmd({ filename }: { filename: string }) {
   const CmdCode: React.FC = () => (
     <pre className="flex items-center">
       <Terminal className="size-4 mr-2 mt-0.5 text-muted-foreground" />
-      <code>{getCmd(value)}</code>
+      <code className="overflow-x-auto pb-2">{getCmd(value)}</code>
     </pre>
   );
 

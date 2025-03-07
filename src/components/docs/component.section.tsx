@@ -9,7 +9,7 @@ interface ComponentSectionsProps {
   examples: string[];
 }
 
-export default function ComponentSections({ componentName, examples }: ComponentSectionsProps) {
+export default function ComponentSection({ componentName, examples }: ComponentSectionsProps) {
   const componentNameExample = componentName + '.example';
   const exampleComponents = examples.filter((e) => e !== componentName);
 
