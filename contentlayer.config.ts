@@ -16,9 +16,9 @@ const Docs = defineDocumentType(() => ({
       description: 'The description of the post',
       required: false,
     },
-    date: {
-      type: 'date',
-      description: 'The date of the post',
+    GettingStartedPosition: {
+      type: 'number',
+      description: 'Indicates if the post is a component',
       required: false,
     },
   },
@@ -26,22 +26,6 @@ const Docs = defineDocumentType(() => ({
     slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath },
   },
 }));
-
-// const Component = defineDocumentType(() => ({
-//   name: 'Component',
-//   filePathPattern: `components/**/*.mdx`,
-//   contentType: 'mdx',
-//   fields: {
-//     title: {
-//       type: 'string',
-//       description: 'The title of the component',
-//       required: true,
-//     },
-//   },
-//   computedFields: {
-//     slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath },
-//   },
-// }));
 
 export default makeSource({
   contentDirPath: 'content/docs',

@@ -24,24 +24,13 @@ import Link from 'next/link';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
 import { Button } from '../ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
-
-const dataGettingStarted = [
-  {
-    title: 'Introduction',
-    href: '/docs',
-  },
-  {
-    title: 'Installation',
-    href: '/docs/installation',
-  },
-  {
-    title: 'Configuration',
-    href: '/docs/configuration',
-  },
-];
+import { allDocs } from 'contentlayer/generated';
 
 export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
   const pathname = usePathname();
+  const docPages = allDocs
+    .filter((doc) => (doc.GettingStartedPosition ?? 0) > 0)
+    .sort((a, b) => (a.GettingStartedPosition ?? 0) - (b.GettingStartedPosition ?? 0));
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -66,11 +55,12 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
             Getting Started
           </SidebarGroupLabel>
           <SidebarMenu>
-            {dataGettingStarted.map((item, i) => {
+            {docPages.map((item, i) => {
+              const path = `/docs${item.slug ? `/${item.slug}` : ''}`;
               return (
                 <SidebarMenuItem key={i}>
-                  <SidebarMenuButton asChild isActive={pathname === item.href}>
-                    <a href={item.href}>{item.title}</a>
+                  <SidebarMenuButton asChild isActive={pathname === path}>
+                    <a href={path}>{item.title}</a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               );
@@ -93,13 +83,13 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
                 <SidebarMenuItem key={i}>
                   <Collapsible className="group/collapsible" defaultOpen={isGroupPathActive}>
                     <CollapsibleTrigger asChild>
-                      <SidebarMenuButton isActive={isGroupePage}>
-                        <a href={`/docs/${group}`} className="hover:underline underline-offset-4">
+                      <a href={`/docs/${group}`}>
+                        <SidebarMenuButton isActive={isGroupePage}>
                           {stringToUppercase(group)}
-                        </a>
-                        <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
-                        <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
-                      </SidebarMenuButton>
+                          <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
+                          <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
+                        </SidebarMenuButton>
+                      </a>
                     </CollapsibleTrigger>
 
                     <CollapsibleContent>

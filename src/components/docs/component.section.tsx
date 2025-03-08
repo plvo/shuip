@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cn } from '@/lib/utils';
+import { cn, filenameToTitle } from '@/lib/utils';
 import { ComponentPreview } from './component.preview';
 import CodePreview from '../shared/code-preview';
 import ComponentInstallation from './component.installation';
@@ -37,7 +37,7 @@ export default function ComponentSection({ componentName, examples }: ComponentS
             Examples
           </h2>
           {exampleComponents.map((example) => (
-            <ComponentPreview key={example} filename={componentNameExample} />
+            <ComponentPreview key={example} filename={example + '.example'} />
           ))}
         </div>
       )}

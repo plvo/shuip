@@ -48,15 +48,17 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
 }
 
 export async function generateStaticParams(): Promise<{ slug: string[] }[]> {
-  return Object.entries(COMPONENT_CATEGORIES).flatMap(([group, components]) => {
-    const groupParam = { slug: [group] };
+  const docRoutes = allDocs.filter((doc) => doc.GettingStartedPosition).map((doc) => ({ slug: [doc.slug] }));
 
+  const componentRoutes = Object.entries(COMPONENT_CATEGORIES).flatMap(([group, components]) => {
+    const groupParam = { slug: [group] };
     const componentParams = Object.keys(components).map((name) => ({
       slug: [group, name],
     }));
-
     return [groupParam, ...componentParams];
   });
+
+  return [...docRoutes, ...componentRoutes];
 }
 
 export default async function Page({ params }: DocPageProps) {
