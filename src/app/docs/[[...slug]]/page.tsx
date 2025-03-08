@@ -47,6 +47,18 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
   };
 }
 
+export async function generateStaticParams(): Promise<{ slug: string[] }[]> {
+  return Object.entries(COMPONENT_CATEGORIES).flatMap(([group, components]) => {
+    const groupParam = { slug: [group] };
+
+    const componentParams = Object.keys(components).map((name) => ({
+      slug: [group, name],
+    }));
+
+    return [groupParam, ...componentParams];
+  });
+}
+
 export default async function Page({ params }: DocPageProps) {
   const { doc, slugArray } = await getDocAndSlugFromParams({ params });
   const { group, name, components, examples } = getComponentFromSlug(slugArray);
