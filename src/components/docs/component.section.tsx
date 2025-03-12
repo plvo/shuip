@@ -14,7 +14,7 @@ export default function ComponentSection({ componentName, examples }: ComponentS
   const exampleComponents = examples.filter((e) => e !== componentName);
 
   return (
-    <section className="w-full space-y-8">
+    <section className="w-full max-w-4xl space-y-8">
       <ComponentPreview filename={componentNameExample} />
 
       <div>

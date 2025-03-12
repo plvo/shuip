@@ -1,9 +1,9 @@
 export type PackageManager = 'npm' | 'pnpm' | 'bun' | 'yarn';
 
-export const getCmd = (value: PackageManager, filename: string) => {
+export const getCmd = (pkg: PackageManager, filename: string) => {
   const url = `https://shuip.xyz/r/${filename}.json`;
 
-  switch (value) {
+  switch (pkg) {
     case 'npm':
       return `npx shadcn@latest add ${url}`;
     case 'pnpm':

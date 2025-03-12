@@ -39,9 +39,9 @@ export default function ComponentInstallation({ filename }: ComponentInstallatio
 }
 
 export function InstallationCmd({ filename }: { filename: string | string[] }) {
-  const [value, setValue] = React.useState<PackageManager>('npm');
+  const [pkg, setValue] = React.useState<PackageManager>('npm');
 
-  const code = filename instanceof Array ? filename.map((f) => getCmd(value, f)).join('\n') : getCmd(value, filename);
+  const code = filename instanceof Array ? filename.map((f) => getCmd(pkg, f)).join('\n') : getCmd(pkg, filename);
 
   const CmdCode: React.FC = () => (
     <pre className="flex items-center">
@@ -51,7 +51,7 @@ export function InstallationCmd({ filename }: { filename: string | string[] }) {
   );
 
   return (
-    <Tabs value={value} onValueChange={(v) => setValue(v as PackageManager)} className="w-full">
+    <Tabs value={pkg} onValueChange={(v) => setValue(v as PackageManager)} className="w-full">
       <TabsList className="flex justify-between p-2 bg-muted/70">
         <div className="px-0 py-2">
           {(['npm', 'pnpm', 'bun', 'yarn'] as PackageManager[]).map((manager) => (
@@ -67,7 +67,7 @@ export function InstallationCmd({ filename }: { filename: string | string[] }) {
             </TabsTrigger>
           ))}
         </div>
-        <ButtonCopy value={getCmd(value, code)} />
+        <ButtonCopy value={code} />
       </TabsList>
 
       {(['npm', 'pnpm', 'bun', 'yarn'] as PackageManager[]).map((cmd) => (

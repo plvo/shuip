@@ -33,11 +33,11 @@ function getComponentFromSlug(slug: string[]) {
 }
 
 export async function generateMetadata({ params }: DocPageProps): Promise<Metadata> {
-  const { doc } = await getDocAndSlugFromParams({ params });
+  const { doc, slugArray } = await getDocAndSlugFromParams({ params });
 
   if (!doc) {
     return {
-      title: 'Not Found',
+      title: slugArray.length ? filenameToTitle(slugArray.at(-1) || 'Not Found') : 'Not Found',
     };
   }
 
