@@ -3,10 +3,10 @@
 
 'use client';
 
-import * as React from 'react';
-import { TableOfContents } from '@/lib/toc';
-import { cn } from '@/lib/utils';
 import { useMounted } from '@/hooks/use-mounted';
+import type { TableOfContents } from '@/lib/toc';
+import { cn } from '@/lib/utils';
+import * as React from 'react';
 
 interface TocProps {
   toc?: TableOfContents;
@@ -25,7 +25,7 @@ export function SidebarTableOfContents({ toc, isComponentPage, hasExamples }: To
   }, [toc]);
 
   const activeHeading = useActiveItem(itemIds);
-  const mounted = useMounted();
+  const _mounted = useMounted();
 
   const docToc: TableOfContents | undefined = isComponentPage
     ? {
@@ -53,11 +53,11 @@ export function SidebarTableOfContents({ toc, isComponentPage, hasExamples }: To
   }
 
   return (
-    <div className="hidden text-sm xl:block border-l p-8 ml-8">
-      <div className="sticky top-20 -mt-6">
-        <div className="h-full overflow-auto">
-          <div className="space-y-2">
-            <p className="font-bold text-lg">On This Page</p>
+    <div className='hidden text-sm xl:block border-l p-8 ml-8'>
+      <div className='sticky top-20 -mt-6'>
+        <div className='h-full overflow-auto'>
+          <div className='space-y-2'>
+            <p className='font-bold text-lg'>On This Page</p>
             {docToc && <TreeToc tree={docToc} activeItem={activeHeading} />}
           </div>
         </div>
@@ -78,7 +78,7 @@ function useActiveItem(itemIds: string[]) {
           }
         });
       },
-      { rootMargin: `0% 0% -80% 0%` },
+      { rootMargin: '0% 0% -80% 0%' },
     );
 
     itemIds?.forEach((id) => {

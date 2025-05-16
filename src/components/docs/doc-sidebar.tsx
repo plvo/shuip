@@ -1,7 +1,5 @@
 'use client';
 
-import * as React from 'react';
-import { Component, Flame, Minus, Plus } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -17,14 +15,16 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { filenameToTitle, stringToUppercase } from '@/lib/utils';
-import { usePathname } from 'next/navigation';
-import ButtonTheme from '../ui/shuip/button.theme';
-import { COMPONENT_CATEGORIES } from '#/registry/__index__';
-import Link from 'next/link';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
+import { allDocs } from 'contentlayer/generated';
+import { Component, Flame, Minus, Plus } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import type * as React from 'react';
+import { COMPONENT_CATEGORIES } from '#/registry/__index__';
 import { Button } from '../ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
-import { allDocs } from 'contentlayer/generated';
+import ButtonTheme from '../ui/shuip/button.theme';
 
 export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
   const pathname = usePathname();
@@ -33,14 +33,14 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
     .sort((a, b) => (a.GettingStartedPosition ?? 0) - (b.GettingStartedPosition ?? 0));
 
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar variant='inset' {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <a href="/">
-                <b className="text-3xl">
-                  sh<span className="text-primary">ui</span>p
+            <SidebarMenuButton size='lg' asChild>
+              <a href='/'>
+                <b className='text-3xl'>
+                  sh<span className='text-primary'>ui</span>p
                 </b>
               </a>
             </SidebarMenuButton>
@@ -50,8 +50,8 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-primary">
-            <Flame className="mr-1.5 size-5" />
+          <SidebarGroupLabel className='text-primary'>
+            <Flame className='mr-1.5 size-5' />
             Getting Started
           </SidebarGroupLabel>
           <SidebarMenu>
@@ -69,8 +69,8 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-primary">
-            <Component className="mr-1.5 size-5" />
+          <SidebarGroupLabel className='text-primary'>
+            <Component className='mr-1.5 size-5' />
             Components
           </SidebarGroupLabel>
           <SidebarMenu>
@@ -81,13 +81,13 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
 
               return (
                 <SidebarMenuItem key={i}>
-                  <Collapsible className="group/collapsible" defaultOpen={isGroupPathActive}>
+                  <Collapsible className='group/collapsible' defaultOpen={isGroupPathActive}>
                     <CollapsibleTrigger asChild>
                       <a href={`/docs/${group}`}>
                         <SidebarMenuButton isActive={isGroupePage}>
                           {stringToUppercase(group)}
-                          <Plus className="ml-auto group-data-[state=open]/collapsible:hidden" />
-                          <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
+                          <Plus className='ml-auto group-data-[state=open]/collapsible:hidden' />
+                          <Minus className='ml-auto group-data-[state=closed]/collapsible:hidden' />
                         </SidebarMenuButton>
                       </a>
                     </CollapsibleTrigger>
@@ -115,8 +115,8 @@ export const DocSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) =
 
       <SidebarFooter>
         <Link href={'https://github.com/plvo/shuip'} passHref>
-          <Button className="w-full cursor-pointer" variant={'outline'}>
-            <GitHubLogoIcon className="size-5" />
+          <Button className='w-full cursor-pointer' variant={'outline'}>
+            <GitHubLogoIcon className='size-5' />
             Github
           </Button>
         </Link>

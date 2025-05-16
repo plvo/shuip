@@ -1,12 +1,12 @@
 'use client';
 
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { SidebarTrigger } from '../ui/sidebar';
+import { cn, stringToUppercase } from '@/lib/utils';
+import { GitHubLogoIcon } from '@radix-ui/react-icons';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react';
-import { cn, stringToUppercase } from '@/lib/utils';
-import Link from 'next/link';
-import { GitHubLogoIcon } from '@radix-ui/react-icons';
+import { SidebarTrigger } from '../ui/sidebar';
 
 export function Header() {
   const pathname = usePathname().split('/').filter(Boolean);
@@ -18,8 +18,8 @@ export function Header() {
         'shrink-0 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12',
       )}
     >
-      <div className="flex items-center gap-2">
-        <SidebarTrigger className="z-50" />
+      <div className='flex items-center gap-2'>
+        <SidebarTrigger className='z-50' />
         <Breadcrumb>
           <BreadcrumbList>
             {pathname.map((path, index) => {
@@ -28,7 +28,7 @@ export function Header() {
 
               return (
                 <React.Fragment key={path}>
-                  <Link href={href} className="flex items-center gap-2 underline-offset-4 hover:underline">
+                  <Link href={href} className='flex items-center gap-2 underline-offset-4 hover:underline'>
                     <BreadcrumbItem className={isLast ? 'font-bold' : ''}>{stringToUppercase(path)}</BreadcrumbItem>
                     {!isLast && <BreadcrumbSeparator />}
                   </Link>
@@ -38,8 +38,8 @@ export function Header() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <Link href={'https://github.com/plvo/shuip'} passHref className="lg:hidden">
-        <GitHubLogoIcon className="size-5" />
+      <Link href={'https://github.com/plvo/shuip'} passHref className='lg:hidden'>
+        <GitHubLogoIcon className='size-5' />
       </Link>
     </header>
   );

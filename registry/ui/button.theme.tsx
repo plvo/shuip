@@ -1,7 +1,7 @@
-import * as React from 'react';
+import { Button } from '@/components/ui/button';
 import { Laptop, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { Button } from '@/components/ui/button';
+import * as React from 'react';
 
 export interface ButtonThemeProps {
   withText?: boolean;
@@ -23,14 +23,14 @@ export default function ButtonTheme({ withText }: ButtonThemeProps) {
   };
 
   return (
-    <Button variant="outline" size={withText ? 'default' : 'icon'} onClick={cycleTheme}>
-      {currentTheme === 'system' && <Laptop className="h-[1.2rem] w-[1.2rem]" />}
-      {currentTheme === 'light' && <Sun className="h-[1.2rem] w-[1.2rem]" />}
-      {currentTheme === 'dark' && <Moon className="h-[1.2rem] w-[1.2rem]" />}
+    <Button variant='outline' size={withText ? 'default' : 'icon'} onClick={cycleTheme}>
+      {currentTheme === 'system' && <Laptop className='h-[1.2rem] w-[1.2rem]' />}
+      {currentTheme === 'light' && <Sun className='h-[1.2rem] w-[1.2rem]' />}
+      {currentTheme === 'dark' && <Moon className='h-[1.2rem] w-[1.2rem]' />}
       {withText && (
-        <span className="ml-2 capitalize">{currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}</span>
+        <span className='ml-2 capitalize'>{currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}</span>
       )}
-      <span className="sr-only">Toggle theme</span>
+      <span className='sr-only'>Toggle theme</span>
     </Button>
   );
 }

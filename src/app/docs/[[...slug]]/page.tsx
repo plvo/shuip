@@ -1,12 +1,12 @@
-import type { Metadata } from 'next';
-import { filenameToTitle, stringToUppercase } from '@/lib/utils';
-import { MdxContent } from '@/components/shared/mdx-components';
-import ComponentSection from '@/components/docs/component.section';
-import { COMPONENT_CATEGORIES } from '#/registry/__index__';
-import { getTableOfContents } from '@/lib/toc';
-import { allDocs } from 'contentlayer/generated';
-import { SidebarTableOfContents } from '@/components/docs/toc';
 import CardComponent from '@/components/docs/card.component';
+import ComponentSection from '@/components/docs/component.section';
+import { SidebarTableOfContents } from '@/components/docs/toc';
+import { MdxContent } from '@/components/shared/mdx-components';
+import { getTableOfContents } from '@/lib/toc';
+import { filenameToTitle, stringToUppercase } from '@/lib/utils';
+import { allDocs } from 'contentlayer/generated';
+import type { Metadata } from 'next';
+import { COMPONENT_CATEGORIES } from '#/registry/__index__';
 
 export interface DocPageProps {
   params: Promise<{ slug: string[] }>;
@@ -70,13 +70,13 @@ export default async function Page({ params }: DocPageProps) {
   const hasExamples = examples ? examples.length > 1 : false;
 
   return (
-    <main className="xl:grid xl:grid-cols-[1fr_350px]">
+    <main className='xl:grid xl:grid-cols-[1fr_350px]'>
       <div>
         {doc && (
           <>
-            <div className="space-y-2 mb-10">
+            <div className='space-y-2 mb-10'>
               <h1 className={'h1-mdx'}>{doc.title}</h1>
-              <p className="text-base text-muted-foreground">{doc.description}</p>
+              <p className='text-base text-muted-foreground'>{doc.description}</p>
             </div>
             <MdxContent code={doc.body.code} />
           </>
@@ -86,7 +86,7 @@ export default async function Page({ params }: DocPageProps) {
           <ComponentSection componentName={name} examples={examples} />
         ) : (
           components && (
-            <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <section className='grid sm:grid-cols-2 lg:grid-cols-3 gap-8'>
               {Object.entries(components).map(([componentName, examples]) => {
                 const doc = allDocs.find((doc) => doc.slug === componentName);
                 return <CardComponent key={componentName} {...{ componentName, group, doc, examples }} />;

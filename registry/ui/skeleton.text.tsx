@@ -5,6 +5,6 @@ export interface SkeletonTextProps {
 }
 
 export const SkeletonText = ({ text }: SkeletonTextProps) => {
-  if (!text) return <Skeleton className="w-20 h-4" />;
+  if (!text) return <Skeleton className='w-20 h-4' />;
   return text;
 };

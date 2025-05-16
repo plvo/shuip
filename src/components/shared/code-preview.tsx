@@ -1,8 +1,8 @@
 'use client';
 
+import { Highlight, themes } from 'prism-react-renderer';
 import React from 'react';
 import { registryIndex } from '#/registry/__index__';
-import { Highlight, themes } from 'prism-react-renderer';
 import ButtonCopy from './button.copy';
 
 interface CodePreviewProps {
@@ -15,7 +15,7 @@ export default function CodePreview({ code, filename }: CodePreviewProps) {
   const codeString = code
     ? code
     : React.useMemo(() => {
-        const codeSource = registryIndex[filename!]?.code;
+        const codeSource = registryIndex[filename as keyof typeof registryIndex]?.code;
 
         if (!codeSource) {
           return null;
@@ -25,11 +25,11 @@ export default function CodePreview({ code, filename }: CodePreviewProps) {
       }, [filename]);
 
   return (
-    <div className="w-full border rounded-lg [&_pre]:my-0 [&_pre]:max-h-[350px] [&_pre]:overflow-auto">
+    <div className='w-full border rounded-lg [&_pre]:my-0 [&_pre]:max-h-[350px] [&_pre]:overflow-auto'>
       {codeString ? (
         <CodeHighlight code={codeString} />
       ) : (
-        <p className="text-sm text-muted-foreground">Component not found in registry.</p>
+        <p className='text-sm text-muted-foreground'>Component not found in registry.</p>
       )}
     </div>
   );
@@ -43,13 +43,13 @@ interface CodeHighlightProps {
 export function CodeHighlight({ code, language = 'tsx' }: CodeHighlightProps) {
   return (
     <div>
-      <div className="flex items-center justify-between p-2 border-b">
+      <div className='flex items-center justify-between p-2 border-b'>
         {/* TODO V0 */}
         <ButtonCopy value={code} />
       </div>
       <Highlight theme={themes.vsDark} code={code} language={language}>
         {({ style, tokens, getLineProps, getTokenProps }) => (
-          <pre style={style} className="p-4">
+          <pre style={style} className='p-4'>
             {tokens.map((line, i) => (
               <div key={i} {...getLineProps({ line })}>
                 {line.map((token, key) => (

@@ -31,7 +31,7 @@ export function DialogConfirmation({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription className="md:text-left">{description}</DialogDescription>
+          <DialogDescription className='md:text-left'>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button onClick={onConfirm}>{labelConfirmButton}</Button>

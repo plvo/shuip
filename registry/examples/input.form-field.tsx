@@ -1,8 +1,8 @@
-import { z } from 'zod';
-import { useZodForm } from 'shext';
-import InputField from '@/components/ui/shuip/input.form-field';
 import { Form } from '@/components/ui/form';
 import ButtonSubmit from '@/components/ui/shuip/button.submit';
+import InputField from '@/components/ui/shuip/input.form-field';
+import { useZodForm } from 'shext';
+import { z } from 'zod';
 
 const zodSchema = z.object({
   name: z.string().nonempty({ message: 'Name is required' }),
@@ -22,9 +22,9 @@ export default function InputFieldExample() {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <InputField control={control} name="name" label="Name" description="Your name" placeholder="John" />
-        <ButtonSubmit label="Check" />
+      <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
+        <InputField control={control} name='name' label='Name' description='Your name' placeholder='John' />
+        <ButtonSubmit label='Check' />
       </form>
     </Form>
   );

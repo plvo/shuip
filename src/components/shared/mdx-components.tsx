@@ -1,7 +1,7 @@
 'use client';
-import React from 'react';
-import { useMDXComponent } from 'next-contentlayer2/hooks';
 import { cn } from '@/lib/utils';
+import { useMDXComponent } from 'next-contentlayer2/hooks';
+import type React from 'react';
 import CodeAllCli from '../docs/code.all-cli';
 
 interface MdxComponentsProps {
@@ -41,16 +41,17 @@ const components = {
     <blockquote className={cn('blockquote-mdx', className)} {...props} />
   ),
   img: ({ className, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => (
+    // biome-ignore lint/a11y/useAltText: <explanation>
     <img className={cn('img-mdx', className)} alt={alt} {...props} />
   ),
-  hr: ({ ...props }: React.HTMLAttributes<HTMLHRElement>) => <hr className="hr-mdx" {...props} />,
+  hr: ({ ...props }: React.HTMLAttributes<HTMLHRElement>) => <hr className='hr-mdx' {...props} />,
   code: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
     <code className={cn('code-mdx', className)} {...props} />
   ),
   small: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
     <small className={cn('small-mdx', className)} {...props} />
   ),
-  CodeAllCli: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => <CodeAllCli />,
+  CodeAllCli: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => <CodeAllCli {...props} />,
 };
 
 export function MdxContent({ code, className }: MdxComponentsProps) {

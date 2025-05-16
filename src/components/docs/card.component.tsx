@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { ArrowRight, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Docs } from 'contentlayer/generated';
 import { filenameToTitle } from '@/lib/utils';
+import type { Docs } from 'contentlayer/generated';
+import { ArrowRight, BookOpen } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
 
 interface ComponentCardProps {
   componentName?: string;
@@ -19,12 +19,12 @@ export default function CardComponent({ componentName, group, doc, examples = []
 
   return (
     <Card
-      className="relative overflow-hidden transition-all duration-300 hover:shadow-md border border-border/80 hover:border-primary/20"
+      className='relative overflow-hidden transition-all duration-300 hover:shadow-md border border-border/80 hover:border-primary/20'
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link href={`/docs/${group || 'components'}/${componentName || ''}`} className="block h-full" passHref>
-        <CardHeader className="pb-2">
+      <Link href={`/docs/${group || 'components'}/${componentName || ''}`} className='block h-full' passHref>
+        <CardHeader className='pb-2'>
           <CardTitle
             className={`text-xl font-semibold transition-colors duration-300 ${isHovered ? 'text-primary' : ''}`}
           >
@@ -33,15 +33,15 @@ export default function CardComponent({ componentName, group, doc, examples = []
         </CardHeader>
         <CardContent>
           {doc?.description ? (
-            <p className="text-muted-foreground line-clamp-2">{doc.description}</p>
+            <p className='text-muted-foreground line-clamp-2'>{doc.description}</p>
           ) : (
-            <p className="text-muted-foreground italic">No description available</p>
+            <p className='text-muted-foreground italic'>No description available</p>
           )}
         </CardContent>
-        <CardFooter className="flex items-center justify-between pt-2">
-          <div className="flex items-center gap-1.5">
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
+        <CardFooter className='flex items-center justify-between pt-2'>
+          <div className='flex items-center gap-1.5'>
+            <BookOpen className='h-4 w-4 text-muted-foreground' />
+            <span className='text-sm text-muted-foreground'>
               {examples.length > 0
                 ? `${examples.length} ${examples.length === 1 ? 'example' : 'examples'}`
                 : 'No examples'}

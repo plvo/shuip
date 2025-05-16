@@ -3,14 +3,11 @@
   "name": "dialog.confirmation",
   "type": "registry:ui",
   "dependencies": [],
-  "registryDependencies": [
-    "button",
-    "dialog"
-  ],
+  "registryDependencies": ["button", "dialog"],
   "files": [
     {
-      "path": "./registry/dialog.confirmation.tsx",
-      "content": "import { Button } from '@/components/ui/button';\nimport {\n  Dialog,\n  DialogContent,\n  DialogDescription,\n  DialogFooter,\n  DialogHeader,\n  DialogTitle,\n  DialogTrigger,\n} from '@/components/ui/dialog';\nimport type { JSX } from 'react';\n\nexport function DialogConfirmation({\n  trigger,\n  title,\n  description,\n  labelConfirmButton,\n  onConfirm,\n}: {\n  trigger: JSX.Element;\n  title: string;\n  description: string;\n  labelConfirmButton: string;\n  onConfirm: () => void;\n}) {\n  return (\n    <Dialog>\n      <DialogTrigger asChild>{trigger}</DialogTrigger>\n      <DialogContent>\n        <DialogHeader>\n          <DialogTitle>{title}</DialogTitle>\n          <DialogDescription className=\"md:text-left\">{description}</DialogDescription>\n        </DialogHeader>\n        <DialogFooter>\n          <Button onClick={onConfirm}>{labelConfirmButton}</Button>\n        </DialogFooter>\n      </DialogContent>\n    </Dialog>\n  );\n}\n",
+      "path": "./registry/ui/dialog.confirmation.tsx",
+      "content": "import { Button } from '@/components/ui/button';\nimport {\n  Dialog,\n  DialogContent,\n  DialogDescription,\n  DialogFooter,\n  DialogHeader,\n  DialogTitle,\n  DialogTrigger,\n} from '@/components/ui/dialog';\nimport type { JSX } from 'react';\n\nexport interface DialogConfirmationProps {\n  trigger: JSX.Element;\n  title: string;\n  description: string;\n  labelConfirmButton: string;\n  onConfirm: () => void;\n}\n\nexport function DialogConfirmation({\n  trigger,\n  title,\n  description,\n  labelConfirmButton,\n  onConfirm,\n}: DialogConfirmationProps) {\n  return (\n    <Dialog>\n      <DialogTrigger asChild>{trigger}</DialogTrigger>\n      <DialogContent>\n        <DialogHeader>\n          <DialogTitle>{title}</DialogTitle>\n          <DialogDescription className='md:text-left'>{description}</DialogDescription>\n        </DialogHeader>\n        <DialogFooter>\n          <Button onClick={onConfirm}>{labelConfirmButton}</Button>\n        </DialogFooter>\n      </DialogContent>\n    </Dialog>\n  );\n}\n",
       "type": "registry:ui",
       "target": "./components/ui/shuip/dialog.confirmation.tsx"
     }

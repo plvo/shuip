@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   },
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   reactStrictMode: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 const withContentlayer = createContentlayerPlugin({});

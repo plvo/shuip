@@ -1,8 +1,8 @@
-import * as React from 'react';
 import { cn, filenameToTitle } from '@/lib/utils';
-import { ComponentPreview } from './component.preview';
+import * as React from 'react';
 import CodePreview from '../shared/code-preview';
 import ComponentInstallation from './component.installation';
+import { ComponentPreview } from './component.preview';
 
 interface ComponentSectionsProps {
   componentName: string;
@@ -10,22 +10,22 @@ interface ComponentSectionsProps {
 }
 
 export default function ComponentSection({ componentName, examples }: ComponentSectionsProps) {
-  const componentNameExample = componentName + '.example';
+  const componentNameExample = `${componentName}.example`;
   const exampleComponents = examples.filter((e) => e !== componentName);
 
   return (
-    <section className="w-full max-w-4xl space-y-8">
+    <section className='w-full max-w-4xl space-y-8'>
       <ComponentPreview filename={componentNameExample} />
 
       <div>
-        <h2 id="installation" className={cn('h2-mdx')}>
+        <h2 id='installation' className={cn('h2-mdx')}>
           Installation
         </h2>
         <ComponentInstallation filename={componentName} />
       </div>
 
       <div>
-        <h2 id="usage" className={cn('h2-mdx')}>
+        <h2 id='usage' className={cn('h2-mdx')}>
           Usage
         </h2>
         <CodePreview filename={componentNameExample} />
@@ -33,11 +33,11 @@ export default function ComponentSection({ componentName, examples }: ComponentS
 
       {exampleComponents.length > 0 && (
         <div>
-          <h2 id="examples" className={cn('h2-mdx')}>
+          <h2 id='examples' className={cn('h2-mdx')}>
             Examples
           </h2>
           {exampleComponents.map((example) => (
-            <ComponentPreview key={example} filename={example + '.example'} />
+            <ComponentPreview key={example} filename={`${example}.example`} />
           ))}
         </div>
       )}

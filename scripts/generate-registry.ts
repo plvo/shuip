@@ -1,10 +1,10 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import matter from 'gray-matter';
 
 const REGISTRY_UI_PATH = path.join(process.cwd(), 'registry', 'ui');
 const REGISTRY_EXAMPLES_PATH = path.join(process.cwd(), 'registry', 'examples');
-const CONTENT_COMPONENTS_PATH = path.join(process.cwd(), 'content', 'components');
+const _CONTENT_COMPONENTS_PATH = path.join(process.cwd(), 'content', 'components');
 
 async function main() {
   let index = `// @ts-nocheck
@@ -23,7 +23,7 @@ interface RegistryComponent {
 export const registryIndex: Record<string, RegistryComponent> = {
 `;
 
-  let componentsCat: Record<string, Record<string, string[]>> = {};
+  const componentsCat: Record<string, Record<string, string[]>> = {};
 
   const registryUiFiles = fs.readdirSync(REGISTRY_UI_PATH);
 
