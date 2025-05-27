@@ -101,13 +101,21 @@ body {
   }
 }
 
-main {
-  @apply min-h-[70vh] w-full;
-  @apply p-2 md:px-4 mx-auto;
+.table-trigger {
+  @apply relative h-9 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 .h1-mdx {
-  @apply scroll-m-20 pt-4 text-4xl font-extrabold tracking-tight;
+  @apply scroll-m-20 text-4xl font-extrabold tracking-tight;
   @apply text-accent-foreground;
 }
 
@@ -161,8 +169,4 @@ main {
 
 .small-mdx {
   @apply text-sm font-medium leading-none;
-}
-
-.table-trigger {
-  @apply relative h-9 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none;
 }

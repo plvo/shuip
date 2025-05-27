@@ -53,7 +53,7 @@ export function SidebarTableOfContents({ toc, isComponentPage, hasExamples }: To
   }
 
   return (
-    <div className='hidden text-sm xl:block border-l p-8 ml-8'>
+    <div className='hidden text-sm xl:block p-8 ml-8'>
       <div className='sticky top-20 -mt-6'>
         <div className='h-full overflow-auto'>
           <div className='space-y-2'>

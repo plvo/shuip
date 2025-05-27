@@ -17,6 +17,12 @@ async function getDocAndSlugFromParams({ params }: DocPageProps) {
   const docName = slug ? slug.at(-1) : '';
   const doc = allDocs.find((doc) => doc.slug === docName);
 
+  console.log({
+    slug,
+    docName,
+    // doc,
+  });
+
   return { doc, slugArray: slug || [] };
 }
 
@@ -63,40 +69,21 @@ export async function generateStaticParams(): Promise<{ slug: string[] }[]> {
 
 export default async function Page({ params }: DocPageProps) {
   const { doc, slugArray } = await getDocAndSlugFromParams({ params });
-  const { group, name, components, examples } = getComponentFromSlug(slugArray);
   const toc = doc ? await getTableOfContents(doc.body.raw) : undefined;
 
-  const isComponentPage = !!name && !!examples;
-  const hasExamples = examples ? examples.length > 1 : false;
-
   return (
-    <main className='xl:grid xl:grid-cols-[1fr_350px]'>
-      <div>
-        {doc && (
-          <>
-            <div className='space-y-2 mb-10'>
-              <h1 className={'h1-mdx'}>{doc.title}</h1>
-              <p className='text-base text-muted-foreground'>{doc.description}</p>
-            </div>
-            <MdxContent code={doc.body.code} />
-          </>
-        )}
+    <div className='xl:grid xl:grid-cols-[1fr_350px]'>
+      {doc && (
+        <article>
+          <div className='space-y-2 mb-10'>
+            <h1 className={'h1-mdx'}>{doc.title}</h1>
+            <p className='text-base text-muted-foreground'>{doc.description}</p>
+          </div>
+          <MdxContent code={doc.body.code} />
+        </article>
+      )}
 
-        {isComponentPage ? (
-          <ComponentSection componentName={name} examples={examples} />
-        ) : (
-          components && (
-            <section className='grid sm:grid-cols-2 lg:grid-cols-3 gap-8'>
-              {Object.entries(components).map(([componentName, examples]) => {
-                const doc = allDocs.find((doc) => doc.slug === componentName);
-                return <CardComponent key={componentName} {...{ componentName, group, doc, examples }} />;
-              })}
-            </section>
-          )
-        )}
-      </div>
-
-      <SidebarTableOfContents {...{ toc, isComponentPage, hasExamples }} />
-    </main>
+      <SidebarTableOfContents {...{ toc }} />
+    </div>
   );
 }

@@ -1,44 +1,18 @@
 'use client';
 
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { cn, stringToUppercase } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import React from 'react';
-import { SidebarTrigger } from '../ui/sidebar';
 
 export function Header() {
-  const pathname = usePathname().split('/').filter(Boolean);
-
   return (
     <header
-      className={cn(
-        'h-16 w-full flex max-md:justify-between items-center gap-2 p-2 mb-4 border-b',
-        'shrink-0 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12',
-      )}
+      className={cn('sticky top-0 z-50 backdrop-blur-2xl border', 'h-14 flex justify-between items-center gap-4 px-4')}
     >
       <div className='flex items-center gap-2'>
-        <SidebarTrigger className='z-50' />
-        <Breadcrumb>
-          <BreadcrumbList>
-            {pathname.map((path, index) => {
-              const isLast = index === pathname.length - 1;
-              const href = `/${pathname.slice(0, index + 1).join('/')}`;
-
-              return (
-                <React.Fragment key={path}>
-                  <Link href={href} className='flex items-center gap-2 underline-offset-4 hover:underline'>
-                    <BreadcrumbItem className={isLast ? 'font-bold' : ''}>{stringToUppercase(path)}</BreadcrumbItem>
-                    {!isLast && <BreadcrumbSeparator />}
-                  </Link>
-                </React.Fragment>
-              );
-            })}
-          </BreadcrumbList>
-        </Breadcrumb>
+        <h1 className='text-2xl font-bold'>sh(ui)p</h1>
       </div>
-      <Link href={'https://github.com/plvo/shuip'} passHref className='lg:hidden'>
+      <Link href={'https://github.com/plvo/shuip'} passHref>
         <GitHubLogoIcon className='size-5' />
       </Link>
     </header>
