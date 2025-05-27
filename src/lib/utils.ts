@@ -9,13 +9,13 @@ export function absoluteUrl(path: string) {
   return `${process.env.NEXT_PUBLIC_APP_URL}${path}`;
 }
 
-export function stringToUppercase(str: string) {
+export function firstCharUppercase(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 export function filenameToTitle(filename: string) {
   return filename
     .split('.')
-    .map((w) => stringToUppercase(w))
+    .map((w) => firstCharUppercase(w))
     .join(' ');
 }

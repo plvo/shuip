@@ -64,6 +64,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.54.2",
+    "recharts": "^2.15.3",
     "rehype-pretty-code": "^0.14.0",
     "remark": "^15.0.1",
     "shadcn": "^2.4.0-canary.11",
