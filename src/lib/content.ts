@@ -3,9 +3,11 @@ import { type DocumentTypeNames, allDocuments } from 'contentlayer/generated';
 const DocumentTypeHref: Record<DocumentTypeNames, string> = {
   Docs: 'docs',
   Component: 'components',
+  Blocks: 'blocks',
 };
 
-interface GetDocAndSlugFromParamsProps extends DocPageProps {
+interface GetDocumentProps {
+  slug: string[];
   type: DocumentTypeNames;
 }
 
@@ -15,9 +17,7 @@ interface GetDocAndSlugFromParamsProps extends DocPageProps {
  * @param type - The type of document
  * @returns The document and slug
  */
-export async function getDocAndSlugFromParams({ params, type }: GetDocAndSlugFromParamsProps) {
-  const { slug } = await params;
-
+export async function getDocument({ slug, type }: GetDocumentProps) {
   const docName = slug ? slug.at(-1) : '';
   const docHref = `${DocumentTypeHref[type]}${docName ? `/${docName}` : ''}`;
 
@@ -27,5 +27,5 @@ export async function getDocAndSlugFromParams({ params, type }: GetDocAndSlugFro
       return doc.slug === docHref;
     });
 
-  return { document, slugArray: slug || [] };
+  return document;
 }

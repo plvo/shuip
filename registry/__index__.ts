@@ -174,8 +174,7 @@ export const registryIndex: Record<string, RegistryComponent> = {
    * [category]: { [key: registry/ui]: [key: registry/examples][] } 
    * TODO: Need to improve this structure
    */ 
-  export const COMPONENT_CATEGORIES:Record<string, Record<string, string[]>> = {
-  "button": {
+  export const COMPONENT_CATEGORIES: Record<string, string[]> = {
     "button.submit": [
       "button.submit",
       "button.submit.loading"
@@ -186,42 +185,27 @@ export const registryIndex: Record<string, RegistryComponent> = {
     "button.theme": [
       "button.theme.text",
       "button.theme"
-    ]
-  },
-  "radio": {
+    ],
     "radio.form-field": [
       "radio.form-field"
-    ]
-  },
-  "dialog": {
+    ],
     "dialog.confirmation": [
       "dialog.confirmation"
-    ]
-  },
-  "select": {
+    ],
     "select.form-field": [
       "select.form-field"
-    ]
-  },
-  "hover": {
+    ],
     "hover.item": [
       "hover.item"
-    ]
-  },
-  "skeleton": {
+    ],
     "skeleton.text": [
       "skeleton.text"
-    ]
-  },
-  "div": {
+    ],
     "div.title-section": [
       "div.title-section"
-    ]
-  },
-  "input": {
+      ],
     "input.form-field": [
       "input.form-field"
-    ]
-  }
+    ],
 };
   

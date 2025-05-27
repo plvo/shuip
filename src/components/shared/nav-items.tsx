@@ -43,7 +43,7 @@ export function NavItem({
       className={cn(
         'list-none border-l-2 ml-1.5',
         'px-2 py-2 data-[first-index="true"]:pt-1 data-[last-index=true]:pb-1',
-        isActive ? 'border-primary' : 'border-l-muted',
+        isActive ? 'border-primary/60' : 'border-muted',
       )}
     >
       <Link href={href}>

@@ -6,7 +6,7 @@ import { allDocuments } from 'contentlayer/generated';
 import { BookOpen, Cuboid, FileText, LayoutGrid, Zap } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import type React from 'react';
-import { NavGroup, NavItem, SubNavGroup } from '../shared/navs';
+import { NavGroup, NavItem, SubNavGroup } from '../shared/nav-items';
 
 export function DocsNav() {
   const pathname = usePathname();

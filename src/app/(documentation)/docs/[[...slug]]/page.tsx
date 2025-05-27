@@ -1,31 +1,20 @@
 import { SidebarTableOfContents } from '@/components/documentation/toc';
 import { MdxContent } from '@/components/shared/mdx';
-import { getDocAndSlugFromParams } from '@/lib/content';
+import { getDocument } from '@/lib/content';
+import { generateDocumentationMetadata } from '@/lib/metadata';
 import { getTableOfContents } from '@/lib/toc';
-import { filenameToTitle, firstCharUppercase } from '@/lib/utils';
-import type { Metadata } from 'next';
 
-export async function generateMetadata({ params }: DocPageProps): Promise<Metadata> {
-  const { document, slugArray } = await getDocAndSlugFromParams({ params, type: 'Docs' });
-
-  if (!document) {
-    return {
-      title: slugArray.length ? filenameToTitle(slugArray.at(-1) ?? 'Not Found') : 'Not Found',
-    };
-  }
-
-  return {
-    title: firstCharUppercase(document.title),
-    description: document.description,
-  };
+export async function generateMetadata({ params }: DocPageProps) {
+  return generateDocumentationMetadata({ params, type: 'Docs' });
 }
 
 export default async function Page({ params }: DocPageProps) {
-  const { document } = await getDocAndSlugFromParams({ params, type: 'Docs' });
+  const { slug } = await params;
+  const document = await getDocument({ slug, type: 'Docs' });
   const toc = document ? await getTableOfContents(document.body.raw) : undefined;
 
   return (
-    <div className='xl:grid xl:grid-cols-[1fr_350px]'>
+    <>
       {document && (
         <article>
           <div className='space-y-2 mb-10'>
@@ -37,6 +26,6 @@ export default async function Page({ params }: DocPageProps) {
       )}
 
       <SidebarTableOfContents {...{ toc }} />
-    </div>
+    </>
   );
 }

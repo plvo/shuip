@@ -8,7 +8,7 @@ import { allDocuments } from 'contentlayer/generated';
 import { BookOpen, Cuboid, FileText, LayoutGrid, MenuIcon, Zap } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
-import { NavGroup, NavItem, SubNavGroup } from '../shared/navs';
+import { NavGroup, NavItem, SubNavGroup } from '../shared/nav-items';
 
 export function MobileDrawer() {
   const pathname = usePathname();
