@@ -1,34 +1,18 @@
 'use client';
 
 import ButtonCopy from '@/components/shared/button.copy';
-import CodePreview from '@/components/shared/code-preview';
+import { CodePreview } from '@/components/shared/code-preview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import * as React from 'react';
 import { registryIndex } from '#/registry/__index__';
 
-interface ItemPreviewProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface ItemPreviewProps extends React.HTMLAttributes<HTMLDivElement> {
   filename: string;
 }
 
-export default function ItemPreview({ filename, children, ...props }: ItemPreviewProps) {
-  const Preview = React.useMemo(() => {
-    const Comp = registryIndex[filename]?.component;
-
-    if (!Comp) {
-      return (
-        <p className='text-sm text-muted-foreground'>
-          Component{' '}
-          <code className='relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm'>{filename}</code> not
-          found in registry.
-        </p>
-      );
-    }
-
-    return <Comp />;
-  }, [filename]);
-
+export function ItemPreview({ filename, children, ...props }: ItemPreviewProps) {
   const code = React.useMemo(() => {
     const codeSource = registryIndex[filename]?.code;
 
@@ -57,23 +41,50 @@ export default function ItemPreview({ filename, children, ...props }: ItemPrevie
             {/* TODO V0 */}
             <ButtonCopy value={code || ''} />
           </div>
-          <div className={cn('preview w-full min-h-[150px] flex items-center justify-center p-8')}>
-            <React.Suspense
-              fallback={
-                <div className='flex w-full items-center justify-center text-sm text-muted-foreground'>
-                  <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
-                  Loading...
-                </div>
-              }
-            >
-              {Preview}
-            </React.Suspense>
-          </div>
+          <Preview filename={filename} isJustPreview={false} />
         </TabsContent>
         <TabsContent value='code'>
           <CodePreview code={code || ''} />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+export function Preview({ filename, isJustPreview = true }: { filename: string; isJustPreview?: boolean }) {
+  const Preview = React.useMemo(() => {
+    const Comp = registryIndex[filename]?.component;
+
+    if (!Comp) {
+      return (
+        <p className='text-sm text-muted-foreground'>
+          Component{' '}
+          <code className='relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm'>{filename}</code> not
+          found in registry.
+        </p>
+      );
+    }
+
+    return <Comp />;
+  }, [filename]);
+
+  return (
+    <div
+      className={cn(
+        'w-full min-h-[150px] flex items-center justify-center p-8 bg-card',
+        isJustPreview && 'border rounded-md',
+      )}
+    >
+      <React.Suspense
+        fallback={
+          <div className='flex w-full items-center justify-center text-sm text-muted-foreground'>
+            <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
+            Loading...
+          </div>
+        }
+      >
+        {Preview}
+      </React.Suspense>
     </div>
   );
 }

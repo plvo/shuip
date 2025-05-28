@@ -1,8 +1,19 @@
 ---
 title: Title Section
+description: A title section with a title and a description
 ---
 
-a title section
+<ItemHeader filename={'title-section'} />
 
-- it has a title
-- it has a description
+<ItemFooter itemName={'title-section'} props={[
+  {
+    name: 'title',
+    type: 'string',
+    description: 'The title of the section',
+  },
+  {
+    name: 'description',
+    type: 'string',
+    description: 'The description of the section',
+  },
+]} />

@@ -1,20 +1,19 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type PackageManager, getCmd } from '@/lib/cmd';
 import { cn } from '@/lib/utils';
 import { Terminal } from 'lucide-react';
 import React from 'react';
 import ButtonCopy from '../shared/button.copy';
-import CodePreview from '../shared/code-preview';
+import { CodePreview } from '../shared/code-preview';
 
-interface ItemInstallationProps {
+export interface ItemInstallationProps {
   filename: string;
 }
 
-export default function ItemInstallation({ filename }: ItemInstallationProps) {
+export function ItemInstallation({ filename }: ItemInstallationProps) {
   return (
-    <div className={cn('group relative flex flex-col space-y-2')}>
+    <div className={cn('group relative flex flex-col space-y-2 ')}>
       <Tabs defaultValue='cli' className='relative mr-auto w-full'>
         <div className='flex items-center justify-between pb-2'>
           <TabsList className='w-full justify-start rounded-none border-b bg-transparent p-0'>
@@ -38,7 +37,11 @@ export default function ItemInstallation({ filename }: ItemInstallationProps) {
   );
 }
 
-export function InstallationCmd({ filename }: { filename: string | string[] }) {
+export interface InstallationCmdProps extends React.RefAttributes<HTMLDivElement> {
+  filename: string | string[];
+}
+
+export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
   const [pkg, setValue] = React.useState<PackageManager>('npm');
 
   const code = Array.isArray(filename) ? filename.map((f) => getCmd(pkg, f)).join('\n') : getCmd(pkg, filename);
@@ -51,10 +54,15 @@ export function InstallationCmd({ filename }: { filename: string | string[] }) {
   );
 
   return (
-    <Tabs value={pkg} onValueChange={(v) => setValue(v as PackageManager)} className='w-full'>
-      <TabsList className='flex justify-between p-2 bg-muted/70'>
+    <Tabs
+      value={pkg}
+      onValueChange={(v) => setValue(v as PackageManager)}
+      className={'w-full rounded-lg border'}
+      {...props}
+    >
+      <TabsList className='flex justify-between p-2 bg-card'>
         <div className='px-0 py-2'>
-          {(['npm', 'pnpm', 'bun', 'yarn'] as PackageManager[]).map((manager) => (
+          {['npm', 'pnpm', 'bun'].map((manager) => (
             <TabsTrigger
               key={manager}
               value={manager}
@@ -78,3 +86,20 @@ export function InstallationCmd({ filename }: { filename: string | string[] }) {
     </Tabs>
   );
 }
+
+type PackageManager = 'npm' | 'pnpm' | 'bun';
+
+const getCmd = (pkg: PackageManager, filename: string) => {
+  const url = `https://shuip.xyz/r/${filename}.json`;
+
+  switch (pkg) {
+    case 'npm':
+      return `npx shadcn@latest add ${url}`;
+    case 'pnpm':
+      return `pnpm dlx shadcn@latest add ${url}`;
+    case 'bun':
+      return `bunx --bun shadcn@latest add ${url}`;
+    default:
+      return '';
+  }
+};

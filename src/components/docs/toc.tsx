@@ -11,10 +11,9 @@ import * as React from 'react';
 interface TocProps {
   toc?: TableOfContents;
   isComponentPage?: boolean;
-  hasExamples?: boolean;
 }
 
-export function SidebarTableOfContents({ toc, isComponentPage, hasExamples }: TocProps) {
+export function SidebarTableOfContents({ toc, isComponentPage }: TocProps) {
   const itemIds = React.useMemo(() => {
     if (!toc?.items) return [];
     return toc.items
@@ -35,14 +34,17 @@ export function SidebarTableOfContents({ toc, isComponentPage, hasExamples }: To
             url: '#installation',
           },
           {
-            title: 'Usage',
-            url: '#usage',
+            title: 'Preview',
+            url: '#preview',
+          },
+          ...(toc?.items || []),
+          {
+            title: 'Examples',
+            url: '#examples',
           },
           {
-            ...(hasExamples && {
-              title: 'Examples',
-              url: '#examples',
-            }),
+            title: 'Props',
+            url: '#props',
           },
         ],
       }

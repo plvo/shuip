@@ -1,0 +1,78 @@
+---
+title: Contribution
+description: Contribute to shuip to make it better.
+position: 4
+---
+
+## Configuration
+
+### Installation
+
+1. **Clone the repository**
+	<CodeHighlight code={`git clone https://github.com/plvo/shuip.git 
+	cd shuip`} language='bash' />
+2. **Install dependencies**
+	<CodeHighlight code={`bun install`} language='bash' />
+
+3. **Create a branch for your changes**
+	<CodeHighlight code={`git checkout -b feat/my-component`} language='bash' />
+
+4. **Start the development server**
+	<CodeHighlight code={`bun run dev`} language='bash' />
+
+## Add a component
+
+### File structure
+
+Each shuip component follows this structure:
+
+<CodeHighlight code={`├── registry/
+│   ├── ui/
+│   │   └── my-component.tsx          	# Implementation of the component
+│   └── examples/
+│       └── my-component.tsx          	# Base example
+│       └── my-component.with-state.tsx # Example with the title "With state"
+│       └── my-component.disabled.tsx 	# Example with the title "Disabled"
+├── docs/components/
+│       └── my-component.mdx          	# Documentation of the component
+└── registry.json                  		# Registry configuration`} 
+	language='bash' 
+/>
+
+### Detailed steps
+
+1. Create your component in `registry/ui/`
+2. Create at least one example in `registry/examples/` _(with the same name as the component file)_
+3. **Generate and build the registry files**
+	<CodeHighlight code={`bun run registry:generate # Generates the registry/__index__.tsx file
+	bun run registry:build # Generates the JSONs in public/r/*`} language='bash' />
+4. Create the component documentation in `content/components/`
+	<CodeHighlight code={`---
+	title: My Component
+	description: Description of the component
+	group: shortcut
+	---
+
+	<ItemHeader filename={'my-component'} />
+
+	# ...
+
+	<ItemFooter itemName={'my-component'} props={[
+	    {
+	      name: 'label',
+	      type: 'string',
+	      description: 'The label of the component',
+	    },
+	]} />
+	`} language='python' />
+
+## Submit your contribution
+
+### Create a Pull Request
+
+<CodeHighlight code={`git add .
+git commit -m "feat: new component my-component"
+git push origin feat/my-component`} 
+language='bash' />
+
+_Thank you for your contribution to shuip!_ 🚀

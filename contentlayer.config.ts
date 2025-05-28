@@ -27,8 +27,8 @@ const Docs = defineDocumentType(() => ({
   },
 }));
 
-const Component = defineDocumentType(() => ({
-  name: 'Component',
+const Components = defineDocumentType(() => ({
+  name: 'Components',
   filePathPattern: 'components/**/*.mdx',
   contentType: 'mdx',
   fields: {
@@ -76,7 +76,7 @@ const Blocks = defineDocumentType(() => ({
 
 export default makeSource({
   contentDirPath: 'content',
-  documentTypes: [Docs, Component, Blocks],
+  documentTypes: [Docs, Components, Blocks],
   // mdx: {
   //   rehypePlugins: [
   //     [

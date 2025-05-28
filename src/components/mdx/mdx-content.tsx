@@ -2,11 +2,26 @@
 import { cn } from '@/lib/utils';
 import { useMDXComponent } from 'next-contentlayer2/hooks';
 import type React from 'react';
-import CodeAllCli from '../documentation/code.all-cli';
+import ButtonCopy from '../shared/button.copy';
+import { CodeHighlight, type CodeHighlightProps } from '../shared/code-preview';
+import CodeAllCli from './code.all-cli';
+import { ItemFooter, type ItemFooterProps } from './item-footer';
+import { ItemHeader, type ItemHeaderProps } from './item-header';
+import { InstallationCmd, type InstallationCmdProps } from './item-installation';
 
 interface MdxComponentsProps {
   code: string;
   className?: string;
+}
+
+export function MdxContent({ code, className }: MdxComponentsProps) {
+  const Component = useMDXComponent(code);
+
+  return (
+    <div className={cn('mdx', className)}>
+      <Component components={components} />
+    </div>
+  );
 }
 
 const components = {
@@ -51,15 +66,14 @@ const components = {
   small: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
     <small className={cn('small-mdx', className)} {...props} />
   ),
-  CodeAllCli: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => <CodeAllCli {...props} />,
-};
-
-export function MdxContent({ code, className }: MdxComponentsProps) {
-  const Component = useMDXComponent(code);
-
-  return (
-    <div className={cn('mdx', className)}>
-      <Component components={components} />
+  CodeAllCli: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <CodeAllCli {...props} />,
+  InstallationCmd: ({ filename, ...props }: InstallationCmdProps) => <InstallationCmd filename={filename} {...props} />,
+  CodeHighlight: ({ code, language = 'tsx', ...props }: CodeHighlightProps & React.HTMLAttributes<HTMLDivElement>) => (
+    <div className='flex justify-between rounded-lg border my-6 overflow-x-auto bg-[#1E1E1E]' {...props}>
+      <CodeHighlight code={code} language={language} />
+      <ButtonCopy value={code} />
     </div>
-  );
-}
+  ),
+  ItemHeader: ({ filename, text }: ItemHeaderProps) => <ItemHeader filename={filename} text={text} />,
+  ItemFooter: ({ itemName, props }: ItemFooterProps) => <ItemFooter itemName={itemName} props={props} />,
+};

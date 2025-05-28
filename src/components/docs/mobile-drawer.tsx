@@ -8,7 +8,7 @@ import { allDocuments } from 'contentlayer/generated';
 import { BookOpen, Cuboid, FileText, LayoutGrid, MenuIcon, Zap } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
-import { NavGroup, NavItem, SubNavGroup } from '../shared/nav-items';
+import { NavGroup, NavItem, SubNavGroup } from './nav-items';
 
 export function MobileDrawer() {
   const pathname = usePathname();
@@ -23,7 +23,7 @@ export function MobileDrawer() {
         </Button>
       </DrawerTrigger>
       <DrawerContent>
-        <div className='mx-auto w-full max-w-sm px-2'>
+        <div className='mx-auto w-full max-w-sm px-2 overflow-y-auto'>
           <NavGroup title='Introduction' icon={<BookOpen className='size-4' />}>
             {documents.map((item, index) => (
               <NavItem
@@ -42,7 +42,7 @@ export function MobileDrawer() {
             {allComponentGroups.map((group) => (
               <SubNavGroup key={group} title={firstCharUppercase(group)} icon={groupIcons[group]}>
                 {allDocuments
-                  .filter((doc) => doc.type === 'Component' && doc.group === group)
+                  .filter((doc) => doc.type === 'Components' && doc.group === group)
                   .map((item, index) => (
                     <NavItem
                       key={index}
@@ -53,7 +53,7 @@ export function MobileDrawer() {
                       data-first-index={index === 0}
                       data-last-index={
                         index ===
-                        allDocuments.filter((doc) => doc.type === 'Component' && doc.group === group).length - 1
+                        allDocuments.filter((doc) => doc.type === 'Components' && doc.group === group).length - 1
                       }
                     />
                   ))}

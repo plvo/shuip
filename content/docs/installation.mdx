@@ -1,11 +1,86 @@
 ---
 title: Installation
+description: Installation guide for integrating shuip into your project
 position: 2
 ---
 
-a button that signs out the user
+## Prerequisites
 
-- it has a label
-- it has a click event that signs out the user
+Before installing shuip, make sure you have:
 
-<CodeAllCli />
+- [**Node.js 18+**](https://nodejs.org/en/download)
+- [**Next.js 13+**](https://nextjs.org/docs/getting-started/installation)
+- [**React 18+**](https://react.dev/learn/start-a-new-react-project)
+- [**TypeScript**](https://www.typescriptlang.org/) _(recommended)_
+- [**shadcn/ui**](https://ui.shadcn.com/docs/installation) installed and configured in your project
+
+## Installing Components
+
+### Method 1: Install via CLI _(Recommended)_
+
+Use the shadcn/ui CLI to add the shuip components you want to your project:
+
+<div className='my-6'>
+  <InstallationCmd filename={'input-field'} />
+</div>
+
+### Method 2: Manual Copy-Paste
+
+You can also copy and paste the code directly from each component’s documentation page.
+
+## File Structure
+
+After installation, shuip components will be added to your project like this:
+
+<CodeHighlight code={`src/
+├── components/
+│   ├── block/
+│   │   └── shuip/                 # 🆕 shuip blocks
+│   │       ├── title-section.tsx
+│   ├── ui/
+│   │   ├── button.tsx             # shadcn/ui
+│   │   ├── input.tsx              # shadcn/ui
+│   │   └── shuip/                 # 🆕 shuip components
+│   │       ├── input-field.tsx
+│   │       ├── submit-button.tsx
+│   │       └── confirmation-dialog.tsx
+│   │       └── ...`}
+/>
+
+## TypeScript Configuration
+
+If you're using TypeScript, make sure your `tsconfig.json` includes the appropriate path aliases:
+
+<CodeHighlight code={`{
+    "compilerOptions": {
+      "baseUrl": ".",
+      "paths": {
+        "@/*": ["./src/*"] // or "@/*": ["./*"] if your project is rooted at the top level
+      }
+    }
+}`} language='json' />
+
+## Common Issues
+
+### Module Not Found Error
+
+If you get a `Module not found` error, check the following:
+
+1. That shadcn/ui is correctly installed  
+2. That path aliases are configured properly in `tsconfig.json`  
+3. That all required dependencies are installed
+
+### Style Conflicts
+
+If you encounter style conflicts:
+
+1. Ensure Tailwind CSS is properly configured  
+2. Verify that your `globals.css` includes shadcn/ui styles  
+3. Restart your development server
+
+### Support
+
+If you run into issues:
+
+- [GitHub Issues](https://github.com/plvo/shuip/issues)  
+- [shadcn/ui Documentation](https://ui.shadcn.com/docs)

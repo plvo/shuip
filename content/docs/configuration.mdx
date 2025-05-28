@@ -1,9 +1,51 @@
 ---
 title: Configuration
+description: Customize and configure shuip components to fit your needs and design system.
 position: 3
 ---
 
-a button that signs out the user
+## Component Customization
 
-- it has a label
-- it has a click event that signs out the user
+shuip components are designed to be **easily customizable**. Each component accepts all the standard props of its base component, along with some specific ones.
+
+### Method 1: Props and className
+
+The simplest way to customize a component:
+
+<CodeHighlight code={`import { SubmitButton } from '@/components/ui/shuip/submit-button'
+
+<SubmitButton 
+  	label="Send"
+  	className="bg-blue-600 hover:bg-blue-700"
+  	size="lg"
+  	loading={isLoading}
+/>`} language='tsx' />
+
+### Method 2: Editing the Source Code
+
+Since the components are copied directly into your project, you can freely modify them:
+
+<CodeHighlight code={`// src/components/ui/shuip/submit-button.tsx
+
+export function SubmitButton({
+    onClick,
+    label,
+    disabled,
+    loading,
+    icon = <MyCustomIcon className='mr-2 size-4 animate-spin' />,
+    ...props
+}: SubmitButtonProps) {
+    return (
+      <Button
+        type='submit'
+        variant='default'
+        className='w-full bg-primary hover:bg-primary/90'
+        disabled={disabled || loading}
+        {...props}
+        {...(onClick && { onClick })}
+      >
+        {loading && icon}
+        {label}
+      </Button>
+    );
+}`} language='tsx' />

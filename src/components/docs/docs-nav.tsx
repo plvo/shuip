@@ -6,7 +6,7 @@ import { allDocuments } from 'contentlayer/generated';
 import { BookOpen, Cuboid, FileText, LayoutGrid, Zap } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import type React from 'react';
-import { NavGroup, NavItem, SubNavGroup } from '../shared/nav-items';
+import { NavGroup, NavItem, SubNavGroup } from './nav-items';
 
 export function DocsNav() {
   const pathname = usePathname();
@@ -14,7 +14,7 @@ export function DocsNav() {
 
   return (
     <nav className='flex flex-col gap-1'>
-      <NavGroup title='Introduction' icon={<BookOpen className='size-4' />}>
+      <NavGroup title='Getting started' icon={<BookOpen className='size-4' />}>
         {documents.map((item, index) => (
           <NavItem
             key={index}
@@ -31,7 +31,7 @@ export function DocsNav() {
         {allComponentGroups.map((group) => (
           <SubNavGroup key={group} title={firstCharUppercase(group)} icon={groupIcons[group]}>
             {allDocuments
-              .filter((doc) => doc.type === 'Component' && doc.group === group)
+              .filter((doc) => doc.type === 'Components' && doc.group === group)
               .map((item, index) => (
                 <NavItem
                   key={index}
@@ -40,7 +40,7 @@ export function DocsNav() {
                   isActive={pathname === `/${item.slug}`}
                   data-first-index={index === 0}
                   data-last-index={
-                    index === allDocuments.filter((doc) => doc.type === 'Component' && doc.group === group).length - 1
+                    index === allDocuments.filter((doc) => doc.type === 'Components' && doc.group === group).length - 1
                   }
                 />
               ))}
