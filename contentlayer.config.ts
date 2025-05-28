@@ -3,7 +3,7 @@ import { defineDocumentType, makeSource } from 'contentlayer2/source-files';
 
 const Docs = defineDocumentType(() => ({
   name: 'Docs',
-  filePathPattern: '**/*.mdx',
+  filePathPattern: 'docs/**/*.mdx',
   contentType: 'mdx',
   fields: {
     title: {
@@ -16,9 +16,56 @@ const Docs = defineDocumentType(() => ({
       description: 'The description of the post',
       required: false,
     },
-    GettingStartedPosition: {
+    position: {
       type: 'number',
       description: 'Indicates if the post is a component',
+      required: true,
+    },
+  },
+  computedFields: {
+    slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath },
+  },
+}));
+
+const Component = defineDocumentType(() => ({
+  name: 'Component',
+  filePathPattern: 'components/**/*.mdx',
+  contentType: 'mdx',
+  fields: {
+    title: {
+      type: 'string',
+      description: 'The title of the component',
+      required: true,
+    },
+    description: {
+      type: 'string',
+      description: 'The description of the component',
+      required: false,
+    },
+    group: {
+      type: 'string',
+      description: 'The group of the component',
+      required: false,
+    },
+  },
+  computedFields: {
+    slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath },
+  },
+}));
+
+const Blocks = defineDocumentType(() => ({
+  name: 'Blocks',
+  filePathPattern: 'blocks/**/*.mdx',
+  contentType: 'mdx',
+  fields: {
+    title: {
+      type: 'string',
+      description: 'The title of the block',
+      required: true,
+    },
+    description: {
+      type: 'string',
+      description: 'The description of the block',
       required: false,
     },
   },
@@ -28,8 +75,8 @@ const Docs = defineDocumentType(() => ({
 }));
 
 export default makeSource({
-  contentDirPath: 'content/docs',
-  documentTypes: [Docs],
+  contentDirPath: 'content',
+  documentTypes: [Docs, Component, Blocks],
   // mdx: {
   //   rehypePlugins: [
   //     [

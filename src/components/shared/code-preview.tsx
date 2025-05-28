@@ -40,7 +40,7 @@ interface CodeHighlightProps {
   language?: string;
 }
 
-export function CodeHighlight({ code, language = 'tsx' }: CodeHighlightProps) {
+function CodeHighlight({ code, language = 'tsx' }: CodeHighlightProps) {
   return (
     <div>
       <div className='flex items-center justify-between p-2 border-b'>

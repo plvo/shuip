@@ -1,0 +1,14 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "text-skeleton",
+  "type": "registry:ui",
+  "registryDependencies": ["skeleton"],
+  "files": [
+    {
+      "path": "./registry/ui/text-skeleton.tsx",
+      "content": "import { Skeleton } from '@/components/ui/skeleton';\n\nexport interface TextSkeletonProps extends React.RefAttributes<HTMLDivElement> {\n  text: string | undefined;\n}\n\nexport function TextSkeleton({ text, ...props }: TextSkeletonProps) {\n  if (!text) return <Skeleton className='w-20 h-4' {...props} />;\n  return text;\n}\n",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/text-skeleton.tsx"
+    }
+  ]
+}

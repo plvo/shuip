@@ -1,0 +1,13 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "title-section",
+  "type": "registry:block",
+  "files": [
+    {
+      "path": "./registry/block/title-section.tsx",
+      "content": "import type * as React from 'react';\n\nexport interface TitleSectionProps extends React.RefAttributes<HTMLDivElement> {\n  title: string;\n  description: string | React.JSX.Element;\n}\n\nexport function TitleSection({ title, description, ...props }: TitleSectionProps) {\n  return (\n    <div className='text-center -space-y-2 my-6 max-md:text-sm' {...props}>\n      <h1 className='text-4xl md:text-5xl font-bold'>{title}</h1>\n      <p className='opacity-80 text-center'>{description}</p>\n    </div>\n  );\n}\n",
+      "type": "registry:block",
+      "target": "./components/block/shuip/title-section.tsx"
+    }
+  ]
+}

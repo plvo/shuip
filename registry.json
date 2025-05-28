@@ -4,130 +4,131 @@
   "homepage": "https://shuip.xyz",
   "items": [
     {
-      "name": "div.title-section",
-      "type": "registry:ui",
+      "name": "title-section",
+      "type": "registry:block",
       "files": [
         {
-          "path": "./registry/ui/div.title-section.tsx",
-          "type": "registry:component",
-          "target": "./components/ui/shuip/div.title-section.tsx"
+          "path": "./registry/block/title-section.tsx",
+          "type": "registry:block",
+          "target": "./components/block/shuip/title-section.tsx"
         }
       ]
     },
     {
-      "name": "skeleton.text",
+      "name": "text-skeleton",
       "type": "registry:ui",
       "registryDependencies": ["skeleton"],
       "files": [
         {
-          "path": "./registry/ui/skeleton.text.tsx",
-          "type": "registry:component",
-          "target": "./components/ui/shuip/skeleton.text.tsx"
-        }
-      ]
-    },
-    {
-      "name": "button.signout",
-      "type": "registry:ui",
-      "dependencies": ["next-auth", "lucide-react"],
-      "files": [
-        {
-          "path": "./registry/ui/button.signout.tsx",
-          "type": "registry:component",
-          "target": "./components/ui/shuip/button.signout.tsx"
-        }
-      ]
-    },
-    {
-      "name": "button.submit",
-      "type": "registry:ui",
-      "dependencies": ["radix-ui"],
-      "files": [
-        {
-          "path": "./registry/ui/button.submit.tsx",
+          "path": "./registry/ui/text-skeleton.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/button.submit.tsx"
+          "target": "./components/ui/shuip/text-skeleton.tsx"
         }
-      ],
-      "registryDependencies": ["button"]
+      ]
     },
     {
-      "name": "button.theme",
+      "name": "signout-dialog",
       "type": "registry:ui",
-      "dependencies": ["radix-ui", "next-themes", "lucide-react"],
+      "dependencies": ["lucide-react"],
+      "registryDependencies": ["dialog", "button"],
+      "files": [
+        {
+          "path": "./registry/ui/signout-dialog.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/signout-dialog.tsx"
+        }
+      ]
+    },
+    {
+      "name": "submit-button",
+      "type": "registry:ui",
+      "dependencies": ["@radix-ui/react-icons"],
       "registryDependencies": ["button"],
       "files": [
         {
-          "path": "./registry/ui/button.theme.tsx",
+          "path": "./registry/ui/submit-button.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/button.theme.tsx"
+          "target": "./components/ui/shuip/submit-button.tsx"
         }
       ]
     },
     {
-      "name": "dialog.confirmation",
+      "name": "theme-button",
+      "type": "registry:ui",
+      "dependencies": ["next-themes", "lucide-react"],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "./registry/ui/theme-button.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/theme-button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "confirmation-dialog",
       "type": "registry:ui",
       "dependencies": [],
+      "registryDependencies": ["dialog", "button"],
       "files": [
         {
-          "path": "./registry/ui/dialog.confirmation.tsx",
+          "path": "./registry/ui/confirmation-dialog.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/dialog.confirmation.tsx"
+          "target": "./components/ui/shuip/confirmation-dialog.tsx"
         }
-      ],
-      "registryDependencies": ["button", "dialog"]
+      ]
     },
     {
-      "name": "hover.item",
+      "name": "hover-reveal",
       "type": "registry:ui",
       "dependencies": [],
+      "registryDependencies": ["hover-card"],
       "files": [
         {
-          "path": "./registry/ui/hover.item.tsx",
+          "path": "./registry/ui/hover-reveal.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/hover.item.tsx"
+          "target": "./components/ui/shuip/hover-reveal.tsx"
         }
-      ],
-      "registryDependencies": ["hover-card"]
+      ]
     },
     {
-      "name": "input.form-field",
+      "name": "input-field",
       "type": "registry:ui",
-      "dependencies": ["react-hook-form"],
+      "dependencies": ["react-hook-form", "lucide-react"],
+      "registryDependencies": ["form", "input", "button"],
       "files": [
         {
-          "path": "./registry/ui/input.form-field.tsx",
+          "path": "./registry/ui/input-field.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/input.form-field.tsx"
+          "target": "./components/ui/shuip/input-field.tsx"
         }
-      ],
-      "registryDependencies": ["form", "input"]
+      ]
     },
     {
-      "name": "radio.form-field",
+      "name": "radio-field",
       "type": "registry:ui",
       "dependencies": ["react-hook-form"],
+      "registryDependencies": ["form", "radio-group"],
       "files": [
         {
-          "path": "./registry/ui/radio.form-field.tsx",
+          "path": "./registry/ui/radio-field.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/radio.form-field.tsx"
+          "target": "./components/ui/shuip/radio-field.tsx"
         }
-      ],
-      "registryDependencies": ["form", "radio-group"]
+      ]
     },
     {
-      "name": "select.form-field",
+      "name": "select-field",
       "type": "registry:ui",
-      "dependencies": ["react-hook-form"],
+      "dependencies": ["react-hook-form", "@radix-ui/react-select"],
+      "registryDependencies": ["form", "select"],
       "files": [
         {
-          "path": "./registry/ui/select.form-field.tsx",
+          "path": "./registry/ui/select-field.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/select.form-field.tsx"
+          "target": "./components/ui/shuip/select-field.tsx"
         }
-      ],
-      "registryDependencies": ["form", "select"]
+      ]
     }
   ]
 }
