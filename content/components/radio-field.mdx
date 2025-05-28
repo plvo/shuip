@@ -15,7 +15,7 @@ group: form
 
 With classic shadcn/ui, creating a radio group requires a lot of repetitive code:
 
-<CodeMdx code={`<FormField
+<CodeHighlight code={`<FormField
   control={form.control}
   name="theme"
   render={({ field }) => (
@@ -54,7 +54,7 @@ With classic shadcn/ui, creating a radio group requires a lot of repetitive code
 
 With `RadioField`, the same result in a single line:
 
-<CodeMdx code={`// With RadioField - concise
+<CodeHighlight code={`// With RadioField - concise
 <RadioField 
   control={form.control} 
   name="theme" 
@@ -74,7 +74,7 @@ With `RadioField`, the same result in a single line:
 
 The component is specifically designed for react-hook-form:
 
-<CodeMdx code={`const form = useForm({
+<CodeHighlight code={`const form = useForm({
   defaultValues: { plan: 'basic' },
   resolver: zodResolver(schema),
 });

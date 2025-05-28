@@ -87,9 +87,9 @@ export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
   );
 }
 
-export type PackageManager = 'npm' | 'pnpm' | 'bun';
+type PackageManager = 'npm' | 'pnpm' | 'bun';
 
-export const getCmd = (pkg: PackageManager, filename: string) => {
+const getCmd = (pkg: PackageManager, filename: string) => {
   const url = `https://shuip.xyz/r/${filename}.json`;
 
   switch (pkg) {

@@ -1,4 +1,4 @@
-import { SidebarTableOfContents } from '@/components/documentation/toc';
+import { SidebarTableOfContents } from '@/components/docs/toc';
 import { MdxContent } from '@/components/mdx/mdx-content';
 import { getDocument } from '@/lib/document';
 import { getTableOfContents } from '@/lib/toc';

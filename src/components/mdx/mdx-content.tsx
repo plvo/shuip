@@ -2,7 +2,7 @@
 import { cn } from '@/lib/utils';
 import { useMDXComponent } from 'next-contentlayer2/hooks';
 import type React from 'react';
-import { type CodeHighlightProps, CodeMdx } from './code-mdx';
+import { CodeHighlight, type CodeHighlightProps } from '../shared/code-preview';
 import CodeAllCli from './code.all-cli';
 import { ItemFooter, type ItemFooterProps } from './item-footer';
 import { ItemHeader, type ItemHeaderProps } from './item-header';
@@ -67,8 +67,10 @@ const components = {
   ),
   CodeAllCli: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <CodeAllCli {...props} />,
   InstallationCmd: ({ filename, ...props }: InstallationCmdProps) => <InstallationCmd filename={filename} {...props} />,
-  CodeMdx: ({ code, language = 'tsx', ...props }: CodeHighlightProps) => (
-    <CodeMdx code={code} language={language} {...props} />
+  CodeHighlight: ({ code, language = 'tsx', ...props }: CodeHighlightProps & React.HTMLAttributes<HTMLDivElement>) => (
+    <div {...props} className='rounded-lg border my-6'>
+      <CodeHighlight code={code} language={language} />
+    </div>
   ),
   ItemHeader: ({ filename, text }: ItemHeaderProps) => <ItemHeader filename={filename} text={text} />,
   ItemFooter: ({ itemName, props }: ItemFooterProps) => <ItemFooter itemName={itemName} props={props} />,

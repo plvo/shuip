@@ -15,7 +15,7 @@ group: form
 
 With classic shadcn/ui, creating a select field requires a lot of repetitive code:
 
-<CodeMdx code={`<FormField
+<CodeHighlight code={`<FormField
   control={form.control}
   name="country"
   render={({ field }) => (
@@ -43,7 +43,7 @@ With classic shadcn/ui, creating a select field requires a lot of repetitive cod
 
 With `SelectField`, the same result in a single line:
 
-<CodeMdx code={`<SelectField 
+<CodeHighlight code={`<SelectField 
   control={form.control} 
   name="country" 
   label="Country" 
@@ -64,7 +64,7 @@ With `SelectField`, the same result in a single line:
 
 The component is specifically designed for react-hook-form:
 
-<CodeMdx code={`const form = useForm({
+<CodeHighlight code={`const form = useForm({
       defaultValues: { category: '' },
       resolver: zodResolver(schema),
 });

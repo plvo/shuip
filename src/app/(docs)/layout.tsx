@@ -1,5 +1,5 @@
-import { DocsNav } from '@/components/documentation/docs-nav';
-import { Header } from '@/components/documentation/header';
+import { DocsNav } from '@/components/docs/docs-nav';
+import { Header } from '@/components/docs/header';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
   return (
