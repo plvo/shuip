@@ -1,13 +1,77 @@
 ---
 title: Theme Button
-description: A button that changes the theme of the app
+description: Provides an elegant and user-friendly way to cycle through light, dark, and system themes. It's specifically designed to work with next-themes, the most popular theme management library for Next.js applications.
 group: shortcut
 ---
 
-<ItemHeader
-  filename={'theme-button'}
-  text='A button that changes the theme of the app. It is designed to be used with the next-themes library.'
-/>
+<ItemHeader filename={'theme-button'} />
+
+## Ready-to-use theme toggle
+
+The button automatically cycles through these states:
+- **System**: Uses the user's OS preference (🖥️ Laptop icon)
+- **Light**: Forces light mode (☀️ Sun icon)  
+- **Dark**: Forces dark mode (🌙 Moon icon)
+
+With `ThemeButton`, a complete theme switcher in one line:
+
+<CodeHighlight code={`// With ThemeButton - simple and complete
+<ThemeButton />
+
+// With text label
+<ThemeButton withText={true} />`} language='tsx' />
+
+## Setup with next-themes
+
+First, make sure you have [`next-themes`](https://ui.shadcn.com/docs/dark-mode/next) installed and configured:
+
+## Common use cases
+
+<CodeHighlight code={`// Header navigation
+<header className="flex items-center justify-between p-4">
+  <Logo />
+  <nav className="flex items-center space-x-4">
+    <NavigationMenu />
+    <ThemeButton />
+  </nav>
+</header>
+
+// Settings page
+<div className="space-y-4">
+  <h3 className="text-lg font-medium">Appearance</h3>
+  <div className="flex items-center justify-between">
+    <div>
+      <p className="text-sm font-medium">Theme</p>
+      <p className="text-sm text-muted-foreground">
+        Choose your preferred theme
+      </p>
+    </div>
+    <ThemeButton withText={true} />
+  </div>
+</div>
+
+// Sidebar
+<aside className="w-64 p-4">
+  <nav className="space-y-2">
+    <SidebarLink href="/dashboard">Dashboard</SidebarLink>
+    <SidebarLink href="/settings">Settings</SidebarLink>
+  </nav>
+  <div className="mt-auto pt-4">
+    <ThemeButton withText={true} />
+  </div>
+</aside>
+
+// Mobile menu
+<Sheet>
+  <SheetContent>
+    <div className="flex flex-col space-y-4">
+      <MobileNavLinks />
+      <div className="border-t pt-4">
+        <ThemeButton withText={true} />
+      </div>
+    </div>
+  </SheetContent>
+</Sheet>`} language='tsx' />
 
 <ItemFooter itemName={'theme-button'} props={[
   {

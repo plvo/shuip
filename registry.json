@@ -15,31 +15,6 @@
       ]
     },
     {
-      "name": "text-skeleton",
-      "type": "registry:ui",
-      "registryDependencies": ["skeleton"],
-      "files": [
-        {
-          "path": "./registry/ui/text-skeleton.tsx",
-          "type": "registry:ui",
-          "target": "./components/ui/shuip/text-skeleton.tsx"
-        }
-      ]
-    },
-    {
-      "name": "signout-dialog",
-      "type": "registry:ui",
-      "dependencies": ["lucide-react"],
-      "registryDependencies": ["dialog", "button"],
-      "files": [
-        {
-          "path": "./registry/ui/signout-dialog.tsx",
-          "type": "registry:ui",
-          "target": "./components/ui/shuip/signout-dialog.tsx"
-        }
-      ]
-    },
-    {
       "name": "submit-button",
       "type": "registry:ui",
       "dependencies": ["@radix-ui/react-icons"],

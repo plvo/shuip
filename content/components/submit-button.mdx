@@ -1,13 +1,48 @@
 ---
 title: Submit Button
-description: A button that submits a form
+description: Specifically designed for form submission with built-in loading states, making it perfect for forms that need to show submission progress and prevent double submissions.
 group: form
 ---
 
-<ItemHeader
-  filename={'submit-button'}
-  text='A button that submits a form'
+<ItemHeader filename={'submit-button'}/>
+
+## Built-in features
+
+- **Automatic loading state**: Shows spinner icon when `loading` prop is true
+- **Full-width by default**: Optimized for form layouts
+- **Customizable icon**: Can override the default loading spinner
+- **Form integration**: Native `type="submit"` behavior
+
+## Common use cases
+
+<CodeHighlight code={`// Basic form submission
+<SubmitButton label="Save Changes" loading={isSaving} />
+
+// With custom icon
+<SubmitButton 
+      label="Processing Payment"
+      loading={isProcessing}
+      icon={<CreditCard className="mr-2 h-4 w-4 animate-pulse" />}
 />
+
+// With JSX label
+<SubmitButton 
+      label={
+        <span className="flex items-center">
+          <Send className="mr-2 h-4 w-4" />
+          Send Message
+        </span>
+      }
+      loading={isSending}
+/>
+
+// Custom styling
+<SubmitButton 
+      label="Delete Account"
+      loading={isDeleting}
+      className="bg-destructive hover:bg-destructive/90"
+      disabled={!confirmed}
+/>`} language='tsx' />
 
 <ItemFooter itemName={'submit-button'} props={[
   {
@@ -16,17 +51,12 @@ group: form
     description: 'Label displayed above the field',
   },
   {
-    name: 'onClick',
-    type: '() => void',
-    description: 'Click event that submits the form',
-  },
-  {
-    name: 'disabled',
+    name: 'disabled?',
     type: 'boolean',
     description: 'Disabled state of the button',
   },
   {
-    name: 'loading',
+    name: 'loading?',
     type: 'boolean',
     description: 'Loading state of the button',
   },

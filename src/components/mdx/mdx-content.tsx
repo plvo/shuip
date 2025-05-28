@@ -68,7 +68,7 @@ const components = {
   CodeAllCli: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <CodeAllCli {...props} />,
   InstallationCmd: ({ filename, ...props }: InstallationCmdProps) => <InstallationCmd filename={filename} {...props} />,
   CodeHighlight: ({ code, language = 'tsx', ...props }: CodeHighlightProps & React.HTMLAttributes<HTMLDivElement>) => (
-    <div {...props} className='rounded-lg border my-6'>
+    <div className='rounded-lg border my-6 overflow-x-auto bg-[#1E1E1E]' {...props}>
       <CodeHighlight code={code} language={language} />
     </div>
   ),

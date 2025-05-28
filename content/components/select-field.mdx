@@ -1,19 +1,12 @@
 ---
 title: Select Field
-description: A select form field
+description: A select form field designed to be used with react-hook-form and Zod for validation. It combines a label, select dropdown, error handling, and optional description into a single reusable component.
 group: form
 ---
 
-<ItemHeader
-  filename={'select-field'}
-  text='A select form field designed to be used with react-hook-form and Zod for validation. It combines a label, select dropdown, error handling, and optional description into a single reusable component.'
-/>
+<ItemHeader filename={'select-field'} />
 
-## Why use SelectField?
-
-### Less verbose code in forms
-
-With classic shadcn/ui, creating a select field requires a lot of repetitive code:
+## Less verbose code in forms
 
 <CodeHighlight code={`<FormField
   control={form.control}
@@ -44,23 +37,15 @@ With classic shadcn/ui, creating a select field requires a lot of repetitive cod
 With `SelectField`, the same result in a single line:
 
 <CodeHighlight code={`<SelectField 
-  control={form.control} 
-  name="country" 
-  label="Country" 
-  placeholder="Select a country"
-  description="Choose your country"
-  values={countryOptions}
+      control={form.control} 
+      name="country" 
+      label="Country" 
+      placeholder="Select a country"
+      description="Choose your country"
+      values={countryOptions}
 />`} language='tsx' />
 
-### Built-in features
-
-- **Automatic option rendering**: Pass an array of options and they're rendered automatically
-- **Type-safe values**: Full TypeScript support for option values
-- **Zod validation**: Native integration with react-hook-form and Zod
-- **Placeholder support**: Built-in placeholder handling
-- **Error display**: Automatic error message display
-
-### react-hook-form integration
+## react-hook-form integration
 
 The component is specifically designed for react-hook-form:
 

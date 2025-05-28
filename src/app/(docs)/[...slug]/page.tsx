@@ -28,13 +28,13 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
 
 export default async function Page({ params }: DocPageProps) {
   const { slug } = await params;
-  const { document } = await getDocument(slug);
+  const { document, documentType } = await getDocument(slug);
   const toc = document ? await getTableOfContents(document.body.raw) : undefined;
 
   return (
-    <>
+    <section className='xl:grid xl:grid-cols-[1fr_300px]'>
       {document && (
-        <article>
+        <article className='max-w-[880px]'>
           <div className='space-y-2 mb-6'>
             <h1 className={'h1-mdx'}>{document.title}</h1>
             <p className='text-base text-muted-foreground'>{document.description}</p>
@@ -43,7 +43,9 @@ export default async function Page({ params }: DocPageProps) {
         </article>
       )}
 
-      <SidebarTableOfContents {...{ toc }} />
-    </>
+      <SidebarTableOfContents
+        {...{ toc, isComponentPage: documentType === 'components' || documentType === 'blocks' }}
+      />
+    </section>
   );
 }

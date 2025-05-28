@@ -24,14 +24,8 @@ export const registryIndex: Record<string, RegistryComponent> = {
   'submit-button': {
     name: 'submit-button',
     path: '#/registry/ui/submit-button.tsx',
-    code: "import { Button } from '@/components/ui/button';\nimport { ReloadIcon } from '@radix-ui/react-icons';\nimport type * as React from 'react';\n\nexport interface SubmitButtonProps extends React.RefAttributes<HTMLButtonElement> {\n  label?: React.JSX.Element | string;\n  onClick?: React.MouseEventHandler<HTMLButtonElement>;\n  disabled?: boolean;\n  loading?: boolean;\n  icon?: React.JSX.Element;\n}\n\nexport function SubmitButton({\n  onClick,\n  label,\n  disabled,\n  loading,\n  icon = <ReloadIcon className='mr-2 size-4 animate-spin' />,\n  ...props\n}: SubmitButtonProps) {\n  return (\n    <Button\n      type='submit'\n      variant={'default'}\n      className={'w-full'}\n      disabled={disabled || loading}\n      {...props}\n      {...(onClick && { onClick })}\n    >\n      {loading && icon}\n      {label}\n    </Button>\n  );\n}\n",
+    code: "import { Button } from '@/components/ui/button';\nimport { ReloadIcon } from '@radix-ui/react-icons';\nimport type * as React from 'react';\n\nexport interface SubmitButtonProps extends React.RefAttributes<HTMLButtonElement> {\n  label?: React.JSX.Element | string;\n  disabled?: boolean;\n  loading?: boolean;\n  icon?: React.JSX.Element;\n}\n\nexport function SubmitButton({\n  label,\n  disabled,\n  loading,\n  icon = <ReloadIcon className='mr-2 size-4 animate-spin' />,\n  ...props\n}: SubmitButtonProps) {\n  return (\n    <Button type='submit' variant={'default'} className={'w-full'} disabled={disabled || loading} {...props}>\n      {loading && icon}\n      {label}\n    </Button>\n  );\n}\n",
     component: React.lazy(() => import('#/registry/ui/submit-button.tsx')),
-  },
-  'text-skeleton': {
-    name: 'text-skeleton',
-    path: '#/registry/ui/text-skeleton.tsx',
-    code: "import { Skeleton } from '@/components/ui/skeleton';\n\nexport interface TextSkeletonProps extends React.RefAttributes<HTMLDivElement> {\n  text: string | undefined;\n}\n\nexport function TextSkeleton({ text, ...props }: TextSkeletonProps) {\n  if (!text) return <Skeleton className='w-20 h-4' {...props} />;\n  return text;\n}\n",
-    component: React.lazy(() => import('#/registry/ui/text-skeleton.tsx')),
   },
   'radio-field': {
     name: 'radio-field',
@@ -50,12 +44,6 @@ export const registryIndex: Record<string, RegistryComponent> = {
     path: '#/registry/ui/theme-button.tsx',
     code: "import { Button } from '@/components/ui/button';\nimport { Laptop, Moon, Sun } from 'lucide-react';\nimport { useTheme } from 'next-themes';\nimport * as React from 'react';\n\ntype Theme = 'system' | 'light' | 'dark';\n\nexport interface ThemeButtonProps {\n  withText?: boolean;\n}\n\nexport function ThemeButton({ withText }: ThemeButtonProps) {\n  const { theme, setTheme } = useTheme();\n  const [currentTheme, setCurrentTheme] = React.useState<Theme>('system');\n\n  React.useEffect(() => {\n    setCurrentTheme(theme as Theme);\n  }, [theme]);\n\n  const cycleTheme = () => {\n    const themes: Theme[] = ['system', 'light', 'dark'];\n    const currentIndex = themes.indexOf(currentTheme);\n    const nextIndex = (currentIndex + 1) % themes.length;\n    setTheme(themes[nextIndex]);\n  };\n\n  const getThemeIcon = () => {\n    switch (currentTheme) {\n      case 'system':\n        return <Laptop className='size-[1.2rem]' />;\n      case 'light':\n        return <Sun className='size-[1.2rem]' />;\n      case 'dark':\n        return <Moon className='size-[1.2rem]' />;\n    }\n  };\n\n  const getThemeText = () => {\n    return currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1);\n  };\n\n  return (\n    <Button variant='outline' size={withText ? 'default' : 'icon'} onClick={cycleTheme}>\n      {getThemeIcon()}\n      {withText && <span className='ml-2 capitalize'>{getThemeText()}</span>}\n      <span className='sr-only'>Toggle theme</span>\n    </Button>\n  );\n}\n",
     component: React.lazy(() => import('#/registry/ui/theme-button.tsx')),
-  },
-  'signout-dialog': {
-    name: 'signout-dialog',
-    path: '#/registry/ui/signout-dialog.tsx',
-    code: "import { Button } from '@/components/ui/button';\nimport {\n  Dialog,\n  DialogContent,\n  DialogDescription,\n  DialogFooter,\n  DialogHeader,\n  DialogTitle,\n  DialogTrigger,\n} from '@/components/ui/dialog';\nimport { LogOut } from 'lucide-react';\n\nexport interface SignoutDialogProps extends React.RefAttributes<HTMLDialogElement> {\n  title?: string;\n  description?: string;\n  labelConfirmation?: string;\n  withLogo?: boolean;\n  trigger?: React.JSX.Element;\n  onConfirm?: () => void;\n}\n\nexport function SignoutDialog({\n  title = 'Sign out',\n  description = 'Are you sure you want to sign out?',\n  labelConfirmation = 'Sign out',\n  withLogo = false,\n  trigger = <SignoutButton withLogo={withLogo} />,\n  onConfirm,\n  ...props\n}: SignoutDialogProps) {\n  return (\n    <Dialog {...props}>\n      <DialogTrigger asChild>{trigger}</DialogTrigger>\n      <DialogContent>\n        <DialogHeader>\n          <DialogTitle>{title}</DialogTitle>\n          <DialogDescription className='md:text-left'>{description}</DialogDescription>\n        </DialogHeader>\n        <DialogFooter>\n          <Button onClick={onConfirm}>{labelConfirmation}</Button>\n        </DialogFooter>\n      </DialogContent>\n    </Dialog>\n  );\n}\n\nfunction SignoutButton({ withLogo }: { withLogo?: boolean }) {\n  return (\n    <Button variant='outline' className='text-destructive' size={withLogo ? 'icon' : 'default'}>\n      {withLogo ? <LogOut /> : 'Sign out'}\n    </Button>\n  );\n}\n",
-    component: React.lazy(() => import('#/registry/ui/signout-dialog.tsx')),
   },
   'select-field': {
     name: 'select-field',
@@ -78,7 +66,7 @@ export const registryIndex: Record<string, RegistryComponent> = {
   'input-field.example': {
     name: 'input-field.example',
     path: '#/registry/examples/input-field.tsx',
-    code: "import { Form } from '@/components/ui/form';\nimport { InputField } from '@/components/ui/shuip/input-field';\nimport { SubmitButton } from '@/components/ui/shuip/submit-button';\nimport { zodResolver } from '@hookform/resolvers/zod';\nimport { useForm } from 'react-hook-form';\nimport { z } from 'zod';\n\nconst zodSchema = z.object({\n  name: z.string().nonempty({ message: 'Name is required' }),\n});\n\nexport default function InputFieldExample() {\n  const form = useForm({\n    defaultValues: {\n      name: '',\n    },\n    resolver: zodResolver(zodSchema),\n  });\n\n  async function onSubmit(values: z.infer<typeof zodSchema>) {\n    try {\n      alert(`Hello ${values.name}`);\n    } catch (error) {\n      console.error(error);\n    }\n  }\n\n  return (\n    <Form {...form}>\n      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>\n        <InputField control={form.control} name='name' label='Name' description='Your name' placeholder='John' />\n        <SubmitButton label='Check' />\n      </form>\n    </Form>\n  );\n}\n",
+    code: "'use client';\n\nimport { Form } from '@/components/ui/form';\nimport { InputField } from '@/components/ui/shuip/input-field';\nimport { SubmitButton } from '@/components/ui/shuip/submit-button';\nimport { zodResolver } from '@hookform/resolvers/zod';\nimport { useForm } from 'react-hook-form';\nimport { z } from 'zod';\n\nconst zodSchema = z.object({\n  name: z.string().nonempty({ message: 'Name is required' }),\n});\n\nexport default function InputFieldExample() {\n  const form = useForm({\n    defaultValues: {\n      name: '',\n    },\n    resolver: zodResolver(zodSchema),\n  });\n\n  async function onSubmit(values: z.infer<typeof zodSchema>) {\n    try {\n      alert(`Hello ${values.name}`);\n    } catch (error) {\n      console.error(error);\n    }\n  }\n\n  return (\n    <Form {...form}>\n      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>\n        <InputField control={form.control} name='name' label='Name' description='Your name' placeholder='John' />\n        <SubmitButton label='Check' />\n      </form>\n    </Form>\n  );\n}\n",
     component: React.lazy(() => import('#/registry/examples/input-field.tsx')),
   },
   'submit-button.loading.example': {
@@ -99,16 +87,10 @@ export const registryIndex: Record<string, RegistryComponent> = {
     code: "import { TitleSection } from '@/components/block/shuip/title-section';\n\nexport default function TitleSectionExample() {\n  return <TitleSection title='Title' description='Lorem ipsum dolor sit amet consectetur, adipisicing elit.' />;\n}\n",
     component: React.lazy(() => import('#/registry/examples/title-section.tsx')),
   },
-  'text-skeleton.example': {
-    name: 'text-skeleton.example',
-    path: '#/registry/examples/text-skeleton.tsx',
-    code: "import { TextSkeleton } from '@/components/ui/shuip/text-skeleton';\n\nexport default function TextSkeletonExample() {\n  return <TextSkeleton text='Hello' />;\n}\n",
-    component: React.lazy(() => import('#/registry/examples/text-skeleton.tsx')),
-  },
   'radio-field.example': {
     name: 'radio-field.example',
     path: '#/registry/examples/radio-field.tsx',
-    code: "import { Form } from '@/components/ui/form';\nimport { RadioField } from '@/components/ui/shuip/radio-field';\nimport { SubmitButton } from '@/components/ui/shuip/submit-button';\nimport { zodResolver } from '@hookform/resolvers/zod';\nimport { useForm } from 'react-hook-form';\nimport { z } from 'zod';\n\nconst zodSchema = z.object({\n  selection: z.enum(['1', '2', '3']),\n});\n\nexport default function RadioFieldExample() {\n  const form = useForm({\n    defaultValues: {\n      selection: '1' as const,\n    },\n    resolver: zodResolver(zodSchema),\n  });\n\n  async function onSubmit(values: z.infer<typeof zodSchema>) {\n    try {\n      alert(`Selection: ${values.selection}`);\n    } catch (error) {\n      console.error(error);\n    }\n  }\n\n  return (\n    <Form {...form}>\n      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>\n        <RadioField control={form.control} name='selection' label='selection' values={['1', '2', '3']} />\n        <SubmitButton label='Check' />\n      </form>\n    </Form>\n  );\n}\n",
+    code: "'use client';\n\nimport { Form } from '@/components/ui/form';\nimport { RadioField } from '@/components/ui/shuip/radio-field';\nimport { SubmitButton } from '@/components/ui/shuip/submit-button';\nimport { zodResolver } from '@hookform/resolvers/zod';\nimport { useForm } from 'react-hook-form';\nimport { z } from 'zod';\n\nconst zodSchema = z.object({\n  selection: z.enum(['1', '2', '3']),\n});\n\nexport default function RadioFieldExample() {\n  const form = useForm({\n    defaultValues: {\n      selection: '1' as const,\n    },\n    resolver: zodResolver(zodSchema),\n  });\n\n  async function onSubmit(values: z.infer<typeof zodSchema>) {\n    try {\n      alert(`Selection: ${values.selection}`);\n    } catch (error) {\n      console.error(error);\n    }\n  }\n\n  return (\n    <Form {...form}>\n      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>\n        <RadioField control={form.control} name='selection' label='selection' values={['1', '2', '3']} />\n        <SubmitButton label='Check' />\n      </form>\n    </Form>\n  );\n}\n",
     component: React.lazy(() => import('#/registry/examples/radio-field.tsx')),
   },
   'confirmation-dialog.example': {
@@ -129,16 +111,10 @@ export const registryIndex: Record<string, RegistryComponent> = {
     code: "import { ThemeButton } from '@/components/ui/shuip/theme-button';\n\nexport default function ThemeButtonExample() {\n  return <ThemeButton />;\n}\n",
     component: React.lazy(() => import('#/registry/examples/theme-button.tsx')),
   },
-  'signout-dialog.example': {
-    name: 'signout-dialog.example',
-    path: '#/registry/examples/signout-dialog.tsx',
-    code: "import { SignoutDialog } from '@/components/ui/shuip/signout-dialog';\n\nexport default function SignoutDialogExample() {\n  return <SignoutDialog withLogo onConfirm={() => alert('Signout!')} />;\n}\n",
-    component: React.lazy(() => import('#/registry/examples/signout-dialog.tsx')),
-  },
   'select-field.example': {
     name: 'select-field.example',
     path: '#/registry/examples/select-field.tsx',
-    code: "import { Form } from '@/components/ui/form';\nimport { SelectField, type SelectFieldOption } from '@/components/ui/shuip/select-field';\nimport { SubmitButton } from '@/components/ui/shuip/submit-button';\nimport { zodResolver } from '@hookform/resolvers/zod';\nimport { useForm } from 'react-hook-form';\nimport { z } from 'zod';\n\nconst zodSchema = z.object({\n  selection: z.enum(['1', '2', '3']),\n});\n\nconst values: SelectFieldOption[] = [\n  { label: 'First', value: '1' },\n  { label: 'Second', value: '2' },\n  { label: 'Third', value: '3' },\n];\n\nexport default function SelectFieldExample() {\n  const form = useForm({\n    defaultValues: {\n      selection: '1' as const,\n    },\n    resolver: zodResolver(zodSchema),\n  });\n\n  async function onSubmit(values: z.infer<typeof zodSchema>) {\n    try {\n      alert(`Selection: ${values.selection}`);\n    } catch (error) {\n      console.error(error);\n    }\n  }\n\n  return (\n    <Form {...form}>\n      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>\n        <SelectField\n          control={form.control}\n          placeholder='Select an option'\n          name='selection'\n          label='selection'\n          values={values}\n        />\n        <SubmitButton label='Check' />\n      </form>\n    </Form>\n  );\n}\n",
+    code: "'use client';\n\nimport { Form } from '@/components/ui/form';\nimport { SelectField, type SelectFieldOption } from '@/components/ui/shuip/select-field';\nimport { SubmitButton } from '@/components/ui/shuip/submit-button';\nimport { zodResolver } from '@hookform/resolvers/zod';\nimport { useForm } from 'react-hook-form';\nimport { z } from 'zod';\n\nconst zodSchema = z.object({\n  selection: z.enum(['1', '2', '3']),\n});\n\nconst values: SelectFieldOption[] = [\n  { label: 'First', value: '1' },\n  { label: 'Second', value: '2' },\n  { label: 'Third', value: '3' },\n];\n\nexport default function SelectFieldExample() {\n  const form = useForm({\n    defaultValues: {\n      selection: '1' as const,\n    },\n    resolver: zodResolver(zodSchema),\n  });\n\n  async function onSubmit(values: z.infer<typeof zodSchema>) {\n    try {\n      alert(`Selection: ${values.selection}`);\n    } catch (error) {\n      console.error(error);\n    }\n  }\n\n  return (\n    <Form {...form}>\n      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>\n        <SelectField\n          control={form.control}\n          placeholder='Select an option'\n          name='selection'\n          label='selection'\n          values={values}\n        />\n        <SubmitButton label='Check' />\n      </form>\n    </Form>\n  );\n}\n",
     component: React.lazy(() => import('#/registry/examples/select-field.tsx')),
   },
   'hover-reveal.example': {
@@ -154,11 +130,9 @@ export const registryIndex: Record<string, RegistryComponent> = {
 export const COMPONENT_CATEGORIES: Record<string, string[]> = {
   'input-field': ['input-field.example'],
   'submit-button': ['submit-button.loading.example', 'submit-button.example'],
-  'text-skeleton': ['text-skeleton.example'],
   'radio-field': ['radio-field.example'],
   'confirmation-dialog': ['confirmation-dialog.example'],
   'theme-button': ['theme-button.text.example', 'theme-button.example'],
-  'signout-dialog': ['signout-dialog.example'],
   'select-field': ['select-field.example'],
   'hover-reveal': ['hover-reveal.example'],
   'title-section': ['title-section.example'],

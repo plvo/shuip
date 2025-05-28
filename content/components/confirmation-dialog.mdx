@@ -1,13 +1,73 @@
 ---
 title: Confirmation Dialog
-description: A dialog that confirms an action
+description: A standardized way to ask for user confirmation before executing critical actions like deleting data, logging out, or making irreversible changes.
 group: shortcut
 ---
 
-<ItemHeader
-  filename={'confirmation-dialog'}
-  text='A dialog that confirms an action'
+<ItemHeader filename={'confirmation-dialog'} />
+
+## Simple integration
+
+<CodeHighlight code={`<Dialog>
+  <DialogTrigger asChild>
+    <Button variant="destructive">Delete</Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Are you sure?</DialogTitle>
+      <DialogDescription>
+        This action cannot be undone. This will permanently delete the item.
+      </DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+      <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>`} language='tsx' />
+
+With `ConfirmationDialog`, the same result in a clean, reusable component:
+
+<CodeHighlight code={`<ConfirmationDialog
+      trigger={<Button variant="destructive">Delete</Button>}
+      title="Are you sure?"
+      description="This action cannot be undone. This will permanently delete the item."
+      labelConfirmButton="Delete"
+      onConfirm={handleDelete}
+/>`} language='tsx' />
+
+## Common use cases
+
+<CodeHighlight code={`// Delete confirmation
+<ConfirmationDialog
+      trigger={<Button variant="destructive">Delete Account</Button>}
+      title="Delete Account"
+      description="This will permanently delete your account and all associated data. This action cannot be undone."
+      labelConfirmButton="Delete Account"
+      onConfirm={() => deleteAccount()}
 />
+
+// Save confirmation
+<ConfirmationDialog
+      trigger={<Button>Save Changes</Button>}
+      title="Save Changes"
+      description="Are you sure you want to save these changes?"
+      labelConfirmButton="Save"
+      onConfirm={() => saveChanges()}
+/>
+
+// Custom trigger with icon
+<ConfirmationDialog
+      trigger={
+        <Button variant="ghost" size="icon">
+          <Trash2 className="size-4" />
+        </Button>
+      }
+      title="Delete Item"
+      description="This item will be permanently removed."
+      labelConfirmButton="Delete"
+      onConfirm={() => deleteItem(id)}
+/>`} language='tsx' />
 
 <ItemFooter itemName={'confirmation-dialog'} props={[
   {

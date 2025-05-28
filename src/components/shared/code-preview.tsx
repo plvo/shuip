@@ -25,7 +25,7 @@ export function CodePreview({ code, filename, language = 'tsx' }: CodePreviewPro
       }, [filename]);
 
   return (
-    <div className='w-full border rounded-lg [&_pre]:my-0 [&_pre]:max-h-[350px] [&_pre]:overflow-auto'>
+    <div className='w-full max-w-[880px] border rounded-md [&_pre]:my-0 [&_pre]:max-h-[350px] [&_pre]:overflow-auto'>
       {codeString ? (
         <div>
           <div className='flex items-center justify-between p-2 border-b'>
@@ -50,7 +50,7 @@ export function CodeHighlight({ code, language = 'tsx' }: CodeHighlightProps) {
   return (
     <Highlight theme={themes.vsDark} code={code} language={language}>
       {({ style, tokens, getLineProps, getTokenProps }) => (
-        <pre style={style} className='p-4'>
+        <pre style={style} className='p-4 text-sm'>
           {tokens.map((line, i) => (
             <div key={i} {...getLineProps({ line })}>
               {line.map((token, key) => (

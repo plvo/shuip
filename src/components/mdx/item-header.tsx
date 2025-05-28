@@ -19,7 +19,7 @@ export function ItemHeader({ filename, text }: ItemHeaderProps) {
         <ItemInstallation filename={filename} />
       </div>
       <div>
-        <h2 id='examples' className={'h2-mdx'}>
+        <h2 id='preview' className={'h2-mdx'}>
           Preview
         </h2>
         <Preview filename={`${filename}.example`} />

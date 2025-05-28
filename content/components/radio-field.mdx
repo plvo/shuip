@@ -1,19 +1,12 @@
 ---
 title: Radio Field
-description: A radio form field
+description: A radio button group designed to be used with react-hook-form and Zod for validation. It combines a label, radio button options, error handling, and optional description into a single reusable component.
 group: form
 ---
 
-<ItemHeader
-	filename={'radio-field'} 
-	text='A radio button group designed to be used with react-hook-form and Zod for validation. It combines a label, radio button options, error handling, and optional description into a single reusable component.' 
-/>
+<ItemHeader	filename={'radio-field'} />
 
-## Why use RadioField?
-
-### Less verbose code in forms
-
-With classic shadcn/ui, creating a radio group requires a lot of repetitive code:
+## Less verbose code in forms
 
 <CodeHighlight code={`<FormField
   control={form.control}
@@ -54,12 +47,11 @@ With classic shadcn/ui, creating a radio group requires a lot of repetitive code
 
 With `RadioField`, the same result in a single line:
 
-<CodeHighlight code={`// With RadioField - concise
-<RadioField 
-  control={form.control} 
-  name="theme" 
-  label="Select a theme" 
-  values={['light', 'dark', 'system']}
+<CodeHighlight code={`<RadioField 
+      control={form.control} 
+      name="theme" 
+      label="Select a theme" 
+      values={['light', 'dark', 'system']}
 />`} language='tsx' />
 
 ### Built-in features
@@ -75,16 +67,15 @@ With `RadioField`, the same result in a single line:
 The component is specifically designed for react-hook-form:
 
 <CodeHighlight code={`const form = useForm({
-  defaultValues: { plan: 'basic' },
-  resolver: zodResolver(schema),
+      defaultValues: { plan: 'basic' },
+      resolver: zodResolver(schema),
 });
 
-// Direct usage with form control
 <RadioField 
-  control={form.control} 
-  name="plan" 
-  label="Choose your plan" 
-  values={['basic', 'pro', 'enterprise']}
+      control={form.control} 
+      name="plan" 
+      label="Choose your plan" 
+      values={['basic', 'pro', 'enterprise']}
 />`} language='tsx' />
 
 <ItemFooter itemName={'radio-field'} props={[
@@ -112,11 +103,6 @@ The component is specifically designed for react-hook-form:
     name: 'description',
     type: 'string?',
     description: 'Optional description below the field',
-  },
-  {
-    name: 'className',
-    type: 'string?',
-    description: 'Additional CSS classes for the RadioGroup',
   },
   {
     name: '...props',

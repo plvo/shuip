@@ -1,22 +1,14 @@
 ---
 title: Input Field
-description: A form field input designed to be used with react-hook-form and Zod for validation.
+description: A form field input designed to be used with react-hook-form and Zod for validation. It combines a label, input, error handling, and optional description into a single reusable component.
 group: form
 ---
 
-<ItemHeader
-  filename={'input-field'}
-  text='A form field input designed to be used with react-hook-form and Zod for validation. It combines a label, input, error handling, and optional description into a single reusable component.'
-/>
+<ItemHeader filename={'input-field'} />
 
-## Why use InputField?
+## Less verbose code in forms
 
-### Less verbose code in forms
-
-With classic shadcn/ui, creating a form field requires a lot of repetitive code:
-
-<CodeHighlight code={`// With classic shadcn/ui - verbose
-<FormField
+<CodeHighlight code={`<FormField
   control={form.control}
   name="email"
   render={({ field }) => (
@@ -35,16 +27,15 @@ With classic shadcn/ui, creating a form field requires a lot of repetitive code:
 
 With `InputField`, the same result in a single line:
 
-<CodeHighlight code={`// With InputField - concise
-<InputField 
-  control={form.control} 
-  name="email" 
-  label="Email" 
-  description="Your email address"
-  placeholder="your@email.com" 
+<CodeHighlight code={`<InputField 
+      control={form.control} 
+      name="email" 
+      label="Email" 
+      description="Your email address"
+      placeholder="your@email.com" 
 />`} language='tsx' />
 
-### Built-in features
+## Built-in features
 
 - **Automatic type handling**: Native support for `text`, `password`, `number`
 - **Visibility toggle**: Automatic eye/eye-off button for password fields
@@ -52,13 +43,13 @@ With `InputField`, the same result in a single line:
 - **Error display**: Responsive error messages (hidden on mobile at top, shown at bottom)
 - **Automatic conversion**: `number` fields automatically convert values
 
-### react-hook-form integration
+## react-hook-form integration
 
 The component is specifically designed for react-hook-form:
 
 <CodeHighlight code={`const form = useForm({
-  defaultValues: { name: '', age: 0 },
-  resolver: zodResolver(schema),
+      defaultValues: { name: '', age: 0 },
+      resolver: zodResolver(schema),
 });
 
 // Direct usage with form control
