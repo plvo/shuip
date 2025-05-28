@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "select-field",
+  "type": "registry:ui",
+  "dependencies": ["react-hook-form", "@radix-ui/react-select"],
+  "registryDependencies": ["form", "select"],
+  "files": [
+    {
+      "path": "./registry/ui/select-field.tsx",
+      "content": "import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';\nimport { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';\nimport type { SelectProps } from '@radix-ui/react-select';\nimport type { Control, Path, PathValue } from 'react-hook-form';\n\nexport interface SelectFieldOption {\n  value: string;\n  label: string;\n}\n\nexport interface SelectFieldProps<T extends Record<string, string>> extends SelectProps {\n  control: Control<T>;\n  name: Path<T>;\n  values: SelectFieldOption[];\n  label: string;\n  placeholder?: string;\n  description?: string;\n  defaultValues?: PathValue<T, Path<T>>;\n}\n\nexport function SelectField<TFieldValues extends Record<string, string>>({\n  control,\n  name,\n  values,\n  defaultValues,\n  label,\n  placeholder,\n  description,\n  ...props\n}: SelectFieldProps<TFieldValues>) {\n  return (\n    <FormField\n      control={control}\n      name={name}\n      defaultValue={defaultValues}\n      render={({ field }) => (\n        <FormItem>\n          <FormLabel>{label}</FormLabel>\n          <Select onValueChange={field.onChange} defaultValue={field.value} {...props}>\n            <FormControl>\n              <SelectTrigger>\n                <SelectValue placeholder={placeholder} />\n              </SelectTrigger>\n            </FormControl>\n            <SelectContent>\n              {values.map((item) => (\n                <SelectItem key={item.value} value={item.value}>\n                  {item.label}\n                </SelectItem>\n              ))}\n            </SelectContent>\n          </Select>\n          {description && <FormDescription>{description}</FormDescription>}\n          <FormMessage />\n        </FormItem>\n      )}\n    />\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/select-field.tsx"
+    }
+  ]
+}

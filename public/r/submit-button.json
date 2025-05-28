@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "submit-button",
+  "type": "registry:ui",
+  "dependencies": ["@radix-ui/react-icons"],
+  "registryDependencies": ["button"],
+  "files": [
+    {
+      "path": "./registry/ui/submit-button.tsx",
+      "content": "import { Button } from '@/components/ui/button';\nimport { ReloadIcon } from '@radix-ui/react-icons';\nimport type * as React from 'react';\n\nexport interface SubmitButtonProps extends React.RefAttributes<HTMLButtonElement> {\n  label?: React.JSX.Element | string;\n  onClick?: React.MouseEventHandler<HTMLButtonElement>;\n  disabled?: boolean;\n  loading?: boolean;\n  icon?: React.JSX.Element;\n}\n\nexport function SubmitButton({\n  onClick,\n  label,\n  disabled,\n  loading,\n  icon = <ReloadIcon className='mr-2 size-4 animate-spin' />,\n  ...props\n}: SubmitButtonProps) {\n  return (\n    <Button\n      type='submit'\n      variant={'default'}\n      className={'w-full'}\n      disabled={disabled || loading}\n      {...props}\n      {...(onClick && { onClick })}\n    >\n      {loading && icon}\n      {label}\n    </Button>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/submit-button.tsx"
+    }
+  ]
+}

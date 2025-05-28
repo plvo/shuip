@@ -1,4 +1,5 @@
-import ComponentSection from '@/components/documentation/component-section';
+import ItemSection from '@/components/documentation/item-section';
+import ComponentSection from '@/components/documentation/item-section';
 import { SidebarTableOfContents } from '@/components/documentation/toc';
 import { MdxContent } from '@/components/shared/mdx';
 import { getDocument } from '@/lib/content';
@@ -20,14 +21,14 @@ export default async function Page({ params }: DocPageProps) {
 
   return (
     <>
-      {document && itemName && (
+      {document && !!itemName && (
         <article>
           <div className='space-y-2 mb-10'>
             <h1 className={'h1-mdx'}>{document.title}</h1>
             <p className='text-base text-muted-foreground'>{document.description}</p>
           </div>
           <MdxContent code={document.body.code} />
-          <ComponentSection componentName={itemName} examples={examples ?? []} />
+          <ItemSection componentName={itemName} examples={examples ?? []} />
         </article>
       )}
 

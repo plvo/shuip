@@ -16,7 +16,6 @@
       "**/dist/**/*",
       "**/out/**/*",
       "**/generated/**/*",
-      "**/registry/**/*",
       "**/src/components/ui/**/*"
     ]
   },

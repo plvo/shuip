@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "signout-dialog",
+  "type": "registry:ui",
+  "dependencies": ["lucide-react"],
+  "registryDependencies": ["dialog", "button"],
+  "files": [
+    {
+      "path": "./registry/ui/signout-dialog.tsx",
+      "content": "import { Button } from '@/components/ui/button';\nimport {\n  Dialog,\n  DialogContent,\n  DialogDescription,\n  DialogFooter,\n  DialogHeader,\n  DialogTitle,\n  DialogTrigger,\n} from '@/components/ui/dialog';\nimport { LogOut } from 'lucide-react';\n\nexport interface SignoutDialogProps extends React.RefAttributes<HTMLDialogElement> {\n  title?: string;\n  description?: string;\n  labelConfirmation?: string;\n  withLogo?: boolean;\n  trigger?: React.JSX.Element;\n  onConfirm?: () => void;\n}\n\nexport function SignoutDialog({\n  title = 'Sign out',\n  description = 'Are you sure you want to sign out?',\n  labelConfirmation = 'Sign out',\n  withLogo = false,\n  trigger = <SignoutButton withLogo={withLogo} />,\n  onConfirm,\n  ...props\n}: SignoutDialogProps) {\n  return (\n    <Dialog {...props}>\n      <DialogTrigger asChild>{trigger}</DialogTrigger>\n      <DialogContent>\n        <DialogHeader>\n          <DialogTitle>{title}</DialogTitle>\n          <DialogDescription className='md:text-left'>{description}</DialogDescription>\n        </DialogHeader>\n        <DialogFooter>\n          <Button onClick={onConfirm}>{labelConfirmation}</Button>\n        </DialogFooter>\n      </DialogContent>\n    </Dialog>\n  );\n}\n\nfunction SignoutButton({ withLogo }: { withLogo?: boolean }) {\n  return (\n    <Button variant='outline' className='text-destructive' size={withLogo ? 'icon' : 'default'}>\n      {withLogo ? <LogOut /> : 'Sign out'}\n    </Button>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/signout-dialog.tsx"
+    }
+  ]
+}

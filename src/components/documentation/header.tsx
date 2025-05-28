@@ -1,6 +1,6 @@
 'use client';
 
-import ButtonTheme from '@/components/ui/shuip/button.theme';
+import { ThemeButton } from '@/components/ui/shuip/theme-button';
 import { cn } from '@/lib/utils';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
@@ -22,7 +22,7 @@ export function Header() {
         <Link href={'https://github.com/plvo/shuip'} passHref>
           <GitHubLogoIcon className='size-5' />
         </Link>
-        <ButtonTheme />
+        <ThemeButton />
         <div className='md:hidden'>
           <MobileDrawer />
         </div>
