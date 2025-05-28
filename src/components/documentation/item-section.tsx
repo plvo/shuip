@@ -32,12 +32,12 @@ export default function ItemSection({ componentName, examples }: ItemSectionProp
       </div>
 
       {!!exampleComponents.length && (
-        <div>
+        <div className='space-y-8'>
           <h2 id='examples' className={cn('h2-mdx')}>
             Examples
           </h2>
           {exampleComponents.map((example) => (
-            <ItemPreview key={example} filename={`${example}.example`} />
+            <ItemPreview key={example} filename={example} />
           ))}
         </div>
       )}

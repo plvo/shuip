@@ -10,7 +10,7 @@ interface NavGroupProps {
 export function NavGroup({ title, children, icon }: NavGroupProps) {
   return (
     <div className='mb-6'>
-      <h3 className='font-semibold mb-2 flex items-center gap-1.5'>
+      <h3 className='font-semibold mb-3 flex items-center gap-1.5'>
         <span className='size-4'>{icon}</span>
         {title}
       </h3>
@@ -22,7 +22,7 @@ export function NavGroup({ title, children, icon }: NavGroupProps) {
 export function SubNavGroup({ title, children, icon }: NavGroupProps) {
   return (
     <div className='mb-4'>
-      <h4 className='text-sm font-semibold mb-1 flex items-center gap-1.5  text-muted-foreground'>
+      <h4 className='uppercase font-semibold text-sm mb-2.5 flex items-center gap-1.5 text-muted-foreground'>
         <span className='size-4'>{icon}</span>
         {title}
       </h4>
@@ -42,7 +42,7 @@ export function NavItem({
       {...props}
       className={cn(
         'list-none border-l-2 ml-1.5',
-        'px-2 py-2 data-[first-index="true"]:pt-1 data-[last-index=true]:pb-1',
+        'pl-3.5 py-1.5 data-[first-index="true"]:pt-0 data-[last-index=true]:pb-0',
         isActive ? 'border-primary/60' : 'border-muted',
       )}
     >

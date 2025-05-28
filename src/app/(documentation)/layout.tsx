@@ -6,7 +6,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
     <div className='flex flex-col border max-w-[1450px] mx-auto'>
       <Header />
       <div className='flex'>
-        <div className='md:grid md:grid-cols-[200px_minmax(0,1fr)] md:gap-6'>
+        <div className='md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6'>
           <aside className={'top-14 z-30 h-[calc(100vh-3.5rem)] w-full border-r fixed hidden md:sticky md:block'}>
             <div className='h-full overflow-auto no-scrollbar py-8 px-4'>
               <DocsNav />
