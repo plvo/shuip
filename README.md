@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# shuip
 
-## Getting Started
+[**shuip**](https://shuip.xyz) _(ship + ui)_ is an open-source React component library designed to **accelerate the development** of your Next.js applications. Built on top of [shadcn/ui](https://ui.shadcn.com), shuip provides ready-to-use, business-focused components that help you **ship** faster.
 
-First, run the development server:
+For more details, see the full documentation: https://shuip.xyz/docs
+
+## Quick Start
+
+Use the shadcn/ui CLI to add shuip components to your project:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npx shadcn@latest add "https://shuip.xyz/r/submit-button"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+More informations on the [documentation](https://shuip.xyz/docs/installation)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Usage Example
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Here's how shuip simplifies form development:
 
-## Learn More
+### Before
+```html
+<FormField
+  control={form.control}
+  name="email"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Email</FormLabel>
+      <FormControl>
+        <Input placeholder="your@email.com" {...field} />
+      </FormControl>
+      <FormDescription>Your email address</FormDescription>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+```
 
-To learn more about Next.js, take a look at the following resources:
+### After with shuip
+```html
+<InputField
+  control={form.control} 
+  name="email" 
+  label="Email" 
+  description="Your email address"
+  placeholder="your@email.com" 
+/>
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🤝 Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Want to contribute? Check out the [Contribution guide](https://shuip.xyz/docs/contribution).
 
-## Deploy on Vercel
+## 📄 License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
