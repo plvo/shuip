@@ -25,6 +25,8 @@ export default function Home() {
           /docs
         </a>
       </div>
+
+      <img src='/logo.png' alt='shuip' />
     </main>
   );
 }
