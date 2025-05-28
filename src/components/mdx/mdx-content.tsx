@@ -2,6 +2,7 @@
 import { cn } from '@/lib/utils';
 import { useMDXComponent } from 'next-contentlayer2/hooks';
 import type React from 'react';
+import ButtonCopy from '../shared/button.copy';
 import { CodeHighlight, type CodeHighlightProps } from '../shared/code-preview';
 import CodeAllCli from './code.all-cli';
 import { ItemFooter, type ItemFooterProps } from './item-footer';
@@ -68,8 +69,9 @@ const components = {
   CodeAllCli: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <CodeAllCli {...props} />,
   InstallationCmd: ({ filename, ...props }: InstallationCmdProps) => <InstallationCmd filename={filename} {...props} />,
   CodeHighlight: ({ code, language = 'tsx', ...props }: CodeHighlightProps & React.HTMLAttributes<HTMLDivElement>) => (
-    <div className='rounded-lg border my-6 overflow-x-auto bg-[#1E1E1E]' {...props}>
+    <div className='flex justify-between rounded-lg border my-6 overflow-x-auto bg-[#1E1E1E]' {...props}>
       <CodeHighlight code={code} language={language} />
+      <ButtonCopy value={code} />
     </div>
   ),
   ItemHeader: ({ filename, text }: ItemHeaderProps) => <ItemHeader filename={filename} text={text} />,
