@@ -4,7 +4,15 @@ description: A button that changes the theme of the app
 group: shortcut
 ---
 
-a button that signs out the user
+<ItemHeader
+  filename={'theme-button'}
+  text='A button that changes the theme of the app. It is designed to be used with the next-themes library.'
+/>
 
-- it has a label
-- it has a click event that signs out the user
+<ItemFooter itemName={'theme-button'} props={[
+  {
+    name: 'withText',
+    type: 'boolean?',
+    description: 'Whether to display the text',
+  },
+]} />

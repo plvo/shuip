@@ -4,7 +4,20 @@ description: A skeleton for a text
 group: shortcut
 ---
 
-a button that signs out the user
+<ItemHeader
+  filename={'text-skeleton'}
+  text='A skeleton for a text'
+/>
 
-- it has a label
-- it has a click event that signs out the user
+<ItemFooter itemName={'text-skeleton'} props={[
+  {
+    name: 'text',
+    type: 'string | undefined',
+    description: 'Text to display',
+  },
+  {
+    name: '...props',
+    type: 'React.RefAttributes<HTMLDivElement>',
+    description: 'All props to apply to the skeleton',
+  },
+]} />

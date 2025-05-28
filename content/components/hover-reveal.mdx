@@ -4,7 +4,20 @@ description: A hover reveal
 group: shortcut
 ---
 
-a button that signs out the user
+<ItemHeader
+  filename={'hover-reveal'}
+  text='A hover reveal'
+/>
 
-- it has a label
-- it has a click event that signs out the user
+<ItemFooter itemName={'hover-reveal'} props={[
+  {
+    name: 'children',
+    type: 'string | React.JSX.Element',
+    description: 'The content to reveal',
+  },
+  {
+    name: 'content',
+    type: 'React.JSX.Element',
+    description: 'The content to reveal',
+  },
+]} />

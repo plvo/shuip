@@ -4,7 +4,40 @@ description: A dialog that confirms an action
 group: shortcut
 ---
 
-a button that signs out the user
+<ItemHeader
+  filename={'confirmation-dialog'}
+  text='A dialog that confirms an action'
+/>
 
-- it has a label
-- it has a click event that signs out the user
+<ItemFooter itemName={'confirmation-dialog'} props={[
+  {
+    name: 'trigger',
+    type: 'React.JSX.Element',
+    description: 'The trigger to open the dialog',
+  },
+  {
+    name: 'title',
+    type: 'string',
+    description: 'The title of the dialog',
+  },
+  {
+    name: 'description',
+    type: 'string',
+    description: 'The description of the dialog',
+  },
+  {
+    name: 'labelConfirmButton',
+    type: 'string',
+    description: 'The label of the confirmation button',
+  },
+  {
+    name: 'onConfirm',
+    type: '() => void',
+    description: 'The function to call when the confirmation button is clicked',
+  },
+  {
+    name: '...props',
+    type: 'React.RefAttributes<HTMLDialogElement>',
+    description: 'All props to apply to the dialog',
+  },
+]} />

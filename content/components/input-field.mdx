@@ -1,10 +1,104 @@
 ---
 title: Input Field
-description: A form field input
+description: A form field input designed to be used with react-hook-form and Zod for validation.
 group: form
 ---
 
-a button that signs out the user
+<ItemHeader
+  filename={'input-field'}
+  text='A form field input designed to be used with react-hook-form and Zod for validation. It combines a label, input, error handling, and optional description into a single reusable component.'
+/>
 
-- it has a label
-- it has a click event that signs out the user
+## Why use InputField?
+
+### Less verbose code in forms
+
+With classic shadcn/ui, creating a form field requires a lot of repetitive code:
+
+<CodeMdx code={`// With classic shadcn/ui - verbose
+<FormField
+  control={form.control}
+  name="email"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Email</FormLabel>
+      <FormControl>
+        <Input placeholder="your@email.com" {...field} />
+      </FormControl>
+      <FormDescription>
+        Your email address
+      </FormDescription>
+      <FormMessage />
+    </FormItem>
+  )}
+/>`} language='tsx' />
+
+With `InputField`, the same result in a single line:
+
+<CodeMdx code={`// With InputField - concise
+<InputField 
+  control={form.control} 
+  name="email" 
+  label="Email" 
+  description="Your email address"
+  placeholder="your@email.com" 
+/>`} language='tsx' />
+
+### Built-in features
+
+- **Automatic type handling**: Native support for `text`, `password`, `number`
+- **Visibility toggle**: Automatic eye/eye-off button for password fields
+- **Zod validation**: Native integration with react-hook-form and Zod
+- **Error display**: Responsive error messages (hidden on mobile at top, shown at bottom)
+- **Automatic conversion**: `number` fields automatically convert values
+
+### react-hook-form integration
+
+The component is specifically designed for react-hook-form:
+
+<CodeMdx code={`const form = useForm({
+  defaultValues: { name: '', age: 0 },
+  resolver: zodResolver(schema),
+});
+
+// Direct usage with form control
+<InputField control={form.control} name="name" label="Name" />
+<InputField control={form.control} name="age" label="Age" isNumber />`} language='tsx' />
+
+<ItemFooter itemName={'input-field'} props={[
+  {
+    name: 'control',
+    type: 'Control<T>',
+    description: 'react-hook-form control object',
+  },
+  {
+    name: 'name',
+    type: 'Path<T>',
+    description: 'Field name in the form',
+  },
+  {
+    name: 'label',
+    type: 'string',
+    description: 'Label displayed above the field',
+  },
+  {
+    name: 'description',
+    type: 'string?',
+    description: 'Optional description below the field',
+  },
+  {
+    name: 'isNumber',
+    type: 'boolean?',
+    description: 'Automatically converts to number',
+  },
+  {
+    name: 'type',
+    type: 'string?',
+    description: 'HTML field type (text, password, email...)',
+  },
+  {
+    name: '...props',
+    type: 'InputProps',
+    description: 'All shadcn/ui Input props',
+  },
+]} />

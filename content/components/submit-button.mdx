@@ -4,7 +4,35 @@ description: A button that submits a form
 group: form
 ---
 
-a button that submits a form
+<ItemHeader
+  filename={'submit-button'}
+  text='A button that submits a form'
+/>
 
-- it has a label
-- it has a click event that submits the form
+<ItemFooter itemName={'submit-button'} props={[
+  {
+    name: 'label',
+    type: 'string',
+    description: 'Label displayed above the field',
+  },
+  {
+    name: 'onClick',
+    type: '() => void',
+    description: 'Click event that submits the form',
+  },
+  {
+    name: 'disabled',
+    type: 'boolean',
+    description: 'Disabled state of the button',
+  },
+  {
+    name: 'loading',
+    type: 'boolean',
+    description: 'Loading state of the button',
+  },
+  {
+    name: 'icon',
+    type: 'React.JSX.Element?',
+    description: 'Icon displayed in the button',
+  },
+]} />

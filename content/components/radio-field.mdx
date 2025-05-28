@@ -4,7 +4,123 @@ description: A radio form field
 group: form
 ---
 
-a button that signs out the user
+<ItemHeader
+	filename={'radio-field'} 
+	text='A radio button group designed to be used with react-hook-form and Zod for validation. It combines a label, radio button options, error handling, and optional description into a single reusable component.' 
+/>
 
-- it has a label
-- it has a click event that signs out the user
+## Why use RadioField?
+
+### Less verbose code in forms
+
+With classic shadcn/ui, creating a radio group requires a lot of repetitive code:
+
+<CodeMdx code={`<FormField
+  control={form.control}
+  name="theme"
+  render={({ field }) => (
+    <FormItem className="space-y-3">
+      <FormLabel>Select a theme</FormLabel>
+      <FormControl>
+        <RadioGroup
+          onValueChange={field.onChange}
+          defaultValue={field.value}
+          className="flex flex-col space-y-1"
+        >
+          <FormItem className="flex items-center space-x-3 space-y-0">
+            <FormControl>
+              <RadioGroupItem value="light" />
+            </FormControl>
+            <FormLabel className="font-normal">Light</FormLabel>
+          </FormItem>
+          <FormItem className="flex items-center space-x-3 space-y-0">
+            <FormControl>
+              <RadioGroupItem value="dark" />
+            </FormControl>
+            <FormLabel className="font-normal">Dark</FormLabel>
+          </FormItem>
+          <FormItem className="flex items-center space-x-3 space-y-0">
+            <FormControl>
+              <RadioGroupItem value="system" />
+            </FormControl>
+            <FormLabel className="font-normal">System</FormLabel>
+          </FormItem>
+        </RadioGroup>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>`} language='tsx' />
+
+With `RadioField`, the same result in a single line:
+
+<CodeMdx code={`// With RadioField - concise
+<RadioField 
+  control={form.control} 
+  name="theme" 
+  label="Select a theme" 
+  values={['light', 'dark', 'system']}
+/>`} language='tsx' />
+
+### Built-in features
+
+- **Automatic radio rendering**: Pass an array of values and they're rendered as radio options
+- **Clean layout**: Pre-configured spacing and alignment for radio groups
+- **Zod validation**: Native integration with react-hook-form and Zod
+- **Responsive design**: Optimized for both desktop and mobile
+- **Error display**: Automatic error message display
+
+### react-hook-form integration
+
+The component is specifically designed for react-hook-form:
+
+<CodeMdx code={`const form = useForm({
+  defaultValues: { plan: 'basic' },
+  resolver: zodResolver(schema),
+});
+
+// Direct usage with form control
+<RadioField 
+  control={form.control} 
+  name="plan" 
+  label="Choose your plan" 
+  values={['basic', 'pro', 'enterprise']}
+/>`} language='tsx' />
+
+<ItemFooter itemName={'radio-field'} props={[
+  {
+    name: 'control',
+    type: 'Control<T>',
+    description: 'react-hook-form control object',
+  },
+  {
+    name: 'name',
+    type: 'Path<T>',
+    description: 'Field name in the form',
+  },
+  {
+    name: 'values',
+    type: 'string[]',
+    description: 'Array of string values for radio options',
+  },
+  {
+    name: 'label',
+    type: 'string',
+    description: 'Label displayed above the radio group',
+  },
+  {
+    name: 'description',
+    type: 'string?',
+    description: 'Optional description below the field',
+  },
+  {
+    name: 'className',
+    type: 'string?',
+    description: 'Additional CSS classes for the RadioGroup',
+  },
+  {
+    name: '...props',
+    type: 'RadioGroupProps',
+    description: 'All shadcn/ui RadioGroup props',
+  },
+]} />

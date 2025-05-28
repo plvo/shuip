@@ -14,7 +14,7 @@ export function useDocuments(): UseDocumentsReturn {
   const allComponentGroups: string[] = [
     ...new Set(
       allDocuments
-        .filter((doc) => doc.type === 'Component')
+        .filter((doc) => doc.type === 'Components')
         .map((doc) => doc.group)
         .filter((group) => group !== undefined)
         .sort((a, b) => a.localeCompare(b)),

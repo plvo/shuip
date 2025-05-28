@@ -31,7 +31,7 @@ export function DocsNav() {
         {allComponentGroups.map((group) => (
           <SubNavGroup key={group} title={firstCharUppercase(group)} icon={groupIcons[group]}>
             {allDocuments
-              .filter((doc) => doc.type === 'Component' && doc.group === group)
+              .filter((doc) => doc.type === 'Components' && doc.group === group)
               .map((item, index) => (
                 <NavItem
                   key={index}
@@ -40,7 +40,7 @@ export function DocsNav() {
                   isActive={pathname === `/${item.slug}`}
                   data-first-index={index === 0}
                   data-last-index={
-                    index === allDocuments.filter((doc) => doc.type === 'Component' && doc.group === group).length - 1
+                    index === allDocuments.filter((doc) => doc.type === 'Components' && doc.group === group).length - 1
                   }
                 />
               ))}

@@ -4,7 +4,124 @@ description: A select form field
 group: form
 ---
 
-a button that signs out the user
+<ItemHeader
+  filename={'select-field'}
+  text='A select form field designed to be used with react-hook-form and Zod for validation. It combines a label, select dropdown, error handling, and optional description into a single reusable component.'
+/>
 
-- it has a label
-- it has a click event that signs out the user
+## Why use SelectField?
+
+### Less verbose code in forms
+
+With classic shadcn/ui, creating a select field requires a lot of repetitive code:
+
+<CodeMdx code={`<FormField
+  control={form.control}
+  name="country"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Country</FormLabel>
+      <Select onValueChange={field.onChange} defaultValue={field.value}>
+        <FormControl>
+          <SelectTrigger>
+            <SelectValue placeholder="Select a country" />
+          </SelectTrigger>
+        </FormControl>
+        <SelectContent>
+          <SelectItem value="us">United States</SelectItem>
+          <SelectItem value="ca">Canada</SelectItem>
+          <SelectItem value="fr">France</SelectItem>
+        </SelectContent>
+      </Select>
+      <FormDescription>
+        Choose your country
+      </FormDescription>
+      <FormMessage />
+    </FormItem>
+  )}
+/>`} language='tsx' />
+
+With `SelectField`, the same result in a single line:
+
+<CodeMdx code={`<SelectField 
+  control={form.control} 
+  name="country" 
+  label="Country" 
+  placeholder="Select a country"
+  description="Choose your country"
+  values={countryOptions}
+/>`} language='tsx' />
+
+### Built-in features
+
+- **Automatic option rendering**: Pass an array of options and they're rendered automatically
+- **Type-safe values**: Full TypeScript support for option values
+- **Zod validation**: Native integration with react-hook-form and Zod
+- **Placeholder support**: Built-in placeholder handling
+- **Error display**: Automatic error message display
+
+### react-hook-form integration
+
+The component is specifically designed for react-hook-form:
+
+<CodeMdx code={`const form = useForm({
+      defaultValues: { category: '' },
+      resolver: zodResolver(schema),
+});
+
+const options = [
+      { label: 'Technology', value: 'tech' },
+      { label: 'Design', value: 'design' },
+      { label: 'Business', value: 'business' },
+];
+
+// Direct usage with form control
+<SelectField 
+      control={form.control} 
+      name="category" 
+      label="Category" 
+      values={options}
+/>`} language='tsx' />
+
+<ItemFooter itemName={'select-field'} props={[
+  {
+    name: 'control',
+    type: 'Control<T>',
+    description: 'react-hook-form control object',
+  },
+  {
+    name: 'name',
+    type: 'Path<T>',
+    description: 'Field name in the form',
+  },
+  {
+    name: 'values',
+    type: 'SelectFieldOption[]',
+    description: 'Array of options with label and value { label: string, value: string }',
+  },
+  {
+    name: 'label',
+    type: 'string',
+    description: 'Label displayed above the field',
+  },
+  {
+    name: 'placeholder',
+    type: 'string?',
+    description: 'Placeholder text in the select',
+  },
+  {
+    name: 'description',
+    type: 'string?',
+    description: 'Optional description below the field',
+  },
+  {
+    name: 'defaultValues',
+    type: 'PathValue<T, Path<T>>?',
+    description: 'Default selected value',
+  },
+  {
+    name: '...props',
+    type: 'SelectProps',
+    description: 'All Radix Select props',
+  },
+]} />

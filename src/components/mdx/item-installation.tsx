@@ -1,18 +1,17 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type PackageManager, getCmd } from '@/lib/cmd';
 import { cn } from '@/lib/utils';
 import { Terminal } from 'lucide-react';
 import React from 'react';
 import ButtonCopy from '../shared/button.copy';
-import CodePreview from '../shared/code-preview';
+import { CodePreview } from '../shared/code-preview';
 
-interface ItemInstallationProps {
+export interface ItemInstallationProps {
   filename: string;
 }
 
-export default function ItemInstallation({ filename }: ItemInstallationProps) {
+export function ItemInstallation({ filename }: ItemInstallationProps) {
   return (
     <div className={cn('group relative flex flex-col space-y-2')}>
       <Tabs defaultValue='cli' className='relative mr-auto w-full'>
@@ -55,7 +54,12 @@ export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
   );
 
   return (
-    <Tabs value={pkg} onValueChange={(v) => setValue(v as PackageManager)} className={'w-full'} {...props}>
+    <Tabs
+      value={pkg}
+      onValueChange={(v) => setValue(v as PackageManager)}
+      className={'w-full rounded-lg border'}
+      {...props}
+    >
       <TabsList className='flex justify-between p-2 bg-muted/70'>
         <div className='px-0 py-2'>
           {['npm', 'pnpm', 'bun'].map((manager) => (
@@ -82,3 +86,20 @@ export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
     </Tabs>
   );
 }
+
+export type PackageManager = 'npm' | 'pnpm' | 'bun';
+
+export const getCmd = (pkg: PackageManager, filename: string) => {
+  const url = `https://shuip.xyz/r/${filename}.json`;
+
+  switch (pkg) {
+    case 'npm':
+      return `npx shadcn@latest add ${url}`;
+    case 'pnpm':
+      return `pnpm dlx shadcn@latest add ${url}`;
+    case 'bun':
+      return `bunx --bun shadcn@latest add ${url}`;
+    default:
+      return '';
+  }
+};

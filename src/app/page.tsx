@@ -1,4 +1,4 @@
-import CodeAllCli from '@/components/documentation/code.all-cli';
+import CodeAllCli from '@/components/mdx/code.all-cli';
 
 export default function Home() {
   return (
