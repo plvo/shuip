@@ -1,3 +1,5 @@
+'use client';
+
 import { Form } from '@/components/ui/form';
 import { SelectField, type SelectFieldOption } from '@/components/ui/shuip/select-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';

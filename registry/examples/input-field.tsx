@@ -1,3 +1,5 @@
+'use client';
+
 import { Form } from '@/components/ui/form';
 import { InputField } from '@/components/ui/shuip/input-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';

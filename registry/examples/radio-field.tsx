@@ -1,3 +1,5 @@
+'use client';
+
 import { Form } from '@/components/ui/form';
 import { RadioField } from '@/components/ui/shuip/radio-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
