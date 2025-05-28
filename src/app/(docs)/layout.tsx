@@ -3,7 +3,7 @@ import { Header } from '@/components/docs/header';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className='flex flex-col border max-w-[1450px] mx-auto'>
+    <div className='flex flex-col border-x max-w-[1451px] mx-auto'>
       <Header />
       <div className='flex'>
         <div className='md:grid md:grid-cols-[220px_minmax(0,1fr)]'>

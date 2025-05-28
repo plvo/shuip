@@ -41,7 +41,7 @@ export function ItemPreview({ filename, children, ...props }: ItemPreviewProps) 
             {/* TODO V0 */}
             <ButtonCopy value={code || ''} />
           </div>
-          <Preview filename={filename} />
+          <Preview filename={filename} isJustPreview={false} />
         </TabsContent>
         <TabsContent value='code'>
           <CodePreview code={code || ''} />
@@ -51,7 +51,7 @@ export function ItemPreview({ filename, children, ...props }: ItemPreviewProps) 
   );
 }
 
-export function Preview({ filename }: { filename: string }) {
+export function Preview({ filename, isJustPreview = true }: { filename: string; isJustPreview?: boolean }) {
   const Preview = React.useMemo(() => {
     const Comp = registryIndex[filename]?.component;
 
@@ -69,7 +69,12 @@ export function Preview({ filename }: { filename: string }) {
   }, [filename]);
 
   return (
-    <div className={cn('preview w-full min-h-[150px] flex items-center justify-center p-8 border rounded-md')}>
+    <div
+      className={cn(
+        'w-full min-h-[150px] flex items-center justify-center p-8 bg-card',
+        isJustPreview && 'border rounded-md',
+      )}
+    >
       <React.Suspense
         fallback={
           <div className='flex w-full items-center justify-center text-sm text-muted-foreground'>

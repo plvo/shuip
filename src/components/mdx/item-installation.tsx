@@ -13,7 +13,7 @@ export interface ItemInstallationProps {
 
 export function ItemInstallation({ filename }: ItemInstallationProps) {
   return (
-    <div className={cn('group relative flex flex-col space-y-2')}>
+    <div className={cn('group relative flex flex-col space-y-2 ')}>
       <Tabs defaultValue='cli' className='relative mr-auto w-full'>
         <div className='flex items-center justify-between pb-2'>
           <TabsList className='w-full justify-start rounded-none border-b bg-transparent p-0'>
@@ -60,7 +60,7 @@ export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
       className={'w-full rounded-lg border'}
       {...props}
     >
-      <TabsList className='flex justify-between p-2 bg-muted/70'>
+      <TabsList className='flex justify-between p-2 bg-card'>
         <div className='px-0 py-2'>
           {['npm', 'pnpm', 'bun'].map((manager) => (
             <TabsTrigger
