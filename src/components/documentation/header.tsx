@@ -4,6 +4,7 @@ import { ThemeButton } from '@/components/ui/shuip/theme-button';
 import { cn } from '@/lib/utils';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
+import { Button } from '../ui/button';
 import { MobileDrawer } from './mobile-drawer';
 
 export function Header() {
@@ -20,7 +21,9 @@ export function Header() {
       </div>
       <div className='flex items-center md:gap-4 gap-2'>
         <Link href={'https://github.com/plvo/shuip'} passHref>
-          <GitHubLogoIcon className='size-5' />
+          <Button variant='outline' size='icon'>
+            <GitHubLogoIcon className='size-5' />
+          </Button>
         </Link>
         <ThemeButton />
         <div className='md:hidden'>

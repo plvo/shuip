@@ -17,7 +17,7 @@ export default async function Page({ params }: DocPageProps) {
     <>
       {document && (
         <article>
-          <div className='space-y-2 mb-10'>
+          <div className='space-y-2 mb-6'>
             <h1 className={'h1-mdx'}>{document.title}</h1>
             <p className='text-base text-muted-foreground'>{document.description}</p>
           </div>

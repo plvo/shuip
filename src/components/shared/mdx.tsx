@@ -3,6 +3,8 @@ import { cn } from '@/lib/utils';
 import { useMDXComponent } from 'next-contentlayer2/hooks';
 import type React from 'react';
 import CodeAllCli from '../documentation/code.all-cli';
+import { InstallationCmd, type InstallationCmdProps } from '../documentation/item-installation';
+import { type CodeHighlightProps, CodeMdx } from './code-preview';
 
 interface MdxComponentsProps {
   code: string;
@@ -51,7 +53,11 @@ const components = {
   small: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
     <small className={cn('small-mdx', className)} {...props} />
   ),
-  CodeAllCli: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => <CodeAllCli {...props} />,
+  CodeAllCli: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <CodeAllCli {...props} />,
+  InstallationCmd: ({ filename, ...props }: InstallationCmdProps) => <InstallationCmd filename={filename} {...props} />,
+  CodeMdx: ({ code, language = 'tsx', ...props }: CodeHighlightProps) => (
+    <CodeMdx code={code} language={language} {...props} />
+  ),
 };
 
 export function MdxContent({ code, className }: MdxComponentsProps) {

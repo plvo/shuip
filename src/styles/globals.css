@@ -115,21 +115,21 @@ body {
 }
 
 .h1-mdx {
-  @apply scroll-m-20 text-4xl font-extrabold tracking-tight;
+  @apply scroll-m-20 text-4xl font-extrabold tracking-tight mt-2;
   @apply text-accent-foreground;
 }
 
 .h2-mdx {
-  @apply scroll-m-20 text-3xl font-semibold tracking-tight;
+  @apply scroll-m-20 text-3xl font-semibold tracking-tight mt-2;
   @apply border-b first:mt-0 pt-4 pb-2 mb-4;
 }
 
 .h3-mdx {
-  @apply scroll-m-20 text-2xl font-semibold tracking-tight pt-2;
+  @apply scroll-m-20 text-2xl font-semibold tracking-tight mt-2;
 }
 
 .h4-mdx {
-  @apply scroll-m-20 text-xl font-semibold tracking-tight;
+  @apply scroll-m-20 text-xl font-semibold tracking-tight mt-2;
 }
 
 .a-mdx {
@@ -137,7 +137,7 @@ body {
 }
 
 .p-mdx {
-  @apply leading-4 [&:not(:first-child)]:mt-6;
+  @apply leading-7 [&:not(:first-child)]:mt-4;
 }
 
 .ul-mdx {
@@ -149,7 +149,7 @@ body {
 }
 
 .li-mdx {
-  @apply mt-2;
+  @apply mt-1;
 }
 
 .blockquote-mdx {

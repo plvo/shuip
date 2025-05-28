@@ -14,7 +14,7 @@ export function DocsNav() {
 
   return (
     <nav className='flex flex-col gap-1'>
-      <NavGroup title='Introduction' icon={<BookOpen className='size-4' />}>
+      <NavGroup title='Getting started' icon={<BookOpen className='size-4' />}>
         {documents.map((item, index) => (
           <NavItem
             key={index}
