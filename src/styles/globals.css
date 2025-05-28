@@ -115,29 +115,31 @@ body {
 }
 
 .h1-mdx {
-  @apply scroll-m-20 text-4xl font-extrabold tracking-tight mt-2;
+  @apply scroll-m-20 text-4xl font-extrabold tracking-tight;
   @apply text-accent-foreground;
+  @apply first:mt-0;
 }
 
 .h2-mdx {
-  @apply scroll-m-20 text-3xl font-semibold tracking-tight mt-2;
-  @apply border-b first:mt-0 pt-4 pb-2 mb-4;
+  @apply scroll-m-20 text-3xl font-semibold tracking-tight border-b;
+  @apply first:mt-0 pt-4 pb-2 mb-4 mt-10;
 }
 
 .h3-mdx {
-  @apply scroll-m-20 text-2xl font-semibold tracking-tight mt-2;
+  @apply scroll-m-20 text-2xl font-semibold tracking-tight;
+  @apply first:mt-0 mt-4;
 }
 
 .h4-mdx {
-  @apply scroll-m-20 text-xl font-semibold tracking-tight mt-2;
+  @apply scroll-m-20 text-xl font-semibold tracking-tight;
 }
 
 .a-mdx {
-  @apply font-medium underline underline-offset-4;
+  @apply underline underline-offset-4;
 }
 
 .p-mdx {
-  @apply leading-7 [&:not(:first-child)]:mt-4;
+  @apply leading-8 [&:not(:first-child)]:mt-4;
 }
 
 .ul-mdx {
@@ -149,7 +151,7 @@ body {
 }
 
 .li-mdx {
-  @apply mt-1;
+  @apply mt-2;
 }
 
 .blockquote-mdx {

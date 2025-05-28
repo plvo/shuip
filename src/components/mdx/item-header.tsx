@@ -12,18 +12,14 @@ export function ItemHeader({ filename, text }: ItemHeaderProps) {
   return (
     <>
       <p>{text}</p>
-      <div>
-        <h2 id='installation' className={'h2-mdx'}>
-          Installation
-        </h2>
-        <ItemInstallation filename={filename} />
-      </div>
-      <div>
-        <h2 id='preview' className={'h2-mdx'}>
-          Preview
-        </h2>
-        <Preview filename={`${filename}.example`} />
-      </div>
+      <h2 id='installation' className={'h2-mdx'}>
+        Installation
+      </h2>
+      <ItemInstallation filename={filename} />
+      <h2 id='preview' className={'h2-mdx'}>
+        Preview
+      </h2>
+      <Preview filename={`${filename}.example`} />
     </>
   );
 }

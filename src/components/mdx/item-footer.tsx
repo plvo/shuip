@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn, filenameToTitle } from '@/lib/utils';
 import * as React from 'react';
 import { COMPONENT_CATEGORIES } from '#/registry/__index__';
 import { ItemPreview } from './item-preview';
@@ -37,10 +37,16 @@ export function ItemFooter({ itemName, props }: ItemFooterProps) {
 
 function ItemExamples({ itemName }: { itemName: string }) {
   const examples = COMPONENT_CATEGORIES[itemName] || null;
-  const exampleComponents = examples?.filter((e) => e !== itemName) || [];
 
-  if (exampleComponents.length) {
-    return exampleComponents.map((example) => <ItemPreview key={example} filename={example} />);
+  if (examples.length) {
+    return examples.sort().map((example) => (
+      <div key={example} className='my-6 space-y-4'>
+        <h3 className='h3-mdx'>
+          {example === `${itemName}.example` ? 'Default' : filenameToTitle(example.split('.')[1])}
+        </h3>
+        <ItemPreview filename={example} />
+      </div>
+    ));
   }
 }
 
