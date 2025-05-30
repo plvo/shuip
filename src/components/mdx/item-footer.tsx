@@ -17,20 +17,15 @@ export interface ItemFooterProps {
 export function ItemFooter({ itemName, props }: ItemFooterProps) {
   return (
     <>
-      <div>
-        <h2 id='examples' className={'h2-mdx'}>
-          Examples
-        </h2>
+      <h2 id='examples' className={'h2-mdx'}>
+        Examples
+      </h2>
+      <ItemExamples itemName={itemName} />
 
-        <ItemExamples itemName={itemName} />
-      </div>
-
-      <div>
-        <h2 id='props' className={'h2-mdx'}>
-          Props
-        </h2>
-        <PropTable props={props} />
-      </div>
+      <h2 id='props' className={'h2-mdx'}>
+        Props
+      </h2>
+      <PropTable props={props} />
     </>
   );
 }

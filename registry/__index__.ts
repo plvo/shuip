@@ -24,8 +24,14 @@ export const registryIndex: Record<string, RegistryComponent> = {
   'submit-button': {
     name: 'submit-button',
     path: '#/registry/ui/submit-button.tsx',
-    code: "import { Button } from '@/components/ui/button';\nimport { ReloadIcon } from '@radix-ui/react-icons';\nimport type * as React from 'react';\n\nexport interface SubmitButtonProps extends React.RefAttributes<HTMLButtonElement> {\n  label?: React.JSX.Element | string;\n  disabled?: boolean;\n  loading?: boolean;\n  icon?: React.JSX.Element;\n}\n\nexport function SubmitButton({\n  label,\n  disabled,\n  loading,\n  icon = <ReloadIcon className='mr-2 size-4 animate-spin' />,\n  ...props\n}: SubmitButtonProps) {\n  return (\n    <Button type='submit' variant={'default'} className={'w-full'} disabled={disabled || loading} {...props}>\n      {loading && icon}\n      {label}\n    </Button>\n  );\n}\n",
+    code: "import { Button, type buttonVariants } from '@/components/ui/button';\nimport { ReloadIcon } from '@radix-ui/react-icons';\nimport type { VariantProps } from 'class-variance-authority';\nimport type * as React from 'react';\n\ntype ButtonProps = React.ComponentProps<'button'> &\n  VariantProps<typeof buttonVariants> & {\n    asChild?: boolean;\n  };\n\nexport interface SubmitButtonProps extends ButtonProps {\n  label?: React.JSX.Element | string;\n  disabled?: boolean;\n  loading?: boolean;\n  icon?: React.JSX.Element;\n}\n\nexport function SubmitButton({\n  label,\n  disabled,\n  loading,\n  icon = <ReloadIcon className='mr-2 size-4 animate-spin' />,\n  ...props\n}: SubmitButtonProps) {\n  return (\n    <Button type='submit' variant={'default'} className={'w-full'} disabled={disabled || loading} {...props}>\n      {loading && icon}\n      {label}\n    </Button>\n  );\n}\n",
     component: React.lazy(() => import('#/registry/ui/submit-button.tsx')),
+  },
+  'copy-button': {
+    name: 'copy-button',
+    path: '#/registry/ui/copy-button.tsx',
+    code: "'use client';\n\nimport { Button, type buttonVariants } from '@/components/ui/button';\nimport type { VariantProps } from 'class-variance-authority';\nimport { CheckIcon, Copy } from 'lucide-react';\nimport * as React from 'react';\n\ntype ButtonProps = React.ComponentProps<'button'> &\n  VariantProps<typeof buttonVariants> & {\n    asChild?: boolean;\n  };\n\nexport interface CopyButtonProps extends ButtonProps {\n  value: string;\n  copiedIcon?: React.ReactNode;\n  notCopiedIcon?: React.ReactNode;\n}\n\nasync function copyToClipboardWithMeta(value: string) {\n  navigator.clipboard.writeText(value);\n}\n\nexport function CopyButton({ value, copiedIcon = <CheckIcon />, notCopiedIcon = <Copy />, ...props }: CopyButtonProps) {\n  const [hasCopied, setHasCopied] = React.useState(false);\n\n  React.useEffect(() => {\n    setTimeout(() => {\n      setHasCopied(false);\n    }, 2000);\n  }, [hasCopied]);\n\n  return (\n    <Button\n      size='icon'\n      variant={'ghost'}\n      className={'z-10 size-4'}\n      onClick={() => {\n        copyToClipboardWithMeta(value);\n        setHasCopied(true);\n      }}\n      {...props}\n    >\n      <span className='sr-only'>Copy</span>\n      {hasCopied ? copiedIcon : notCopiedIcon}\n    </Button>\n  );\n}\n",
+    component: React.lazy(() => import('#/registry/ui/copy-button.tsx')),
   },
   'radio-field': {
     name: 'radio-field',
@@ -42,7 +48,7 @@ export const registryIndex: Record<string, RegistryComponent> = {
   'theme-button': {
     name: 'theme-button',
     path: '#/registry/ui/theme-button.tsx',
-    code: "import { Button } from '@/components/ui/button';\nimport { Laptop, Moon, Sun } from 'lucide-react';\nimport { useTheme } from 'next-themes';\nimport * as React from 'react';\n\ntype Theme = 'system' | 'light' | 'dark';\n\nexport interface ThemeButtonProps {\n  withText?: boolean;\n}\n\nexport function ThemeButton({ withText }: ThemeButtonProps) {\n  const { theme, setTheme } = useTheme();\n  const [currentTheme, setCurrentTheme] = React.useState<Theme>('system');\n\n  React.useEffect(() => {\n    setCurrentTheme(theme as Theme);\n  }, [theme]);\n\n  const cycleTheme = () => {\n    const themes: Theme[] = ['system', 'light', 'dark'];\n    const currentIndex = themes.indexOf(currentTheme);\n    const nextIndex = (currentIndex + 1) % themes.length;\n    setTheme(themes[nextIndex]);\n  };\n\n  const getThemeIcon = () => {\n    switch (currentTheme) {\n      case 'system':\n        return <Laptop className='size-[1.2rem]' />;\n      case 'light':\n        return <Sun className='size-[1.2rem]' />;\n      case 'dark':\n        return <Moon className='size-[1.2rem]' />;\n    }\n  };\n\n  const getThemeText = () => {\n    return currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1);\n  };\n\n  return (\n    <Button variant='outline' size={withText ? 'default' : 'icon'} onClick={cycleTheme}>\n      {getThemeIcon()}\n      {withText && <span className='ml-2 capitalize'>{getThemeText()}</span>}\n      <span className='sr-only'>Toggle theme</span>\n    </Button>\n  );\n}\n",
+    code: "import { Button, type buttonVariants } from '@/components/ui/button';\nimport type { VariantProps } from 'class-variance-authority';\nimport { Laptop, Moon, Sun } from 'lucide-react';\nimport { useTheme } from 'next-themes';\nimport * as React from 'react';\n\ntype ButtonProps = React.ComponentProps<'button'> &\n  VariantProps<typeof buttonVariants> & {\n    asChild?: boolean;\n  };\n\ntype Theme = 'system' | 'light' | 'dark';\n\nexport interface ThemeButtonProps extends ButtonProps {\n  withText?: boolean;\n}\n\nexport function ThemeButton({ withText, ...props }: ThemeButtonProps) {\n  const { theme, setTheme } = useTheme();\n  const [currentTheme, setCurrentTheme] = React.useState<Theme>('system');\n\n  React.useEffect(() => {\n    setCurrentTheme(theme as Theme);\n  }, [theme]);\n\n  const cycleTheme = () => {\n    const themes: Theme[] = ['system', 'light', 'dark'];\n    const currentIndex = themes.indexOf(currentTheme);\n    const nextIndex = (currentIndex + 1) % themes.length;\n    setTheme(themes[nextIndex]);\n  };\n\n  const getThemeIcon = () => {\n    switch (currentTheme) {\n      case 'system':\n        return <Laptop className='size-[1.2rem]' />;\n      case 'light':\n        return <Sun className='size-[1.2rem]' />;\n      case 'dark':\n        return <Moon className='size-[1.2rem]' />;\n    }\n  };\n\n  const getThemeText = () => {\n    return currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1);\n  };\n\n  return (\n    <Button variant='outline' size={withText ? 'default' : 'icon'} onClick={cycleTheme} {...props}>\n      {getThemeIcon()}\n      {withText && <span className='ml-2 capitalize'>{getThemeText()}</span>}\n      <span className='sr-only'>Toggle theme</span>\n    </Button>\n  );\n}\n",
     component: React.lazy(() => import('#/registry/ui/theme-button.tsx')),
   },
   'select-field': {
@@ -87,6 +93,18 @@ export const registryIndex: Record<string, RegistryComponent> = {
     code: "import { TitleSection } from '@/components/block/shuip/title-section';\n\nexport default function TitleSectionExample() {\n  return <TitleSection title='Title' description='Lorem ipsum dolor sit amet consectetur, adipisicing elit.' />;\n}\n",
     component: React.lazy(() => import('#/registry/examples/title-section.tsx')),
   },
+  'copy-button.with-custom-icons.example': {
+    name: 'copy-button.with-custom-icons.example',
+    path: '#/registry/examples/copy-button.with-custom-icons.tsx',
+    code: "'use client';\n\nimport { CopyButton } from '@/components/ui/shuip/copy-button';\nimport { Cat, Dog } from 'lucide-react';\n\nexport default function CopyButtonWithCustomIconsExample() {\n  return (\n    <CopyButton\n      value='Hello, cat!'\n      copiedIcon={<Dog className='size-6' />}\n      notCopiedIcon={<Cat className='size-6' />}\n      className='size-8'\n      variant={'default'}\n    />\n  );\n}\n",
+    component: React.lazy(() => import('#/registry/examples/copy-button.with-custom-icons.tsx')),
+  },
+  'copy-button.example': {
+    name: 'copy-button.example',
+    path: '#/registry/examples/copy-button.tsx',
+    code: "'use client';\n\nimport { CopyButton } from '@/components/ui/shuip/copy-button';\n\nexport default function CopyButtonExample() {\n  return <CopyButton value='Hello, world!' />;\n}\n",
+    component: React.lazy(() => import('#/registry/examples/copy-button.tsx')),
+  },
   'radio-field.example': {
     name: 'radio-field.example',
     path: '#/registry/examples/radio-field.tsx',
@@ -130,6 +148,7 @@ export const registryIndex: Record<string, RegistryComponent> = {
 export const COMPONENT_CATEGORIES: Record<string, string[]> = {
   'input-field': ['input-field.example'],
   'submit-button': ['submit-button.loading.example', 'submit-button.example'],
+  'copy-button': ['copy-button.with-custom-icons.example', 'copy-button.example'],
   'radio-field': ['radio-field.example'],
   'confirmation-dialog': ['confirmation-dialog.example'],
   'theme-button': ['theme-button.text.example', 'theme-button.example'],

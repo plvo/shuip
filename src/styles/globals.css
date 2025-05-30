@@ -2,10 +2,6 @@
 @custom-variant dark (&:is(.dark *));
 @config "../../tailwind.config.ts";
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 @layer base {
   :root {
     --background: oklch(0.8935 0.0249 265.5792);
@@ -14,7 +10,7 @@ body {
     --card-foreground: oklch(0.2135 0.0158 244.4904);
     --popover: oklch(1.0 0 0);
     --popover-foreground: oklch(0.2135 0.0158 244.4904);
-    --primary: oklch(0.711 0.1523 70.0314);
+    --primary: oklch(0.711 0.1823 70.0314);
     --primary-foreground: oklch(1.0 0 0);
     --secondary: oklch(0.2515 0.0204 264.1075);
     --secondary-foreground: oklch(1.0 0 0);
@@ -40,8 +36,6 @@ body {
     --sidebar-accent-foreground: oklch(0.6346 0.1622 246.6785);
     --sidebar-border: oklch(0.8562 0.0206 238.7099);
     --sidebar-ring: oklch(0.6442 0.1597 245.139);
-    --font-sans: Plus Jakarta Sans, sans-serif;
-    --font-serif: Space Grotesk, serif;
     --font-mono: Menlo, monospace;
     --radius: 1rem;
     --shadow-2xs: 0px 2px 0px 0px hsl(202.844 89.3443% 47.8431% / 0.0);
@@ -67,7 +61,7 @@ body {
     --card-foreground: oklch(0.8612 0.0052 228.829);
     --popover: oklch(0.2048 0.0191 266.0472);
     --popover-foreground: oklch(0.8612 0.0052 228.829);
-    --primary: oklch(0.711 0.1523 70.0314);
+    --primary: oklch(0.711 0.1823 70.0314);
     --primary-foreground: oklch(0.2048 0.0191 266.0472);
     --secondary: oklch(0.2515 0.0204 264.1075);
     --secondary-foreground: oklch(0.8612 0.0052 228.829);
@@ -93,8 +87,6 @@ body {
     --sidebar-accent-foreground: oklch(0.63 0.1584 246.0371);
     --sidebar-border: oklch(0.3533 0.0202 239.7347);
     --sidebar-ring: oklch(0.6442 0.1597 245.139);
-    --font-sans: Plus Jakarta Sans, sans-serif;
-    --font-serif: Space Grotesk, serif;
     --font-mono: Menlo, monospace;
     --radius: 1rem;
     --shadow-2xs: 0px 2px 0px 0px hsl(202.844 89.3443% 47.8431% / 0.0);
@@ -145,16 +137,11 @@ body {
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
-
-    --font-sans: var(--font-sans);
     --font-mono: var(--font-mono);
-    --font-serif: var(--font-serif);
-
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
     --radius-xl: calc(var(--radius) + 4px);
-
     --shadow-2xs: var(--shadow-2xs);
     --shadow-xs: var(--shadow-xs);
     --shadow-sm: var(--shadow-sm);
@@ -163,7 +150,6 @@ body {
     --shadow-lg: var(--shadow-lg);
     --shadow-xl: var(--shadow-xl);
     --shadow-2xl: var(--shadow-2xl);
-
     --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
     --tracking-tight: calc(var(--tracking-normal) - 0.025em);
     --tracking-normal: var(--tracking-normal);
@@ -205,16 +191,11 @@ body {
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
-
-    --font-sans: var(--font-sans);
     --font-mono: var(--font-mono);
-    --font-serif: var(--font-serif);
-
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
     --radius-xl: calc(var(--radius) + 4px);
-
     --shadow-2xs: var(--shadow-2xs);
     --shadow-xs: var(--shadow-xs);
     --shadow-sm: var(--shadow-sm);
@@ -223,7 +204,6 @@ body {
     --shadow-lg: var(--shadow-lg);
     --shadow-xl: var(--shadow-xl);
     --shadow-2xl: var(--shadow-2xl);
-
     --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
     --tracking-tight: calc(var(--tracking-normal) - 0.025em);
     --tracking-normal: var(--tracking-normal);
@@ -238,8 +218,8 @@ body {
     @apply border-border outline-ring/50;
   }
   body {
-    letter-spacing: var(--tracking-normal);
     @apply bg-background text-foreground;
+    font-family: var(--font-geist-sans);
   }
 }
 
@@ -306,6 +286,7 @@ body {
 .hr-mdx {
   @apply my-4 md:my-8;
 }
+
 .code-mdx {
   @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold;
 }

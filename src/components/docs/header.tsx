@@ -17,7 +17,7 @@ export function Header() {
     >
       <div className='flex items-center gap-2'>
         <Link href={'/'} passHref>
-          <h1 className='text-2xl font-bold'>
+          <h1 className='text-2xl font-bold hidden md:block'>
             sh<span className='text-primary'>ui</span>p
           </h1>
         </Link>

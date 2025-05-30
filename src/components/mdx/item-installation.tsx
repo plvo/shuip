@@ -4,8 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { Terminal } from 'lucide-react';
 import React from 'react';
-import ButtonCopy from '../shared/button.copy';
-import { CodePreview } from '../shared/code-preview';
+import { CopyButton } from '../ui/shuip/copy-button';
+import { CodePreview } from './code-preview';
 
 export interface ItemInstallationProps {
   filename: string;
@@ -13,7 +13,7 @@ export interface ItemInstallationProps {
 
 export function ItemInstallation({ filename }: ItemInstallationProps) {
   return (
-    <div className={cn('group relative flex flex-col space-y-2 ')}>
+    <div className={'flex flex-col space-y-2'}>
       <Tabs defaultValue='cli' className='relative mr-auto w-full'>
         <div className='flex items-center justify-between pb-2'>
           <TabsList className='w-full justify-start rounded-none border-b bg-transparent p-0'>
@@ -47,9 +47,9 @@ export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
   const code = Array.isArray(filename) ? filename.map((f) => getCmd(pkg, f)).join('\n') : getCmd(pkg, filename);
 
   const CmdCode: React.FC = () => (
-    <pre className='flex items-center'>
-      <Terminal className='size-4 mr-2 mt-0.5 text-muted-foreground' />
-      <code className='overflow-x-auto pb-2'>{code}</code>
+    <pre className='flex items-center pb-2'>
+      <Terminal className='size-4 mr-2 text-muted-foreground' />
+      <code className='overflow-x-auto'>{code}</code>
     </pre>
   );
 
@@ -75,7 +75,7 @@ export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
             </TabsTrigger>
           ))}
         </div>
-        <ButtonCopy value={code} />
+        <CopyButton value={code} />
       </TabsList>
 
       {(['npm', 'pnpm', 'bun', 'yarn'] as PackageManager[]).map((cmd) => (

@@ -22,7 +22,7 @@ export function NavGroup({ title, children, icon }: NavGroupProps) {
 export function SubNavGroup({ title, children, icon }: NavGroupProps) {
   return (
     <div className='mb-4'>
-      <h4 className='uppercase font-semibold text-sm mb-2.5 flex items-center gap-1.5 text-muted-foreground'>
+      <h4 className='uppercase font-mono text-sm mb-2.5 flex items-center gap-1.5 text-muted-foreground'>
         <span className='size-4'>{icon}</span>
         {title}
       </h4>
@@ -47,7 +47,7 @@ export function NavItem({
       )}
     >
       <Link href={href}>
-        <h5 className={cn('text-sm font-medium', isActive ? 'text-primary' : 'text-muted-foreground')}>{title}</h5>
+        <h5 className={cn('text-sm font-semibold', isActive ? 'text-primary' : 'text-foreground')}>{title}</h5>
       </Link>
     </li>
   );

@@ -17,7 +17,7 @@
     {
       "name": "submit-button",
       "type": "registry:ui",
-      "dependencies": ["@radix-ui/react-icons"],
+      "dependencies": ["@radix-ui/react-icons", "class-variance-authority"],
       "registryDependencies": ["button"],
       "files": [
         {
@@ -30,7 +30,7 @@
     {
       "name": "theme-button",
       "type": "registry:ui",
-      "dependencies": ["next-themes", "lucide-react"],
+      "dependencies": ["next-themes", "lucide-react", "class-variance-authority"],
       "registryDependencies": ["button"],
       "files": [
         {
@@ -102,6 +102,19 @@
           "path": "./registry/ui/select-field.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/select-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "copy-button",
+      "type": "registry:ui",
+      "dependencies": ["lucide-react", "class-variance-authority"],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "./registry/ui/copy-button.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/copy-button.tsx"
         }
       ]
     }

@@ -1,0 +1,30 @@
+---
+title: Copy Button
+description: A button that copies text to the clipboard.
+group: shortcut
+---
+
+<ItemHeader filename={'copy-button'} />
+
+<ItemFooter itemName={'copy-button'} props={[
+  {
+    name: 'value',
+    type: 'string',
+    description: 'The text to copy to the clipboard.',
+  },
+  {
+    name: 'copiedIcon',
+    type: 'React.ReactNode',
+    description: 'The icon to display when the text is copied.',
+  },
+  {
+    name: 'notCopiedIcon',
+    type: 'React.ReactNode',
+    description: 'The icon to display when the text is not copied.',
+  },
+  {
+    name: '...props',
+    type: 'React.ComponentProps<"button">',
+    description: 'The props to pass to the button.',
+  },
+]} />

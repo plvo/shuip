@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { useDocuments } from '@/hooks/use-documents';
 import { firstCharUppercase } from '@/lib/utils';
 import { allDocuments } from 'contentlayer/generated';
@@ -23,7 +23,12 @@ export function MobileDrawer() {
         </Button>
       </DrawerTrigger>
       <DrawerContent>
-        <div className='mx-auto w-full max-w-sm px-2 overflow-y-auto'>
+        <div className='mx-auto w-full max-w-sm px-4 py-6 overflow-y-auto'>
+          <DrawerTitle asChild>
+            <h1 className='text-2xl font-bold text-center mb-6'>
+              sh<span className='text-primary'>ui</span>p
+            </h1>
+          </DrawerTitle>
           <NavGroup title='Introduction' icon={<BookOpen className='size-4' />}>
             {documents.map((item, index) => (
               <NavItem

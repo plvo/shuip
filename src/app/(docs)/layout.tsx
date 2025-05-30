@@ -13,7 +13,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
             </div>
           </aside>
         </div>
-        <main className='min-h-[70vh] w-full md:py-8 max-lg:px-4 lg:px-6'>{children}</main>
+        <main className='min-h-[70vh] w-full py-8 max-lg:px-4 lg:px-6'>{children}</main>
       </div>
     </div>
   );

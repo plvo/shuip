@@ -1,12 +1,12 @@
 'use client';
 
-import ButtonCopy from '@/components/shared/button.copy';
-import { CodePreview } from '@/components/shared/code-preview';
+import { CodePreview } from '@/components/mdx/code-preview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import * as React from 'react';
 import { registryIndex } from '#/registry/__index__';
+import { CopyButton } from '../ui/shuip/copy-button';
 
 export interface ItemPreviewProps extends React.HTMLAttributes<HTMLDivElement> {
   filename: string;
@@ -24,7 +24,7 @@ export function ItemPreview({ filename, children, ...props }: ItemPreviewProps) 
   }, [filename]);
 
   return (
-    <div className={cn('group relative flex flex-col space-y-2')} {...props}>
+    <div className={cn('flex flex-col space-y-2')} {...props}>
       <Tabs defaultValue='preview' className='relative mr-auto w-full'>
         <div className='flex items-center justify-between pb-2'>
           <TabsList className='w-full justify-start rounded-none border-b bg-transparent p-0'>
@@ -39,7 +39,7 @@ export function ItemPreview({ filename, children, ...props }: ItemPreviewProps) 
         <TabsContent value='preview' className='relative rounded-md border'>
           <div className='flex items-center justify-between p-2 border-b'>
             {/* TODO V0 */}
-            <ButtonCopy value={code || ''} />
+            <CopyButton value={code || ''} />
           </div>
           <Preview filename={filename} isJustPreview={false} />
         </TabsContent>

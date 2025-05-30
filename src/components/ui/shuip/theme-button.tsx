@@ -1,15 +1,21 @@
-import { Button } from '@/components/ui/button';
+import { Button, type buttonVariants } from '@/components/ui/button';
+import type { VariantProps } from 'class-variance-authority';
 import { Laptop, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import * as React from 'react';
 
+type ButtonProps = React.ComponentProps<'button'> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean;
+  };
+
 type Theme = 'system' | 'light' | 'dark';
 
-export interface ThemeButtonProps {
+export interface ThemeButtonProps extends ButtonProps {
   withText?: boolean;
 }
 
-export function ThemeButton({ withText }: ThemeButtonProps) {
+export function ThemeButton({ withText, ...props }: ThemeButtonProps) {
   const { theme, setTheme } = useTheme();
   const [currentTheme, setCurrentTheme] = React.useState<Theme>('system');
 
@@ -40,7 +46,7 @@ export function ThemeButton({ withText }: ThemeButtonProps) {
   };
 
   return (
-    <Button variant='outline' size={withText ? 'default' : 'icon'} onClick={cycleTheme}>
+    <Button variant='outline' size={withText ? 'default' : 'icon'} onClick={cycleTheme} {...props}>
       {getThemeIcon()}
       {withText && <span className='ml-2 capitalize'>{getThemeText()}</span>}
       <span className='sr-only'>Toggle theme</span>

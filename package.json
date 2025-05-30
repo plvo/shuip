@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "author": "plvo <plvdev@proton.me>",
   "license": "MIT",
-  "description": "sh(ui)p",
+  "description": "Ship fast with sh(ui)p components, a collection of UI components for your Next.js project, built with shadcn/ui",
   "homepage": "https://github.com/plvo/shuip",
   "bugs": {
     "url": "https://github.com/plvo/shuip/issues"
@@ -50,6 +50,7 @@
     "@radix-ui/react-toast": "^1.2.14",
     "@radix-ui/react-tooltip": "^1.2.7",
     "@tailwindcss/postcss": "^4.1.7",
+    "@vercel/analytics": "^1.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "contentlayer2": "0.5.8",
@@ -68,7 +69,7 @@
     "tailwind-merge": "^3.3.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
-    "zod": "^3.25.32"
+    "zod": "^3.25.42"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

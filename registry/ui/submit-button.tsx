@@ -1,8 +1,14 @@
-import { Button } from '@/components/ui/button';
+import { Button, type buttonVariants } from '@/components/ui/button';
 import { ReloadIcon } from '@radix-ui/react-icons';
+import type { VariantProps } from 'class-variance-authority';
 import type * as React from 'react';
 
-export interface SubmitButtonProps extends React.RefAttributes<HTMLButtonElement> {
+type ButtonProps = React.ComponentProps<'button'> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean;
+  };
+
+export interface SubmitButtonProps extends ButtonProps {
   label?: React.JSX.Element | string;
   disabled?: boolean;
   loading?: boolean;

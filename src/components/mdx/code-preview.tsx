@@ -1,9 +1,9 @@
 'use client';
 
+import { CopyButton } from '@/components/ui/shuip/copy-button';
 import { Highlight, themes } from 'prism-react-renderer';
 import React from 'react';
 import { registryIndex } from '#/registry/__index__';
-import ButtonCopy from './button.copy';
 
 export interface CodePreviewProps {
   code?: string;
@@ -30,7 +30,7 @@ export function CodePreview({ code, filename, language = 'tsx' }: CodePreviewPro
         <div>
           <div className='flex items-center justify-between p-2 border-b'>
             {/* TODO V0 */}
-            <ButtonCopy value={codeString} />
+            <CopyButton value={codeString} />
           </div>
           <CodeHighlight code={codeString} language={language} />
         </div>

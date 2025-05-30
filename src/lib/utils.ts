@@ -15,7 +15,7 @@ export function firstCharUppercase(str: string) {
 
 export function filenameToTitle(filename: string) {
   return filename
-    .split('.')
+    .split('-')
     .map((w) => firstCharUppercase(w))
     .join(' ');
 }
