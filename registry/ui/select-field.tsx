@@ -8,7 +8,7 @@ export interface SelectFieldOption {
   label: string;
 }
 
-export interface SelectFieldProps<T extends Record<string, string>> extends SelectProps {
+export interface SelectFieldProps<T extends Record<string, any>> extends SelectProps {
   control: Control<T>;
   name: Path<T>;
   values: SelectFieldOption[];
@@ -18,7 +18,7 @@ export interface SelectFieldProps<T extends Record<string, string>> extends Sele
   defaultValues?: PathValue<T, Path<T>>;
 }
 
-export function SelectField<TFieldValues extends Record<string, string>>({
+export function SelectField<T extends Record<string, any>>({
   control,
   name,
   values,
@@ -27,7 +27,7 @@ export function SelectField<TFieldValues extends Record<string, string>>({
   placeholder,
   description,
   ...props
-}: SelectFieldProps<TFieldValues>) {
+}: SelectFieldProps<T>) {
   return (
     <FormField
       control={control}

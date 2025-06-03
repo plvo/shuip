@@ -13,7 +13,7 @@ interface TocProps {
   isComponentPage?: boolean;
 }
 
-export function SidebarTableOfContents({ toc, isComponentPage }: TocProps) {
+export function SidebarTableOfContents({ toc, isItemPage }: TocProps) {
   const itemIds = React.useMemo(() => {
     if (!toc?.items) return [];
     return toc.items
@@ -26,7 +26,7 @@ export function SidebarTableOfContents({ toc, isComponentPage }: TocProps) {
   const activeHeading = useActiveItem(itemIds);
   const _mounted = useMounted();
 
-  const docToc: TableOfContents | undefined = isComponentPage
+  const docToc: TableOfContents | undefined = isItemPage
     ? {
         items: [
           {

@@ -6,6 +6,7 @@ import { Terminal } from 'lucide-react';
 import React from 'react';
 import { CopyButton } from '../ui/shuip/copy-button';
 import { CodePreview } from './code-preview';
+import { usePathname } from 'next/navigation';
 
 export interface ItemInstallationProps {
   filename: string;
@@ -90,7 +91,8 @@ export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
 type PackageManager = 'npm' | 'pnpm' | 'bun';
 
 const getCmd = (pkg: PackageManager, filename: string) => {
-  const url = `https://shuip.xyz/r/${filename}.json`;
+  const origin = window?.location.origin ?? 'https://shuip.xyz';
+  const url = `${origin}/r/${filename}.json`;
 
   switch (pkg) {
     case 'npm':
@@ -98,7 +100,7 @@ const getCmd = (pkg: PackageManager, filename: string) => {
     case 'pnpm':
       return `pnpm dlx shadcn@latest add ${url}`;
     case 'bun':
-      return `bunx --bun shadcn@latest add ${url}`;
+      return `bun x shadcn@latest add ${url}`;
     default:
       return '';
   }

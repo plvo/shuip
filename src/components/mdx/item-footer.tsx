@@ -11,7 +11,7 @@ interface Prop {
 
 export interface ItemFooterProps {
   itemName: string;
-  props: Prop[];
+  props?: Prop[];
 }
 
 export function ItemFooter({ itemName, props }: ItemFooterProps) {
@@ -25,7 +25,7 @@ export function ItemFooter({ itemName, props }: ItemFooterProps) {
       <h2 id='props' className={'h2-mdx'}>
         Props
       </h2>
-      <PropTable props={props} />
+      {props ? <PropTable props={props} /> : <p className='text-sm text-muted-foreground'>No props</p>}
     </>
   );
 }
@@ -33,7 +33,7 @@ export function ItemFooter({ itemName, props }: ItemFooterProps) {
 function ItemExamples({ itemName }: { itemName: string }) {
   const examples = COMPONENT_CATEGORIES[itemName] || null;
 
-  if (examples.length) {
+  if (examples?.length) {
     return examples.sort().map((example) => (
       <div key={example} className='my-6 space-y-4'>
         <h3 className='h3-mdx'>
@@ -43,6 +43,8 @@ function ItemExamples({ itemName }: { itemName: string }) {
       </div>
     ));
   }
+
+  return <p className='text-sm text-muted-foreground'>No examples</p>;
 }
 
 function PropTable({ props }: { props: Prop[] }) {

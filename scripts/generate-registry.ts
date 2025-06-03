@@ -6,6 +6,7 @@ const REGISTRY_PATHS = {
   ui: path.join(process.cwd(), 'registry', 'ui'),
   block: path.join(process.cwd(), 'registry', 'block'),
   examples: path.join(process.cwd(), 'registry', 'examples'),
+  lib: path.join(process.cwd(), 'registry', 'lib'),
 } as const;
 
 async function main() {
@@ -44,6 +45,15 @@ export const registryIndex: Record<string, RegistryComponent> = {
   for (const file of registryBlockFiles) {
     if (!file.endsWith('.tsx')) continue;
     const { itemName, registryItem } = handleRegistryFile(file, 'block');
+    index += registryItem;
+    componentsCat[itemName] = [];
+  }
+
+  const registryLibFiles = fs.readdirSync(REGISTRY_PATHS.lib);
+
+  for (const file of registryLibFiles) {
+    if (!file.endsWith('.ts')) continue;
+    const { itemName, registryItem } = handleRegistryFile(file, 'lib');
     index += registryItem;
     componentsCat[itemName] = [];
   }

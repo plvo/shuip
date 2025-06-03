@@ -2,7 +2,7 @@ import { allDocuments } from 'contentlayer/generated';
 import { firstCharUppercase } from './utils';
 
 // DocumentTypeNames[]
-const DOCUMENT_TYPE_LIST = ['blocks', 'components', 'docs'] as const;
+const DOCUMENT_TYPE_LIST = ['blocks', 'components', 'docs', 'lib'] as const;
 
 export async function getDocument(slug: string[]) {
   const [documentType, item] = slug as [type: (typeof DOCUMENT_TYPE_LIST)[number], item: string | undefined];

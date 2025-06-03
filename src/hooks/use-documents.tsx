@@ -1,11 +1,12 @@
 'use client';
 
-import { type Blocks, type Docs, allDocuments } from 'contentlayer/generated';
+import { type Blocks, type Docs, type Lib, allDocuments } from 'contentlayer/generated';
 
 interface UseDocumentsReturn {
   documents: Docs[];
   allComponentGroups: string[];
   blocks: Blocks[];
+  lib: Lib[];
 }
 
 export function useDocuments(): UseDocumentsReturn {
@@ -23,5 +24,7 @@ export function useDocuments(): UseDocumentsReturn {
 
   const blocks = allDocuments.filter((doc) => doc.type === 'Blocks').sort((a, b) => a.title.localeCompare(b.title));
 
-  return { documents, allComponentGroups, blocks };
+  const lib = allDocuments.filter((doc) => doc.type === 'Lib').sort((a, b) => a.title.localeCompare(b.title));
+
+  return { documents, allComponentGroups, blocks, lib };
 }
