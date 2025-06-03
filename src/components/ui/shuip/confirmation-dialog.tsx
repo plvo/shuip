@@ -11,11 +11,11 @@ import {
 import type * as React from 'react';
 
 export interface ConfirmationDialogProps extends React.RefAttributes<HTMLDialogElement> {
-  trigger: React.JSX.Element;
-  title: string;
-  description: string;
-  labelConfirmButton: string;
-  onConfirm: () => void;
+  trigger?: React.ReactNode;
+  title?: string;
+  description?: string;
+  labelConfirmButton?: string;
+  onConfirm?: () => void;
 }
 
 export function ConfirmationDialog({

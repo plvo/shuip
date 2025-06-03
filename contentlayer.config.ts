@@ -47,6 +47,11 @@ const Components = defineDocumentType(() => ({
       description: 'The group of the component',
       required: false,
     },
+    position: {
+      type: 'number',
+      description: 'Indicates if the post is a component',
+      required: false,
+    },
   },
   computedFields: {
     slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath },
@@ -68,6 +73,37 @@ const Blocks = defineDocumentType(() => ({
       description: 'The description of the block',
       required: false,
     },
+    position: {
+      type: 'number',
+      description: 'Indicates if the post is a component',
+      required: false,
+    },
+  },
+  computedFields: {
+    slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath },
+  },
+}));
+
+const Lib = defineDocumentType(() => ({
+  name: 'Lib',
+  filePathPattern: 'lib/**/*.mdx',
+  contentType: 'mdx',
+  fields: {
+    title: {
+      type: 'string',
+      description: 'The title of the library',
+      required: true,
+    },
+    description: {
+      type: 'string',
+      description: 'The description of the library',
+      required: false,
+    },
+    position: {
+      type: 'number',
+      description: 'Indicates if the post is a library',
+      required: false,
+    },
   },
   computedFields: {
     slug: { type: 'string', resolve: (doc) => doc._raw.flattenedPath },
@@ -76,7 +112,7 @@ const Blocks = defineDocumentType(() => ({
 
 export default makeSource({
   contentDirPath: 'content',
-  documentTypes: [Docs, Components, Blocks],
+  documentTypes: [Docs, Components, Blocks, Lib],
   // mdx: {
   //   rehypePlugins: [
   //     [

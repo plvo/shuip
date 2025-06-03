@@ -43,7 +43,7 @@ export default function SelectFieldExample() {
           label='selection'
           values={values}
         />
-        <SubmitButton label='Check' />
+        <SubmitButton>Check</SubmitButton>
       </form>
     </Form>
   );

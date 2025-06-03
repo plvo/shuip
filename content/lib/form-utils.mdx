@@ -1,0 +1,279 @@
+---
+title: Form Utils
+description: A set of utilities for working with forms and Zod schemas.
+position: 1
+---
+
+<ItemHeader filename={'form-utils'} />
+
+A collection of TypeScript utilities to efficiently manage forms, detect changes, and generate default values from Zod schemas.
+
+## getChangedFields
+
+Detects changed fields between two objects using deep comparison.
+
+<CodeHighlight 
+  code={`export function getChangedFields<T extends Record<string, unknown>>(
+      oldObject: T | null | undefined,
+      newObject: T | null | undefined,
+): Partial<T>`}
+  language="typescript"
+/>
+
+### Parameters
+
+- `oldObject`: The original object (can be null or undefined)
+- `newObject`: The new object to compare (can be null or undefined)
+
+### Return
+
+A partial object containing only the fields that have changed.
+
+### Examples
+
+<CodeHighlight 
+  code={`// Detect simple changes
+const oldData = { name: "John", age: 25 };
+const newData = { name: "John", age: 30 };
+const changes = getChangedFields(oldData, newData);
+// Result: { age: 30 }
+
+// Handle nested objects
+const oldForm = {
+    user: { name: "John", email: "john@example.com" },
+    settings: { theme: "dark" }
+};
+const newForm = {
+    user: { name: "Jane", email: "john@example.com" },
+    settings: { theme: "dark" }
+};
+const changes = getChangedFields(oldForm, newForm);
+// Result: { user: { name: "Jane", email: "john@example.com" } }
+
+// Handle edge cases
+getChangedFields(null, { name: "John" }); // { name: "John" }
+getChangedFields({ name: "John" }, null); // { name: undefined }`}
+  language="typescript"
+/>
+
+### Usage with React Hook Form
+
+<CodeHighlight 
+  code={`const form = useForm<FormData>({
+      defaultValues: initialData
+});
+
+const handleSubmit = (data: FormData) => {
+      // Detect only modified fields
+      const changedFields = getChangedFields(form.formState.defaultValues, data);
+      
+      // Send only changes to the API
+      await updateUser(changedFields);
+};`}
+  language="typescript"
+/>
+
+## getZodDefaultValues
+
+Generates complete default values from a Zod schema, with support for nested objects and TypeScript autocompletion.
+
+<CodeHighlight 
+  code={`export function getZodDefaultValues<T extends z.ZodObject<z.ZodRawShape>>(
+      schema: T,
+      data?: Partial<z.infer<T>>
+): z.infer<T>`}
+  language="typescript"
+/>
+
+### Parameters
+
+- `schema`: The Zod schema from which to generate default values
+- `data`: Optional data to override certain default values
+
+### Return
+
+A typed object with all appropriate default values.
+
+### Examples
+
+<CodeHighlight 
+  code={`const userSchema = z.object({
+  name: z.string(),
+  age: z.number(),
+  address: z.object({
+    street: z.string(),
+    city: z.string(),
+    zip: z.string(),
+  }),
+  role: z.enum(['admin', 'user']),
+  createdAt: z.date().optional(),
+});
+
+// Generate default values
+const defaultValues = getZodDefaultValues(userSchema);
+/* Result:
+{
+    name: "",
+    age: 0,
+    address: {
+        street: "",
+        city: "",
+        zip: ""
+    },
+    role: undefined,
+    createdAt: undefined
+}
+*/
+
+// With pre-filled data
+const defaultValues = getZodDefaultValues(userSchema, {
+    name: "John Doe",
+    age: 25
+});
+/* Result:
+{
+    name: "John Doe",
+    age: 25,
+    address: {
+      street: "",
+      city: "",
+      zip: ""
+    },
+    role: undefined,
+    createdAt: undefined
+}
+*/`}
+  language="typescript"
+/>
+
+### Usage with React Hook Form
+
+<CodeHighlight 
+  code={`const form = useForm<z.infer<typeof userSchema>>({
+    resolver: zodResolver(userSchema),
+    defaultValues: getZodDefaultValues(userSchema, {
+      name: 'John Doe',
+      age: 25,
+    }),
+});
+
+// Autocompletion works perfectly!
+const values = form.getValues();
+values.name // ✅ string
+values.address.street // ✅ string`}
+  language="typescript"
+/>
+
+## zodTypeDefaultValue
+
+Internal utility function that generates an appropriate default value for a given Zod type.
+
+<CodeHighlight 
+  code={`export function zodTypeDefaultValue(key: z.ZodTypeAny): unknown`}
+  language="typescript"
+/>
+
+### Supported Types
+
+- `z.ZodString` → `""`
+- `z.ZodNumber` → `0`
+- `z.ZodBoolean` → `false`
+- `z.ZodArray` → `[]`
+- `z.ZodObject` → Object with all fields initialized recursively
+- `z.ZodOptional` → `undefined`
+- `z.ZodNullable` → `null`
+- `z.ZodDate` → `undefined`
+- `z.ZodEnum` → `undefined`
+- `z.ZodNativeEnum` → `undefined`
+
+### Example
+
+<CodeHighlight 
+  code={`// Direct usage (rare)
+zodTypeDefaultValue(z.string()); // ""
+zodTypeDefaultValue(z.number()); // 0
+zodTypeDefaultValue(z.boolean()); // false
+
+// For nested objects (automatic via getZodDefaultValues)
+zodTypeDefaultValue(z.object({
+    name: z.string(),
+    age: z.number()
+})); 
+// { name: "", age: 0 }`}
+  language="typescript"
+/>
+
+## Complete Example
+
+Here's a complete example showing how to use these utilities together:
+
+<CodeHighlight 
+  code={`'use client';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { getChangedFields, getZodDefaultValues } from '@/lib/form-utils';
+
+const userSchema = z.object({
+    name: z.string(),
+    age: z.number(),
+    address: z.object({
+      street: z.string().optional(),
+      city: z.string().optional(),
+      zip: z.string().optional(),
+    }),
+    role: z.enum(['admin', 'user']).optional(),
+});
+
+type UserForm = z.infer<typeof userSchema>;
+
+export function UserFormExample() {
+    const [changedFields, setChangedFields] = useState<Partial<UserForm>>();
+  
+    const form = useForm<UserForm>({
+      resolver: zodResolver(userSchema),
+      defaultValues: getZodDefaultValues(userSchema, {
+        name: 'John Doe',
+        age: 25,
+      }),
+    });
+  
+    const handleSubmit = (data: UserForm) => {
+      // Detect changes
+      const changes = getChangedFields(form.formState.defaultValues, data);
+      setChangedFields(changes);
+      
+      // API call with only modified fields
+      console.log('Modified fields:', changes);
+      
+      // Reset form with new values
+      form.reset(data);
+    };
+  
+    return (
+      <form onSubmit={form.handleSubmit(handleSubmit)}>
+        {/* Your form fields */}
+        
+        <div className="debug-info">
+          <h3>Current values:</h3>
+          <pre>{JSON.stringify(form.getValues(), null, 2)}</pre>
+          
+          <h3>Changed fields:</h3>
+          <pre>{JSON.stringify(changedFields, null, 2)}</pre>
+        </div>
+      </form>
+    );
+}`}
+  language="typescript"
+/>
+
+## Benefits
+
+- **Type Safety**: Complete TypeScript autocompletion
+- **Performance**: Efficient change detection with deep comparison
+- **Flexibility**: Support for nested objects and complex types
+- **Integration**: Works perfectly with React Hook Form and Zod
+- **Edge Cases**: Robust handling of null/undefined values
+
+<ItemFooter itemName={'form-utils'} />

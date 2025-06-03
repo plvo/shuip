@@ -9,14 +9,14 @@ type ButtonProps = React.ComponentProps<'button'> &
   };
 
 export interface SubmitButtonProps extends ButtonProps {
-  label?: React.JSX.Element | string;
+  children?: React.ReactNode;
   disabled?: boolean;
   loading?: boolean;
   icon?: React.JSX.Element;
 }
 
 export function SubmitButton({
-  label,
+  children,
   disabled,
   loading,
   icon = <ReloadIcon className='mr-2 size-4 animate-spin' />,
@@ -25,7 +25,7 @@ export function SubmitButton({
   return (
     <Button type='submit' variant={'default'} className={'w-full'} disabled={disabled || loading} {...props}>
       {loading && icon}
-      {label}
+      {children}
     </Button>
   );
 }

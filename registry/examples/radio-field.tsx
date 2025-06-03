@@ -31,7 +31,7 @@ export default function RadioFieldExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <RadioField control={form.control} name='selection' label='selection' values={['1', '2', '3']} />
-        <SubmitButton label='Check' />
+        <SubmitButton>Check</SubmitButton>
       </form>
     </Form>
   );

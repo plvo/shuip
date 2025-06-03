@@ -3,14 +3,14 @@
 import { useDocuments } from '@/hooks/use-documents';
 import { firstCharUppercase } from '@/lib/utils';
 import { allDocuments } from 'contentlayer/generated';
-import { BookOpen, Cuboid, FileText, LayoutGrid, Zap } from 'lucide-react';
+import { BookOpen, Cuboid, FileText, LayoutGrid, Library, Zap } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import type React from 'react';
 import { NavGroup, NavItem, SubNavGroup } from './nav-items';
 
 export function DocsNav() {
   const pathname = usePathname();
-  const { documents, allComponentGroups, blocks } = useDocuments();
+  const { documents, allComponentGroups, blocks, lib } = useDocuments();
 
   return (
     <nav className='flex flex-col gap-1'>
@@ -57,6 +57,19 @@ export function DocsNav() {
             isActive={pathname === `/${item.slug}`}
             data-first-index={index === 0}
             data-last-index={index === blocks.length - 1}
+          />
+        ))}
+      </NavGroup>
+
+      <NavGroup title='Libs' icon={<Library className='size-4' />}>
+        {lib.map((item, index) => (
+          <NavItem
+            key={index}
+            title={item.title}
+            href={`/${item.slug}`}
+            isActive={pathname === `/${item.slug}`}
+            data-first-index={index === 0}
+            data-last-index={index === lib.length - 1}
           />
         ))}
       </NavGroup>

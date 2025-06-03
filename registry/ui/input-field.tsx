@@ -12,7 +12,6 @@ export interface InputFieldProps<T extends Record<string, any>> extends React.Co
   name: Path<T>;
   label: string;
   description?: string;
-  isNumber?: boolean;
 }
 
 export function InputField<TFieldValues extends Record<string, any>>({
@@ -20,13 +19,11 @@ export function InputField<TFieldValues extends Record<string, any>>({
   name,
   label,
   description,
-  isNumber = false,
   ...props
 }: InputFieldProps<TFieldValues>) {
   const [showPassword, setShowPassword] = React.useState(false);
 
   const getInputType = () => {
-    if (isNumber) return 'number';
     if (props.type === 'password') {
       return showPassword ? 'text' : 'password';
     }
@@ -38,7 +35,8 @@ export function InputField<TFieldValues extends Record<string, any>>({
     field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>,
   ) => {
     const value = e.target.value;
-    if (isNumber) return field.onChange(value === '' ? '' : Number(value));
+    if (props.type === 'number') return field.onChange(value === '' ? '' : Number(value));
+    if (props.type === 'date') return field.onChange(value === '' ? '' : new Date(value));
     return field.onChange(value);
   };
 

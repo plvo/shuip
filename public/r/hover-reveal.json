@@ -7,7 +7,7 @@
   "files": [
     {
       "path": "./registry/ui/hover-reveal.tsx",
-      "content": "import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';\nimport type * as React from 'react';\n\nexport interface HoverRevealProps extends React.RefAttributes<HTMLDivElement> {\n  children: string | React.JSX.Element;\n  content: string | React.JSX.Element;\n}\n\nexport function HoverReveal({ children, content, ...props }: HoverRevealProps) {\n  return (\n    <HoverCard {...props}>\n      <HoverCardTrigger className='cursor-pointer'>{children}</HoverCardTrigger>\n      <HoverCardContent className='text-sm w-full'>{content}</HoverCardContent>\n    </HoverCard>\n  );\n}\n",
+      "content": "import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';\nimport type * as React from 'react';\n\nexport interface HoverRevealProps extends React.RefAttributes<HTMLDivElement> {\n  children: React.ReactNode;\n  content: React.ReactNode;\n}\n\nexport function HoverReveal({ children, content, ...props }: HoverRevealProps) {\n  return (\n    <HoverCard {...props}>\n      <HoverCardTrigger className='cursor-pointer'>{children}</HoverCardTrigger>\n      <HoverCardContent className='text-sm w-full'>{content}</HoverCardContent>\n    </HoverCard>\n  );\n}\n",
       "type": "registry:ui",
       "target": "./components/ui/shuip/hover-reveal.tsx"
     }

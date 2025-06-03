@@ -117,6 +117,18 @@
           "target": "./components/ui/shuip/copy-button.tsx"
         }
       ]
+    },
+    {
+      "name": "form-utils",
+      "type": "registry:lib",
+      "dependencies": [],
+      "files": [
+        {
+          "path": "./registry/lib/form-utils.ts",
+          "type": "registry:lib",
+          "target": "./lib/shuip/form-utils.ts"
+        }
+      ]
     }
   ]
 }
