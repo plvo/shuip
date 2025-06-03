@@ -91,7 +91,7 @@ export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
 type PackageManager = 'npm' | 'pnpm' | 'bun';
 
 const getCmd = (pkg: PackageManager, filename: string) => {
-  const origin = window?.location.origin ?? 'https://shuip.xyz';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://shuip.xyz';
   const url = `${origin}/r/${filename}.json`;
 
   switch (pkg) {
