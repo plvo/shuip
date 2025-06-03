@@ -2,8 +2,8 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/h
 import type * as React from 'react';
 
 export interface HoverRevealProps extends React.RefAttributes<HTMLDivElement> {
-  children: string | React.JSX.Element;
-  content: string | React.JSX.Element;
+  children: React.ReactNode;
+  content: React.ReactNode;
 }
 
 export function HoverReveal({ children, content, ...props }: HoverRevealProps) {

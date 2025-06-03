@@ -16,18 +16,25 @@ group: form
 ## Common use cases
 
 <CodeHighlight code={`// Basic form submission
-<SubmitButton label="Save Changes" loading={isSaving} />
+<SubmitButton children="Save Changes" loading={isSaving} />
+
+<SubmitButton loading={isSaving}>
+  <span className="flex items-center">
+    <Send className="mr-2 h-4 w-4" />
+    Send Message
+  </span>
+</SubmitButton>
 
 // With custom icon
 <SubmitButton 
-      label="Processing Payment"
+      children="Processing Payment"
       loading={isProcessing}
       icon={<CreditCard className="mr-2 h-4 w-4 animate-pulse" />}
 />
 
 // With JSX label
 <SubmitButton 
-      label={
+      children={
         <span className="flex items-center">
           <Send className="mr-2 h-4 w-4" />
           Send Message
@@ -38,7 +45,7 @@ group: form
 
 // Custom styling
 <SubmitButton 
-      label="Delete Account"
+      children="Delete Account"
       loading={isDeleting}
       className="bg-destructive hover:bg-destructive/90"
       disabled={!confirmed}
@@ -46,8 +53,8 @@ group: form
 
 <ItemFooter itemName={'submit-button'} props={[
   {
-    name: 'label',
-    type: 'string',
+    name: 'children',
+    type: 'React.ReactNode | string',
     description: 'Label displayed above the field',
   },
   {

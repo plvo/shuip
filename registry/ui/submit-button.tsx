@@ -9,7 +9,7 @@ type ButtonProps = React.ComponentProps<'button'> &
   };
 
 export interface SubmitButtonProps extends ButtonProps {
-  children?: React.ReactNode | string;
+  children?: React.ReactNode;
   disabled?: boolean;
   loading?: boolean;
   icon?: React.JSX.Element;
