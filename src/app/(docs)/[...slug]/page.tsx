@@ -5,9 +5,39 @@ import { getTableOfContents } from '@/lib/toc';
 import { filenameToTitle } from '@/lib/utils';
 import { firstCharUppercase } from '@/lib/utils';
 import type { Metadata } from 'next';
+import { readdir } from 'node:fs/promises';
+import path from 'node:path';
 
 export interface DocPageProps {
   params: Promise<{ slug: string[] }>;
+}
+
+export async function generateStaticParams() {
+  const contentDir = path.join(process.cwd(), 'content');
+  const allRoutes: { slug: string[] }[] = [];
+
+  async function scanDirectory(dir: string, basePath: string[] = []): Promise<void> {
+    try {
+      const entries = await readdir(dir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const newBasePath = [...basePath, entry.name];
+          await scanDirectory(path.join(dir, entry.name), newBasePath);
+        } else if (entry.name.endsWith('.mdx')) {
+          const fileName = entry.name.replace(/\.mdx$/, '');
+          const slug = [...basePath, fileName];
+          allRoutes.push({ slug });
+        }
+      }
+    } catch (error) {
+      console.error(`Error scanning directory ${dir}:`, error);
+    }
+  }
+
+  await scanDirectory(contentDir);
+
+  return allRoutes;
 }
 
 export async function generateMetadata({ params }: DocPageProps): Promise<Metadata> {
