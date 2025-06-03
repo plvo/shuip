@@ -27,6 +27,12 @@ export const registryIndex: Record<string, RegistryComponent> = {
     code: "import { Button, type buttonVariants } from '@/components/ui/button';\nimport { ReloadIcon } from '@radix-ui/react-icons';\nimport type { VariantProps } from 'class-variance-authority';\nimport type * as React from 'react';\n\ntype ButtonProps = React.ComponentProps<'button'> &\n  VariantProps<typeof buttonVariants> & {\n    asChild?: boolean;\n  };\n\nexport interface SubmitButtonProps extends ButtonProps {\n  children?: React.ReactNode;\n  disabled?: boolean;\n  loading?: boolean;\n  icon?: React.JSX.Element;\n}\n\nexport function SubmitButton({\n  children,\n  disabled,\n  loading,\n  icon = <ReloadIcon className='mr-2 size-4 animate-spin' />,\n  ...props\n}: SubmitButtonProps) {\n  return (\n    <Button type='submit' variant={'default'} className={'w-full'} disabled={disabled || loading} {...props}>\n      {loading && icon}\n      {children}\n    </Button>\n  );\n}\n",
     component: React.lazy(() => import('#/registry/ui/submit-button.tsx')),
   },
+  'query-boundary': {
+    name: 'query-boundary',
+    path: '#/registry/ui/query-boundary.tsx',
+    code: "'use client';\n\nimport { Button } from '@/components/ui/button';\nimport { QueryErrorResetBoundary } from '@tanstack/react-query';\nimport { AlertTriangle, RefreshCcw } from 'lucide-react';\nimport * as React from 'react';\nimport { ErrorBoundary, type FallbackProps } from 'react-error-boundary';\n\ninterface QueryBoundaryProps {\n  children: React.ReactNode;\n  queryKeys?: string[];\n  loadingFallback?: React.ReactNode;\n  errorFallback?: (props: FallbackProps) => React.ReactNode;\n}\n\nexport function QueryBoundary({\n  children,\n  queryKeys = [],\n  loadingFallback = 'Loading...',\n  errorFallback,\n}: QueryBoundaryProps) {\n  return (\n    <QueryErrorResetBoundary>\n      {({ reset }) => (\n        <ErrorBoundary\n          onReset={reset}\n          fallbackRender={(props) =>\n            errorFallback ? errorFallback(props) : <DefaultErrorFallback {...props} queryKeys={queryKeys} />\n          }\n        >\n          <React.Suspense fallback={loadingFallback}>{children}</React.Suspense>\n        </ErrorBoundary>\n      )}\n    </QueryErrorResetBoundary>\n  );\n}\n\nexport function DefaultErrorFallback({\n  error,\n  resetErrorBoundary,\n  queryKeys = [],\n}: FallbackProps & { queryKeys?: string[] }) {\n  return (\n    <div className='p-6 rounded-lg border border-destructive/30 bg-destructive/5 flex flex-col items-center justify-center space-y-4 text-center'>\n      <AlertTriangle className='text-destructive size-12' />\n      <div>\n        <h3 className='text-lg font-semibold mb-2'>Oops, something went wrong!</h3>\n        <p className='text-muted-foreground'>{error.message || 'Unexpected error'}</p>\n        {queryKeys.length && (\n          <p className='text-xs text-muted-foreground mt-2'>\n            Concerned quer{queryKeys.length > 1 ? 'ies' : 'y'}: {queryKeys.join(', ')}\n          </p>\n        )}\n      </div>\n      <Button onClick={resetErrorBoundary} variant='outline' className='gap-2'>\n        <RefreshCcw className='size-4' />\n        Retry\n      </Button>\n    </div>\n  );\n}\n",
+    component: React.lazy(() => import('#/registry/ui/query-boundary.tsx')),
+  },
   'copy-button': {
     name: 'copy-button',
     path: '#/registry/ui/copy-button.tsx',
@@ -99,6 +105,12 @@ export const registryIndex: Record<string, RegistryComponent> = {
     code: "import { TitleSection } from '@/components/block/shuip/title-section';\n\nexport default function TitleSectionExample() {\n  return <TitleSection title='Title' description='Lorem ipsum dolor sit amet consectetur, adipisicing elit.' />;\n}\n",
     component: React.lazy(() => import('#/registry/examples/title-section.tsx')),
   },
+  'query-boundary.example': {
+    name: 'query-boundary.example',
+    path: '#/registry/examples/query-boundary.tsx',
+    code: "'use client';\n\nimport { QueryBoundary } from '@/components/ui/shuip/query-boundary';\nimport { LoaderCircle } from 'lucide-react';\n\nexport default function QueryBoundaryExample() {\n  const queryKeys = ['data', Math.random().toString(36).substring(2, 15)];\n  return (\n    <div className='flex flex-col items-center justify-center gap-4'>\n      <QueryBoundary queryKeys={queryKeys} loadingFallback={<LoaderCircle className='animate-spin' />}>\n        <DataComponent />\n      </QueryBoundary>\n    </div>\n  );\n}\n\nasync function DataComponent() {\n  const isError = Math.random() > 0.5;\n\n  const getData = async () => {\n    await new Promise((resolve) => setTimeout(resolve, 3000));\n    if (isError) {\n      throw new Error('Error in DataComponent');\n    }\n    return { data: 'DataComponent' };\n  };\n\n  const data = await getData();\n\n  return (\n    <div className='flex flex-col items-center justify-center gap-4'>\n      DataComponent: <pre>{JSON.stringify(data, null, 2)}</pre>\n    </div>\n  );\n}\n",
+    component: React.lazy(() => import('#/registry/examples/query-boundary.tsx')),
+  },
   'copy-button.with-custom-icons.example': {
     name: 'copy-button.with-custom-icons.example',
     path: '#/registry/examples/copy-button.with-custom-icons.tsx',
@@ -160,6 +172,7 @@ export const registryIndex: Record<string, RegistryComponent> = {
 export const COMPONENT_CATEGORIES: Record<string, string[]> = {
   'input-field': ['input-field.example'],
   'submit-button': ['submit-button.loading.example', 'submit-button.example'],
+  'query-boundary': ['query-boundary.example'],
   'copy-button': ['copy-button.with-custom-icons.example', 'copy-button.example'],
   'radio-field': ['radio-field.example'],
   'confirmation-dialog': ['confirmation-dialog.example'],

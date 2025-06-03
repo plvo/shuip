@@ -121,12 +121,25 @@
     {
       "name": "form-utils",
       "type": "registry:lib",
-      "dependencies": [],
+      "dependencies": ["zod"],
       "files": [
         {
           "path": "./registry/lib/form-utils.ts",
           "type": "registry:lib",
           "target": "./lib/shuip/form-utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "query-boundary",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-query", "react-error-boundary", "lucide-react"],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "./registry/ui/query-boundary.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/query-boundary.tsx"
         }
       ]
     }

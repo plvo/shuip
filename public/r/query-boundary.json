@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "query-boundary",
+  "type": "registry:ui",
+  "dependencies": ["@tanstack/react-query", "react-error-boundary", "lucide-react"],
+  "registryDependencies": ["button"],
+  "files": [
+    {
+      "path": "./registry/ui/query-boundary.tsx",
+      "content": "'use client';\n\nimport { Button } from '@/components/ui/button';\nimport { QueryErrorResetBoundary } from '@tanstack/react-query';\nimport { AlertTriangle, RefreshCcw } from 'lucide-react';\nimport * as React from 'react';\nimport { ErrorBoundary, type FallbackProps } from 'react-error-boundary';\n\ninterface QueryBoundaryProps {\n  children: React.ReactNode;\n  queryKeys?: string[];\n  loadingFallback?: React.ReactNode;\n  errorFallback?: (props: FallbackProps) => React.ReactNode;\n}\n\nexport function QueryBoundary({\n  children,\n  queryKeys = [],\n  loadingFallback = 'Loading...',\n  errorFallback,\n}: QueryBoundaryProps) {\n  return (\n    <QueryErrorResetBoundary>\n      {({ reset }) => (\n        <ErrorBoundary\n          onReset={reset}\n          fallbackRender={(props) =>\n            errorFallback ? errorFallback(props) : <DefaultErrorFallback {...props} queryKeys={queryKeys} />\n          }\n        >\n          <React.Suspense fallback={loadingFallback}>{children}</React.Suspense>\n        </ErrorBoundary>\n      )}\n    </QueryErrorResetBoundary>\n  );\n}\n\nexport function DefaultErrorFallback({\n  error,\n  resetErrorBoundary,\n  queryKeys = [],\n}: FallbackProps & { queryKeys?: string[] }) {\n  return (\n    <div className='p-6 rounded-lg border border-destructive/30 bg-destructive/5 flex flex-col items-center justify-center space-y-4 text-center'>\n      <AlertTriangle className='text-destructive size-12' />\n      <div>\n        <h3 className='text-lg font-semibold mb-2'>Oops, something went wrong!</h3>\n        <p className='text-muted-foreground'>{error.message || 'Unexpected error'}</p>\n        {queryKeys.length && (\n          <p className='text-xs text-muted-foreground mt-2'>\n            Concerned quer{queryKeys.length > 1 ? 'ies' : 'y'}: {queryKeys.join(', ')}\n          </p>\n        )}\n      </div>\n      <Button onClick={resetErrorBoundary} variant='outline' className='gap-2'>\n        <RefreshCcw className='size-4' />\n        Retry\n      </Button>\n    </div>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/query-boundary.tsx"
+    }
+  ]
+}

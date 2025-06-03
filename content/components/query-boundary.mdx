@@ -1,0 +1,232 @@
+---
+title: Query Boundary
+description: A component that provides centralized error and loading management for TanStack Query queries.
+group: shortcut
+---
+
+<ItemHeader filename={'query-boundary'} />
+
+A wrapper component that combines `QueryErrorResetBoundary`, `ErrorBoundary` and `Suspense` to provide robust error and loading state management in your applications using TanStack Query.
+
+## Usage
+
+<CodeHighlight 
+  code={`import { QueryBoundary } from '@/components/ui/shuip/query-boundary';
+
+export default function App() {
+  return (
+    <QueryBoundary 
+      queryKeys={['users']}
+      loadingFallback={<div>Loading users...</div>}
+    >
+      <UsersList />
+    </QueryBoundary>
+  );
+}`}
+  language="typescript"
+/>
+
+## Features
+
+### Error Handling
+The component automatically captures errors occurring in child queries and displays an error fallback with retry capability.
+
+### Loading Management
+Uses `React.Suspense` to display a loading fallback while queries are loading.
+
+### Automatic Reset
+Integrated with `QueryErrorResetBoundary` from TanStack Query to allow error reset and query retry.
+
+## Examples
+
+### Basic Usage
+
+<CodeHighlight 
+  code={`import { QueryBoundary } from '@/components/ui/shuip/query-boundary';
+import { LoaderCircle } from 'lucide-react';
+
+export default function BasicExample() {
+  return (
+    <QueryBoundary 
+      queryKeys={['data']} 
+      loadingFallback={<LoaderCircle className="animate-spin" />}
+    >
+      <DataComponent />
+    </QueryBoundary>
+  );
+}
+
+function DataComponent() {
+  const { data } = useQuery({
+    queryKey: ['data'],
+    queryFn: fetchData
+  });
+
+  return <div>{data.name}</div>;
+}`}
+  language="typescript"
+/>
+
+### Custom Error Fallback
+
+<CodeHighlight 
+  code={`import { QueryBoundary } from '@/components/ui/shuip/query-boundary';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+
+function CustomErrorFallback({ error, resetErrorBoundary }) {
+  return (
+    <div className="text-center p-8">
+      <AlertCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+      <h3 className="text-lg font-semibold mb-2">Loading Error</h3>
+      <p className="text-muted-foreground mb-4">{error.message}</p>
+      <button 
+        onClick={resetErrorBoundary}
+        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md"
+      >
+        <RefreshCw className="h-4 w-4" />
+        Retry
+      </button>
+    </div>
+  );
+}
+
+export default function CustomErrorExample() {
+  return (
+    <QueryBoundary 
+      queryKeys={['users', 'posts']}
+      errorFallback={CustomErrorFallback}
+      loadingFallback={<div>Loading...</div>}
+    >
+      <ComplexComponent />
+    </QueryBoundary>
+  );
+}`}
+  language="typescript"
+/>
+
+### With Multiple Queries
+
+<CodeHighlight 
+  code={`import { QueryBoundary } from '@/components/ui/shuip/query-boundary';
+
+export default function MultiQueryExample() {
+  return (
+    <QueryBoundary 
+      queryKeys={['users', 'posts', 'comments']}
+      loadingFallback={
+        <div className="space-y-4">
+          <div className="h-4 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 bg-gray-200 rounded animate-pulse" />
+        </div>
+      }
+    >
+      <Dashboard />
+    </QueryBoundary>
+  );
+}
+
+function Dashboard() {
+  const { data: users } = useQuery({ queryKey: ['users'], queryFn: fetchUsers });
+  const { data: posts } = useQuery({ queryKey: ['posts'], queryFn: fetchPosts });
+  const { data: comments } = useQuery({ queryKey: ['comments'], queryFn: fetchComments });
+
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <UserCard users={users} />
+      <PostCard posts={posts} />
+      <CommentCard comments={comments} />
+    </div>
+  );
+}`}
+  language="typescript"
+/>
+
+### With Suspense Query
+
+<CodeHighlight 
+  code={`import { QueryBoundary } from '@/components/ui/shuip/query-boundary';
+import { useSuspenseQuery } from '@tanstack/react-query';
+
+function SuspenseDataComponent() {
+  // useSuspenseQuery automatically suspends the component
+  const { data } = useSuspenseQuery({
+    queryKey: ['suspense-data'],
+    queryFn: fetchSuspenseData
+  });
+
+  return <div>Data: {data.value}</div>;
+}
+
+export default function SuspenseExample() {
+  return (
+    <QueryBoundary 
+      queryKeys={['suspense-data']}
+      loadingFallback={<div>Suspending...</div>}
+    >
+      <SuspenseDataComponent />
+    </QueryBoundary>
+  );
+}`}
+  language="typescript"
+/>
+
+## Default Error Fallback
+
+The component includes a default error fallback with:
+
+- **Error Icon**: Alert triangle with destructive color
+- **Error Message**: Display of error message or "Unexpected error"
+- **Query Keys**: Display of concerned query keys
+- **Retry Button**: Allows relaunching failed queries
+
+<CodeHighlight 
+  code={`// The default fallback looks like this:
+<div className="p-6 rounded-lg border border-destructive/30 bg-destructive/5 flex flex-col items-center justify-center space-y-4 text-center">
+  <AlertTriangle className="text-destructive size-12" />
+  <div>
+    <h3 className="text-lg font-semibold mb-2">Oops, something went wrong!</h3>
+    <p className="text-muted-foreground">{error.message || 'Unexpected error'}</p>
+    <p className="text-xs text-muted-foreground mt-2">
+      Concerned queries: {queryKeys.join(', ')}
+    </p>
+  </div>
+  <Button onClick={resetErrorBoundary} variant="outline" className="gap-2">
+    <RefreshCw className="size-4" />
+    Retry
+  </Button>
+</div>`}
+  language="typescript"
+/>
+
+## TanStack Query Integration
+
+The component integrates perfectly with the TanStack Query ecosystem:
+
+- **QueryClient**: Uses the QueryClient from context
+- **Error Reset**: Automatic reset of query errors
+- **Invalidation**: Compatible with query invalidation
+- **Suspense**: Native support for Suspense queries
+
+<ItemFooter itemName={'query-boundary'} props={[
+	{
+		name: 'children',
+		type: 'React.ReactNode',
+		description: 'The child components to wrap in the boundary.',
+	},
+	{
+		name: 'queryKeys',
+		type: 'string[]',
+		description: 'The query keys to monitor for debugging (optional).',
+	},
+	{
+		name: 'loadingFallback',
+		type: 'React.ReactNode',
+		description: 'The fallback to display during loading (default: "Loading...").',
+	},
+	{
+		name: 'errorFallback',
+		type: '(props: FallbackProps) => React.ReactNode',
+		description: 'The custom fallback to display on error (optional).',
+	},
+]} />
