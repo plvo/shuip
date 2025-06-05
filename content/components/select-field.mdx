@@ -37,12 +37,11 @@ group: form
 With `SelectField`, the same result in a single line:
 
 <CodeHighlight code={`<SelectField 
-      control={form.control} 
-      name="country" 
+      register={form.register('country')} 
       label="Country" 
       placeholder="Select a country"
       description="Choose your country"
-      values={countryOptions}
+      options={{ 'United States': 'us', 'Canada': 'ca', 'France': 'fr' }}
 />`} language='tsx' />
 
 ## react-hook-form integration
@@ -54,39 +53,33 @@ The component is specifically designed for react-hook-form:
       resolver: zodResolver(schema),
 });
 
-const options = [
-      { label: 'Technology', value: 'tech' },
-      { label: 'Design', value: 'design' },
-      { label: 'Business', value: 'business' },
-];
+const options = {
+      'Technology': 'tech',
+      'Design': 'design', 
+      'Business': 'business',
+};
 
-// Direct usage with form control
+// Direct usage with form register
 <SelectField 
-      control={form.control} 
-      name="category" 
+      register={form.register('category')} 
       label="Category" 
-      values={options}
+      options={options}
 />`} language='tsx' />
 
 <ItemFooter itemName={'select-field'} props={[
   {
-    name: 'control',
-    type: 'Control<T>',
-    description: 'react-hook-form control object',
+    name: 'register',
+    type: 'UseFormRegisterReturn',
+    description: 'react-hook-form register function result',
   },
   {
-    name: 'name',
-    type: 'Path<T>',
-    description: 'Field name in the form',
-  },
-  {
-    name: 'values',
-    type: 'SelectFieldOption[]',
-    description: 'Array of options with label and value { label: string, value: string }',
+    name: 'options',
+    type: 'Record<string, string>',
+    description: 'Object where keys are labels and values are form values',
   },
   {
     name: 'label',
-    type: 'string',
+    type: 'string?',
     description: 'Label displayed above the field',
   },
   {
@@ -100,8 +93,8 @@ const options = [
     description: 'Optional description below the field',
   },
   {
-    name: 'defaultValues',
-    type: 'PathValue<T, Path<T>>?',
+    name: 'defaultValue',
+    type: 'TFieldValues[FieldPath<TFieldValues>]?',
     description: 'Default selected value',
   },
   {

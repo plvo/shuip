@@ -1,27 +1,24 @@
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { Control, Path } from 'react-hook-form';
+import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
 
-export interface RadioFieldProps<T extends Record<string, any>> extends React.ComponentProps<typeof RadioGroup> {
-  control: Control<T>;
-  name: Path<T>;
-  label: string;
+export interface RadioFieldProps<T extends FieldValues> extends React.ComponentProps<typeof RadioGroup> {
+  register: UseFormRegisterReturn<FieldPath<T>>;
+  options: string[];
+  label?: string;
   description?: string;
-  values: string[];
 }
 
-export function RadioField<T extends Record<string, any>>({
-  control,
-  name,
+export function RadioField<T extends FieldValues>({
+  register,
+  options,
   label,
   description,
-  values,
   ...props
 }: RadioFieldProps<T>) {
   return (
     <FormField
-      control={control}
-      name={name}
+      {...register}
       render={({ field }) => (
         <FormItem className='space-y-1.5'>
           <FormLabel>{label}</FormLabel>
@@ -32,7 +29,7 @@ export function RadioField<T extends Record<string, any>>({
               className='flex flex-col space-y-1'
               {...props}
             >
-              {values.map((value: any) => (
+              {options.map((value: any) => (
                 <FormItem key={value} className='flex items-center space-x-3 space-y-0'>
                   <FormControl>
                     <RadioGroupItem value={value} />

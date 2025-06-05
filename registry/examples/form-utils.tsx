@@ -1,15 +1,15 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { getChangedFields, getZodDefaultValues } from '@/lib/shuip/form-utils';
-import React from 'react';
-import { InputField } from '@/components/ui/shuip/input-field';
 import { Form } from '@/components/ui/form';
+import { InputField } from '@/components/ui/shuip/input-field';
+import { RadioField } from '@/components/ui/shuip/radio-field';
 import { SelectField } from '@/components/ui/shuip/select-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
-import { RadioField } from '@/components/ui/shuip/radio-field';
+import { getChangedFields, getZodDefaultValues } from '@/lib/shuip/form-utils';
+import { zodResolver } from '@hookform/resolvers/zod';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 const zodSchema = z.object({
   name: z.string(),
@@ -22,7 +22,7 @@ const zodSchema = z.object({
     zip: z.number().optional(),
   }),
   role: z.enum(['admin', 'user']).optional(),
-  status: z.nativeEnum({ ACTIVE: 'active', INACTIVE: 'inactive' }).optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
 });
 
 type MyZodSchema = z.infer<typeof zodSchema>;
@@ -35,7 +35,7 @@ export default function FormUtilsExample() {
     defaultValues: getZodDefaultValues(zodSchema, {
       name: 'John Doe',
       age: 25,
-      status: 'inactive',
+      status: 'INACTIVE',
     }),
   });
 
@@ -49,29 +49,28 @@ export default function FormUtilsExample() {
     <div className='space-y-4 w-full'>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className='grid lg:grid-cols-2 gap-4'>
-          <InputField control={form.control} name='name' label='name' placeholder='Your Name' />
-          <InputField control={form.control} type='number' name='age' label='age' placeholder='Your Age' />
-          <RadioField control={form.control} name='role' label='role' values={['admin', 'user']} />
+          <InputField register={form.register('name')} label='name' placeholder='Your Name' />
+          <InputField register={form.register('age')} type='number' name='age' label='age' placeholder='Your Age' />
+          <RadioField register={form.register('role')} label='role' options={['admin', 'user']} />
           <SelectField
-            control={form.control}
-            name='status'
+            register={form.register('status')}
             label='status'
-            values={[
-              { value: 'active', label: 'Active' },
-              { value: 'inactive', label: 'Inactive' },
-            ]}
+            options={{
+              active: 'ACTIVE',
+              inactive: 'INACTIVE',
+            }}
           />
           <InputField
-            control={form.control}
+            register={form.register('createdAt')}
             type='date'
             name='createdAt'
             label='createdAt'
             placeholder='Your Created At'
           />
-          <InputField control={form.control} name='address.street' label='address.street' placeholder='Your Street' />
-          <InputField control={form.control} name='address.city' label='address.city' placeholder='Your City' />
-          <InputField control={form.control} name='address.zip' label='address.zip' placeholder='Your Zip' />
-          <InputField control={form.control} name='address.state' label='address.state' placeholder='Your State' />
+          <InputField register={form.register('address.street')} label='address.street' placeholder='Your Street' />
+          <InputField register={form.register('address.city')} label='address.city' placeholder='Your City' />
+          <InputField register={form.register('address.zip')} label='address.zip' placeholder='Your Zip' />
+          <InputField register={form.register('address.state')} label='address.state' placeholder='Your State' />
 
           <SubmitButton
             className='lg:col-span-2'

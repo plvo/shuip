@@ -8,13 +8,13 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 const zodSchema = z.object({
-  selection: z.enum(['1', '2', '3']),
+  selection: z.enum(['Yes', 'No', 'Maybe', 'Not sure']),
 });
 
 export default function RadioFieldExample() {
   const form = useForm({
     defaultValues: {
-      selection: '1' as const,
+      selection: 'Yes' as const,
     },
     resolver: zodResolver(zodSchema),
   });
@@ -30,7 +30,12 @@ export default function RadioFieldExample() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <RadioField control={form.control} name='selection' label='selection' values={['1', '2', '3']} />
+        <RadioField
+          register={form.register('selection')}
+          options={['Yes', 'No', 'Maybe', 'Not sure']}
+          label='Are you sure?'
+          description='This is a description'
+        />
         <SubmitButton>Check</SubmitButton>
       </form>
     </Form>

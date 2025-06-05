@@ -1,0 +1,142 @@
+---
+title: "Address Field"
+description: "A field for entering an address"
+group: "form"
+---
+
+<ItemHeader filename={'address-field'} />
+
+## Configuration
+
+- This component uses the [Google Places API](https://developers.google.com/maps/documentation/places/web-service/overview). You **must** provide an API key in your `.env` file as `GOOGLE_PLACES_API_KEY` for autocomplete to work.
+- **Default country:** Address suggestions are for the USA (`US`) by default. To change the default country or language, edit the constants at the top of [`address-field.tsx`](https://github.com/plvo/shuip/blob/main/src/components/ui/shuip/address-field.tsx):
+
+<CodeHighlight code={`const DEFAULT_COUNTRY = 'US'; 
+const LANGUAGE_RESULT = 'en'; 
+const DEBOUNCE_TIME = 300;`} language='ts' />
+
+  - `DEFAULT_COUNTRY`: The country code for address suggestions (e.g., `'FR'` for France).
+  - `LANGUAGE_RESULT`: The language code for results (e.g., `'fr'` for French).
+  - `DEBOUNCE_TIME`: The delay (in milliseconds) before triggering the autocomplete API after the user stops typing. Increase to reduce API calls, decrease for more responsiveness.
+
+## Why use AddressField?
+
+### Smart address input with autocomplete
+
+The `AddressField` component provides a user-friendly way to enter and validate addresses, with Google Places autocomplete integration. It helps users quickly find and select their address, reducing errors and improving form completion rates.
+
+### Less boilerplate, more UX
+
+Instead of manually wiring up address fields, autocomplete, and validation:
+
+<CodeHighlight code={`// Without AddressField - verbose
+<Input name="street" placeholder="Street" />
+<Input name="city" placeholder="City" />
+<Input name="postalCode" placeholder="Postal Code" />
+<Input name="country" placeholder="Country" />
+// ...manual autocomplete, validation, and state management
+`} language='tsx' />
+
+With `AddressField`, you get a complete, validated address input in a single line:
+
+<CodeHighlight code={`<AddressField register={form.register('address')} placeholder="Enter your address" />`} language='tsx' />
+
+### Built-in features
+
+- **Autocomplete**: Powered by Google Places API for fast, accurate suggestions
+- **Debounced search**: Reduces API calls for better performance
+- **Full address parsing**: Automatically fills street, city, postal code, country, and placeId
+- **Popover suggestions**: Clean dropdown for address selection
+- **Form integration**: Works seamlessly with react-hook-form and Zod
+- **Validation**: Ensures all address fields are filled
+- **Customizable**: Change label, placeholder, country, and more
+
+### Usage Example
+
+<CodeHighlight code={`import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AddressField, addressSchema } from '@/components/ui/shuip/address-field';
+
+const schema = z.object({
+    address: addressSchema,
+});
+
+const form = useForm({
+    defaultValues: {
+      address: {
+        street: '',
+        city: '',
+        postalCode: '',
+        country: '',
+        fullAddress: '',
+        placeId: '',
+      },
+    },
+    resolver: zodResolver(schema),
+});
+
+<form onSubmit={form.handleSubmit(onSubmit)}>
+    <AddressField register={form.register('address')} placeholder="Enter your address" />
+    <SubmitButton label="Submit" />
+</form>`} language='tsx' />
+
+### Advanced usage
+
+- **Show form values live**
+- **Custom label, description, or country**
+
+<CodeHighlight code={`<AddressField
+    register={form.register('address')}
+    label="Shipping Address"
+    description="We only ship to valid addresses."
+    country="FR"
+/>`} language='tsx' />
+
+### What you get in your form values
+
+<CodeHighlight code={`{
+    address: {
+      street: '123 Main St',
+      city: 'Paris',
+      postalCode: '75001',
+      country: 'France',
+      fullAddress: '123 Main St, 75001 Paris, France',
+      placeId: 'abcdef123456',
+    }
+}`} language='json' />
+
+<ItemFooter itemName={'address-field'} props={[
+  {
+    name: 'register',
+    type: 'UseFormRegisterReturn',
+    description: 'react-hook-form register function result',
+  },
+  {
+    name: 'label',
+    type: 'string?',
+    description: 'Label displayed above the field',
+  },
+  {
+    name: 'placeholder',
+    type: 'string?',
+    description: 'Placeholder text for the input',
+  },
+  {
+    name: 'description',
+    type: 'string?',
+    description: 'Optional description below the field',
+  },
+  {
+    name: 'country',
+    type: 'string?',
+    description: 'Country code for address suggestions (default: US)',
+  },
+  {
+    name: '...props',
+    type: 'InputProps',
+    description: 'All shadcn/ui Input props',
+  },
+]} />
+
+
+

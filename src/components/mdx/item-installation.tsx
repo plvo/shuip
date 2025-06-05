@@ -3,10 +3,10 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { Terminal } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import React from 'react';
 import { CopyButton } from '../ui/shuip/copy-button';
 import { CodePreview } from './code-preview';
-import { usePathname } from 'next/navigation';
 
 export interface ItemInstallationProps {
   filename: string;

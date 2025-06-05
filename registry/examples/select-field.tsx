@@ -7,20 +7,21 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-const zodSchema = z.object({
-  selection: z.enum(['1', '2', '3']),
-});
+const options: SelectFieldOption = {
+  First: '1',
+  Second: '2',
+  Third: '3',
+  Fourth: '4',
+};
 
-const values: SelectFieldOption[] = [
-  { label: 'First', value: '1' },
-  { label: 'Second', value: '2' },
-  { label: 'Third', value: '3' },
-];
+const zodSchema = z.object({
+  selection: z.enum(Object.values(options) as [string]),
+});
 
 export default function SelectFieldExample() {
   const form = useForm({
     defaultValues: {
-      selection: '1' as const,
+      selection: '1',
     },
     resolver: zodResolver(zodSchema),
   });
@@ -37,11 +38,11 @@ export default function SelectFieldExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <SelectField
-          control={form.control}
+          register={form.register('selection')}
           placeholder='Select an option'
-          name='selection'
           label='selection'
-          values={values}
+          options={options}
+          defaultValue={'3'}
         />
         <SubmitButton>Check</SubmitButton>
       </form>

@@ -5,6 +5,8 @@ import type { VariantProps } from 'class-variance-authority';
 import { CheckIcon, Copy } from 'lucide-react';
 import * as React from 'react';
 
+const DEFAULT_TIMEOUT = 2000;
+
 type ButtonProps = React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
@@ -26,7 +28,7 @@ export function CopyButton({ value, copiedIcon = <CheckIcon />, notCopiedIcon = 
   React.useEffect(() => {
     setTimeout(() => {
       setHasCopied(false);
-    }, 2000);
+    }, DEFAULT_TIMEOUT);
   }, [hasCopied]);
 
   return (
