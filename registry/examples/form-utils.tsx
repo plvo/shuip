@@ -1,15 +1,15 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { getChangedFields, getZodDefaultValues } from '@/lib/shuip/form-utils';
-import React from 'react';
-import { InputField } from '@/components/ui/shuip/input-field';
 import { Form } from '@/components/ui/form';
+import { InputField } from '@/components/ui/shuip/input-field';
+import { RadioField } from '@/components/ui/shuip/radio-field';
 import { SelectField } from '@/components/ui/shuip/select-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
-import { RadioField } from '@/components/ui/shuip/radio-field';
+import { getChangedFields, getZodDefaultValues } from '@/lib/shuip/form-utils';
+import { zodResolver } from '@hookform/resolvers/zod';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 const zodSchema = z.object({
   name: z.string(),
@@ -49,8 +49,8 @@ export default function FormUtilsExample() {
     <div className='space-y-4 w-full'>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className='grid lg:grid-cols-2 gap-4'>
-          <InputField control={form.control} name='name' label='name' placeholder='Your Name' />
-          <InputField control={form.control} type='number' name='age' label='age' placeholder='Your Age' />
+          <InputField name='name' label='name' placeholder='Your Name' />
+          <InputField type='number' name='age' label='age' placeholder='Your Age' />
           <RadioField control={form.control} name='role' label='role' values={['admin', 'user']} />
           <SelectField
             control={form.control}
@@ -61,17 +61,11 @@ export default function FormUtilsExample() {
               { value: 'inactive', label: 'Inactive' },
             ]}
           />
-          <InputField
-            control={form.control}
-            type='date'
-            name='createdAt'
-            label='createdAt'
-            placeholder='Your Created At'
-          />
-          <InputField control={form.control} name='address.street' label='address.street' placeholder='Your Street' />
-          <InputField control={form.control} name='address.city' label='address.city' placeholder='Your City' />
-          <InputField control={form.control} name='address.zip' label='address.zip' placeholder='Your Zip' />
-          <InputField control={form.control} name='address.state' label='address.state' placeholder='Your State' />
+          <InputField type='date' name='createdAt' label='createdAt' placeholder='Your Created At' />
+          <InputField name='address.street' label='address.street' placeholder='Your Street' />
+          <InputField name='address.city' label='address.city' placeholder='Your City' />
+          <InputField name='address.zip' label='address.zip' placeholder='Your Zip' />
+          <InputField name='address.state' label='address.state' placeholder='Your State' />
 
           <SubmitButton
             className='lg:col-span-2'

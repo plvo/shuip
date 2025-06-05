@@ -5,23 +5,22 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import { Eye, EyeOff } from 'lucide-react';
 import * as React from 'react';
-import type { Control, ControllerRenderProps, Path } from 'react-hook-form';
+import { type ControllerRenderProps, type FieldValues, type Path, useFormContext } from 'react-hook-form';
 
 export interface InputFieldProps<T extends Record<string, any>> extends React.ComponentProps<typeof Input> {
-  control: Control<T>;
   name: Path<T>;
-  label: string;
+  label?: string;
   description?: string;
 }
 
 export function InputField<TFieldValues extends Record<string, any>>({
-  control,
   name,
   label,
   description,
   ...props
 }: InputFieldProps<TFieldValues>) {
   const [showPassword, setShowPassword] = React.useState(false);
+  const form = useFormContext();
 
   const getInputType = () => {
     if (props.type === 'password') {
@@ -32,7 +31,7 @@ export function InputField<TFieldValues extends Record<string, any>>({
 
   const onChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>,
+    field: ControllerRenderProps<FieldValues, Path<FieldValues>>,
   ) => {
     const value = e.target.value;
     if (props.type === 'number') return field.onChange(value === '' ? '' : Number(value));
@@ -42,45 +41,50 @@ export function InputField<TFieldValues extends Record<string, any>>({
 
   return (
     <FormField
-      control={control}
+      control={form.control}
       name={name}
       render={({ field }) => {
         return (
-          <FormItem className='space-y-1.5'>
+          <FormItem>
             <FormLabel className='flex items-center justify-between'>
               {label}
-              <FormMessage className='max-sm:hidden text-sm' />
+              <FormMessage className='max-sm:hidden text-xs opacity-80' />
             </FormLabel>
             <FormControl>
               <div className='relative'>
                 <Input {...field} {...props} type={getInputType()} onChange={(e) => onChange(e, field)} />
                 {props.type === 'password' && (
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='sm'
-                    className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    tabIndex={-1}
-                    aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                  >
-                    {showPassword ? (
-                      <EyeOff className='h-4 w-4' aria-hidden='true' />
-                    ) : (
-                      <Eye className='h-4 w-4' aria-hidden='true' />
-                    )}
-                    <span className='sr-only'>
-                      {showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                    </span>
-                  </Button>
+                  <PasswordButton showPassword={showPassword} setShowPassword={setShowPassword} />
                 )}
               </div>
             </FormControl>
-            {description && <p className='text-muted-foreground text-sm'>{description}</p>}
-            <FormMessage className='sm:hidden text-xs text-left' />
+            {description && <p className='text-muted-foreground text-xs'>{description}</p>}
+            <FormMessage className='sm:hidden text-xs text-left opacity-80' />
           </FormItem>
         );
       }}
     />
+  );
+}
+
+interface PasswordButtonProps {
+  showPassword: boolean;
+  setShowPassword: (showPassword: boolean) => void;
+}
+
+function PasswordButton({ showPassword, setShowPassword }: PasswordButtonProps) {
+  return (
+    <Button
+      type='button'
+      variant='ghost'
+      size='sm'
+      className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
+      onClick={() => setShowPassword(!showPassword)}
+      tabIndex={-1}
+      aria-label={showPassword ? 'Hide password' : 'Show password'}
+    >
+      {showPassword ? <EyeOff className='size-4' aria-hidden='true' /> : <Eye className='size-4' aria-hidden='true' />}
+      <span className='sr-only'>{showPassword ? 'Hide password' : 'Show password'}</span>
+    </Button>
   );
 }

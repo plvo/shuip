@@ -15,8 +15,7 @@
       "**/.contentlayer/**/*",
       "**/dist/**/*",
       "**/out/**/*",
-      "**/generated/**/*",
-      "**/src/components/ui/**/*"
+      "**/generated/**/*"
     ]
   },
   "organizeImports": {

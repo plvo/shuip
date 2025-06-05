@@ -30,7 +30,7 @@ export default function InputFieldExample() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <InputField control={form.control} name='name' label='Name' description='Your name' placeholder='John' />
+        <InputField name='name' label='Name' description='Your name' placeholder='John' />
         <SubmitButton>Check</SubmitButton>
       </form>
     </Form>
