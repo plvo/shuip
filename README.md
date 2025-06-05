@@ -19,7 +19,7 @@ More informations on the [documentation](https://shuip.xyz/docs/installation)
 Here's how shuip simplifies form development:
 
 ### Before
-```html
+```tsx
 <FormField
   control={form.control}
   name="email"
@@ -37,14 +37,8 @@ Here's how shuip simplifies form development:
 ```
 
 ### After with shuip
-```html
-<InputField
-  control={form.control} 
-  name="email" 
-  label="Email" 
-  description="Your email address"
-  placeholder="your@email.com" 
-/>
+```tsx
+<InputField register={form.register('email')} label="Email" description="Your email address" placeholder="your@email.com" />
 ```
 
 ## 🤝 Contributing

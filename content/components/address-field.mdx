@@ -39,7 +39,7 @@ Instead of manually wiring up address fields, autocomplete, and validation:
 
 With `AddressField`, you get a complete, validated address input in a single line:
 
-<CodeHighlight code={`<AddressField name="address" placeholder="Enter your address" />`} language='tsx' />
+<CodeHighlight code={`<AddressField register={form.register('address')} placeholder="Enter your address" />`} language='tsx' />
 
 ### Built-in features
 
@@ -76,7 +76,7 @@ const form = useForm({
 });
 
 <form onSubmit={form.handleSubmit(onSubmit)}>
-    <AddressField name="address" placeholder="Enter your address" />
+    <AddressField register={form.register('address')} placeholder="Enter your address" />
     <SubmitButton label="Submit" />
 </form>`} language='tsx' />
 
@@ -86,7 +86,7 @@ const form = useForm({
 - **Custom label, description, or country**
 
 <CodeHighlight code={`<AddressField
-    name="address"
+    register={form.register('address')}
     label="Shipping Address"
     description="We only ship to valid addresses."
     country="FR"
@@ -107,9 +107,9 @@ const form = useForm({
 
 <ItemFooter itemName={'address-field'} props={[
   {
-    name: 'name',
-    type: 'string',
-    description: 'Field name in the form (should match your form schema)',
+    name: 'register',
+    type: 'UseFormRegisterReturn',
+    description: 'react-hook-form register function result',
   },
   {
     name: 'label',

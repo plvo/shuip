@@ -48,15 +48,14 @@ group: form
 With `RadioField`, the same result in a single line:
 
 <CodeHighlight code={`<RadioField 
-      control={form.control} 
-      name="theme" 
+      register={form.register('theme')} 
       label="Select a theme" 
-      values={['light', 'dark', 'system']}
+      options={['light', 'dark', 'system' ]}
 />`} language='tsx' />
 
 ### Built-in features
 
-- **Automatic radio rendering**: Pass an array of values and they're rendered as radio options
+- **Automatic radio rendering**: Pass an array of options and they're rendered as radio buttons
 - **Clean layout**: Pre-configured spacing and alignment for radio groups
 - **Zod validation**: Native integration with react-hook-form and Zod
 - **Responsive design**: Optimized for both desktop and mobile
@@ -72,31 +71,25 @@ The component is specifically designed for react-hook-form:
 });
 
 <RadioField 
-      control={form.control} 
-      name="plan" 
+      register={form.register('plan')} 
       label="Choose your plan" 
-      values={['basic', 'pro', 'enterprise']}
+      options={{ Basic: 'basic', Pro: 'pro', Enterprise: 'enterprise' }}
 />`} language='tsx' />
 
 <ItemFooter itemName={'radio-field'} props={[
   {
-    name: 'control',
-    type: 'Control<T>',
-    description: 'react-hook-form control object',
+    name: 'register',
+    type: 'UseFormRegisterReturn',
+    description: 'react-hook-form register function result',
   },
   {
-    name: 'name',
-    type: 'Path<T>',
-    description: 'Field name in the form',
-  },
-  {
-    name: 'values',
+    name: 'options',
     type: 'string[]',
-    description: 'Array of string values for radio options',
+    description: 'Array of options to render as radio buttons',
   },
   {
     name: 'label',
-    type: 'string',
+    type: 'string?',
     description: 'Label displayed above the radio group',
   },
   {

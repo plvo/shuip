@@ -28,8 +28,7 @@ group: form
 With `InputField`, the same result in a single line:
 
 <CodeHighlight code={`<InputField 
-      control={form.control} 
-      name="email" 
+      register={form.register('email')} 
       label="Email" 
       description="Your email address"
       placeholder="your@email.com" 
@@ -52,20 +51,15 @@ The component is specifically designed for react-hook-form:
       resolver: zodResolver(schema),
 });
 
-// Direct usage with form control
-<InputField control={form.control} name="name" label="Name" />
-<InputField control={form.control} name="age" label="Age" isNumber />`} language='tsx' />
+// Direct usage with form register
+<InputField register={form.register('name')} label="Name" />
+<InputField register={form.register('age')} label="Age" type="number" />`} language='tsx' />
 
 <ItemFooter itemName={'input-field'} props={[
   {
-    name: 'control',
-    type: 'Control<T>',
-    description: 'react-hook-form control object',
-  },
-  {
-    name: 'name',
-    type: 'Path<T>',
-    description: 'Field name in the form',
+    name: 'register',
+    type: 'UseFormRegisterReturn',
+    description: 'react-hook-form register function result',
   },
   {
     name: 'label',
@@ -78,14 +72,9 @@ The component is specifically designed for react-hook-form:
     description: 'Optional description below the field',
   },
   {
-    name: 'isNumber',
-    type: 'boolean?',
-    description: 'Automatically converts to number',
-  },
-  {
     name: 'type',
     type: 'string?',
-    description: 'HTML field type (text, password, email...)',
+    description: 'HTML field type (text, password, email, number...)',
   },
   {
     name: '...props',
