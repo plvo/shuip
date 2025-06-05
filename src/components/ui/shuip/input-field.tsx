@@ -5,22 +5,16 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import { Eye, EyeOff } from 'lucide-react';
 import * as React from 'react';
-import { type ControllerRenderProps, type FieldValues, type Path, useFormContext } from 'react-hook-form';
+import type { ControllerRenderProps, FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
 
-export interface InputFieldProps<T extends Record<string, any>> extends React.ComponentProps<typeof Input> {
-  name: Path<T>;
+export interface InputFieldProps<T extends FieldValues> extends React.ComponentProps<typeof Input> {
+  register: UseFormRegisterReturn<FieldPath<T>>;
   label?: string;
   description?: string;
 }
 
-export function InputField<TFieldValues extends Record<string, any>>({
-  name,
-  label,
-  description,
-  ...props
-}: InputFieldProps<TFieldValues>) {
+export function InputField<T extends FieldValues>({ register, label, description, ...props }: InputFieldProps<T>) {
   const [showPassword, setShowPassword] = React.useState(false);
-  const form = useFormContext();
 
   const getInputType = () => {
     if (props.type === 'password') {
@@ -31,7 +25,7 @@ export function InputField<TFieldValues extends Record<string, any>>({
 
   const onChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    field: ControllerRenderProps<FieldValues, Path<FieldValues>>,
+    field: ControllerRenderProps<FieldValues, FieldPath<FieldValues>>,
   ) => {
     const value = e.target.value;
     if (props.type === 'number') return field.onChange(value === '' ? '' : Number(value));
@@ -41,8 +35,7 @@ export function InputField<TFieldValues extends Record<string, any>>({
 
   return (
     <FormField
-      control={form.control}
-      name={name}
+      {...register}
       render={({ field }) => {
         return (
           <FormItem>

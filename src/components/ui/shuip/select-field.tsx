@@ -1,41 +1,43 @@
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { SelectProps } from '@radix-ui/react-select';
-import type { Control, Path, PathValue } from 'react-hook-form';
+import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
 
-export interface SelectFieldOption {
-  value: string;
-  label: string;
-}
+/**
+ * Key is the label, value is the value
+ * @example
+ * const options: SelectFieldOption = {
+ *   'First': '1',
+ *   'Second': '2',
+ *   'Third': '3',
+ * };
+ */
+export type SelectFieldOption<T extends string = string> = Record<string, T>;
 
-export interface SelectFieldProps<T extends Record<string, any>> extends SelectProps {
-  control: Control<T>;
-  name: Path<T>;
-  values: SelectFieldOption[];
-  label: string;
+export interface SelectFieldProps<TFieldValues extends FieldValues> extends SelectProps {
+  register: UseFormRegisterReturn<FieldPath<TFieldValues>>;
+  options: SelectFieldOption;
+  label?: string;
   placeholder?: string;
   description?: string;
-  defaultValues?: PathValue<T, Path<T>>;
+  defaultValue?: TFieldValues[FieldPath<TFieldValues>];
 }
-
-export function SelectField<T extends Record<string, any>>({
-  control,
-  name,
-  values,
-  defaultValues,
+export function SelectField<TFieldValues extends FieldValues>({
+  register,
+  options,
   label,
-  placeholder,
   description,
+  placeholder,
+  defaultValue,
   ...props
-}: SelectFieldProps<T>) {
+}: SelectFieldProps<TFieldValues>) {
   return (
     <FormField
-      control={control}
-      name={name}
-      defaultValue={defaultValues}
+      {...register}
+      defaultValue={defaultValue}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          {label && <FormLabel>{label}</FormLabel>}
           <Select onValueChange={field.onChange} defaultValue={field.value} {...props}>
             <FormControl>
               <SelectTrigger>
@@ -43,9 +45,9 @@ export function SelectField<T extends Record<string, any>>({
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {values.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
+              {Object.entries(options).map(([label, value]) => (
+                <SelectItem key={label} value={value}>
+                  {label}
                 </SelectItem>
               ))}
             </SelectContent>

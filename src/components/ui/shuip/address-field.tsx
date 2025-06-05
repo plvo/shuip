@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { Loader2, MapPin } from 'lucide-react';
 import * as React from 'react';
-import { useFormContext } from 'react-hook-form';
+import { type FieldPath, type FieldValues, type UseFormRegisterReturn, useFormContext } from 'react-hook-form';
 import { z } from 'zod';
 
 const DEFAULT_COUNTRY = 'US';
@@ -35,7 +35,7 @@ interface AddressSuggestion {
 }
 
 interface AddressFieldProps extends React.ComponentProps<typeof Input> {
-  name: string;
+  register: UseFormRegisterReturn<FieldPath<FieldValues>>;
   label?: string;
   placeholder?: string;
   description?: string;
@@ -43,7 +43,7 @@ interface AddressFieldProps extends React.ComponentProps<typeof Input> {
 }
 
 export function AddressField({
-  name,
+  register,
   label = 'Address',
   placeholder = 'Enter your address',
   description,
@@ -211,8 +211,8 @@ export function AddressField({
 
   return (
     <FormField
-      control={form.control}
-      name={`${name}.fullAddress`}
+      {...register}
+      name={`${register.name}.fullAddress`}
       render={({ field }) => (
         <FormItem>
           <FormLabel className='flex items-center justify-between'>

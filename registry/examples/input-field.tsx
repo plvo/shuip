@@ -13,9 +13,7 @@ const zodSchema = z.object({
 
 export default function InputFieldExample() {
   const form = useForm({
-    defaultValues: {
-      name: '',
-    },
+    defaultValues: { name: '' },
     resolver: zodResolver(zodSchema),
   });
 
@@ -30,7 +28,7 @@ export default function InputFieldExample() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <InputField name='name' label='Name' description='Your name' placeholder='John' />
+        <InputField register={form.register('name')} label='Name' description='Your name' placeholder='John' />
         <SubmitButton>Check</SubmitButton>
       </form>
     </Form>

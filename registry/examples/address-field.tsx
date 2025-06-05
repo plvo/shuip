@@ -41,8 +41,8 @@ export default function AddressFieldExample() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 w-full'>
-        <InputField name='name' label='Name' placeholder='Enter your name' />
-        <AddressField name='address' placeholder='Enter your address' className='w-full' />
+        <InputField register={form.register('name')} label='Name' placeholder='Enter your name' />
+        <AddressField register={form.register('address')} placeholder='Enter your address' className='w-full' />
         <SubmitButton>Check</SubmitButton>
 
         <pre className='border border-primary rounded-md p-4 overflow-x-auto'>
