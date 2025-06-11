@@ -1,0 +1,152 @@
+---
+title: Checkbox Field
+description: A form checkbox field input designed to be used with react-hook-form and Zod for validation.
+group: form
+---
+
+<ItemHeader filename={'checkbox-field'} />
+
+## Less verbose code in forms
+
+<CodeHighlight code={`<FormField
+  control={form.control}
+  name="terms"
+  render={({ field }) => (
+    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+      <FormControl>
+        <Checkbox
+          checked={field.value}
+          onCheckedChange={field.onChange}
+        />
+      </FormControl>
+      <div className="space-y-1 leading-none">
+        <FormLabel>
+          Accept terms and conditions
+        </FormLabel>
+        <FormDescription>
+          You agree to our Terms of Service and Privacy Policy.
+        </FormDescription>
+      </div>
+      <FormMessage />
+    </FormItem>
+  )}
+/>`} language='tsx' />
+
+With `CheckboxField`, the same result in a single line:
+
+<CodeHighlight code={`<CheckboxField 
+      control={form.control}
+      name="terms"
+      label="Accept terms and conditions"
+      description="You agree to our Terms of Service and Privacy Policy."
+/>`} language='tsx' />
+
+## Built-in features
+
+- **react-hook-form integration**: Native support for `control` and `name` props
+- **Flexible labeling**: Main label above checkbox, optional `boxLabel` next to checkbox
+- **Zod validation**: Native integration with react-hook-form and Zod
+- **Error display**: Responsive error messages with proper form validation
+- **Accessible**: Proper ARIA labels and form associations
+
+## react-hook-form integration
+
+The component is specifically designed for react-hook-form:
+
+<CodeHighlight code={`const form = useForm({
+      defaultValues: { 
+        terms: false,
+        newsletter: false 
+      },
+      resolver: zodResolver(schema),
+});
+
+// Basic usage
+<CheckboxField 
+  control={form.control}
+  name="terms" 
+  label="Accept terms and conditions"
+  description="You agree to our Terms of Service"
+/>
+
+// With box label (text next to checkbox)
+<CheckboxField 
+  control={form.control}
+  name="newsletter" 
+  label="Newsletter"
+  description="Subscribe to our newsletter"
+  boxLabel="Send me weekly updates"
+/>`} language='tsx' />
+
+## Complete example
+
+<CodeHighlight code={`const zodSchema = z.object({
+  terms: z.boolean().refine(val => val === true, {
+    message: "You must accept the terms and conditions",
+  }),
+  newsletter: z.boolean(),
+});
+
+export default function ExampleForm() {
+  const form = useForm({
+    defaultValues: { 
+      terms: false,
+      newsletter: false 
+    },
+    resolver: zodResolver(zodSchema),
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <CheckboxField
+          control={form.control}
+          name="terms"
+          label="Terms and Conditions"
+          description="Please read and accept our terms"
+          boxLabel="I accept the terms and conditions"
+        />
+        
+        <CheckboxField
+          control={form.control}
+          name="newsletter"
+          label="Newsletter"
+          description="Stay updated with our latest news"
+        />
+        
+        <SubmitButton>Submit</SubmitButton>
+      </form>
+    </Form>
+  );
+}`} language='tsx' />
+
+<ItemFooter itemName={'checkbox-field'} props={[
+  {
+    name: 'control',
+    type: 'Control<any>',
+    description: 'react-hook-form control object',
+  },
+  {
+    name: 'name',
+    type: 'string',
+    description: 'Field name for form registration',
+  },
+  {
+    name: 'label',
+    type: 'string',
+    description: 'Main label displayed above the checkbox field',
+  },
+  {
+    name: 'description',
+    type: 'string?',
+    description: 'Optional description text below the field',
+  },
+  {
+    name: 'boxLabel',
+    type: 'string?',
+    description: 'Optional label text displayed next to the checkbox',
+  },
+]} />
+
+
+
