@@ -35,7 +35,7 @@ export function CheckboxField<T extends FieldValues>({
             </FormLabel>
             <FormControl>
               <div className='flex items-center gap-2'>
-                <Checkbox {...field} {...props} />
+                <Checkbox checked={field.value} onCheckedChange={field.onChange} {...props} />
                 {boxLabel && (
                   <label htmlFor={field.name} className='text-sm cursor-pointer'>
                     {boxLabel}
