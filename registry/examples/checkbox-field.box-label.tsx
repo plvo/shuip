@@ -19,7 +19,7 @@ export default function CheckboxFieldExample() {
 
   async function onSubmit(values: z.infer<typeof zodSchema>) {
     try {
-      alert(`Checkbox: ${values.checkbox}`);
+      alert(`Checkbox: ${values}`);
     } catch (error) {
       console.error(error);
     }
@@ -29,8 +29,7 @@ export default function CheckboxFieldExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <CheckboxField
-          control={form.control}
-          name='checkbox'
+          register={form.register('checkbox')}
           label='Checkbox'
           description='Your checkbox'
           boxLabel='Box description'

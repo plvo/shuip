@@ -1,30 +1,29 @@
 'use client';
 
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import type { Control, FieldPath, FieldValues } from 'react-hook-form';
 import { Checkbox } from '@/components/ui/checkbox';
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
 
-const CheckboxField = <TFieldValues extends FieldValues>({
-  control,
-  name,
-  label,
-  description,
-  boxLabel,
-  ...props
-}: {
-  control: Control<TFieldValues>;
-  name: FieldPath<TFieldValues>;
+export interface CheckboxFieldProps<T extends FieldValues> extends React.ComponentProps<typeof Checkbox> {
+  register: UseFormRegisterReturn<FieldPath<T>>;
   label: string;
-  description?: string;
   boxLabel?: string;
-} & React.ComponentProps<typeof Checkbox>) => {
+  description?: string;
+}
+
+export function CheckboxField<T extends FieldValues>({
+  register,
+  label,
+  boxLabel,
+  description,
+  ...props
+}: CheckboxFieldProps<T>) {
   return (
     <FormField
-      control={control}
-      name={name}
+      {...register}
       render={({ field }) => {
         if (!field) {
-          console.error('Field is missing for CheckboxField', name);
+          console.error('Field is missing for CheckboxField', field);
           return <></>;
         }
 
@@ -51,6 +50,6 @@ const CheckboxField = <TFieldValues extends FieldValues>({
       }}
     />
   );
-};
+}
 
 export default CheckboxField;

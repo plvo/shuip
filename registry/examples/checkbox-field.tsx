@@ -28,7 +28,7 @@ export default function CheckboxFieldExample() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <CheckboxField control={form.control} name='checkbox' label='Checkbox' description='Your checkbox' />
+        <CheckboxField register={form.register('checkbox')} label='Checkbox' description='Your checkbox' />
         <SubmitButton>Submit</SubmitButton>
       </form>
     </Form>
