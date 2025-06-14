@@ -160,6 +160,19 @@
           "target": "./actions/shuip/places.ts"
         }
       ]
+    },
+    {
+      "name": "checkbox-field",
+      "type": "registry:ui",
+      "dependencies": ["react-hook-form"],
+      "registryDependencies": ["form", "checkbox"],
+      "files": [
+        {
+          "path": "./registry/ui/checkbox-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/checkbox-field.tsx"
+        }
+      ]
     }
   ]
 }
