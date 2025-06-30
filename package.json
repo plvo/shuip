@@ -1,9 +1,9 @@
 {
   "name": "shuip",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "author": "plvo <plvdev@proton.me>",
   "license": "MIT",
-  "description": "Ship fast with sh(ui)p components, a collection of UI components for your Next.js project, built with shadcn/ui",
+  "description": "Ship fast with sh(ui)p, a collection of components and blocks for your Next.js project, built with shadcn/ui",
   "homepage": "https://github.com/plvo/shuip",
   "bugs": {
     "url": "https://github.com/plvo/shuip/issues"
@@ -13,22 +13,22 @@
     "url": "git+https://github.com/plvo/shuip"
   },
   "type": "module",
+  "packageManager": "bun@1.2.10",
   "scripts": {
+    "clean": "rimraf .next node_modules .contentlayer bun.lock package-lock.json",
     "check": "biome check --write .",
     "format": "biome format --write .",
     "lint": "biome lint --write .",
-    "clean": "rimraf .next node_modules .contentlayer bun.lock package-lock.json",
-    "dev": "next dev",
     "build": "next build",
     "build:analyze": "ANALYZE=true next build",
     "build:full": "next build && bun registry:generate && bun registry:build && bun content:build",
+    "dev": "next dev",
     "start": "next start",
     "content:build": "contentlayer2 build",
     "registry:build": "shadcn build",
     "registry:generate": "bun ./scripts/generate-registry.ts",
     "prepare": "husky"
   },
-  "packageManager": "bun@1.2.10",
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
     "@radix-ui/react-avatar": "^1.1.10",
