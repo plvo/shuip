@@ -185,6 +185,19 @@
           "target": "./components/ui/shuip/side-dialog.tsx"
         }
       ]
+    },
+    {
+      "name": "responsive-dialog",
+      "type": "registry:block",
+      "dependencies": ["vaul"],
+      "registryDependencies": ["drawer", "side-dialog"],
+      "files": [
+        {
+          "path": "./registry/block/responsive-dialog.tsx",
+          "type": "registry:block",
+          "target": "./components/block/shuip/responsive-dialog.tsx"
+        }
+      ]
     }
   ]
 }
