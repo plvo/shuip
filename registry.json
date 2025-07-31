@@ -173,6 +173,18 @@
           "target": "./components/ui/shuip/checkbox-field.tsx"
         }
       ]
+    },
+    {
+      "name": "side-dialog",
+      "type": "registry:ui",
+      "dependencies": ["lucide-react"],
+      "files": [
+        {
+          "path": "./registry/ui/side-dialog.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/side-dialog.tsx"
+        }
+      ]
     }
   ]
 }

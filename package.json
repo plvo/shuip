@@ -21,7 +21,7 @@
     "lint": "biome lint --write .",
     "build": "next build",
     "build:analyze": "ANALYZE=true next build",
-    "build:full": "next build && bun registry:generate && bun registry:build && bun content:build",
+    "build:full": "next build && bun run registry:generate && bun run registry:build && bun run content:build",
     "dev": "next dev",
     "start": "next start",
     "content:build": "contentlayer2 build",
