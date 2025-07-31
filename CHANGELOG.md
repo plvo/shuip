@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/plvo/shuip/compare/v1.1.0...v1.1.1) (2025-07-31)
+
+
+### Bug Fixes
+
+* hotfix responsive-dialog.mdx ([a22cf46](https://github.com/plvo/shuip/commit/a22cf466fb2b9833f3dbe771ee09e5c6fac616a1))
+
 ## [1.1.0](https://github.com/plvo/shuip/compare/v1.0.0...v1.1.0) (2025-07-31)
 
 
