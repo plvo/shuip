@@ -1,0 +1,289 @@
+---
+title: Side Dialog
+description: A lightweight dialog that opens from the sides of the screen, perfect for notifications, user menus, and contextual actions.
+group: shortcut
+---
+
+<ItemHeader filename={'side-dialog'} />
+
+## Contextual positioning
+
+Unlike traditional centered dialogs, `SideDialog` provides a more contextual user experience by opening from the edges of the screen, perfect for notifications, user menus, and contextual actions.
+
+## Built-in features
+
+- **6 positions**: Choose from `top-left`, `top-right`, `bottom-left`, `bottom-right`, `left`, `right`
+- **Flexible sizes**: Predefined sizes (`xs`, `sm`, `md`, `lg`, `xl`, `2xl`)
+- **Lightweight**: Custom implementation without depending on shadcn dialog
+- **Accessible**: Keyboard support (Escape), focus management, and ARIA compliance
+- **Portal rendering**: Renders in `document.body` to avoid z-index issues
+- **Smooth animations**: Entry/exit animations with Tailwind CSS
+- **Controlled & Uncontrolled**: Works with or without state management
+
+## Position options
+
+The `position` prop controls where the dialog appears:
+
+<CodeHighlight code={`// Corner positions
+<SideDialog position="top-left">     {/* Top left corner */}
+<SideDialog position="top-right">    {/* Top right corner */}  
+<SideDialog position="bottom-left">  {/* Bottom left corner */}
+<SideDialog position="bottom-right"> {/* Bottom right corner (default) */}
+
+// Side positions (vertically centered)
+<SideDialog position="left">   {/* Left side, centered */}
+<SideDialog position="right">  {/* Right side, centered */}`} language='tsx' />
+
+## Size options
+
+The `size` prop controls the dialog size with predefined responsive values:
+
+<CodeHighlight code={`// Predefined sizes (all automatically responsive)
+<SideDialog size="xs">      {/* 320px max-width, adapts to small screens */}
+<SideDialog size="sm">      {/* 384px max-width (default) */}
+<SideDialog size="md">      {/* 448px max-width */}
+<SideDialog size="lg">      {/* 512px max-width */}
+<SideDialog size="xl">      {/* 576px max-width */}
+<SideDialog size="2xl">     {/* 672px max-width */}
+
+// For custom sizes, use className with responsive constraints
+<SideDialogContent className="w-full max-w-[min(400px,calc(100vw-2rem))]">
+  {/* Custom size with responsive protection */}
+</SideDialogContent>`} language='tsx' />
+
+### Responsive behavior
+
+All predefined sizes automatically include responsive constraints using CSS `min()` function:
+- **Desktop**: Uses the specified max-width (e.g. `lg` = 32rem/512px)
+- **Small screens**: Automatically reduces to `calc(100vw - 2rem)` when viewport is smaller
+- **Never overflows**: The dialog will always fit within the viewport with 1rem margin on each side
+- **CSS native**: Uses `min(targetSize, calc(100vw - 2rem))` for optimal performance
+
+## Common use cases
+
+### Notifications and alerts
+
+<CodeHighlight code={`// Success notification - top right
+<SideDialog position="top-right">
+  <SideDialogTrigger asChild>
+    <Button onClick={handleSave}>Save Changes</Button>
+  </SideDialogTrigger>
+  <SideDialogContent>
+    <SideDialogHeader>
+      <SideDialogTitle className="text-green-600">Success!</SideDialogTitle>
+      <SideDialogDescription>Your changes have been saved.</SideDialogDescription>
+    </SideDialogHeader>
+  </SideDialogContent>
+</SideDialog>
+
+// Error notification - top left  
+<SideDialog position="top-left">
+  <SideDialogContent>
+    <SideDialogHeader>
+      <SideDialogTitle className="text-red-600">Error</SideDialogTitle>
+      <SideDialogDescription>Something went wrong. Please try again.</SideDialogDescription>
+    </SideDialogHeader>
+  </SideDialogContent>
+</SideDialog>`} language='tsx' />
+
+### Different sizes for different content
+
+<CodeHighlight code={`// Small notification - xs size
+<SideDialog position="top-right" size="xs">
+  <SideDialogContent>
+    <SideDialogHeader>
+      <SideDialogTitle>Saved!</SideDialogTitle>
+    </SideDialogHeader>
+  </SideDialogContent>
+</SideDialog>
+
+// User profile - medium size
+<SideDialog position="top-right" size="md">
+  <SideDialogContent>
+    <SideDialogHeader>
+      <SideDialogTitle>User Profile</SideDialogTitle>
+    </SideDialogHeader>
+    <div className="space-y-4">
+      <div className="flex items-center space-x-4">
+        <Avatar className="w-16 h-16">
+          <AvatarImage src="/avatar.jpg" />
+          <AvatarFallback>JD</AvatarFallback>
+        </Avatar>
+        <div>
+          <h3 className="font-semibold">John Doe</h3>
+          <p className="text-muted-foreground">john@example.com</p>
+        </div>
+      </div>
+    </div>
+  </SideDialogContent>
+</SideDialog>
+
+// Wide content panel - custom size with responsive constraints
+<SideDialog position="right">
+  <SideDialogContent className="w-full max-w-[min(600px,calc(100vw-2rem))]">
+    <SideDialogHeader>
+      <SideDialogTitle>Content Editor</SideDialogTitle>
+    </SideDialogHeader>
+    <div className="space-y-4">
+      <Textarea placeholder="Write your content here..." rows={10} />
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline">Save Draft</Button>
+        <Button>Publish</Button>
+      </div>
+    </div>
+  </SideDialogContent>
+</SideDialog>`} language='tsx' />
+
+### Help and information
+
+<CodeHighlight code={`// Help panel - bottom left
+<SideDialog position="bottom-left">
+  <SideDialogTrigger asChild>
+    <Button variant="outline" size="icon">
+      <HelpCircle className="size-4" />
+    </Button>
+  </SideDialogTrigger>
+  <SideDialogContent>
+    <SideDialogHeader>
+      <SideDialogTitle>Need Help?</SideDialogTitle>
+      <SideDialogDescription>
+        Find answers to common questions or contact support.
+      </SideDialogDescription>
+    </SideDialogHeader>
+    <div className="space-y-3">
+      <Button variant="outline" className="w-full">
+        <Book className="mr-2 size-4" />
+        Documentation
+      </Button>
+      <Button variant="outline" className="w-full">
+        <MessageCircle className="mr-2 size-4" />
+        Contact Support
+      </Button>
+    </div>
+  </SideDialogContent>
+</SideDialog>`} language='tsx' />
+
+## State management
+
+The component supports both controlled and uncontrolled modes, automatically detecting which mode to use based on the props provided:
+
+<CodeHighlight code={`// Uncontrolled: Component manages its own state
+<SideDialog position="top-right">
+  <SideDialogTrigger asChild>
+    <Button>Open</Button>
+  </SideDialogTrigger>
+  <SideDialogContent>
+    <SideDialogHeader>
+      <SideDialogTitle>Self-managed State</SideDialogTitle>
+    </SideDialogHeader>
+  </SideDialogContent>
+</SideDialog>
+
+// Controlled: You manage the state
+const [open, setOpen] = useState(false);
+<SideDialog open={open} onOpenChange={setOpen} position="top-right">
+  <SideDialogTrigger asChild>
+    <Button>Open</Button>
+  </SideDialogTrigger>
+  <SideDialogContent>
+    <SideDialogHeader>
+      <SideDialogTitle>Controlled State</SideDialogTitle>
+    </SideDialogHeader>
+  </SideDialogContent>
+</SideDialog>`} language='tsx' />
+
+## Advanced customization
+
+### Custom close behavior
+
+<CodeHighlight code={`// Disable the default close button
+<SideDialogContent showCloseButton={false}>
+  <SideDialogHeader>
+    <SideDialogTitle>Custom Controls</SideDialogTitle>
+  </SideDialogHeader>
+  <SideDialogFooter>
+    <SideDialogClose asChild>
+      <Button variant="destructive">Cancel</Button>
+    </SideDialogClose>
+    <SideDialogClose asChild>
+      <Button>Confirm</Button>
+    </SideDialogClose>
+  </SideDialogFooter>
+</SideDialogContent>`} language='tsx' />
+
+### Custom styling
+
+<CodeHighlight code={`// Custom dialog appearance
+<SideDialogContent className="border-primary shadow-xl bg-gradient-to-b from-background to-muted">
+  <SideDialogHeader>
+    <SideDialogTitle className="text-primary">Custom Style</SideDialogTitle>
+  </SideDialogHeader>
+</SideDialogContent>`} language='tsx' />
+
+<ItemFooter itemName={'side-dialog'} props={[
+  {
+    name: 'open',
+    type: 'boolean?',
+    description: 'Controlled open state (optional)',
+  },
+  {
+    name: 'onOpenChange',
+    type: '(open: boolean) => void?',
+    description: 'Callback when open state changes',
+  },
+  {
+    name: 'position',
+    type: 'SideDialogPosition?',
+    description: 'Position of the dialog: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "left" | "right" (default: "bottom-right")',
+  },
+  {
+    name: 'size',
+    type: 'SideDialogSize?',
+    description: 'Size of the dialog: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" with automatic responsive constraints (default: "sm")',
+  },
+  {
+    name: 'children',
+    type: 'React.ReactNode',
+    description: 'Dialog content (SideDialogTrigger and SideDialogContent)',
+  },
+]} />
+
+**SideDialogContent Props:**
+
+<ItemFooter itemName={'side-dialog-content'} props={[
+  {
+    name: 'showCloseButton',
+    type: 'boolean?',
+    description: 'Whether to show the default close button (default: true)',
+  },
+  {
+    name: 'className',
+    type: 'string?',
+    description: 'Additional CSS classes',
+  },
+  {
+    name: 'children',
+    type: 'React.ReactNode',
+    description: 'Dialog content',
+  },
+]} />
+
+**SideDialogTrigger Props:**
+
+<ItemFooter itemName={'side-dialog-trigger'} props={[
+  {
+    name: 'asChild',
+    type: 'boolean?',
+    description: 'Render as child element instead of button',
+  },
+  {
+    name: 'children',
+    type: 'React.ReactNode',
+    description: 'Trigger content',
+  },
+  {
+    name: '...props',
+    type: 'ButtonHTMLAttributes<HTMLButtonElement>',
+    description: 'All button HTML attributes',
+  },
+]} />
