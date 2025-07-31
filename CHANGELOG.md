@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/plvo/shuip/compare/v1.0.0...v1.1.0) (2025-07-31)
+
+
+### Features
+
+* new block `responsive-dialog` ([#21](https://github.com/plvo/shuip/issues/21)) ([e5a2af8](https://github.com/plvo/shuip/commit/e5a2af8ec5c34952c8c153000046d3d4a3b7ee84))
+* new ui side-dialog ([#18](https://github.com/plvo/shuip/issues/18)) ([ea7096c](https://github.com/plvo/shuip/commit/ea7096c89a9ba5dc074aa6bf0bcdce9d22bbdd5d))
+
 ## 1.0.0 (2025-06-30)
 
 

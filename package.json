@@ -1,6 +1,6 @@
 {
   "name": "shuip",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "plvo <plvdev@proton.me>",
   "license": "MIT",
   "description": "Ship fast with sh(ui)p, a collection of components and blocks for your Next.js project, built with shadcn/ui",
