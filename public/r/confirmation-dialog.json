@@ -3,7 +3,10 @@
   "name": "confirmation-dialog",
   "type": "registry:ui",
   "dependencies": [],
-  "registryDependencies": ["dialog", "button"],
+  "registryDependencies": [
+    "dialog",
+    "button"
+  ],
   "files": [
     {
       "path": "./registry/ui/confirmation-dialog.tsx",

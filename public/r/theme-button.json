@@ -2,8 +2,14 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "theme-button",
   "type": "registry:ui",
-  "dependencies": ["next-themes", "lucide-react", "class-variance-authority"],
-  "registryDependencies": ["button"],
+  "dependencies": [
+    "next-themes",
+    "lucide-react",
+    "class-variance-authority"
+  ],
+  "registryDependencies": [
+    "button"
+  ],
   "files": [
     {
       "path": "./registry/ui/theme-button.tsx",

@@ -2,8 +2,13 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "checkbox-field",
   "type": "registry:ui",
-  "dependencies": ["react-hook-form"],
-  "registryDependencies": ["form", "checkbox"],
+  "dependencies": [
+    "react-hook-form"
+  ],
+  "registryDependencies": [
+    "form",
+    "checkbox"
+  ],
   "files": [
     {
       "path": "./registry/ui/checkbox-field.tsx",

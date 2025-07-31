@@ -2,8 +2,15 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "input-field",
   "type": "registry:ui",
-  "dependencies": ["react-hook-form", "lucide-react"],
-  "registryDependencies": ["form", "input", "button"],
+  "dependencies": [
+    "react-hook-form",
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "form",
+    "input",
+    "button"
+  ],
   "files": [
     {
       "path": "./registry/ui/input-field.tsx",

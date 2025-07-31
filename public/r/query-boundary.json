@@ -2,8 +2,14 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "query-boundary",
   "type": "registry:ui",
-  "dependencies": ["@tanstack/react-query", "react-error-boundary", "lucide-react"],
-  "registryDependencies": ["button"],
+  "dependencies": [
+    "@tanstack/react-query",
+    "react-error-boundary",
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "button"
+  ],
   "files": [
     {
       "path": "./registry/ui/query-boundary.tsx",

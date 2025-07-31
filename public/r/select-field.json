@@ -2,8 +2,14 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "select-field",
   "type": "registry:ui",
-  "dependencies": ["react-hook-form", "@radix-ui/react-select"],
-  "registryDependencies": ["form", "select"],
+  "dependencies": [
+    "react-hook-form",
+    "@radix-ui/react-select"
+  ],
+  "registryDependencies": [
+    "form",
+    "select"
+  ],
   "files": [
     {
       "path": "./registry/ui/select-field.tsx",

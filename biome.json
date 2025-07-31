@@ -15,7 +15,8 @@
       "**/.contentlayer/**/*",
       "**/dist/**/*",
       "**/out/**/*",
-      "**/generated/**/*"
+      "**/generated/**/*",
+      "**/public/r/**/*"
     ]
   },
   "organizeImports": {

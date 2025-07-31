@@ -116,10 +116,16 @@ export function getZodDefaultValues<T extends z.ZodObject<z.ZodRawShape>>(
   schema: T,
   data?: Partial<z.infer<T>>,
 ): z.infer<T> {
-  return Object.keys(schema.shape).reduce<Record<string, unknown>>((acc, key) => {
-    acc[key] = data && data[key] !== undefined ? data[key] : zodTypeDefaultValue(schema.shape[key]);
-    return acc;
-  }, {});
+  return Object.keys(schema.shape).reduce<z.infer<T>>(
+    (acc, key) => {
+      acc[key as keyof z.infer<T>] =
+        data && data[key] !== undefined
+          ? data[key]
+          : (zodTypeDefaultValue(schema.shape[key] as z.ZodTypeAny) as z.infer<T>[keyof z.infer<T>]);
+      return acc;
+    },
+    {} as z.infer<T>,
+  );
 }
 
 /**
@@ -149,14 +155,14 @@ export function zodTypeDefaultValue(key: z.ZodTypeAny): unknown {
     case z.ZodObject: {
       const objectSchema = key as z.ZodObject<z.ZodRawShape>;
       return Object.keys(objectSchema.shape).reduce<Record<string, unknown>>((acc, fieldKey) => {
-        acc[fieldKey] = zodTypeDefaultValue(objectSchema.shape[fieldKey]);
+        acc[fieldKey] = zodTypeDefaultValue(objectSchema.shape[fieldKey] as z.ZodTypeAny);
         return acc;
       }, {});
     }
     case z.ZodEnum: {
       return undefined;
     }
-    case z.ZodNativeEnum: {
+    case z.enum: {
       return undefined;
     }
     case z.ZodOptional:

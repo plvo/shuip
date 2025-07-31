@@ -2,8 +2,13 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "submit-button",
   "type": "registry:ui",
-  "dependencies": ["@radix-ui/react-icons", "class-variance-authority"],
-  "registryDependencies": ["button"],
+  "dependencies": [
+    "@radix-ui/react-icons",
+    "class-variance-authority"
+  ],
+  "registryDependencies": [
+    "button"
+  ],
   "files": [
     {
       "path": "./registry/ui/submit-button.tsx",

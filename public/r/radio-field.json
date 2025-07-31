@@ -2,8 +2,13 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "radio-field",
   "type": "registry:ui",
-  "dependencies": ["react-hook-form"],
-  "registryDependencies": ["form", "radio-group"],
+  "dependencies": [
+    "react-hook-form"
+  ],
+  "registryDependencies": [
+    "form",
+    "radio-group"
+  ],
   "files": [
     {
       "path": "./registry/ui/radio-field.tsx",

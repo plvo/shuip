@@ -2,8 +2,13 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "copy-button",
   "type": "registry:ui",
-  "dependencies": ["lucide-react", "class-variance-authority"],
-  "registryDependencies": ["button"],
+  "dependencies": [
+    "lucide-react",
+    "class-variance-authority"
+  ],
+  "registryDependencies": [
+    "button"
+  ],
   "files": [
     {
       "path": "./registry/ui/copy-button.tsx",

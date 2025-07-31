@@ -3,7 +3,9 @@
   "name": "hover-reveal",
   "type": "registry:ui",
   "dependencies": [],
-  "registryDependencies": ["hover-card"],
+  "registryDependencies": [
+    "hover-card"
+  ],
   "files": [
     {
       "path": "./registry/ui/hover-reveal.tsx",

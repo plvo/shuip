@@ -2,7 +2,9 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "responsive-dialog",
   "type": "registry:block",
-  "registryDependencies": ["drawer"],
+  "registryDependencies": [
+    "drawer"
+  ],
   "files": [
     {
       "path": "./registry/block/responsive-dialog.tsx",
