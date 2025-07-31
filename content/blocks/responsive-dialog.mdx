@@ -1,0 +1,214 @@
+---
+title: Responsive Dialog
+description: A dialog component that adapts to screen size - side dialog on desktop, drawer on mobile.
+---
+
+<ItemHeader filename={'responsive-dialog'} text="A dialog component that adapts to screen size - side dialog on desktop, drawer on mobile." />
+
+## About
+
+`ResponsiveDialog` is a smart dialog component that automatically adapts to the user's screen size:
+
+- **Desktop (≥1024px)**: Renders as a `SideDialog` with flexible positioning
+- **Mobile (&lt;1024px)**: Renders as a `Drawer` for better mobile UX
+
+Unlike traditional dialogs that force the same experience across all devices, `ResponsiveDialog` provides the optimal interface for each screen size while maintaining a consistent API.
+
+## Built-in features
+
+- **Automatic responsive behavior**: Switches between side dialog and drawer based on screen size
+- **6 positions (desktop)**: Choose from `top-left`, `top-right`, `bottom-left`, `bottom-right`, `left`, `right`
+- **Flexible sizes (desktop)**: Predefined sizes (`xs`, `sm`, `md`, `lg`, `xl`, `2xl`)
+- **Mobile-optimized**: Uses native drawer with swipe gestures on mobile
+- **Lightweight**: Combines existing components without additional overhead
+- **Accessible**: Inherits accessibility features from both SideDialog and Drawer
+
+## Installation
+
+
+## Usage
+
+### Basic responsive dialog
+
+<CodeHighlight code={`<ResponsiveDialog>
+  <ResponsiveDialogTrigger asChild>
+    <Button>Open Dialog</Button>
+  </ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Settings</ResponsiveDialogTitle>
+      <ResponsiveDialogDescription>
+        Manage your preferences and account settings.
+      </ResponsiveDialogDescription>
+    </ResponsiveDialogHeader>
+    <ResponsiveDialogFooter>
+      <ResponsiveDialogClose asChild>
+        <Button variant="outline">Cancel</Button>
+      </ResponsiveDialogClose>
+      <Button>Save</Button>
+    </ResponsiveDialogFooter>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>`} language='tsx' />
+
+### Different positions (desktop only)
+
+Desktop positions are ignored on mobile where the drawer behavior takes precedence:
+
+<CodeHighlight code={`// Notification from bottom-right
+<ResponsiveDialog position="bottom-right">
+  <ResponsiveDialogTrigger asChild>
+    <Button>Show Notification</Button>
+  </ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Success!</ResponsiveDialogTitle>
+      <ResponsiveDialogDescription>Your changes have been saved.</ResponsiveDialogDescription>
+    </ResponsiveDialogHeader>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>
+
+// User menu from top-right
+<ResponsiveDialog position="top-right" size="sm">
+  <ResponsiveDialogTrigger asChild>
+    <Button variant="ghost" size="icon">
+      <User className="size-4" />
+    </Button>
+  </ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Account</ResponsiveDialogTitle>
+    </ResponsiveDialogHeader>
+    <div className="space-y-2">
+      <Button variant="ghost" className="w-full justify-start">
+        Profile Settings
+      </Button>
+      <Button variant="ghost" className="w-full justify-start">
+        Sign out
+      </Button>
+    </div>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>`} language='tsx' />
+
+### Custom breakpoints
+
+Control when the dialog switches between desktop and mobile modes:
+
+<CodeHighlight code={`// Use predefined breakpoints
+<ResponsiveDialog breakpoint="sm">  {/* Switches at 640px */}
+  <ResponsiveDialogTrigger asChild>
+    <Button>Small Breakpoint</Button>
+  </ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Mobile at 640px</ResponsiveDialogTitle>
+      <ResponsiveDialogDescription>
+        This dialog becomes a drawer on screens smaller than 640px.
+      </ResponsiveDialogDescription>
+    </ResponsiveDialogHeader>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>
+
+// Use custom pixel values
+<ResponsiveDialog breakpoint={900}>
+  <ResponsiveDialogTrigger asChild>
+    <Button>Custom Breakpoint</Button>
+  </ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Custom at 900px</ResponsiveDialogTitle>
+      <ResponsiveDialogDescription>
+        Switches to mobile mode at exactly 900px and below.
+      </ResponsiveDialogDescription>
+    </ResponsiveDialogHeader>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>`} language='tsx' />
+
+### Different sizes (desktop only)
+
+Size props affect the desktop side dialog appearance:
+
+<CodeHighlight code={`// Small dialog for quick actions
+<ResponsiveDialog size="xs">
+  <ResponsiveDialogTrigger asChild>
+    <Button variant="outline">Quick Action</Button>
+  </ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Confirm</ResponsiveDialogTitle>
+      <ResponsiveDialogDescription>Are you sure?</ResponsiveDialogDescription>
+    </ResponsiveDialogHeader>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>
+
+// Large dialog for complex content
+<ResponsiveDialog position="left" size="lg">
+  <ResponsiveDialogTrigger asChild>
+    <Button variant="outline">Navigation Menu</Button>
+  </ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Navigation</ResponsiveDialogTitle>
+    </ResponsiveDialogHeader>
+    <nav className="space-y-2">
+      <Link href="/dashboard">Dashboard</Link>
+      <Link href="/projects">Projects</Link>
+      <Link href="/settings">Settings</Link>
+    </nav>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>`} language='tsx' />
+
+## Common use cases
+
+### Mobile-first navigation
+
+<CodeHighlight code={`<ResponsiveDialog position="left" size="lg">
+  <ResponsiveDialogTrigger asChild>
+    <Button variant="outline" size="icon">
+      <Menu className="size-4" />
+    </Button>
+  </ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Menu</ResponsiveDialogTitle>
+    </ResponsiveDialogHeader>
+    <nav className="space-y-3">
+      <Link href="/home" className="block p-2 hover:bg-muted rounded">
+        Home
+      </Link>
+      <Link href="/about" className="block p-2 hover:bg-muted rounded">
+        About
+      </Link>
+      <Link href="/contact" className="block p-2 hover:bg-muted rounded">
+        Contact
+      </Link>
+    </nav>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>`} language='tsx' />
+
+<ItemFooter itemName={'responsive-dialog'} props={[
+  {
+    prop: 'open',
+    type: 'boolean',
+    description: 'Whether the dialog is open. Use with onOpenChange for controlled component.',
+  },
+  {
+    prop: 'onOpenChange',
+    type: '(open: boolean) => void',
+    description: 'Callback fired when the dialog open state changes.',
+  },
+  {
+    prop: 'position',
+    type: "'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'left' | 'right'",
+    description: 'Position of the dialog on desktop. Default is "bottom-right". Ignored on mobile.',
+  },
+  {
+    prop: 'size',
+    type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'",
+    description: 'Size of the dialog on desktop. Default is "sm". Ignored on mobile.',
+  },
+  {
+    prop: 'breakpoint',
+    type: "'sm' | 'md' | 'lg' | 'xl' | number",
+    description: 'Breakpoint at which the dialog switches to mobile mode. Default is "md" (768px). Can be a predefined breakpoint or custom pixel value.',
+  },
+]} />
