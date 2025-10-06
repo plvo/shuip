@@ -1,8 +1,8 @@
-import { Button, type buttonVariants } from '@/components/ui/button';
 import type { VariantProps } from 'class-variance-authority';
 import { Laptop, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import * as React from 'react';
+import { Button, type buttonVariants } from '@/components/ui/button';
 
 type ButtonProps = React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {

@@ -1,6 +1,6 @@
+import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
 
 export interface RadioFieldProps<T extends FieldValues> extends React.ComponentProps<typeof RadioGroup> {
   register: UseFormRegisterReturn<FieldPath<T>>;

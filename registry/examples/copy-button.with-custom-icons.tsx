@@ -1,7 +1,7 @@
 'use client';
 
-import { CopyButton } from '@/components/ui/shuip/copy-button';
 import { Cat, Dog } from 'lucide-react';
+import { CopyButton } from '@/components/ui/shuip/copy-button';
 
 export default function CopyButtonWithCustomIconsExample() {
   return (

@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -8,7 +9,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import type * as React from 'react';
 
 export interface ConfirmationDialogProps extends React.RefAttributes<HTMLDialogElement> {
   trigger?: React.ReactNode;

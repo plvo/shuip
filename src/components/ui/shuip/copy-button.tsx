@@ -1,9 +1,9 @@
 'use client';
 
-import { Button, type buttonVariants } from '@/components/ui/button';
 import type { VariantProps } from 'class-variance-authority';
 import { CheckIcon, Copy } from 'lucide-react';
 import * as React from 'react';
+import { Button, type buttonVariants } from '@/components/ui/button';
 
 const DEFAULT_TIMEOUT = 2000;
 

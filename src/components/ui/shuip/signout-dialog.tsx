@@ -1,3 +1,4 @@
+import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -8,7 +9,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { LogOut } from 'lucide-react';
 
 export interface SignoutDialogProps extends React.RefAttributes<HTMLDialogElement> {
   title?: string;

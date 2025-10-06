@@ -1,9 +1,9 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import { XIcon } from 'lucide-react';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
+import { cn } from '@/lib/utils';
 
 type SideDialogPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'left' | 'right';
 type SideDialogSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';

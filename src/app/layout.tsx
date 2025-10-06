@@ -1,7 +1,7 @@
-import RootProvider from '@/providers/root-provider';
 import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
+import RootProvider from '@/providers/root-provider';
 import '@/styles/globals.css';
 
 const geistSans = Geist({

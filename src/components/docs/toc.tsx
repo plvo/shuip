@@ -3,10 +3,10 @@
 
 'use client';
 
+import * as React from 'react';
 import { useMounted } from '@/hooks/use-mounted';
 import type { TableOfContents } from '@/lib/toc';
 import { cn } from '@/lib/utils';
-import * as React from 'react';
 
 interface TocProps {
   toc?: TableOfContents;

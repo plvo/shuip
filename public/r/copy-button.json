@@ -2,17 +2,12 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "copy-button",
   "type": "registry:ui",
-  "dependencies": [
-    "lucide-react",
-    "class-variance-authority"
-  ],
-  "registryDependencies": [
-    "button"
-  ],
+  "dependencies": ["lucide-react", "class-variance-authority"],
+  "registryDependencies": ["button"],
   "files": [
     {
       "path": "./registry/ui/copy-button.tsx",
-      "content": "'use client';\n\nimport { Button, type buttonVariants } from '@/components/ui/button';\nimport type { VariantProps } from 'class-variance-authority';\nimport { CheckIcon, Copy } from 'lucide-react';\nimport * as React from 'react';\n\nconst DEFAULT_TIMEOUT = 2000;\n\ntype ButtonProps = React.ComponentProps<'button'> &\n  VariantProps<typeof buttonVariants> & {\n    asChild?: boolean;\n  };\n\nexport interface CopyButtonProps extends ButtonProps {\n  value: string;\n  copiedIcon?: React.ReactNode;\n  notCopiedIcon?: React.ReactNode;\n}\n\nasync function copyToClipboardWithMeta(value: string) {\n  navigator.clipboard.writeText(value);\n}\n\nexport function CopyButton({ value, copiedIcon = <CheckIcon />, notCopiedIcon = <Copy />, ...props }: CopyButtonProps) {\n  const [hasCopied, setHasCopied] = React.useState(false);\n\n  React.useEffect(() => {\n    setTimeout(() => {\n      setHasCopied(false);\n    }, DEFAULT_TIMEOUT);\n  }, [hasCopied]);\n\n  return (\n    <Button\n      size='icon'\n      variant={'ghost'}\n      className={'z-10 size-4'}\n      onClick={() => {\n        copyToClipboardWithMeta(value);\n        setHasCopied(true);\n      }}\n      {...props}\n    >\n      <span className='sr-only'>Copy</span>\n      {hasCopied ? copiedIcon : notCopiedIcon}\n    </Button>\n  );\n}\n",
+      "content": "'use client';\n\nimport type { VariantProps } from 'class-variance-authority';\nimport { CheckIcon, Copy } from 'lucide-react';\nimport * as React from 'react';\nimport { Button, type buttonVariants } from '@/components/ui/button';\n\nconst DEFAULT_TIMEOUT = 2000;\n\ntype ButtonProps = React.ComponentProps<'button'> &\n  VariantProps<typeof buttonVariants> & {\n    asChild?: boolean;\n  };\n\nexport interface CopyButtonProps extends ButtonProps {\n  value: string;\n  copiedIcon?: React.ReactNode;\n  notCopiedIcon?: React.ReactNode;\n}\n\nasync function copyToClipboardWithMeta(value: string) {\n  navigator.clipboard.writeText(value);\n}\n\nexport function CopyButton({ value, copiedIcon = <CheckIcon />, notCopiedIcon = <Copy />, ...props }: CopyButtonProps) {\n  const [hasCopied, setHasCopied] = React.useState(false);\n\n  React.useEffect(() => {\n    setTimeout(() => {\n      setHasCopied(false);\n    }, DEFAULT_TIMEOUT);\n  }, [hasCopied]);\n\n  return (\n    <Button\n      size='icon'\n      variant={'ghost'}\n      className={'z-10 size-4'}\n      onClick={() => {\n        copyToClipboardWithMeta(value);\n        setHasCopied(true);\n      }}\n      {...props}\n    >\n      <span className='sr-only'>Copy</span>\n      {hasCopied ? copiedIcon : notCopiedIcon}\n    </Button>\n  );\n}\n",
       "type": "registry:ui",
       "target": "./components/ui/shuip/copy-button.tsx"
     }

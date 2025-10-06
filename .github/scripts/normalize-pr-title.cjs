@@ -1,8 +1,8 @@
 const PATTERNS = [
   // FEAT
-  { regex: /^(?:Feat|Feature|FT|feat|feature|ft)[\s\/\\|:-]+(.+)$/i, type: 'feat' },
+  { regex: /^(?:Feat|Feature|FT|feat|feature|ft)[\s/\\|:-]+(.+)$/i, type: 'feat' },
   { regex: /^(?:new|Update|update|updated|Updated|add|adding|added)\s+(.+)$/i, type: 'feat' },
-  { regex: /^(?:Fix|Bug|Bugfix|Hotfix|Patch|fix|bug|bugfix|hotfix|patch)[\s\/\\|:-]+(.+)$/i, type: 'fix' },
+  { regex: /^(?:Fix|Bug|Bugfix|Hotfix|Patch|fix|bug|bugfix|hotfix|patch)[\s/\\|:-]+(.+)$/i, type: 'fix' },
   { regex: /^(?:resolve|resolves|resolved|solve|solves|solved)\s+(.+)$/i, type: 'fix' },
 ];
 

@@ -1,5 +1,6 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.2.5/schema.json",
+  "root": true,
   "vcs": {
     "enabled": false,
     "clientKind": "git",
@@ -7,21 +8,23 @@
     "defaultBranch": "main"
   },
   "files": {
-    "ignoreUnknown": false,
-    "ignore": [
-      "**/.next/**/*",
-      "**/node_modules/**/*",
-      "**/.husky/**/*",
-      "**/.contentlayer/**/*",
-      "**/dist/**/*",
-      "**/out/**/*",
-      "**/generated/**/*",
-      "**/public/r/**/*"
+    "ignoreUnknown": true,
+    "includes": [
+      "**",
+      "!apps/app/src/app/init/**/*",
+      "!packages/ui/src/components/**/*",
+      "!packages/ui/src/styles/**/*",
+      "!**/*.css",
+      "!**/.next/**/*",
+      "!**/node_modules/**/*",
+      "!**/.husky/**/*",
+      "!**/dist/**/*",
+      "!**/out/**/*",
+      "!**/generated/**/*",
+      "!**/.turbo/**/*"
     ]
   },
-  "organizeImports": {
-    "enabled": true
-  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "formatter": {
     "enabled": true,
     "formatWithErrors": false,
@@ -49,12 +52,13 @@
     "rules": {
       "recommended": true,
       "suspicious": {
-        "noConsoleLog": "off",
         "noExplicitAny": "off",
-        "noArrayIndexKey": "off"
+        "noArrayIndexKey": "off",
+        "noConsole": { "level": "off", "options": { "allow": ["log"] } }
       },
       "a11y": {
-        "useKeyWithClickEvents": "info"
+        "useKeyWithClickEvents": "off",
+        "noStaticElementInteractions": "off"
       },
       "correctness": {
         "noUnusedVariables": {

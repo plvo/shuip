@@ -1,6 +1,6 @@
 'use client';
 
-import { type Blocks, type Docs, type Lib, allDocuments } from 'contentlayer/generated';
+import { allDocuments, type Blocks, type Docs, type Lib } from 'contentlayer/generated';
 
 interface UseDocumentsReturn {
   documents: Docs[];

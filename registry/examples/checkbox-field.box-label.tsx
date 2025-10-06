@@ -1,11 +1,11 @@
 'use client';
 
-import { Form } from '@/components/ui/form';
-import CheckboxField from '@/components/ui/shuip/checkbox-field';
-import { SubmitButton } from '@/components/ui/shuip/submit-button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { Form } from '@/components/ui/form';
+import CheckboxField from '@/components/ui/shuip/checkbox-field';
+import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
 const zodSchema = z.object({
   checkbox: z.boolean(),

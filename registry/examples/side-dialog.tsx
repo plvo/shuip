@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   SideDialog,
@@ -11,7 +12,6 @@ import {
   SideDialogTitle,
   SideDialogTrigger,
 } from '@/components/ui/shuip/side-dialog';
-import { useState } from 'react';
 
 export default function SideDialogExample() {
   const [open, setOpen] = useState(false);

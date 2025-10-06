@@ -1,13 +1,13 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
-import { useDocuments } from '@/hooks/use-documents';
-import { firstCharUppercase } from '@/lib/utils';
 import { allDocuments } from 'contentlayer/generated';
 import { BookOpen, Cuboid, FileText, LayoutGrid, MenuIcon, Zap } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
+import { Button } from '@/components/ui/button';
+import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import { useDocuments } from '@/hooks/use-documents';
+import { firstCharUppercase } from '@/lib/utils';
 import { NavGroup, NavItem, SubNavGroup } from './nav-items';
 
 export function MobileDrawer() {

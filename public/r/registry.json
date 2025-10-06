@@ -1,0 +1,207 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "shuip",
+  "homepage": "https://shuip.xyz",
+  "items": [
+    {
+      "name": "title-section",
+      "type": "registry:block",
+      "files": [
+        {
+          "path": "./registry/block/title-section.tsx",
+          "type": "registry:block",
+          "target": "./components/block/shuip/title-section.tsx"
+        }
+      ]
+    },
+    {
+      "name": "submit-button",
+      "type": "registry:ui",
+      "dependencies": ["@radix-ui/react-icons", "class-variance-authority"],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "./registry/ui/submit-button.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/submit-button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "theme-button",
+      "type": "registry:ui",
+      "dependencies": ["next-themes", "lucide-react", "class-variance-authority"],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "./registry/ui/theme-button.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/theme-button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "confirmation-dialog",
+      "type": "registry:ui",
+      "dependencies": [],
+      "registryDependencies": ["dialog", "button"],
+      "files": [
+        {
+          "path": "./registry/ui/confirmation-dialog.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/confirmation-dialog.tsx"
+        }
+      ]
+    },
+    {
+      "name": "hover-reveal",
+      "type": "registry:ui",
+      "dependencies": [],
+      "registryDependencies": ["hover-card"],
+      "files": [
+        {
+          "path": "./registry/ui/hover-reveal.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/hover-reveal.tsx"
+        }
+      ]
+    },
+    {
+      "name": "input-field",
+      "type": "registry:ui",
+      "dependencies": ["react-hook-form", "lucide-react"],
+      "registryDependencies": ["form", "input", "button"],
+      "files": [
+        {
+          "path": "./registry/ui/input-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/input-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "radio-field",
+      "type": "registry:ui",
+      "dependencies": ["react-hook-form"],
+      "registryDependencies": ["form", "radio-group"],
+      "files": [
+        {
+          "path": "./registry/ui/radio-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/radio-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "select-field",
+      "type": "registry:ui",
+      "dependencies": ["react-hook-form", "@radix-ui/react-select"],
+      "registryDependencies": ["form", "select"],
+      "files": [
+        {
+          "path": "./registry/ui/select-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/select-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "copy-button",
+      "type": "registry:ui",
+      "dependencies": ["lucide-react", "class-variance-authority"],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "./registry/ui/copy-button.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/copy-button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "form-utils",
+      "type": "registry:lib",
+      "dependencies": ["zod"],
+      "files": [
+        {
+          "path": "./registry/lib/form-utils.ts",
+          "type": "registry:lib",
+          "target": "./lib/shuip/form-utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "query-boundary",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-query", "react-error-boundary", "lucide-react"],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "./registry/ui/query-boundary.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/query-boundary.tsx"
+        }
+      ]
+    },
+    {
+      "name": "address-field",
+      "type": "registry:ui",
+      "dependencies": ["react-hook-form", "zod", "lucide-react"],
+      "registryDependencies": ["form", "input", "button", "popover", "command"],
+      "files": [
+        {
+          "path": "./registry/ui/address-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/address-field.tsx"
+        },
+        {
+          "path": "./registry/actions/places.ts",
+          "type": "registry:file",
+          "target": "./actions/shuip/places.ts"
+        }
+      ]
+    },
+    {
+      "name": "checkbox-field",
+      "type": "registry:ui",
+      "dependencies": ["react-hook-form"],
+      "registryDependencies": ["form", "checkbox"],
+      "files": [
+        {
+          "path": "./registry/ui/checkbox-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/checkbox-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "side-dialog",
+      "type": "registry:ui",
+      "dependencies": ["lucide-react"],
+      "files": [
+        {
+          "path": "./registry/ui/side-dialog.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/side-dialog.tsx"
+        }
+      ]
+    },
+    {
+      "name": "responsive-dialog",
+      "type": "registry:block",
+      "registryDependencies": ["drawer"],
+      "files": [
+        {
+          "path": "./registry/block/responsive-dialog.tsx",
+          "type": "registry:block",
+          "target": "./components/block/shuip/responsive-dialog.tsx"
+        },
+        {
+          "path": "./registry/ui/side-dialog.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/side-dialog.tsx"
+        }
+      ]
+    }
+  ]
+}

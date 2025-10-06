@@ -1,7 +1,7 @@
-import { Button, type buttonVariants } from '@/components/ui/button';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import type { VariantProps } from 'class-variance-authority';
 import type * as React from 'react';
+import { Button, type buttonVariants } from '@/components/ui/button';
 
 type ButtonProps = React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {

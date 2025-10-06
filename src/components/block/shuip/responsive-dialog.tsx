@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Drawer,
@@ -21,7 +22,6 @@ import {
   SideDialogTitle,
   SideDialogTrigger,
 } from '@/components/ui/shuip/side-dialog';
-import * as React from 'react';
 
 type ResponsiveDialogPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'left' | 'right';
 type ResponsiveDialogSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';

@@ -1,6 +1,6 @@
-import { cn, filenameToTitle } from '@/lib/utils';
 import * as React from 'react';
 import { COMPONENT_CATEGORIES } from '#/registry/__index__';
+import { cn, filenameToTitle } from '@/lib/utils';
 import { ItemPreview } from './item-preview';
 
 interface Prop {

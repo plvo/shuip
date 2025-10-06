@@ -1,9 +1,9 @@
 'use client';
 
-import { CopyButton } from '@/components/ui/shuip/copy-button';
 import { Highlight, themes } from 'prism-react-renderer';
 import React from 'react';
 import { registryIndex } from '#/registry/__index__';
+import { CopyButton } from '@/components/ui/shuip/copy-button';
 
 export interface CodePreviewProps {
   code?: string;

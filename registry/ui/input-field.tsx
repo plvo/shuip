@@ -1,11 +1,11 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Eye, EyeOff } from 'lucide-react';
 import * as React from 'react';
 import type { ControllerRenderProps, FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 
 export interface InputFieldProps<T extends FieldValues> extends React.ComponentProps<typeof Input> {
   register: UseFormRegisterReturn<FieldPath<T>>;

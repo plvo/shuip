@@ -2,18 +2,12 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "theme-button",
   "type": "registry:ui",
-  "dependencies": [
-    "next-themes",
-    "lucide-react",
-    "class-variance-authority"
-  ],
-  "registryDependencies": [
-    "button"
-  ],
+  "dependencies": ["next-themes", "lucide-react", "class-variance-authority"],
+  "registryDependencies": ["button"],
   "files": [
     {
       "path": "./registry/ui/theme-button.tsx",
-      "content": "import { Button, type buttonVariants } from '@/components/ui/button';\nimport type { VariantProps } from 'class-variance-authority';\nimport { Laptop, Moon, Sun } from 'lucide-react';\nimport { useTheme } from 'next-themes';\nimport * as React from 'react';\n\ntype ButtonProps = React.ComponentProps<'button'> &\n  VariantProps<typeof buttonVariants> & {\n    asChild?: boolean;\n  };\n\ntype Theme = 'system' | 'light' | 'dark';\n\nexport interface ThemeButtonProps extends ButtonProps {\n  withText?: boolean;\n}\n\nexport function ThemeButton({ withText, ...props }: ThemeButtonProps) {\n  const { theme, setTheme } = useTheme();\n  const [currentTheme, setCurrentTheme] = React.useState<Theme>('system');\n\n  React.useEffect(() => {\n    setCurrentTheme(theme as Theme);\n  }, [theme]);\n\n  const cycleTheme = () => {\n    const themes: Theme[] = ['system', 'light', 'dark'];\n    const currentIndex = themes.indexOf(currentTheme);\n    const nextIndex = (currentIndex + 1) % themes.length;\n    setTheme(themes[nextIndex]);\n  };\n\n  const getThemeIcon = () => {\n    switch (currentTheme) {\n      case 'system':\n        return <Laptop className='size-[1.2rem]' />;\n      case 'light':\n        return <Sun className='size-[1.2rem]' />;\n      case 'dark':\n        return <Moon className='size-[1.2rem]' />;\n    }\n  };\n\n  const getThemeText = () => {\n    return currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1);\n  };\n\n  return (\n    <Button variant='outline' size={withText ? 'default' : 'icon'} onClick={cycleTheme} {...props}>\n      {getThemeIcon()}\n      {withText && <span className='ml-2 capitalize'>{getThemeText()}</span>}\n      <span className='sr-only'>Toggle theme</span>\n    </Button>\n  );\n}\n",
+      "content": "import type { VariantProps } from 'class-variance-authority';\nimport { Laptop, Moon, Sun } from 'lucide-react';\nimport { useTheme } from 'next-themes';\nimport * as React from 'react';\nimport { Button, type buttonVariants } from '@/components/ui/button';\n\ntype ButtonProps = React.ComponentProps<'button'> &\n  VariantProps<typeof buttonVariants> & {\n    asChild?: boolean;\n  };\n\ntype Theme = 'system' | 'light' | 'dark';\n\nexport interface ThemeButtonProps extends ButtonProps {\n  withText?: boolean;\n}\n\nexport function ThemeButton({ withText, ...props }: ThemeButtonProps) {\n  const { theme, setTheme } = useTheme();\n  const [currentTheme, setCurrentTheme] = React.useState<Theme>('system');\n\n  React.useEffect(() => {\n    setCurrentTheme(theme as Theme);\n  }, [theme]);\n\n  const cycleTheme = () => {\n    const themes: Theme[] = ['system', 'light', 'dark'];\n    const currentIndex = themes.indexOf(currentTheme);\n    const nextIndex = (currentIndex + 1) % themes.length;\n    setTheme(themes[nextIndex]);\n  };\n\n  const getThemeIcon = () => {\n    switch (currentTheme) {\n      case 'system':\n        return <Laptop className='size-[1.2rem]' />;\n      case 'light':\n        return <Sun className='size-[1.2rem]' />;\n      case 'dark':\n        return <Moon className='size-[1.2rem]' />;\n    }\n  };\n\n  const getThemeText = () => {\n    return currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1);\n  };\n\n  return (\n    <Button variant='outline' size={withText ? 'default' : 'icon'} onClick={cycleTheme} {...props}>\n      {getThemeIcon()}\n      {withText && <span className='ml-2 capitalize'>{getThemeText()}</span>}\n      <span className='sr-only'>Toggle theme</span>\n    </Button>\n  );\n}\n",
       "type": "registry:ui",
       "target": "./components/ui/shuip/theme-button.tsx"
     }

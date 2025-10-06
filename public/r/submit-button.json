@@ -2,17 +2,12 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "submit-button",
   "type": "registry:ui",
-  "dependencies": [
-    "@radix-ui/react-icons",
-    "class-variance-authority"
-  ],
-  "registryDependencies": [
-    "button"
-  ],
+  "dependencies": ["@radix-ui/react-icons", "class-variance-authority"],
+  "registryDependencies": ["button"],
   "files": [
     {
       "path": "./registry/ui/submit-button.tsx",
-      "content": "import { Button, type buttonVariants } from '@/components/ui/button';\nimport { ReloadIcon } from '@radix-ui/react-icons';\nimport type { VariantProps } from 'class-variance-authority';\nimport type * as React from 'react';\n\ntype ButtonProps = React.ComponentProps<'button'> &\n  VariantProps<typeof buttonVariants> & {\n    asChild?: boolean;\n  };\n\nexport interface SubmitButtonProps extends ButtonProps {\n  children?: React.ReactNode;\n  disabled?: boolean;\n  loading?: boolean;\n  icon?: React.JSX.Element;\n}\n\nexport function SubmitButton({\n  children,\n  disabled,\n  loading,\n  icon = <ReloadIcon className='mr-2 size-4 animate-spin' />,\n  ...props\n}: SubmitButtonProps) {\n  return (\n    <Button type='submit' variant={'default'} className={'w-full'} disabled={disabled || loading} {...props}>\n      {loading && icon}\n      {children}\n    </Button>\n  );\n}\n",
+      "content": "import { ReloadIcon } from '@radix-ui/react-icons';\nimport type { VariantProps } from 'class-variance-authority';\nimport type * as React from 'react';\nimport { Button, type buttonVariants } from '@/components/ui/button';\n\ntype ButtonProps = React.ComponentProps<'button'> &\n  VariantProps<typeof buttonVariants> & {\n    asChild?: boolean;\n  };\n\nexport interface SubmitButtonProps extends ButtonProps {\n  children?: React.ReactNode;\n  disabled?: boolean;\n  loading?: boolean;\n  icon?: React.JSX.Element;\n}\n\nexport function SubmitButton({\n  children,\n  disabled,\n  loading,\n  icon = <ReloadIcon className='mr-2 size-4 animate-spin' />,\n  ...props\n}: SubmitButtonProps) {\n  return (\n    <Button type='submit' variant={'default'} className={'w-full'} disabled={disabled || loading} {...props}>\n      {loading && icon}\n      {children}\n    </Button>\n  );\n}\n",
       "type": "registry:ui",
       "target": "./components/ui/shuip/submit-button.tsx"
     }

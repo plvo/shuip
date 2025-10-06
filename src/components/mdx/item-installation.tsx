@@ -1,10 +1,10 @@
 'use client';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
 import { Terminal } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import { CopyButton } from '../ui/shuip/copy-button';
 import { CodePreview } from './code-preview';
 

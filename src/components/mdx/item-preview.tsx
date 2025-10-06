@@ -1,11 +1,11 @@
 'use client';
 
-import { CodePreview } from '@/components/mdx/code-preview';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import * as React from 'react';
 import { registryIndex } from '#/registry/__index__';
+import { CodePreview } from '@/components/mdx/code-preview';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import { CopyButton } from '../ui/shuip/copy-button';
 
 export interface ItemPreviewProps extends React.HTMLAttributes<HTMLDivElement> {

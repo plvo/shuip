@@ -1,11 +1,10 @@
+import { allDocuments } from 'contentlayer/generated';
+import type { Metadata } from 'next';
 import { SidebarTableOfContents } from '@/components/docs/toc';
 import { MdxContent } from '@/components/mdx/mdx-content';
 import { getDocument } from '@/lib/document';
 import { getTableOfContents } from '@/lib/toc';
-import { filenameToTitle } from '@/lib/utils';
-import { firstCharUppercase } from '@/lib/utils';
-import { allDocuments } from 'contentlayer/generated';
-import type { Metadata } from 'next';
+import { filenameToTitle, firstCharUppercase } from '@/lib/utils';
 
 export interface DocPageProps {
   params: Promise<{ slug: string[] }>;
