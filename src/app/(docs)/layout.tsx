@@ -1,7 +1,10 @@
+import { getPathsByCategory } from '@/actions/docs';
 import { DocsNav } from '@/components/docs/docs-nav';
 import { Header } from '@/components/docs/header';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
+  const { pathsByCategory, allPaths } = await getPathsByCategory();
+
   return (
     <div className='flex flex-col border-x max-w-[1451px] mx-auto'>
       <Header />
@@ -9,7 +12,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         <div className='md:grid md:grid-cols-[220px_minmax(0,1fr)]'>
           <aside className={'top-14 z-30 h-[calc(100vh-3.5rem)] w-full border-r fixed hidden md:sticky md:block'}>
             <div className='h-full overflow-auto no-scrollbar py-8 px-4'>
-              <DocsNav />
+              <DocsNav pathsByCategory={pathsByCategory} allPaths={allPaths} />
             </div>
           </aside>
         </div>

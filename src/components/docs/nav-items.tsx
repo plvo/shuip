@@ -19,18 +19,6 @@ export function NavGroup({ title, children, icon }: NavGroupProps) {
   );
 }
 
-export function SubNavGroup({ title, children, icon }: NavGroupProps) {
-  return (
-    <div className='mb-4'>
-      <h4 className='uppercase font-mono text-sm mb-2.5 flex items-center gap-1.5 text-muted-foreground'>
-        <span className='size-4'>{icon}</span>
-        {title}
-      </h4>
-      <ul>{children}</ul>
-    </div>
-  );
-}
-
 export function NavItem({
   title,
   href,

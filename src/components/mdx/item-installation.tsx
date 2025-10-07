@@ -73,7 +73,10 @@ export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
 
       {(['npm', 'pnpm', 'bun', 'yarn'] as PackageManager[]).map((cmd) => (
         <TabsContent className='rounded-lg mt-2 p-2' key={cmd} value={cmd}>
-          <CmdCode code={code} />
+          <pre className='flex items-center pb-2'>
+            <Terminal className='size-4 mr-2 text-muted-foreground' />
+            <code className='overflow-x-auto'>{code}</code>
+          </pre>
         </TabsContent>
       ))}
     </Tabs>
@@ -97,10 +100,3 @@ const getCmd = (pkg: PackageManager, filename: string) => {
       return '';
   }
 };
-
-const CmdCode: React.FC<{ code: string }> = ({ code }) => (
-  <pre className='flex items-center pb-2'>
-    <Terminal className='size-4 mr-2 text-muted-foreground' />
-    <code className='overflow-x-auto'>{code}</code>
-  </pre>
-);

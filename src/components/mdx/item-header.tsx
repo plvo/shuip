@@ -12,11 +12,11 @@ export function ItemHeader({ filename, text }: ItemHeaderProps) {
   return (
     <>
       <p>{text}</p>
-      <h2 id='installation' className={'h2-mdx'}>
+      <h2 id={`installation-${filename}`} className={'h2-mdx'}>
         Installation
       </h2>
       <ItemInstallation filename={filename} />
-      <h2 id='preview' className={'h2-mdx'}>
+      <h2 id={`preview-${filename}`} className={'h2-mdx'}>
         Preview
       </h2>
       <Preview filename={`${filename}.example`} />

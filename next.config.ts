@@ -1,12 +1,12 @@
+import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
-import { createContentlayerPlugin } from 'next-contentlayer2';
 
 const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     registry: ['./registry/**/*'],
   },
 
-  pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
 
   reactStrictMode: true,
 
@@ -14,11 +14,23 @@ const nextConfig: NextConfig = {
     URL: 'https://shuip.plvo.dev',
   },
 
-  eslint: {
-    ignoreDuringBuilds: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*',
+      },
+    ],
   },
 };
 
-const withContentlayer = createContentlayerPlugin({});
+const withMDX = createMDX({
+  extension: /\.(md|mdx)$/,
+  options: {},
+});
 
-export default withContentlayer(nextConfig);
+export default withMDX(nextConfig);
