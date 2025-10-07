@@ -67,41 +67,41 @@
       ]
     },
     {
-      "name": "input-field",
+      "name": "rhf-input-field",
       "type": "registry:ui",
       "dependencies": ["react-hook-form", "lucide-react"],
       "registryDependencies": ["form", "input", "button"],
       "files": [
         {
-          "path": "./registry/ui/input-field.tsx",
+          "path": "./registry/ui/rhf-input-field.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/input-field.tsx"
+          "target": "./components/ui/shuip/react-hook-form/input-field.tsx"
         }
       ]
     },
     {
-      "name": "radio-field",
+      "name": "rhf-radio-field",
       "type": "registry:ui",
       "dependencies": ["react-hook-form"],
       "registryDependencies": ["form", "radio-group"],
       "files": [
         {
-          "path": "./registry/ui/radio-field.tsx",
+          "path": "./registry/ui/rhf-radio-field.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/radio-field.tsx"
+          "target": "./components/ui/shuip/react-hook-form/radio-field.tsx"
         }
       ]
     },
     {
-      "name": "select-field",
+      "name": "rhf-select-field",
       "type": "registry:ui",
       "dependencies": ["react-hook-form", "@radix-ui/react-select"],
       "registryDependencies": ["form", "select"],
       "files": [
         {
-          "path": "./registry/ui/select-field.tsx",
+          "path": "./registry/ui/rhf-select-field.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/select-field.tsx"
+          "target": "./components/ui/shuip/react-hook-form/select-field.tsx"
         }
       ]
     },
@@ -119,14 +119,14 @@
       ]
     },
     {
-      "name": "form-utils",
+      "name": "rhf-utils",
       "type": "registry:lib",
       "dependencies": ["zod"],
       "files": [
         {
-          "path": "./registry/lib/form-utils.ts",
+          "path": "./registry/lib/rhf-utils.ts",
           "type": "registry:lib",
-          "target": "./lib/shuip/form-utils.ts"
+          "target": "./lib/shuip/rhf-utils.ts"
         }
       ]
     },
@@ -162,15 +162,15 @@
       ]
     },
     {
-      "name": "checkbox-field",
+      "name": "rhf-checkbox-field",
       "type": "registry:ui",
       "dependencies": ["react-hook-form"],
       "registryDependencies": ["form", "checkbox"],
       "files": [
         {
-          "path": "./registry/ui/checkbox-field.tsx",
+          "path": "./registry/ui/rhf-checkbox-field.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/checkbox-field.tsx"
+          "target": "./components/ui/shuip/react-hook-form/checkbox-field.tsx"
         }
       ]
     },

@@ -4,17 +4,24 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
-import { RadioField } from '@/components/ui/shuip/radio-field';
+import { SelectField, type SelectFieldOption } from '@/components/ui/shuip/react-hook-form/select-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
+const options: SelectFieldOption = {
+  First: '1',
+  Second: '2',
+  Third: '3',
+  Fourth: '4',
+};
+
 const zodSchema = z.object({
-  selection: z.enum(['Yes', 'No', 'Maybe', 'Not sure']),
+  selection: z.enum(Object.values(options) as [string]),
 });
 
-export default function RadioFieldExample() {
+export default function SelectFieldExample() {
   const form = useForm({
     defaultValues: {
-      selection: 'Yes' as const,
+      selection: '1',
     },
     resolver: zodResolver(zodSchema),
   });
@@ -30,11 +37,12 @@ export default function RadioFieldExample() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <RadioField
+        <SelectField
           register={form.register('selection')}
-          options={['Yes', 'No', 'Maybe', 'Not sure']}
-          label='Are you sure?'
-          description='This is a description'
+          placeholder='Select an option'
+          label='selection'
+          options={options}
+          defaultValue={'3'}
         />
         <SubmitButton>Check</SubmitButton>
       </form>

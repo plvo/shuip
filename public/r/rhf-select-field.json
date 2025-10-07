@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "rhf-select-field",
+  "type": "registry:ui",
+  "dependencies": ["react-hook-form", "@radix-ui/react-select"],
+  "registryDependencies": ["form", "select"],
+  "files": [
+    {
+      "path": "./registry/ui/rhf-select-field.tsx",
+      "content": "import type { SelectProps } from '@radix-ui/react-select';\nimport type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';\nimport { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';\nimport { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';\n\n/**\n * Key is the label, value is the value\n * @example\n * const options: SelectFieldOption = {\n *   'First': '1',\n *   'Second': '2',\n *   'Third': '3',\n * };\n */\nexport type SelectFieldOption<T extends string = string> = Record<string, T>;\n\nexport interface SelectFieldProps<TFieldValues extends FieldValues> extends SelectProps {\n  register: UseFormRegisterReturn<FieldPath<TFieldValues>>;\n  options: SelectFieldOption;\n  label?: string;\n  placeholder?: string;\n  description?: string;\n  defaultValue?: TFieldValues[FieldPath<TFieldValues>];\n}\nexport function SelectField<TFieldValues extends FieldValues>({\n  register,\n  options,\n  label,\n  description,\n  placeholder,\n  defaultValue,\n  ...props\n}: SelectFieldProps<TFieldValues>) {\n  return (\n    <FormField\n      {...register}\n      defaultValue={defaultValue}\n      render={({ field }) => (\n        <FormItem>\n          {label && <FormLabel>{label}</FormLabel>}\n          <Select onValueChange={field.onChange} defaultValue={field.value} {...props}>\n            <FormControl>\n              <SelectTrigger>\n                <SelectValue placeholder={placeholder} />\n              </SelectTrigger>\n            </FormControl>\n            <SelectContent>\n              {Object.entries(options).map(([label, value]) => (\n                <SelectItem key={label} value={value}>\n                  {label}\n                </SelectItem>\n              ))}\n            </SelectContent>\n          </Select>\n          {description && <FormDescription>{description}</FormDescription>}\n          <FormMessage />\n        </FormItem>\n      )}\n    />\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/react-hook-form/select-field.tsx"
+    }
+  ]
+}

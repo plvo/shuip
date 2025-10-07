@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
-import { InputField } from '@/components/ui/shuip/input-field';
+import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import {
   SideDialog,
   SideDialogClose,
