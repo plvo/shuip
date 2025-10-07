@@ -4,22 +4,24 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
-import CheckboxField from '@/components/ui/shuip/checkbox-field';
+import { RadioField } from '@/components/ui/shuip/react-hook-form/radio-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
 const zodSchema = z.object({
-  checkbox: z.boolean(),
+  selection: z.enum(['Yes', 'No', 'Maybe', 'Not sure']),
 });
 
-export default function CheckboxFieldExample() {
+export default function RadioFieldExample() {
   const form = useForm({
-    defaultValues: { checkbox: false },
+    defaultValues: {
+      selection: 'Yes' as const,
+    },
     resolver: zodResolver(zodSchema),
   });
 
   async function onSubmit(values: z.infer<typeof zodSchema>) {
     try {
-      alert(`Checkbox: ${values.checkbox}`);
+      alert(`Selection: ${values.selection}`);
     } catch (error) {
       console.error(error);
     }
@@ -28,8 +30,13 @@ export default function CheckboxFieldExample() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <CheckboxField register={form.register('checkbox')} label='Checkbox' description='Your checkbox' />
-        <SubmitButton>Submit</SubmitButton>
+        <RadioField
+          register={form.register('selection')}
+          options={['Yes', 'No', 'Maybe', 'Not sure']}
+          label='Are you sure?'
+          description='This is a description'
+        />
+        <SubmitButton>Check</SubmitButton>
       </form>
     </Form>
   );

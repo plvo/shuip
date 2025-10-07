@@ -34,7 +34,7 @@ export default async function Page({ params }: DocPageProps) {
   const { slug } = await params;
   const { document, documentType } = await getDocument(slug);
   const toc = document ? await getTableOfContents(document.body.raw) : undefined;
-  const isItemPage = documentType === 'components' || documentType === 'blocks' || documentType === 'lib';
+  const isItemPage = documentType !== 'docs';
 
   return (
     <section className='xl:grid xl:grid-cols-[1fr_300px]'>

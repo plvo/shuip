@@ -1,7 +1,6 @@
 'use client';
 
 import { Terminal } from 'lucide-react';
-import { usePathname } from 'next/navigation';
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -47,13 +46,6 @@ export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
 
   const code = Array.isArray(filename) ? filename.map((f) => getCmd(pkg, f)).join('\n') : getCmd(pkg, filename);
 
-  const CmdCode: React.FC = () => (
-    <pre className='flex items-center pb-2'>
-      <Terminal className='size-4 mr-2 text-muted-foreground' />
-      <code className='overflow-x-auto'>{code}</code>
-    </pre>
-  );
-
   return (
     <Tabs
       value={pkg}
@@ -81,7 +73,7 @@ export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
 
       {(['npm', 'pnpm', 'bun', 'yarn'] as PackageManager[]).map((cmd) => (
         <TabsContent className='rounded-lg mt-2 p-2' key={cmd} value={cmd}>
-          <CmdCode />
+          <CmdCode code={code} />
         </TabsContent>
       ))}
     </Tabs>
@@ -91,7 +83,7 @@ export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
 type PackageManager = 'npm' | 'pnpm' | 'bun';
 
 const getCmd = (pkg: PackageManager, filename: string) => {
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://shuip.xyz';
+  const origin = typeof window !== 'undefined' ? window.location.origin : process.env.URL;
   const url = `${origin}/r/${filename}.json`;
 
   switch (pkg) {
@@ -105,3 +97,10 @@ const getCmd = (pkg: PackageManager, filename: string) => {
       return '';
   }
 };
+
+const CmdCode: React.FC<{ code: string }> = ({ code }) => (
+  <pre className='flex items-center pb-2'>
+    <Terminal className='size-4 mr-2 text-muted-foreground' />
+    <code className='overflow-x-auto'>{code}</code>
+  </pre>
+);

@@ -152,15 +152,15 @@ export function AddressField({
         }
       });
 
-      form.setValue(`${register.name}.street`, street.trim());
-      form.setValue(`${register.name}.city`, city.trim());
-      form.setValue(`${register.name}.postalCode`, postalCode.trim());
-      form.setValue(`${register.name}.country`, country.trim());
-      form.setValue(`${register.name}.fullAddress`, details.result.formatted_address.trim());
-      form.setValue(`${register.name}.placeId`, suggestion.placeId.trim());
+      form.setValue(`${name}.street`, street.trim());
+      form.setValue(`${name}.city`, city.trim());
+      form.setValue(`${name}.postalCode`, postalCode.trim());
+      form.setValue(`${name}.country`, country.trim());
+      form.setValue(`${name}.fullAddress`, details.result.formatted_address.trim());
+      form.setValue(`${name}.placeId`, suggestion.placeId.trim());
     } else {
-      form.setValue(`${register.name}.fullAddress`, suggestion.description.trim());
-      form.setValue(`${register.name}.placeId`, suggestion.placeId.trim());
+      form.setValue(`${name}.fullAddress`, suggestion.description.trim());
+      form.setValue(`${name}.placeId`, suggestion.placeId.trim());
     }
   };
 

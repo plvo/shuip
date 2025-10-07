@@ -5,8 +5,15 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     registry: ['./registry/**/*'],
   },
+
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+
   reactStrictMode: true,
+
+  env: {
+    URL: 'https://shuip.plvo.dev',
+  },
+
   eslint: {
     ignoreDuringBuilds: true,
   },

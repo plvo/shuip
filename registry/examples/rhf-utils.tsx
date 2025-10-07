@@ -5,11 +5,11 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
-import { InputField } from '@/components/ui/shuip/input-field';
-import { RadioField } from '@/components/ui/shuip/radio-field';
-import { SelectField } from '@/components/ui/shuip/select-field';
+import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
+import { RadioField } from '@/components/ui/shuip/react-hook-form/radio-field';
+import { SelectField } from '@/components/ui/shuip/react-hook-form/select-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
-import { getChangedFields, getZodDefaultValues } from '@/lib/shuip/form-utils';
+import { getChangedFields, getZodDefaultValues } from '@/lib/shuip/rhf-utils';
 
 const zodSchema = z.object({
   name: z.string(),

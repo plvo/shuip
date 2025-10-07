@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
-import CheckboxField from '@/components/ui/shuip/checkbox-field';
+import CheckboxField from '@/components/ui/shuip/react-hook-form/checkbox-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
 const zodSchema = z.object({
@@ -19,7 +19,7 @@ export default function CheckboxFieldExample() {
 
   async function onSubmit(values: z.infer<typeof zodSchema>) {
     try {
-      alert(`Checkbox: ${values}`);
+      alert(`Checkbox: ${values.checkbox}`);
     } catch (error) {
       console.error(error);
     }
@@ -28,12 +28,7 @@ export default function CheckboxFieldExample() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <CheckboxField
-          register={form.register('checkbox')}
-          label='Checkbox'
-          description='Your checkbox'
-          boxLabel='Box description'
-        />
+        <CheckboxField register={form.register('checkbox')} label='Checkbox' description='Your checkbox' />
         <SubmitButton>Submit</SubmitButton>
       </form>
     </Form>

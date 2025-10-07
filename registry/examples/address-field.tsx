@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
 import { AddressField, addressSchema } from '@/components/ui/shuip/address-field';
-import { InputField } from '@/components/ui/shuip/input-field';
+import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
 const zodSchema = z.object({

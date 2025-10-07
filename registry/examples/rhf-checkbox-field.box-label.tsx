@@ -4,22 +4,22 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
-import { InputField } from '@/components/ui/shuip/input-field';
+import CheckboxField from '@/components/ui/shuip/react-hook-form/checkbox-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
 const zodSchema = z.object({
-  name: z.string().nonempty({ message: 'Name is required' }),
+  checkbox: z.boolean(),
 });
 
-export default function InputFieldExample() {
+export default function CheckboxFieldExample() {
   const form = useForm({
-    defaultValues: { name: '' },
+    defaultValues: { checkbox: false },
     resolver: zodResolver(zodSchema),
   });
 
   async function onSubmit(values: z.infer<typeof zodSchema>) {
     try {
-      alert(`Hello ${values.name}`);
+      alert(`Checkbox: ${values}`);
     } catch (error) {
       console.error(error);
     }
@@ -28,8 +28,13 @@ export default function InputFieldExample() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <InputField register={form.register('name')} label='Name' description='Your name' placeholder='John' />
-        <SubmitButton>Check</SubmitButton>
+        <CheckboxField
+          register={form.register('checkbox')}
+          label='Checkbox'
+          description='Your checkbox'
+          boxLabel='Box description'
+        />
+        <SubmitButton>Submit</SubmitButton>
       </form>
     </Form>
   );
