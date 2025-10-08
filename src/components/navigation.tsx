@@ -39,7 +39,7 @@ export function Header({ pathsByCategory }: { pathsByCategory: PathsByCategory }
         <Link href={`https://github.com/plvo/shuip`} passHref>
           <Button>
             <GitHubLogoIcon className='size-4' />
-            Start on GitHub
+            Star on GitHub
           </Button>
         </Link>
         <ThemeButton />
