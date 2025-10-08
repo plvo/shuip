@@ -82,6 +82,16 @@ export default async function DocsPage({ params }: DocPageProps) {
           {content}
         </article>
       )}
+
+      <aside className='hidden text-sm xl:block ml-8'>
+        <div className='sticky top-20'>
+          <div className='h-full overflow-auto'>
+            <div className='space-y-2'>
+              <p className='font-semibold text-muted-foreground'>On This Page</p>
+            </div>
+          </div>
+        </div>
+      </aside>
     </section>
   );
 }

@@ -5,7 +5,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
   const pathsByCategory = await getPathsByCategory();
 
   return (
-    <div className='flex flex-col border-x max-w-[1451px] mx-auto'>
+    <div className='flex flex-col max-w-[1451px] mx-auto border-x border-muted'>
       <Header pathsByCategory={pathsByCategory} />
       <div className='flex'>
         <DocsSidebar pathsByCategory={pathsByCategory} />
