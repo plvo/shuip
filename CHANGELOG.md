@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/plvo/shuip/compare/v1.1.0...v1.2.0) (2025-10-08)
+
+
+### Features
+
+* improve navigation uiux, changelog pages ([#25](https://github.com/plvo/shuip/issues/25)) ([9f9ea77](https://github.com/plvo/shuip/commit/9f9ea7745aa05045bf6e4e01d3cb666da640babf))
+
+
+### Bug Fixes
+
+* hotfix responsive-dialog.mdx ([a22cf46](https://github.com/plvo/shuip/commit/a22cf466fb2b9833f3dbe771ee09e5c6fac616a1))
+
 ## [1.1.0](https://github.com/plvo/shuip/compare/v1.0.0...v1.1.0) (2025-07-31)
 
 
