@@ -99,7 +99,7 @@
       "registryDependencies": ["form", "select"],
       "files": [
         {
-          "path": "./registry/ui/react-hook-form/select-field.tsx",
+          "path": "./registry/ui/rhf-select-field.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/react-hook-form/select-field.tsx"
         }

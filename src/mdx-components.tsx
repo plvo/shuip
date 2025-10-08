@@ -2,7 +2,14 @@ import Link from 'next/link';
 import type React from 'react';
 import { CopyButton } from '#/registry/ui/copy-button';
 import { CodeHighlight, type CodeHighlightProps } from './components/mdx/code-preview';
-import { ItemFooter, type ItemFooterProps, ItemHeader, type ItemHeaderProps } from './components/mdx/item-content';
+import {
+  ItemExamples,
+  type ItemExamplesProps,
+  ItemHeader,
+  type ItemHeaderProps,
+  type Prop,
+  PropTable,
+} from './components/mdx/item-content';
 import { InstallationCmd, type InstallationCmdProps } from './components/mdx/item-installation';
 import { cn } from './lib/utils';
 
@@ -65,8 +72,9 @@ export const mdxComponents = {
   InstallationCmd: ({ registryPath, ...props }: InstallationCmdProps) => (
     <InstallationCmd registryPath={registryPath} {...props} />
   ),
-  ItemHeader: ({ registryPath, text }: ItemHeaderProps) => <ItemHeader registryPath={registryPath} text={text} />,
-  ItemFooter: ({ registryPath, props }: ItemFooterProps) => <ItemFooter registryPath={registryPath} props={props} />,
+  ItemHeader: ({ registryName, text }: ItemHeaderProps) => <ItemHeader registryName={registryName} text={text} />,
+  ItemExamples: ({ registryName }: ItemExamplesProps) => <ItemExamples registryName={registryName} />,
+  PropTable: ({ props }: { props: Prop[] }) => <PropTable props={props} />,
 };
 
 declare global {

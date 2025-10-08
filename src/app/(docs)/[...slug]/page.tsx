@@ -2,10 +2,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { MDXRemote } from 'next-mdx-remote/rsc';
+import { compileMDX } from 'next-mdx-remote/rsc';
+import { ItemHeader } from '@/components/mdx/item-content';
 import { getTableOfContents } from '@/lib/toc';
-import { parseFrontmatter, processSlug } from '@/lib/utils';
+import { processSlug } from '@/lib/utils';
 import { mdxComponents } from '@/mdx-components';
+
+export interface MdxFrontmatter {
+  title: string;
+  description: string;
+  position?: string;
+  registryName?: string;
+}
 
 // export function generateStaticParams() {
 //   const { allPaths } = getPathsByCategory();
@@ -29,11 +37,14 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
     return notFound();
   }
 
-  const { metadata } = parseFrontmatter(fileContent);
+  const { frontmatter } = await compileMDX<MdxFrontmatter>({
+    source: fileContent,
+    options: { parseFrontmatter: true },
+  });
 
   return {
-    title: metadata.title,
-    description: metadata.description,
+    title: frontmatter.title,
+    description: frontmatter.description,
   };
 }
 
@@ -46,20 +57,24 @@ export default async function Page({ params }: DocPageProps) {
     return notFound();
   }
 
-  const { metadata, mdxContent } = parseFrontmatter(fileContent);
+  const { content, frontmatter } = await compileMDX<MdxFrontmatter>({
+    source: fileContent,
+    components: mdxComponents,
+    options: { parseFrontmatter: true },
+  });
 
   const toc = await getTableOfContents(fileContent);
-  const isItemPage = slug[0] !== 'docs';
 
   return (
     <section className='xl:grid xl:grid-cols-[1fr_300px]'>
-      {mdxContent && (
+      {content && (
         <article className='max-w-[880px]'>
           <div className='space-y-2 mb-6'>
-            <h1 className='h1-mdx'>{metadata.title}</h1>
-            <p className='text-base text-muted-foreground'>{metadata.description}</p>
+            <h1 className='h1-mdx'>{frontmatter.title as string}</h1>
+            <p className='text-base text-muted-foreground'>{frontmatter.description as string}</p>
           </div>
-          <MDXRemote source={mdxContent} components={mdxComponents} />
+          {frontmatter.registryName && <ItemHeader registryName={frontmatter.registryName} />}
+          {content}
         </article>
       )}
 

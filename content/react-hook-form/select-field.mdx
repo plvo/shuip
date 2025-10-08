@@ -2,9 +2,8 @@
 title: Select Field
 description: A select form field designed to be used with react-hook-form and Zod for validation. It combines a label, select dropdown, error handling, and optional description into a single reusable component.
 position: 2
+registryName: rhf-select-field
 ---
-
-<ItemHeader registryPath={'#/registry/ui/react-hook-form/select-field.tsx'} />
 
 ## Less verbose code in forms
 
@@ -66,7 +65,9 @@ const options = {
       options={options}
 />`} language='tsx' />
 
-<ItemFooter registryPath={'#/registry/ui/react-hook-form/select-field.tsx'} props={[
+<ItemExamples registryName="rhf-select-field" />
+
+<PropTable props={[
   {
     name: 'register',
     type: 'UseFormRegisterReturn',

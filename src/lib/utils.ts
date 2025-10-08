@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import type { MdxFrontmatter } from '@/app/(docs)/[...slug]/page';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -20,16 +21,10 @@ export function filenameToTitle(filename: string) {
     .join(' ');
 }
 
-export type MdxFrontmatter = {
-  title: string;
-  description: string;
-  position?: string;
-};
-
-export type ParsedFrontmatterReturn = {
+export interface ParsedFrontmatterReturn {
   metadata: Partial<MdxFrontmatter>;
   mdxContent: string;
-};
+}
 
 // https://github.com/shadcn/leerob.io/blob/main/app/db/blog.ts#L58
 export function parseFrontmatter(fileContent: string): ParsedFrontmatterReturn {

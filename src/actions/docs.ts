@@ -45,25 +45,20 @@ export async function getPathsByCategory(): Promise<PathsByCategoryReturn> {
   return { pathsByCategory, allPaths };
 }
 
-export async function getContentByFilePath(filePath: string): Promise<string> {
-  return fs.readFileSync(path.join(process.cwd(), filePath.split('#/')[1]), 'utf8');
+export async function getRegistryPath(filename: string, type: string): Promise<string | null> {
+  const registryType = ['ui', 'lib', 'block', 'actions'].includes(type) ? type : 'ui';
+  return path.join(process.cwd(), 'registry', registryType, `rhf-${filename}.tsx`);
 }
 
-export async function getExamplesByFilePath(filePath: string): Promise<string[]> {
-  const filename = path.basename(filePath).split('.')[0];
-
-  const allExamples = [];
-
-  const examplesDir = path.join(process.cwd(), 'examples');
-  const exampleDirs = fs
-    .readdirSync(examplesDir, { withFileTypes: true })
-    .filter((dirent) => (dirent.isDirectory() ? true : dirent.name.includes(filename)))
-    .map((dirent) => dirent.name);
-
-  for (const dir of exampleDirs) {
-    const files = fs.readdirSync(path.join(examplesDir, dir));
-    allExamples.push(...files.map((file) => path.join('examples', dir, file)));
+export async function getRegistryContent(registryPath: string): Promise<string | null> {
+  try {
+    return fs.readFileSync(path.join(process.cwd(), registryPath), 'utf8');
+  } catch (error) {
+    console.error(error);
+    return null;
   }
+}
 
-  return allExamples.filter((example) => example.includes(filename));
+export async function getExamples(filename: string): Promise<string[]> {
+  return fs.readdirSync(path.join(process.cwd(), 'examples')).filter((file) => file.includes(filename));
 }

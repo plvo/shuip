@@ -27,6 +27,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  webpack: (config) => {
+    config.resolve.alias['@r'] = path.resolve(__dirname, 'registry');
+    return config;
+  },
 };
 
 const withMDX = createMDX({

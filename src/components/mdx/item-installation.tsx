@@ -2,26 +2,14 @@
 
 import { Terminal } from 'lucide-react';
 import React from 'react';
-import { getContentByFilePath } from '@/actions/docs';
+import { registryIndex } from '#/registry/__index__';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { CopyButton } from '../ui/shuip/copy-button';
 import { CodePreview } from './code-preview';
 
-export interface ItemInstallationProps {
-  registryPath: string;
-}
-
-export function ItemInstallation({ registryPath }: ItemInstallationProps) {
-  const code = React.useMemo(() => {
-    const codeSource = getContentByFilePath(registryPath);
-
-    if (!codeSource) {
-      return null;
-    }
-
-    return codeSource;
-  }, [registryPath]);
+export function ItemInstallation({ registryPath }: { registryPath: string }) {
+  const code = registryIndex[registryPath]?.code;
 
   return (
     <div className={'flex flex-col space-y-2'}>
@@ -40,8 +28,14 @@ export function ItemInstallation({ registryPath }: ItemInstallationProps) {
           <InstallationCmd registryPath={registryPath} />
         </TabsContent>
         <TabsContent value='manual'>
-          <p className='text-muted-foreground pb-2'>Copy the following code and paste it into your project.</p>
-          <CodePreview code={code || ''} />
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <p className='text-muted-foreground pb-2'>Copy the following code and paste it into your project.</p>
+            {code ? (
+              <CodePreview code={code} />
+            ) : (
+              <p className='text-sm text-muted-foreground'>Component not found in registry.</p>
+            )}
+          </React.Suspense>
         </TabsContent>
       </Tabs>
     </div>
@@ -84,7 +78,7 @@ export function InstallationCmd({ registryPath, ...props }: InstallationCmdProps
         <CopyButton value={code} />
       </TabsList>
 
-      {(['npm', 'pnpm', 'bun', 'yarn'] as PackageManager[]).map((cmd) => (
+      {(['npm', 'pnpm', 'bun'] as PackageManager[]).map((cmd) => (
         <TabsContent className='rounded-lg mt-2 p-2' key={cmd} value={cmd}>
           <pre className='flex items-center pb-2'>
             <Terminal className='size-4 mr-2 text-muted-foreground' />
@@ -98,7 +92,7 @@ export function InstallationCmd({ registryPath, ...props }: InstallationCmdProps
 
 type PackageManager = 'npm' | 'pnpm' | 'bun';
 
-const getCmd = (pkg: PackageManager, filename: string) => {
+function getCmd(pkg: PackageManager, filename: string): string {
   const origin = typeof window !== 'undefined' ? window.location.origin : process.env.URL;
   const url = `${origin}/r/${filename}.json`;
 
@@ -112,4 +106,4 @@ const getCmd = (pkg: PackageManager, filename: string) => {
     default:
       return '';
   }
-};
+}
