@@ -1,6 +1,8 @@
+/** biome-ignore-all lint/correctness/noUnreachable: ignore */
 'use client';
 
 import { LoaderCircle } from 'lucide-react';
+import React from 'react';
 import { QueryBoundary } from '@/components/ui/shuip/query-boundary';
 
 export default function QueryBoundaryExample() {
@@ -14,22 +16,12 @@ export default function QueryBoundaryExample() {
   );
 }
 
-async function DataComponent() {
-  const isError = Math.random() > 0.5;
+function DataComponent() {
+  // const res = await fetch('https://api.example.com/data');
+  // const data = await res.json();
+  // if (data.error) {
+  // throw new Error('Error in DataComponent');
+  // }
 
-  const getData = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    if (isError) {
-      throw new Error('Error in DataComponent');
-    }
-    return { data: 'DataComponent' };
-  };
-
-  const data = await getData();
-
-  return (
-    <div className='flex flex-col items-center justify-center gap-4'>
-      DataComponent: <pre>{JSON.stringify(data, null, 2)}</pre>
-    </div>
-  );
+  return <div>DataComponent</div>;
 }
