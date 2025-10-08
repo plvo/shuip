@@ -1,10 +1,8 @@
 ---
 title: "Address Field"
 description: "A field for entering an address"
-group: "form"
+registryName: address-field
 ---
-
-<ItemHeader filename={'address-field'} />
 
 ## Configuration
 
@@ -105,7 +103,9 @@ const form = useForm({
     }
 }`} language='json' />
 
-<ItemFooter itemName={'address-field'} props={[
+<ItemExamples registryName={'address-field'} /> 
+
+<PropTable props={[
   {
     name: 'register',
     type: 'UseFormRegisterReturn',

@@ -2,27 +2,18 @@
 
 import { ReloadIcon } from '@radix-ui/react-icons';
 import * as React from 'react';
-import { registryIndex } from '#/registry/__index__';
+import { REGISTRY_INDEX } from '#/registry/__index__';
 import { CodePreview } from '@/components/mdx/code-preview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { CopyButton } from '../ui/shuip/copy-button';
 
 export interface ItemPreviewProps extends React.HTMLAttributes<HTMLDivElement> {
-  filename: string;
+  registryName: string;
 }
 
-export function ItemPreview({ filename, children, ...props }: ItemPreviewProps) {
-  const code = React.useMemo(() => {
-    const codeSource = registryIndex[filename]?.code;
-
-    if (!codeSource) {
-      return null;
-    }
-
-    return codeSource;
-  }, [filename]);
-
+export function ItemPreview({ registryName, ...props }: ItemPreviewProps) {
+  const code = REGISTRY_INDEX[registryName]?.code;
   return (
     <div className={cn('flex flex-col space-y-2')} {...props}>
       <Tabs defaultValue='preview' className='relative mr-auto w-full'>
@@ -38,10 +29,11 @@ export function ItemPreview({ filename, children, ...props }: ItemPreviewProps) 
         </div>
         <TabsContent value='preview' className='relative rounded-md border'>
           <div className='flex items-center justify-between p-2 border-b'>
-            {/* TODO V0 */}
             <CopyButton value={code || ''} />
           </div>
-          <Preview filename={filename} isJustPreview={false} />
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <Preview registryName={registryName} isJustPreview={false} />
+          </React.Suspense>
         </TabsContent>
         <TabsContent value='code'>
           <CodePreview code={code || ''} />
@@ -51,22 +43,22 @@ export function ItemPreview({ filename, children, ...props }: ItemPreviewProps) 
   );
 }
 
-export function Preview({ filename, isJustPreview = true }: { filename: string; isJustPreview?: boolean }) {
-  const Preview = React.useMemo(() => {
-    const Comp = registryIndex[filename]?.component;
+export function Preview({ registryName, isJustPreview = true }: { registryName: string; isJustPreview?: boolean }) {
+  const PreviewComponent = React.useMemo(() => {
+    const Comp = REGISTRY_INDEX[registryName]?.component;
 
     if (!Comp) {
-      return (
+      return () => (
         <p className='text-sm text-muted-foreground'>
           Component{' '}
-          <code className='relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm'>{filename}</code> not
-          found in registry.
+          <code className='relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm'>{registryName}</code>{' '}
+          not found in registry.
         </p>
       );
     }
 
-    return <Comp />;
-  }, [filename]);
+    return Comp;
+  }, [registryName]);
 
   return (
     <div
@@ -78,12 +70,12 @@ export function Preview({ filename, isJustPreview = true }: { filename: string; 
       <React.Suspense
         fallback={
           <div className='flex w-full items-center justify-center text-sm text-muted-foreground'>
-            <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
+            <ReloadIcon className='mr-2 size-4 animate-spin' />
             Loading...
           </div>
         }
       >
-        {Preview}
+        <PreviewComponent />
       </React.Suspense>
     </div>
   );

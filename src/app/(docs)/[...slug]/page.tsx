@@ -1,54 +1,100 @@
-import { allDocuments } from 'contentlayer/generated';
+import fs from 'node:fs';
+import path from 'node:path';
 import type { Metadata } from 'next';
-import { SidebarTableOfContents } from '@/components/docs/toc';
-import { MdxContent } from '@/components/mdx/mdx-content';
-import { getDocument } from '@/lib/document';
-import { getTableOfContents } from '@/lib/toc';
-import { filenameToTitle, firstCharUppercase } from '@/lib/utils';
+import { notFound } from 'next/navigation';
+import { compileMDX } from 'next-mdx-remote/rsc';
+import { getPathsByCategory } from '@/actions/docs';
+import { ItemHeader } from '@/components/mdx/item-content';
+import { processSlug } from '@/lib/utils';
+import { mdxComponents, useMDXComponents } from '@/mdx-components';
+import type { MdxFrontmatter } from '@/types';
+
+export async function generateStaticParams() {
+  const pathsByCategory = await getPathsByCategory();
+
+  const allPaths = [
+    { slug: ['/'] },
+    ...Object.values(pathsByCategory)
+      .flat()
+      .map((pathObj) => {
+        const pathParts = pathObj.path.split('/').filter(Boolean);
+        return { slug: pathParts };
+      }),
+  ];
+
+  return allPaths;
+}
 
 export interface DocPageProps {
   params: Promise<{ slug: string[] }>;
 }
 
-export async function generateStaticParams() {
-  return allDocuments.map((doc) => ({ slug: [doc.slug] }));
-}
-
-export async function generateMetadata({ params }: DocPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: DocPageProps): Promise<Metadata | undefined> {
   const { slug } = await params;
-  const { item, document } = await getDocument(slug);
 
-  if (!document) {
-    return {
-      title: item ? filenameToTitle(item) : 'Not Found',
-    };
+  if (slug === undefined) {
+    return undefined;
   }
 
+  const fileContent = getFileContent(slug);
+
+  if (fileContent === null) {
+    return notFound();
+  }
+
+  const { frontmatter } = await compileMDX<MdxFrontmatter>({
+    source: fileContent,
+    options: { parseFrontmatter: true },
+  });
+
   return {
-    title: firstCharUppercase(document.title),
-    description: document.description,
+    title: frontmatter.title,
+    description: frontmatter.description,
   };
 }
 
-export default async function Page({ params }: DocPageProps) {
+export default async function DocsPage({ params }: DocPageProps) {
   const { slug } = await params;
-  const { document, documentType } = await getDocument(slug);
-  const toc = document ? await getTableOfContents(document.body.raw) : undefined;
-  const isItemPage = documentType !== 'docs';
+
+  const fileContent = getFileContent(slug);
+
+  const { h1: H1 } = useMDXComponents();
+
+  if (fileContent === null) {
+    return notFound();
+  }
+
+  const { content, frontmatter } = await compileMDX<MdxFrontmatter>({
+    source: fileContent,
+    components: mdxComponents,
+    options: { parseFrontmatter: true },
+  });
 
   return (
     <section className='xl:grid xl:grid-cols-[1fr_300px]'>
-      {document && (
+      {content && (
         <article className='max-w-[880px]'>
           <div className='space-y-2 mb-6'>
-            <h1 className={'h1-mdx'}>{document.title}</h1>
-            <p className='text-base text-muted-foreground'>{document.description}</p>
+            <H1>{frontmatter.title as string}</H1>
+            <p className='text-base text-muted-foreground'>{frontmatter.description as string}</p>
           </div>
-          <MdxContent code={document.body.code} />
+          {frontmatter.registryName && <ItemHeader registryName={frontmatter.registryName} />}
+          {content}
         </article>
       )}
-
-      <SidebarTableOfContents {...{ toc, isItemPage }} />
     </section>
   );
+}
+
+function getFileContent(slug: string[]): string | null {
+  const contentPath = getContentPath(slug);
+  if (!fs.existsSync(contentPath)) {
+    return null;
+  }
+  return fs.readFileSync(contentPath, 'utf-8');
+}
+
+function getContentPath(slug: string[]) {
+  const [category, name] = processSlug(slug);
+  return path.join(process.cwd(), 'content', `${category}`, `${name ?? 'index'}.mdx`);
 }

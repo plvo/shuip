@@ -50,14 +50,14 @@ Each shuip component follows this structure:
 	<CodeHighlight code={`---
 	title: My Component
 	description: Description of the component
-	group: shortcut
+	
 	---
 
-	<ItemHeader filename={'my-component'} />
+
 
 	# ...
 
-	<ItemFooter itemName={'my-component'} props={[
+	<ItemExamples registryName={'my-component'} /> <PropTable props={[
 	    {
 	      name: 'label',
 	      type: 'string',

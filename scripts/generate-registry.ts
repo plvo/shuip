@@ -2,13 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import matter from 'gray-matter';
 
-const REGISTRY_PATHS = {
-  ui: path.join(process.cwd(), 'registry', 'ui'),
-  block: path.join(process.cwd(), 'registry', 'block'),
-  examples: path.join(process.cwd(), 'registry', 'examples'),
-  lib: path.join(process.cwd(), 'registry', 'lib'),
-} as const;
-
 async function main() {
   let index = `// @ts-nocheck
 
@@ -20,70 +13,53 @@ async function main() {
 import * as React from "react"
 
 interface RegistryComponent {
-    name: string;
     path: string;
     code: string;
     component: any;
 }
 
-export const registryIndex: Record<string, RegistryComponent> = {
-`;
+export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
 
-  const componentsCat: Record<string, string[]> = {};
+  const registryDirectories = fs.readdirSync(path.join(process.cwd(), 'registry'));
 
-  const registryUiFiles = fs.readdirSync(REGISTRY_PATHS.ui);
-
-  for (const file of registryUiFiles) {
-    if (!file.endsWith('.tsx')) continue;
-    const { itemName, registryItem } = handleRegistryFile(file, 'ui');
-    index += registryItem;
-    componentsCat[itemName] = [];
+  for (const directory of registryDirectories) {
+    const dirPath = path.join(process.cwd(), 'registry', directory);
+    if (!fs.statSync(dirPath).isDirectory()) continue;
+    const files = fs.readdirSync(dirPath);
+    for (const file of files) {
+      const { registryItem } = handleFile(file, directory);
+      index += registryItem;
+    }
   }
 
-  const registryBlockFiles = fs.readdirSync(REGISTRY_PATHS.block);
+  const examples = fs.readdirSync(path.join(process.cwd(), 'examples'));
 
-  for (const file of registryBlockFiles) {
-    if (!file.endsWith('.tsx')) continue;
-    const { itemName, registryItem } = handleRegistryFile(file, 'block');
+  for (const example of examples) {
+    const { registryItem } = handleFile(example, 'examples');
     index += registryItem;
-    componentsCat[itemName] = [];
-  }
-
-  const registryLibFiles = fs.readdirSync(REGISTRY_PATHS.lib);
-
-  for (const file of registryLibFiles) {
-    if (!file.endsWith('.ts')) continue;
-    const { itemName, registryItem } = handleRegistryFile(file, 'lib');
-    index += registryItem;
-    componentsCat[itemName] = [];
-  }
-
-  const registryExamplesFiles = fs.readdirSync(REGISTRY_PATHS.examples);
-
-  for (const file of registryExamplesFiles) {
-    if (!file.endsWith('.tsx')) continue;
-    const { itemName, registryItem } = handleRegistryFile(file, 'examples');
-    index += registryItem;
-    componentsCat[itemName.split('.')[0]].push(itemName);
   }
 
   index += `
   };
-  /**
-   * registry/(ui|block): registry/examples[] 
-   */ 
-  export const COMPONENT_CATEGORIES:Record<string, string[]> = ${JSON.stringify(componentsCat, null, 2)};
   `;
 
   fs.writeFileSync('./registry/__index__.ts', index);
 
-  console.log(`✅ Registry generated successfully, ${Object.keys(componentsCat).length} components found`);
+  console.log(`✅ Registry generated successfully`);
 }
 
-const handleRegistryFile = (file: string, type: keyof typeof REGISTRY_PATHS) => {
+const handleFile = (file: string, type: string) => {
   const { name, base: filename } = path.parse(file);
-  const pathRegistry = `#/registry/${type}/${filename}`;
-  const fileContent = fs.readFileSync(path.join(REGISTRY_PATHS[type], file), 'utf-8');
+  const pathRegistry = type === 'examples' ? `#/examples/${filename}` : `#/registry/${type}/${filename}`;
+
+  const filePath = path.join(
+    process.cwd(),
+    type === 'examples' ? 'examples' : 'registry',
+    type !== 'examples' ? type : '',
+    file,
+  );
+
+  const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { content } = matter(fileContent);
 
   const itemName = type === 'examples' ? `${name}.example` : name;
@@ -92,7 +68,6 @@ const handleRegistryFile = (file: string, type: keyof typeof REGISTRY_PATHS) => 
     itemName,
     registryItem: `
     "${itemName}": {
-      name: "${itemName}",
       path: "${pathRegistry}",
       code: ${JSON.stringify(content)},
       component: React.lazy(() => import("${pathRegistry}")),
