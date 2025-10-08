@@ -1,9 +1,8 @@
 ---
 title: Confirmation Dialog
 description: A standardized way to ask for user confirmation before executing critical actions like deleting data, logging out, or making irreversible changes.
+registryName: confirmation-dialog
 ---
-
-<ItemHeader registryPath={'#/registry/ui/confirmation-dialog'} />
 
 ## Simple integration
 
@@ -68,7 +67,9 @@ With `ConfirmationDialog`, the same result in a clean, reusable component:
       onConfirm={() => deleteItem(id)}
 />`} language='tsx' />
 
-<ItemFooter registryPath={'confirmation-dialog'} props={[
+<ItemExamples registryName={'confirmation-dialog'} /> 
+
+<PropTable props={[
   {
     name: 'trigger',
     type: 'React.ReactNode',

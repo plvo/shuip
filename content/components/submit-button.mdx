@@ -1,10 +1,8 @@
 ---
 title: Submit Button
 description: Specifically designed for form submission with built-in loading states, making it perfect for forms that need to show submission progress and prevent double submissions.
-group: form
+registryName: submit-button
 ---
-
-<ItemHeader registryPath={'#/registry/ui/submit-button'}/>
 
 ## Built-in features
 
@@ -51,7 +49,9 @@ group: form
       disabled={!confirmed}
 />`} language='tsx' />
 
-<ItemFooter registryPath={'submit-button'} props={[
+<ItemExamples registryName={'submit-button'} /> 
+
+<PropTable props={[
   {
     name: 'children',
     type: 'React.ReactNode | string',

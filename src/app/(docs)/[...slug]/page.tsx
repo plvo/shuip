@@ -54,7 +54,6 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
 }
 
 export default async function DocsPage({ params }: DocPageProps) {
-  11;
   const { slug } = await params;
 
   const fileContent = getFileContent(slug);
