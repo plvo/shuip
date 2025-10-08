@@ -1,38 +1,23 @@
 'use client';
 
 import { Highlight, themes } from 'prism-react-renderer';
-import React from 'react';
-import { registryIndex } from '#/registry/__index__';
 import { CopyButton } from '@/components/ui/shuip/copy-button';
 
 export interface CodePreviewProps {
   code?: string;
-  filename?: string;
   language?: string;
 }
 
-export function CodePreview({ code, filename, language = 'tsx' }: CodePreviewProps) {
-  const codeString = code
-    ? code
-    : React.useMemo(() => {
-        const codeSource = registryIndex[filename as keyof typeof registryIndex]?.code;
-
-        if (!codeSource) {
-          return null;
-        }
-
-        return codeSource;
-      }, [filename]);
-
+export function CodePreview({ code, language = 'tsx' }: CodePreviewProps) {
   return (
     <div className='w-full max-w-[880px] border rounded-md [&_pre]:my-0 [&_pre]:max-h-[350px] [&_pre]:overflow-auto'>
-      {codeString ? (
+      {code ? (
         <div>
           <div className='flex items-center justify-between p-2 border-b'>
             {/* TODO V0 */}
-            <CopyButton value={codeString} />
+            <CopyButton value={code} />
           </div>
-          <CodeHighlight code={codeString} language={language} />
+          <CodeHighlight code={code} language={language} />
         </div>
       ) : (
         <p className='text-sm text-muted-foreground'>Component not found in registry.</p>

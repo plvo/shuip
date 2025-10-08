@@ -25,7 +25,6 @@
     "dev": "next dev",
     "start": "next start",
     "registry:build": "shadcn build",
-    "registry:generate": "bun ./scripts/generate-registry.ts",
     "prepare": "husky"
   },
   "dependencies": {

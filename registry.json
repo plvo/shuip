@@ -73,7 +73,7 @@
       "registryDependencies": ["form", "input", "button"],
       "files": [
         {
-          "path": "./registry/ui/rhf-input-field.tsx",
+          "path": "./registry/ui/react-hook-form/input-field.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/react-hook-form/input-field.tsx"
         }
@@ -86,7 +86,7 @@
       "registryDependencies": ["form", "radio-group"],
       "files": [
         {
-          "path": "./registry/ui/rhf-radio-field.tsx",
+          "path": "./registry/ui/react-hook-form/radio-field.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/react-hook-form/radio-field.tsx"
         }
@@ -99,7 +99,7 @@
       "registryDependencies": ["form", "select"],
       "files": [
         {
-          "path": "./registry/ui/rhf-select-field.tsx",
+          "path": "./registry/ui/react-hook-form/select-field.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/react-hook-form/select-field.tsx"
         }
@@ -168,7 +168,7 @@
       "registryDependencies": ["form", "checkbox"],
       "files": [
         {
-          "path": "./registry/ui/rhf-checkbox-field.tsx",
+          "path": "./registry/ui/react-hook-form/checkbox-field.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/react-hook-form/checkbox-field.tsx"
         }

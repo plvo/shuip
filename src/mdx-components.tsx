@@ -1,10 +1,8 @@
 import Link from 'next/link';
 import type React from 'react';
 import { CopyButton } from '#/registry/ui/copy-button';
-import CodeAllCli from './components/mdx/code.all-cli';
 import { CodeHighlight, type CodeHighlightProps } from './components/mdx/code-preview';
-import { ItemFooter, type ItemFooterProps } from './components/mdx/item-footer';
-import { ItemHeader, type ItemHeaderProps } from './components/mdx/item-header';
+import { ItemFooter, type ItemFooterProps, ItemHeader, type ItemHeaderProps } from './components/mdx/item-content';
 import { InstallationCmd, type InstallationCmdProps } from './components/mdx/item-installation';
 import { cn } from './lib/utils';
 
@@ -58,16 +56,17 @@ export const mdxComponents = {
     // biome-ignore lint/performance/noImgElement: false positive
     <img className={cn('img-mdx', className)} alt={alt} {...props} />
   ),
-  CodeAllCli: ({ ...props }: React.HTMLAttributes<HTMLElement>) => <CodeAllCli {...props} />,
-  InstallationCmd: ({ filename, ...props }: InstallationCmdProps) => <InstallationCmd filename={filename} {...props} />,
   CodeHighlight: ({ code, language = 'tsx', ...props }: CodeHighlightProps & React.HTMLAttributes<HTMLDivElement>) => (
     <div className='flex justify-between rounded-lg border my-6 overflow-x-auto bg-[#1E1E1E]' {...props}>
       <CodeHighlight code={code} language={language} />
       <CopyButton value={code} className='pt-6 pr-6' />
     </div>
   ),
-  ItemHeader: ({ filename, text }: ItemHeaderProps) => <ItemHeader filename={filename} text={text} />,
-  ItemFooter: ({ itemName, props }: ItemFooterProps) => <ItemFooter itemName={itemName} props={props} />,
+  InstallationCmd: ({ registryPath, ...props }: InstallationCmdProps) => (
+    <InstallationCmd registryPath={registryPath} {...props} />
+  ),
+  ItemHeader: ({ registryPath, text }: ItemHeaderProps) => <ItemHeader registryPath={registryPath} text={text} />,
+  ItemFooter: ({ registryPath, props }: ItemFooterProps) => <ItemFooter registryPath={registryPath} props={props} />,
 };
 
 declare global {

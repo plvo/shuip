@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
 
   return {
     title: metadata.title,
-    description: metadata.summary,
+    description: metadata.description,
   };
 }
 
@@ -51,24 +51,13 @@ export default async function Page({ params }: DocPageProps) {
   const toc = await getTableOfContents(fileContent);
   const isItemPage = slug[0] !== 'docs';
 
-  const publishedAt = metadata.publishedAt
-    ? new Date(metadata.publishedAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
-    : null;
-
   return (
     <section className='xl:grid xl:grid-cols-[1fr_300px]'>
       {mdxContent && (
         <article className='max-w-[880px]'>
           <div className='space-y-2 mb-6'>
             <h1 className='h1-mdx'>{metadata.title}</h1>
-            <p className='text-base text-muted-foreground'>{metadata.summary}</p>
-            {publishedAt && (
-              <code className='whitespace-nowrap text-muted-foreground md:text-right'>{publishedAt}</code>
-            )}
+            <p className='text-base text-muted-foreground'>{metadata.description}</p>
           </div>
           <MDXRemote source={mdxContent} components={mdxComponents} />
         </article>

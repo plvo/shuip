@@ -2,16 +2,27 @@
 
 import { Terminal } from 'lucide-react';
 import React from 'react';
+import { getContentByFilePath } from '@/actions/docs';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { CopyButton } from '../ui/shuip/copy-button';
 import { CodePreview } from './code-preview';
 
 export interface ItemInstallationProps {
-  filename: string;
+  registryPath: string;
 }
 
-export function ItemInstallation({ filename }: ItemInstallationProps) {
+export function ItemInstallation({ registryPath }: ItemInstallationProps) {
+  const code = React.useMemo(() => {
+    const codeSource = getContentByFilePath(registryPath);
+
+    if (!codeSource) {
+      return null;
+    }
+
+    return codeSource;
+  }, [registryPath]);
+
   return (
     <div className={'flex flex-col space-y-2'}>
       <Tabs defaultValue='cli' className='relative mr-auto w-full'>
@@ -26,11 +37,11 @@ export function ItemInstallation({ filename }: ItemInstallationProps) {
           </TabsList>
         </div>
         <TabsContent value='cli'>
-          <InstallationCmd filename={filename} />
+          <InstallationCmd registryPath={registryPath} />
         </TabsContent>
         <TabsContent value='manual'>
           <p className='text-muted-foreground pb-2'>Copy the following code and paste it into your project.</p>
-          <CodePreview filename={filename} />
+          <CodePreview code={code || ''} />
         </TabsContent>
       </Tabs>
     </div>
@@ -38,13 +49,15 @@ export function ItemInstallation({ filename }: ItemInstallationProps) {
 }
 
 export interface InstallationCmdProps extends React.RefAttributes<HTMLDivElement> {
-  filename: string | string[];
+  registryPath: string | string[];
 }
 
-export function InstallationCmd({ filename, ...props }: InstallationCmdProps) {
+export function InstallationCmd({ registryPath, ...props }: InstallationCmdProps) {
   const [pkg, setValue] = React.useState<PackageManager>('npm');
 
-  const code = Array.isArray(filename) ? filename.map((f) => getCmd(pkg, f)).join('\n') : getCmd(pkg, filename);
+  const code = Array.isArray(registryPath)
+    ? registryPath.map((f) => getCmd(pkg, f.split('/').pop() || '')).join('\n')
+    : getCmd(pkg, registryPath.split('/').pop() || '');
 
   return (
     <Tabs

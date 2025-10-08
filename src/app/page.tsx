@@ -1,6 +1,9 @@
-import CodeAllCli from '@/components/mdx/code.all-cli';
+import { getPathsByCategory } from '@/actions/docs';
+import { InstallationCmd } from '@/components/mdx/item-installation';
 
-export default function Home() {
+export default async function Home() {
+  const { allPaths } = await getPathsByCategory();
+
   return (
     <main className='flex flex-col items-center justify-center h-screen gap-8'>
       <h1 className='text-4xl hover:text-amber-400'>
@@ -14,7 +17,7 @@ export default function Home() {
       </p>
 
       <div className='w-full max-w-3xl'>
-        <CodeAllCli />
+        <InstallationCmd filename={allPaths} />;
       </div>
 
       <div className='flex flex-col gap-2 justify-center items-center'>

@@ -1,10 +1,10 @@
 ---
 title: Side Dialog
 description: A lightweight dialog that opens from the sides of the screen, perfect for notifications, user menus, and contextual actions.
-group: shortcut
+
 ---
 
-<ItemHeader filename={'side-dialog'} />
+<ItemHeader registryPath={'#/registry/ui/side-dialog'} />
 
 ## Contextual positioning
 
@@ -220,7 +220,7 @@ const [open, setOpen] = useState(false);
   </SideDialogHeader>
 </SideDialogContent>`} language='tsx' />
 
-<ItemFooter itemName={'side-dialog'} props={[
+<ItemFooter registryPath={'side-dialog'} props={[
   {
     name: 'open',
     type: 'boolean?',
@@ -250,7 +250,7 @@ const [open, setOpen] = useState(false);
 
 **SideDialogContent Props:**
 
-<ItemFooter itemName={'side-dialog-content'} props={[
+<ItemFooter registryPath={'side-dialog-content'} props={[
   {
     name: 'showCloseButton',
     type: 'boolean?',
@@ -270,7 +270,7 @@ const [open, setOpen] = useState(false);
 
 **SideDialogTrigger Props:**
 
-<ItemFooter itemName={'side-dialog-trigger'} props={[
+<ItemFooter registryPath={'side-dialog-trigger'} props={[
   {
     name: 'asChild',
     type: 'boolean?',

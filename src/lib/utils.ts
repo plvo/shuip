@@ -1,7 +1,3 @@
-// import fs from 'node:fs';
-// import path from 'node:path';
-
-import path from 'node:path';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -26,9 +22,8 @@ export function filenameToTitle(filename: string) {
 
 export type MdxFrontmatter = {
   title: string;
-  summary: string;
-  publishedAt: string;
-  imageUrl?: string;
+  description: string;
+  position?: string;
 };
 
 export type ParsedFrontmatterReturn = {
