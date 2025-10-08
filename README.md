@@ -1,18 +1,18 @@
 # shuip
 
-[**shuip**](https://shuip.xyz) _(ship + ui)_ is an open-source React component library designed to **accelerate the development** of your Next.js applications. Built on top of [shadcn/ui](https://ui.shadcn.com), shuip provides ready-to-use, business-focused components that help you **ship** faster.
+[**shuip**](https://shuip.plvo.dev) _(ship + ui)_ is an open-source React component library designed to **accelerate the development** of your Next.js applications. Built on top of [shadcn/ui](https://ui.shadcn.com), shuip provides ready-to-use, business-focused components that help you **ship** faster.
 
-For more details, see the full documentation: https://shuip.xyz/docs
+For more details, see the full documentation: https://shuip.plvo.dev/docs
 
 ## Quick Start
 
 Use the shadcn/ui CLI to add shuip components to your project:
 
 ```bash
-npx shadcn@latest add "https://shuip.xyz/r/submit-button"
+npx shadcn@latest add "https://shuip.plvo.dev/r/submit-button"
 ```
 
-More informations on the [documentation](https://shuip.xyz/docs/installation)
+More informations on the [documentation](https://shuip.plvo.dev/docs/installation)
 
 ## Usage Example
 
@@ -43,7 +43,7 @@ Here's how shuip simplifies form development:
 
 ## 🤝 Contributing
 
-Want to contribute? Check out the [Contribution guide](https://shuip.xyz/docs/contribution).
+Want to contribute? Check out the [Contribution guide](https://shuip.plvo.dev/docs/contribution).
 
 ## 📄 License
 

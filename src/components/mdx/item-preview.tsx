@@ -2,7 +2,7 @@
 
 import { ReloadIcon } from '@radix-ui/react-icons';
 import * as React from 'react';
-import { examplesIndex, registryIndex } from '#/registry/__index__';
+import { REGISTRY_INDEX } from '#/registry/__index__';
 import { CodePreview } from '@/components/mdx/code-preview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -10,10 +10,10 @@ import { CopyButton } from '../ui/shuip/copy-button';
 
 export interface ItemPreviewProps extends React.HTMLAttributes<HTMLDivElement> {
   registryName: string;
-  code: string | null;
 }
 
-export function ItemPreview({ registryName, code, ...props }: ItemPreviewProps) {
+export function ItemPreview({ registryName, ...props }: ItemPreviewProps) {
+  const code = REGISTRY_INDEX[registryName]?.code;
   return (
     <div className={cn('flex flex-col space-y-2')} {...props}>
       <Tabs defaultValue='preview' className='relative mr-auto w-full'>
@@ -44,11 +44,11 @@ export function ItemPreview({ registryName, code, ...props }: ItemPreviewProps) 
 }
 
 export function Preview({ registryName, isJustPreview = true }: { registryName: string; isJustPreview?: boolean }) {
-  const Preview = React.useMemo(() => {
-    const Comp = registryIndex[registryName]?.component || examplesIndex[registryName]?.component;
+  const PreviewComponent = React.useMemo(() => {
+    const Comp = REGISTRY_INDEX[registryName]?.component;
 
     if (!Comp) {
-      return (
+      return () => (
         <p className='text-sm text-muted-foreground'>
           Component{' '}
           <code className='relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm'>{registryName}</code>{' '}
@@ -57,7 +57,7 @@ export function Preview({ registryName, isJustPreview = true }: { registryName: 
       );
     }
 
-    return <Comp />;
+    return Comp;
   }, [registryName]);
 
   return (
@@ -70,12 +70,12 @@ export function Preview({ registryName, isJustPreview = true }: { registryName: 
       <React.Suspense
         fallback={
           <div className='flex w-full items-center justify-center text-sm text-muted-foreground'>
-            <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
+            <ReloadIcon className='mr-2 size-4 animate-spin' />
             Loading...
           </div>
         }
       >
-        {Preview}
+        <PreviewComponent />
       </React.Suspense>
     </div>
   );

@@ -11,12 +11,7 @@ interface PathWithMetadata {
 
 export type PathsByCategory = Record<string, PathWithMetadata[]>;
 
-interface PathsByCategoryReturn {
-  allPaths: string[];
-  pathsByCategory: PathsByCategory;
-}
-
-export async function getPathsByCategory(): Promise<PathsByCategoryReturn> {
+export async function getPathsByCategory(): Promise<PathsByCategory> {
   const contentDirs = fs.readdirSync(path.join(process.cwd(), 'content'));
   const pathsByCategory: Record<string, PathWithMetadata[]> = {};
 
@@ -35,14 +30,7 @@ export async function getPathsByCategory(): Promise<PathsByCategoryReturn> {
     pathsByCategory[dir] = paths;
   }
 
-  const allPaths = [
-    '/',
-    ...Object.values(pathsByCategory)
-      .flat()
-      .map((path) => path.path),
-  ];
-
-  return { pathsByCategory, allPaths };
+  return pathsByCategory;
 }
 
 export async function getRegistryPath(filename: string, type: string): Promise<string | null> {

@@ -4,16 +4,14 @@
 'use client';
 
 import * as React from 'react';
-import { useMounted } from '@/hooks/use-mounted';
 import type { TableOfContents } from '@/lib/toc';
 import { cn } from '@/lib/utils';
 
 interface TocProps {
   toc?: TableOfContents;
-  isComponentPage?: boolean;
 }
 
-export function SidebarTableOfContents({ toc, isItemPage }: TocProps) {
+export function SidebarTableOfContents({ toc }: TocProps) {
   const itemIds = React.useMemo(() => {
     if (!toc?.items) return [];
     return toc.items
@@ -23,32 +21,9 @@ export function SidebarTableOfContents({ toc, isItemPage }: TocProps) {
       .map((id) => id?.split('#')[1]);
   }, [toc]);
 
-  const activeHeading = useActiveItem(itemIds);
-  const _mounted = useMounted();
+  const activeHeading = useActiveItem(itemIds ?? []);
 
-  const docToc: TableOfContents | undefined = isItemPage
-    ? {
-        items: [
-          {
-            title: 'Installation',
-            url: '#installation',
-          },
-          {
-            title: 'Preview',
-            url: '#preview',
-          },
-          ...(toc?.items || []),
-          {
-            title: 'Examples',
-            url: '#examples',
-          },
-          {
-            title: 'Props',
-            url: '#props',
-          },
-        ],
-      }
-    : toc;
+  const docToc: TableOfContents | undefined = toc;
 
   if (!docToc?.items?.length) {
     return null;

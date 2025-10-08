@@ -2,7 +2,7 @@ import { getPathsByCategory } from '@/actions/docs';
 import { DocsSidebar, Header } from '@/components/docs/navigation';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-  const { pathsByCategory } = await getPathsByCategory();
+  const pathsByCategory = await getPathsByCategory();
 
   return (
     <div className='flex flex-col border-x max-w-[1451px] mx-auto'>

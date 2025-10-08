@@ -3,10 +3,12 @@ import path from 'node:path';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { compileMDX } from 'next-mdx-remote/rsc';
+import { getPathsByCategory } from '@/actions/docs';
+import { SidebarTableOfContents } from '@/components/docs/toc';
 import { ItemHeader } from '@/components/mdx/item-content';
 import { getTableOfContents } from '@/lib/toc';
 import { processSlug } from '@/lib/utils';
-import { mdxComponents } from '@/mdx-components';
+import { mdxComponents, useMDXComponents } from '@/mdx-components';
 
 export interface MdxFrontmatter {
   title: string;
@@ -15,10 +17,21 @@ export interface MdxFrontmatter {
   registryName?: string;
 }
 
-// export function generateStaticParams() {
-//   const { allPaths } = getPathsByCategory();
-//   return allPaths;
-// }
+export async function generateStaticParams() {
+  const pathsByCategory = await getPathsByCategory();
+
+  const allPaths = [
+    { slug: [] },
+    ...Object.values(pathsByCategory)
+      .flat()
+      .map((pathObj) => {
+        const pathParts = pathObj.path.split('/').filter(Boolean);
+        return { slug: pathParts };
+      }),
+  ];
+
+  return allPaths;
+}
 
 export interface DocPageProps {
   params: Promise<{ slug: string[] }>;
@@ -48,10 +61,12 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
   };
 }
 
-export default async function Page({ params }: DocPageProps) {
+export default async function DocsPage({ params }: DocPageProps) {
   const { slug } = await params;
 
   const fileContent = getFileContent(slug);
+
+  const { h1: H1 } = useMDXComponents();
 
   if (fileContent === null) {
     return notFound();
@@ -70,15 +85,14 @@ export default async function Page({ params }: DocPageProps) {
       {content && (
         <article className='max-w-[880px]'>
           <div className='space-y-2 mb-6'>
-            <h1 className='h1-mdx'>{frontmatter.title as string}</h1>
+            <H1>{frontmatter.title as string}</H1>
             <p className='text-base text-muted-foreground'>{frontmatter.description as string}</p>
           </div>
           {frontmatter.registryName && <ItemHeader registryName={frontmatter.registryName} />}
           {content}
         </article>
       )}
-
-      {/* <SidebarTableOfContents {...{ toc, isItemPage }} /> */}
+      {/* <SidebarTableOfContents toc={toc} /> */}
     </section>
   );
 }

@@ -13,14 +13,12 @@ async function main() {
 import * as React from "react"
 
 interface RegistryComponent {
-    name: string;
     path: string;
     code: string;
     component: any;
 }
 
-export const registryIndex: Record<string, RegistryComponent> = {
-`;
+export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
 
   const registryDirectories = fs.readdirSync(path.join(process.cwd(), 'registry'));
 
@@ -33,11 +31,6 @@ export const registryIndex: Record<string, RegistryComponent> = {
       index += registryItem;
     }
   }
-
-  index += `};
-
-  export const examplesIndex: Record<string, RegistryComponent> = {
-`;
 
   const examples = fs.readdirSync(path.join(process.cwd(), 'examples'));
 
@@ -57,7 +50,7 @@ export const registryIndex: Record<string, RegistryComponent> = {
 
 const handleFile = (file: string, type: string) => {
   const { name, base: filename } = path.parse(file);
-  const pathRegistry = type === 'examples' ? `#/examples/${filename}` : `@r/${type}/${filename}`;
+  const pathRegistry = type === 'examples' ? `#/examples/${filename}` : `#/registry/${type}/${filename}`;
 
   const filePath = path.join(
     process.cwd(),
@@ -75,7 +68,6 @@ const handleFile = (file: string, type: string) => {
     itemName,
     registryItem: `
     "${itemName}": {
-      name: "${itemName}",
       path: "${pathRegistry}",
       code: ${JSON.stringify(content)},
       component: React.lazy(() => import("${pathRegistry}")),
