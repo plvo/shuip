@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
 export default async function DocsPage({ params }: DocPageProps) {
   const { slug } = await params;
 
-  const fileContent = getFileContent(slug);
+  let fileContent = getFileContent(slug);
 
   const { h1: H1 } = useMDXComponents();
 
@@ -64,11 +64,23 @@ export default async function DocsPage({ params }: DocPageProps) {
     return notFound();
   }
 
-  const { content, frontmatter } = await compileMDX<MdxFrontmatter>({
+  let { content, frontmatter } = await compileMDX<MdxFrontmatter>({
     source: fileContent,
     components: mdxComponents,
     options: { parseFrontmatter: true },
   });
+
+  if (frontmatter.urlToFetch) {
+    fileContent = await fetch(frontmatter.urlToFetch).then((res) => res.text());
+    if (fileContent === null) {
+      return notFound();
+    }
+    ({ content, frontmatter } = await compileMDX<MdxFrontmatter>({
+      source: fileContent,
+      components: mdxComponents,
+      options: { parseFrontmatter: true },
+    }));
+  }
 
   return (
     <section className='xl:grid xl:grid-cols-[1fr_300px]'>
@@ -82,6 +94,16 @@ export default async function DocsPage({ params }: DocPageProps) {
           {content}
         </article>
       )}
+
+      <aside className='hidden text-sm xl:block ml-8'>
+        <div className='sticky top-20'>
+          <div className='h-full overflow-auto'>
+            <div className='space-y-2'>
+              <p className='font-semibold text-muted-foreground'>On This Page</p>
+            </div>
+          </div>
+        </div>
+      </aside>
     </section>
   );
 }

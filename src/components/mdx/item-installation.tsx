@@ -2,38 +2,31 @@
 
 import { Terminal } from 'lucide-react';
 import React from 'react';
+import { CopyButton } from '@/components/ui/shuip/copy-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
-import { CopyButton } from '../ui/shuip/copy-button';
+import { CodePreview } from './code-preview';
 
 export interface InstallationCmdProps extends React.RefAttributes<HTMLDivElement> {
-  registryPath: string | string[];
+  registryPath: string;
+  manualCode?: string;
 }
 
-export function InstallationCmd({ registryPath, ...props }: InstallationCmdProps) {
+export function InstallationCmd({ registryPath, manualCode, ...props }: InstallationCmdProps) {
   const [pkg, setValue] = React.useState<PackageManager>('npm');
 
-  const code = Array.isArray(registryPath)
-    ? registryPath.map((f) => getCmd(pkg, f.split('/').pop() || '')).join('\n')
-    : getCmd(pkg, registryPath.split('/').pop() || '');
+  const code = pkg === 'manual' && manualCode ? manualCode : getCmd(pkg, registryPath.split('/').pop() || '');
+
+  const choices = ['npm', 'pnpm', 'bun', manualCode ? 'manual' : undefined].filter(Boolean) as PackageManager[];
 
   return (
-    <Tabs
-      value={pkg}
-      onValueChange={(v) => setValue(v as PackageManager)}
-      className={'w-full rounded-lg border'}
-      {...props}
-    >
+    <Tabs value={pkg} onValueChange={(v) => setValue(v as PackageManager)} className={'w-full rounded-lg'} {...props}>
       <TabsList className='flex justify-between p-2 bg-card'>
         <div className='px-0 py-2'>
-          {['npm', 'pnpm', 'bun'].map((manager) => (
+          {choices.map((manager) => (
             <TabsTrigger
               key={manager}
               value={manager}
-              className={cn(
-                'px-2 data-[state=active]:text-primary-foreground',
-                'data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:underline data-[state=active]:underline-offset-4',
-              )}
+              className={'px-2 data-[state=active]:bg-transparent data-[state=active]:text-foreground'}
             >
               {manager}
             </TabsTrigger>
@@ -42,19 +35,23 @@ export function InstallationCmd({ registryPath, ...props }: InstallationCmdProps
         <CopyButton value={code} />
       </TabsList>
 
-      {(['npm', 'pnpm', 'bun'] as PackageManager[]).map((cmd) => (
-        <TabsContent className='rounded-lg mt-2 p-2' key={cmd} value={cmd}>
-          <pre className='flex items-center pb-2'>
-            <Terminal className='size-4 mr-2 text-muted-foreground' />
-            <code className='overflow-x-auto'>{code}</code>
-          </pre>
+      {choices.map((cmd) => (
+        <TabsContent className='rounded-lg border border-secondary overflow-hidden' key={cmd} value={cmd}>
+          {cmd === 'manual' && manualCode ? (
+            <CodePreview onlyCode code={manualCode} />
+          ) : (
+            <pre className='flex items-center p-3'>
+              <Terminal className='size-4 mr-2 text-muted-foreground' />
+              <code className='overflow-x-auto'>{code}</code>
+            </pre>
+          )}
         </TabsContent>
       ))}
     </Tabs>
   );
 }
 
-type PackageManager = 'npm' | 'pnpm' | 'bun';
+type PackageManager = 'npm' | 'pnpm' | 'bun' | 'manual';
 
 function getCmd(pkg: PackageManager, filename: string): string {
   const origin = typeof window !== 'undefined' ? window.location.origin : process.env.URL;

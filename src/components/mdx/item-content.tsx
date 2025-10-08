@@ -12,12 +12,12 @@ export interface ItemHeaderProps {
 
 export async function ItemHeader({ registryName, text }: ItemHeaderProps) {
   const { h2: H2 } = useMDXComponents();
+  const code = REGISTRY_INDEX[registryName]?.code;
 
   return (
     <>
       {text && <p>{text}</p>}
-      <H2 id={`installation-${registryName}`}>Installation</H2>
-      <ItemInstallation registryPath={registryName} />
+      <InstallationCmd registryPath={registryName} manualCode={code} />
       <H2 id={`preview-${registryName}`}>Preview</H2>
       <Preview registryName={`${registryName}.example`} />
     </>
@@ -86,37 +86,5 @@ export function PropTable({ props }: { props: Prop[] }) {
         </tbody>
       </table>
     </>
-  );
-}
-
-function ItemInstallation({ registryPath }: { registryPath: string }) {
-  const code = REGISTRY_INDEX[registryPath]?.code;
-
-  return (
-    <div className={'flex flex-col space-y-2'}>
-      <Tabs defaultValue='cli' className='relative mr-auto w-full'>
-        <div className='flex items-center justify-between pb-2'>
-          <TabsList className='w-full justify-start rounded-none border-b bg-transparent p-0'>
-            <TabsTrigger value='cli' className='table-trigger'>
-              CLI
-            </TabsTrigger>
-            <TabsTrigger value='manual' className='table-trigger'>
-              Manual
-            </TabsTrigger>
-          </TabsList>
-        </div>
-        <TabsContent value='cli'>
-          <InstallationCmd registryPath={registryPath} />
-        </TabsContent>
-        <TabsContent value='manual'>
-          <p className='text-muted-foreground pb-2'>Copy the following code and paste it into your project.</p>
-          {code ? (
-            <CodePreview code={code} />
-          ) : (
-            <p className='text-sm text-muted-foreground'>Component not found in registry.</p>
-          )}
-        </TabsContent>
-      </Tabs>
-    </div>
   );
 }
