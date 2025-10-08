@@ -1,13 +1,9 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type { MdxFrontmatter } from '@/app/(docs)/[...slug]/page';
+import type { MdxFrontmatter, ParsedFrontmatterReturn } from '@/types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-}
-
-export function absoluteUrl(path: string) {
-  return `${process.env.NEXT_PUBLIC_APP_URL}${path}`;
 }
 
 export function firstCharUppercase(str: string) {
@@ -19,11 +15,6 @@ export function filenameToTitle(filename: string) {
     .split('-')
     .map((w) => firstCharUppercase(w))
     .join(' ');
-}
-
-export interface ParsedFrontmatterReturn {
-  metadata: Partial<MdxFrontmatter>;
-  mdxContent: string;
 }
 
 // https://github.com/shadcn/leerob.io/blob/main/app/db/blog.ts#L58

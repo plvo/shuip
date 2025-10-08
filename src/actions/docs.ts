@@ -2,7 +2,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { type ParsedFrontmatterReturn, parseFrontmatter } from '@/lib/utils';
+import { parseFrontmatter } from '@/lib/utils';
+import type { ParsedFrontmatterReturn } from '@/types';
 
 interface PathWithMetadata {
   path: string;
@@ -31,22 +32,4 @@ export async function getPathsByCategory(): Promise<PathsByCategory> {
   }
 
   return pathsByCategory;
-}
-
-export async function getRegistryPath(filename: string, type: string): Promise<string | null> {
-  const registryType = ['ui', 'lib', 'block', 'actions'].includes(type) ? type : 'ui';
-  return path.join(process.cwd(), 'registry', registryType, `rhf-${filename}.tsx`);
-}
-
-export async function getRegistryContent(registryPath: string): Promise<string | null> {
-  try {
-    return fs.readFileSync(path.join(process.cwd(), registryPath), 'utf8');
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-}
-
-export async function getExamples(filename: string): Promise<string[]> {
-  return fs.readdirSync(path.join(process.cwd(), 'examples')).filter((file) => file.includes(filename));
 }

@@ -1,4 +1,3 @@
-import path from 'node:path';
 import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
 
@@ -26,11 +25,6 @@ const nextConfig: NextConfig = {
         hostname: '*',
       },
     ],
-  },
-
-  webpack: (config) => {
-    config.resolve.alias['@r'] = path.resolve(__dirname, 'registry');
-    return config;
   },
 };
 

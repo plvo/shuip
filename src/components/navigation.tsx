@@ -9,7 +9,7 @@ import type { PathsByCategory } from '@/actions/docs';
 import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { ThemeButton } from '@/components/ui/shuip/theme-button';
 import { cn, filenameToTitle } from '@/lib/utils';
-import { Button } from '../ui/button';
+import { Button } from './ui/button';
 
 export function DocsSidebar({ pathsByCategory }: { pathsByCategory: PathsByCategory }) {
   return (

@@ -4,24 +4,16 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { compileMDX } from 'next-mdx-remote/rsc';
 import { getPathsByCategory } from '@/actions/docs';
-import { SidebarTableOfContents } from '@/components/docs/toc';
 import { ItemHeader } from '@/components/mdx/item-content';
-import { getTableOfContents } from '@/lib/toc';
 import { processSlug } from '@/lib/utils';
 import { mdxComponents, useMDXComponents } from '@/mdx-components';
-
-export interface MdxFrontmatter {
-  title: string;
-  description: string;
-  position?: string;
-  registryName?: string;
-}
+import type { MdxFrontmatter } from '@/types';
 
 export async function generateStaticParams() {
   const pathsByCategory = await getPathsByCategory();
 
   const allPaths = [
-    { slug: [] },
+    { slug: ['/'] },
     ...Object.values(pathsByCategory)
       .flat()
       .map((pathObj) => {
@@ -62,6 +54,7 @@ export async function generateMetadata({ params }: DocPageProps): Promise<Metada
 }
 
 export default async function DocsPage({ params }: DocPageProps) {
+  11;
   const { slug } = await params;
 
   const fileContent = getFileContent(slug);
@@ -78,8 +71,6 @@ export default async function DocsPage({ params }: DocPageProps) {
     options: { parseFrontmatter: true },
   });
 
-  const toc = await getTableOfContents(fileContent);
-
   return (
     <section className='xl:grid xl:grid-cols-[1fr_300px]'>
       {content && (
@@ -92,7 +83,6 @@ export default async function DocsPage({ params }: DocPageProps) {
           {content}
         </article>
       )}
-      {/* <SidebarTableOfContents toc={toc} /> */}
     </section>
   );
 }
