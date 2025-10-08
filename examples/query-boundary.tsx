@@ -2,7 +2,6 @@
 'use client';
 
 import { LoaderCircle } from 'lucide-react';
-import React from 'react';
 import { QueryBoundary } from '@/components/ui/shuip/query-boundary';
 
 export default function QueryBoundaryExample() {
