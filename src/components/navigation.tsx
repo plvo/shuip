@@ -1,11 +1,11 @@
 'use client';
 
+import { GitHubLogoIcon } from '@radix-ui/react-icons';
 import { MenuIcon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react';
 import type { PathsByCategory } from '@/actions/docs';
-import { GitHubStarButton } from '@/components/github-star-button';
 import { Drawer, DrawerContent, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { ThemeButton } from '@/components/ui/shuip/theme-button';
 import { cn, filenameToTitle } from '@/lib/utils';
@@ -36,7 +36,12 @@ export function Header({ pathsByCategory }: { pathsByCategory: PathsByCategory }
         </Link>
       </div>
       <div className='flex items-center md:gap-4 gap-2'>
-        <GitHubStarButton owner='plvo' repo='shuip' />
+        <Link href={`https://github.com/plvo/shuip`} passHref>
+          <Button>
+            <GitHubLogoIcon className='size-4' />
+            Start on GitHub
+          </Button>
+        </Link>
         <ThemeButton />
         <div className='md:hidden'>
           <MobileDrawer pathsByCategory={pathsByCategory} />
@@ -79,18 +84,26 @@ function DocsNav({ pathsByCategory }: { pathsByCategory: PathsByCategory }) {
     return groupOrder.indexOf(a[0]) - groupOrder.indexOf(b[0]);
   });
 
-  return orderedPathsByCategory.map(([category, paths]) => (
-    <NavGroup key={category} title={filenameToTitle(category)}>
-      {paths.map((content, index) => (
-        <NavItem
-          key={index}
-          title={content.metadata.title ?? ''}
-          href={content.path}
-          isActive={pathname === content.path}
-        />
-      ))}
-    </NavGroup>
-  ));
+  return orderedPathsByCategory.map(([category, paths]) => {
+    const needToSort = paths[0].metadata.position !== undefined;
+
+    const handledPaths = needToSort
+      ? paths.sort((a, b) => ((a.metadata.position as any) - (b.metadata.position as any)) as any)
+      : paths;
+
+    return (
+      <NavGroup key={category} title={filenameToTitle(category)}>
+        {handledPaths.map((content, index) => (
+          <NavItem
+            key={index}
+            title={content.metadata.title ?? ''}
+            href={content.path}
+            isActive={pathname === content.path}
+          />
+        ))}
+      </NavGroup>
+    );
+  });
 }
 
 interface NavGroupProps {

@@ -11,10 +11,11 @@
  * ```
  */
 export interface MdxFrontmatter {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   position?: string;
   registryName?: string;
+  urlToFetch?: string;
 }
 
 export interface ParsedFrontmatterReturn {
