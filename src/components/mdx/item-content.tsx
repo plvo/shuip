@@ -1,8 +1,6 @@
 import { REGISTRY_INDEX } from '#/registry/__index__';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { filenameToTitle } from '@/lib/utils';
 import { useMDXComponents } from '@/mdx-components';
-import { CodePreview } from './code-preview';
 import { InstallationCmd } from './item-installation';
 import { ItemPreview, Preview } from './item-preview';
 export interface ItemHeaderProps {
