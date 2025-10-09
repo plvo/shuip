@@ -60,6 +60,7 @@
         "noStaticElementInteractions": "off"
       },
       "correctness": {
+        "noChildrenProp": "off",
         "noUnusedVariables": {
           "level": "info",
           "fix": "unsafe"
