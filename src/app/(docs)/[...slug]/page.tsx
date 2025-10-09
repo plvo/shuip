@@ -14,7 +14,7 @@ import type { MdxFrontmatter } from '@/types';
 export async function generateStaticParams() {
   const pathsByCategory = await getPathsByCategory();
 
-  const allPaths = [
+  return [
     { slug: ['/'] },
     ...Object.values(pathsByCategory)
       .flat()
@@ -23,8 +23,6 @@ export async function generateStaticParams() {
         return { slug: pathParts };
       }),
   ];
-
-  return allPaths;
 }
 
 export interface DocPageProps {
@@ -69,10 +67,13 @@ export default async function DocsPage({ params }: DocPageProps) {
   let { content, frontmatter } = await compileMDX<MdxFrontmatter>({
     source: fileContent,
     components: mdxComponents,
-    options: { parseFrontmatter: true },
+    options: {
+      parseFrontmatter: true,
+      mdxOptions: {
+        format: 'mdx',
+      },
+    },
   });
-
-  const toc = getTableOfContents(fileContent, !!frontmatter.registryName);
 
   if (frontmatter.urlToFetch) {
     fileContent = await fetch(frontmatter.urlToFetch).then((res) => res.text());
@@ -85,6 +86,8 @@ export default async function DocsPage({ params }: DocPageProps) {
       options: { parseFrontmatter: true },
     }));
   }
+
+  const toc = getTableOfContents(fileContent, !!frontmatter.registryName);
 
   return (
     <section className='xl:grid xl:grid-cols-[1fr_300px]'>
