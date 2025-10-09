@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/plvo/shuip/compare/v1.2.0...v1.3.0) (2025-10-09)
+
+
+### Features
+
+* toc ([#26](https://github.com/plvo/shuip/issues/26)) ([65bff9e](https://github.com/plvo/shuip/commit/65bff9e56fec574d970741ddd888fc8239029415))
+
 ## [1.2.0](https://github.com/plvo/shuip/compare/v1.1.0...v1.2.0) (2025-10-08)
 
 
