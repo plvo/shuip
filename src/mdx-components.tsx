@@ -11,7 +11,7 @@ import {
   PropTable,
 } from './components/mdx/item-content';
 import { InstallationCmd, type InstallationCmdProps } from './components/mdx/item-installation';
-import { cn } from './lib/utils';
+import { cn, titleToFilename } from './lib/utils';
 
 type HeadingProps = React.ComponentPropsWithoutRef<'h1'>;
 type ParagraphProps = React.ComponentPropsWithoutRef<'p'>;
@@ -24,10 +24,18 @@ type SmallProps = React.ComponentPropsWithoutRef<'small'>;
 type CodeProps = React.ComponentPropsWithoutRef<'code'>;
 
 export const mdxComponents = {
-  h1: ({ ...props }: HeadingProps) => <h1 className={'h1-mdx'} {...props} />,
-  h2: ({ ...props }: HeadingProps) => <h2 className={'h2-mdx'} {...props} />,
-  h3: ({ ...props }: HeadingProps) => <h3 className={'h3-mdx'} {...props} />,
-  h4: ({ ...props }: HeadingProps) => <h4 className={'h4-mdx'} {...props} />,
+  h1: ({ ...props }: HeadingProps) => (
+    <h1 id={titleToFilename(props.children?.toString() ?? '')} className={'h1-mdx'} {...props} />
+  ),
+  h2: ({ ...props }: HeadingProps) => (
+    <h2 id={titleToFilename(props.children?.toString() ?? '')} className={'h2-mdx'} {...props} />
+  ),
+  h3: ({ ...props }: HeadingProps) => (
+    <h3 id={titleToFilename(props.children?.toString() ?? '')} className={'h3-mdx'} {...props} />
+  ),
+  h4: ({ ...props }: HeadingProps) => (
+    <h4 id={titleToFilename(props.children?.toString() ?? '')} className={'h4-mdx'} {...props} />
+  ),
   p: ({ ...props }: ParagraphProps) => <p className={'p-mdx'} {...props} />,
   em: (props: React.ComponentPropsWithoutRef<'em'>) => <em className='em-mdx' {...props} />,
   strong: (props: React.ComponentPropsWithoutRef<'strong'>) => <strong className='strong-mdx' {...props} />,
@@ -74,7 +82,7 @@ export const mdxComponents = {
   ),
   ItemHeader: ({ registryName, text }: ItemHeaderProps) => <ItemHeader registryName={registryName} text={text} />,
   ItemExamples: ({ registryName }: ItemExamplesProps) => <ItemExamples registryName={registryName} />,
-  PropTable: ({ props }: { props: Prop[] }) => <PropTable props={props} />,
+  PropTable: ({ props, title }: { props: Prop[]; title?: string }) => <PropTable props={props} title={title} />,
 };
 
 declare global {

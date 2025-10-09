@@ -1,3 +1,5 @@
+import type React from 'react';
+
 /**
  * @description Frontmatter for MDX files
  * @example

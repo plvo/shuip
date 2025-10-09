@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation';
 import { compileMDX } from 'next-mdx-remote/rsc';
 import { getPathsByCategory } from '@/actions/docs';
 import { ItemHeader } from '@/components/mdx/item-content';
+import { TableOfContents } from '@/components/toc';
+import { getTableOfContents } from '@/lib/toc';
 import { processSlug } from '@/lib/utils';
 import { mdxComponents, useMDXComponents } from '@/mdx-components';
 import type { MdxFrontmatter } from '@/types';
@@ -12,7 +14,7 @@ import type { MdxFrontmatter } from '@/types';
 export async function generateStaticParams() {
   const pathsByCategory = await getPathsByCategory();
 
-  const allPaths = [
+  return [
     { slug: ['/'] },
     ...Object.values(pathsByCategory)
       .flat()
@@ -21,8 +23,6 @@ export async function generateStaticParams() {
         return { slug: pathParts };
       }),
   ];
-
-  return allPaths;
 }
 
 export interface DocPageProps {
@@ -67,7 +67,12 @@ export default async function DocsPage({ params }: DocPageProps) {
   let { content, frontmatter } = await compileMDX<MdxFrontmatter>({
     source: fileContent,
     components: mdxComponents,
-    options: { parseFrontmatter: true },
+    options: {
+      parseFrontmatter: true,
+      mdxOptions: {
+        format: 'mdx',
+      },
+    },
   });
 
   if (frontmatter.urlToFetch) {
@@ -81,6 +86,8 @@ export default async function DocsPage({ params }: DocPageProps) {
       options: { parseFrontmatter: true },
     }));
   }
+
+  const toc = getTableOfContents(fileContent, !!frontmatter.registryName);
 
   return (
     <section className='xl:grid xl:grid-cols-[1fr_300px]'>
@@ -100,6 +107,7 @@ export default async function DocsPage({ params }: DocPageProps) {
           <div className='h-full overflow-auto'>
             <div className='space-y-2'>
               <p className='font-semibold text-muted-foreground'>On This Page</p>
+              <TableOfContents items={toc} />
             </div>
           </div>
         </div>

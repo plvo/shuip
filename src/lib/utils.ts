@@ -6,15 +6,31 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * @example firstCharUppercase('hello') // Hello
+ */
 export function firstCharUppercase(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
-
+/**
+ * @example filenameToTitle('my-file-name') // My File Name
+ */
 export function filenameToTitle(filename: string) {
   return filename
     .split('-')
     .map((w) => firstCharUppercase(w))
     .join(' ');
+}
+
+/**
+ * @example titleToFilename('My File Name') // my-file-name
+ */
+export function titleToFilename(title: string) {
+  return title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
 }
 
 // https://github.com/shadcn/leerob.io/blob/main/app/db/blog.ts#L58
