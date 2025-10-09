@@ -16,7 +16,7 @@ export async function ItemHeader({ registryName, text }: ItemHeaderProps) {
     <>
       {text && <p>{text}</p>}
       <InstallationCmd registryPath={registryName} manualCode={code} />
-      <H2 id={`preview-${registryName}`}>Preview</H2>
+      <H2>Preview</H2>
       <Preview registryName={`${registryName}.example`} />
     </>
   );
@@ -36,7 +36,7 @@ export async function ItemExamples({ registryName }: ItemExamplesProps) {
 
   return (
     <>
-      <H2 id={`examples-${registryName}`}>Examples</H2>
+      <H2>Examples</H2>
       {examples.length ? (
         examples.sort().map((example) => (
           <div key={example} className='my-6 space-y-4'>
@@ -62,7 +62,7 @@ export function PropTable({ props }: { props: Prop[] }) {
 
   return (
     <>
-      <H2 id={'props'}>Props</H2>
+      <H2>Props</H2>
       <table className={'w-full border-collapse border-spacing-0 my-6 border border-border rounded-lg overflow-hidden'}>
         <thead className={'bg-muted/50'}>
           <tr>
