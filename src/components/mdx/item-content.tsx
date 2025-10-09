@@ -57,12 +57,12 @@ export interface Prop {
   description: string;
 }
 
-export function PropTable({ props }: { props: Prop[] }) {
+export function PropTable({ props, title }: { props: Prop[]; title?: string }) {
   const { h2: H2 } = useMDXComponents();
 
   return (
     <>
-      <H2>Props</H2>
+      <H2>{title || 'Props'}</H2>
       <table className={'w-full border-collapse border-spacing-0 my-6 border border-border rounded-lg overflow-hidden'}>
         <thead className={'bg-muted/50'}>
           <tr>

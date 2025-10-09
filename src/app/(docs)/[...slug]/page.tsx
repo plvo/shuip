@@ -1,13 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { compileMDX } from 'next-mdx-remote/rsc';
 import { getPathsByCategory } from '@/actions/docs';
 import { ItemHeader } from '@/components/mdx/item-content';
+import { TableOfContents } from '@/components/toc';
 import { getTableOfContents } from '@/lib/toc';
-import { cn, processSlug } from '@/lib/utils';
+import { processSlug } from '@/lib/utils';
 import { mdxComponents, useMDXComponents } from '@/mdx-components';
 import type { MdxFrontmatter } from '@/types';
 
@@ -104,13 +104,7 @@ export default async function DocsPage({ params }: DocPageProps) {
           <div className='h-full overflow-auto'>
             <div className='space-y-2'>
               <p className='font-semibold text-muted-foreground'>On This Page</p>
-              <ul className='space-y-2'>
-                {toc.map((item) => (
-                  <li key={item.id} style={{ paddingLeft: item.depth * 8 }}>
-                    <Link href={item.url}>{item.title}</Link>
-                  </li>
-                ))}
-              </ul>
+              <TableOfContents items={toc} />
             </div>
           </div>
         </div>

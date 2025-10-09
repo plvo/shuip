@@ -82,7 +82,7 @@ export const mdxComponents = {
   ),
   ItemHeader: ({ registryName, text }: ItemHeaderProps) => <ItemHeader registryName={registryName} text={text} />,
   ItemExamples: ({ registryName }: ItemExamplesProps) => <ItemExamples registryName={registryName} />,
-  PropTable: ({ props }: { props: Prop[] }) => <PropTable props={props} />,
+  PropTable: ({ props, title }: { props: Prop[]; title?: string }) => <PropTable props={props} title={title} />,
 };
 
 declare global {
