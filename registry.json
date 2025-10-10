@@ -255,6 +255,84 @@
           "target": "./components/ui/shuip/tanstack-form/submit-button.tsx"
         }
       ]
+    },
+    {
+      "name": "tsf-radio-field",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form"],
+      "registryDependencies": ["field", "radio-group"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-radio-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/radio-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-radio-field-composed",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form"],
+      "registryDependencies": ["field", "radio-group"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-radio-field-composed.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/radio-field-composed.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-select-field",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form", "@radix-ui/react-select"],
+      "registryDependencies": ["field", "select"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-select-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/select-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-select-field-composed",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form", "@radix-ui/react-select"],
+      "registryDependencies": ["field", "select"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-select-field-composed.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/select-field-composed.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-checkbox-field",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form"],
+      "registryDependencies": ["field", "checkbox"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-checkbox-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/checkbox-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-checkbox-field-composed",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form"],
+      "registryDependencies": ["field", "checkbox"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-checkbox-field-composed.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/checkbox-field-composed.tsx"
+        }
+      ]
     }
   ]
 }

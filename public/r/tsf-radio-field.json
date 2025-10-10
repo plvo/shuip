@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tsf-radio-field",
+  "type": "registry:ui",
+  "dependencies": ["@tanstack/react-form"],
+  "registryDependencies": ["field", "radio-group"],
+  "files": [
+    {
+      "path": "./registry/ui/tsf-radio-field.tsx",
+      "content": "'use client';\n\nimport type { DeepKeys, ReactFormApi } from '@tanstack/react-form';\nimport { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';\nimport { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';\n\nexport interface RadioFieldProps<TFormData, TName extends DeepKeys<TFormData>>\n  extends Omit<React.ComponentProps<typeof RadioGroup>, 'value' | 'onValueChange'> {\n  form: ReactFormApi<TFormData, any, any, any, any, any, any, any, any, any, any, any>;\n  name: TName;\n  options: string[];\n  label?: string;\n  description?: string;\n  fieldProps?: React.ComponentProps<'div'> & { orientation?: 'vertical' | 'horizontal' | 'responsive' };\n}\n\nexport function RadioField<TFormData, TName extends DeepKeys<TFormData>>({\n  form,\n  name,\n  options,\n  label,\n  description,\n  fieldProps,\n  ...radioGroupProps\n}: RadioFieldProps<TFormData, TName>) {\n  return (\n    <form.Field name={name}>\n      {(field) => {\n        const hasErrors = field.state.meta.errors.length > 0;\n        const errors = field.state.meta.errors.join(', ');\n\n        return (\n          <Field data-invalid={hasErrors} {...fieldProps}>\n            {label && <FieldLabel>{label}</FieldLabel>}\n            <RadioGroup\n              value={field.state.value as string}\n              onValueChange={(value) => field.handleChange(value as any)}\n              className='flex flex-col space-y-1'\n              {...radioGroupProps}\n            >\n              {options.map((value) => (\n                <div key={value} className='flex items-center space-x-3 space-y-0'>\n                  <RadioGroupItem value={value} id={`${field.name}-${value}`} />\n                  <label htmlFor={`${field.name}-${value}`} className='text-sm font-normal cursor-pointer'>\n                    {value}\n                  </label>\n                </div>\n              ))}\n            </RadioGroup>\n            {description && <FieldDescription>{description}</FieldDescription>}\n            {hasErrors && <FieldError>{errors}</FieldError>}\n          </Field>\n        );\n      }}\n    </form.Field>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/tanstack-form/radio-field.tsx"
+    }
+  ]
+}

@@ -11,6 +11,7 @@
     "ignoreUnknown": true,
     "includes": [
       "**",
+      "!src/public/**/*",
       "!src/components/ui/**/*",
       "!src/styles/**/*",
       "!**/*.css",
