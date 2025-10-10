@@ -1,0 +1,276 @@
+---
+title: Submit Button
+description: Context-aware submit button that automatically manages loading and disabled states based on form validation and submission status.
+registryName: tsf-submit-button
+position: 4
+---
+
+## Context-driven submit button
+
+The TanStack Form submit button integrates with the form context to automatically handle submission states. It displays loading indicators during async operations and disables when the form cannot be submitted.
+
+## Core characteristics
+
+- **Context-aware**: Accesses form state via `useFormContext` hook
+- **Auto-disabled**: Automatically disabled when form is submitting or invalid
+- **Loading indicator**: Shows spinner during submission
+- **Validation integration**: Only enabled when `canSubmit` is true
+- **Zero configuration**: Works out of the box with composed forms
+
+## Prerequisites
+
+This component requires the TanStack Form context setup:
+
+<CodeHighlight code={`// Install the context hooks first
+npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-context"`} language='bash' />
+
+## Basic usage
+
+<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/components/ui/tsf-context'
+
+function LoginForm() {
+    const form = useAppForm({
+      defaultValues: {
+        email: '',
+        password: '',
+      },
+      onSubmit: async ({ value }) => {
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+        console.log('Submitted:', value)
+      },
+    })
+  
+    return (
+      <TanstackForm form={form}>
+        <form.AppField name='email'>
+          {(field) => <field.InputField label='Email' />}
+        </form.AppField>
+  
+        <form.AppField name='password'>
+          {(field) => (
+            <field.InputField
+              label='Password'
+              inputProps={{ type: 'password' }}
+            />
+          )}
+        </form.AppField>
+  
+        {/* Auto-handles loading and disabled states */}
+        <form.SubmitButton>Login</form.SubmitButton>
+      </TanstackForm>
+    )
+}`} language='tsx' />
+
+## How it works
+
+The submit button subscribes to form state changes using `form.Subscribe`:
+
+<CodeHighlight code={`import { useFormContext } from '@/components/ui/tsf-context'
+
+export function SubmitButton({ children = 'Submit', ...props }) {
+    const form = useFormContext()
+  
+    return (
+      <form.Subscribe
+        selector={(state) => [state.isSubmitting, state.canSubmit]}
+      >
+        {([isSubmitting, canSubmit]) => (
+          <Button
+            type='submit'
+            disabled={isSubmitting || !canSubmit}
+            {...props}
+          >
+            {isSubmitting && <Loader2Icon className='animate-spin' />}
+            {children}
+          </Button>
+        )}
+      </form.Subscribe>
+    )
+}`} language='tsx' />
+
+## Form state integration
+
+The button responds to multiple form state properties:
+
+- **isSubmitting**: True during async `onSubmit` execution
+- **canSubmit**: True when form has no validation errors
+- **isValid**: All fields pass validation
+- **isDirty**: Form values differ from initial state
+
+<CodeHighlight code={`// The button is disabled when:
+// 1. Form is currently submitting (isSubmitting = true)
+// 2. Form has validation errors (canSubmit = false)
+
+<form.SubmitButton>Submit</form.SubmitButton>
+// Automatically disabled during submission or when invalid`} language='tsx' />
+
+## Validation-based enabling
+
+The button automatically enables/disables based on form validation:
+
+<CodeHighlight code={`const form = useAppForm({
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+})
+
+<form.AppField
+    name='email'
+    validators={{
+      onChange: ({ value }) =>
+        !value.includes('@') ? 'Invalid email' : undefined,
+    }}
+>
+    {(field) => <field.InputField label='Email' />}
+</form.AppField>
+
+{/* Button is disabled until email is valid */}
+<form.SubmitButton>Login</form.SubmitButton>`} language='tsx' />
+
+## Preventing double submissions
+
+The button automatically prevents double submissions:
+
+<CodeHighlight code={`// During submission:
+// 1. isSubmitting = true
+// 2. Button is disabled
+// 3. Loading spinner shows
+// 4. User cannot click again
+
+<form.SubmitButton>
+    Process Payment
+</form.SubmitButton>
+
+// This prevents race conditions and duplicate API calls`} language='tsx' />
+
+## Form submission flow
+
+Complete example showing the submission lifecycle:
+
+<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/components/ui/tsf-context'
+
+function ContactForm() {
+    const form = useAppForm({
+      defaultValues: {
+        name: '',
+        email: '',
+        message: '',
+      },
+      validators: {
+        // Form-level validation
+        onSubmit: ({ value }) => {
+          if (!value.name || !value.email || !value.message) {
+            return {
+              form: 'All fields are required',
+            }
+          }
+          return null
+        },
+      },
+      onSubmit: async ({ value }) => {
+        // 1. Button shows loading spinner
+        // 2. Button is disabled
+  
+        await fetch('/api/contact', {
+          method: 'POST',
+          body: JSON.stringify(value),
+        })
+  
+        // 3. Loading stops
+        // 4. Button is re-enabled
+        alert('Message sent!')
+      },
+    })
+  
+    return (
+      <TanstackForm form={form}>
+        <form.AppField name='name'>
+          {(field) => <field.InputField label='Name' />}
+        </form.AppField>
+  
+        <form.AppField name='email'>
+          {(field) => <field.InputField label='Email' />}
+        </form.AppField>
+  
+        <form.AppField name='message'>
+          {(field) => <field.InputField label='Message' />}
+        </form.AppField>
+  
+        {/* Automatically managed */}
+        <form.SubmitButton>Send Message</form.SubmitButton>
+      </TanstackForm>
+    )
+}`} language='tsx' />
+
+## Integration with TanstackForm wrapper
+
+The submit button works seamlessly with the TanstackForm wrapper component:
+
+<CodeHighlight code={`// TanstackForm provides:
+// 1. Form context via formContext.Provider
+// 2. Automatic form submission via onSubmit handler
+// 3. Prevents default form behavior
+
+export const TanstackForm = ({ form, children, ...formProps }) => (
+    <formContext.Provider value={form}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          form.handleSubmit()
+        }}
+        {...formProps}
+      >
+        {children}
+      </form>
+    </formContext.Provider>
+)
+
+// SubmitButton accesses this context automatically`} language='tsx' />
+
+## When to use this button
+
+**Use this component when:**
+- Working with TanStack Form composed pattern
+- Need automatic loading state management
+- Want validation-based enabling/disabling
+- Building forms with async submission
+
+**Use standard Button when:**
+- Not using TanStack Form
+- Need custom submission logic
+- Building non-form submit buttons
+- Using the simple form pattern (non-context)
+
+<ItemExamples registryName='tsf-submit-button' />
+
+<PropTable props={[
+  {
+    name: 'children',
+    type: 'React.ReactNode',
+    description: 'Button label or content (default: "Submit")',
+  },
+  {
+    name: 'variant',
+    type: '"default" | "destructive" | "outline" | "secondary" | "ghost" | "link"',
+    description: 'Button visual variant',
+  },
+  {
+    name: 'size',
+    type: '"default" | "sm" | "lg" | "icon"',
+    description: 'Button size',
+  },
+  {
+    name: 'className',
+    type: 'string?',
+    description: 'Additional CSS classes',
+  },
+  {
+    name: '...props',
+    type: 'React.ComponentProps<"button">',
+    description: 'All native button attributes',
+  },
+]} />
+
+Note: The `disabled` prop is automatically managed based on form state (`isSubmitting` and `canSubmit`).

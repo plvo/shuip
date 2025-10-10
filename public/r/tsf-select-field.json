@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tsf-select-field",
+  "type": "registry:ui",
+  "dependencies": ["@tanstack/react-form", "@radix-ui/react-select"],
+  "registryDependencies": ["field", "select"],
+  "files": [
+    {
+      "path": "./registry/ui/tsf-select-field.tsx",
+      "content": "'use client';\n\nimport type { SelectProps } from '@radix-ui/react-select';\nimport type { DeepKeys, ReactFormApi } from '@tanstack/react-form';\nimport { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';\nimport { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';\n\n/**\n * Key is the label, value is the value\n * @example\n * const options: SelectFieldOption = {\n *   'First': '1',\n *   'Second': '2',\n *   'Third': '3',\n * };\n */\nexport type SelectFieldOption<T extends string = string> = Record<string, T>;\n\nexport interface SelectFieldProps<TFormData, TName extends DeepKeys<TFormData>>\n  extends Omit<SelectProps, 'value' | 'onValueChange' | 'form'> {\n  form: ReactFormApi<TFormData, any, any, any, any, any, any, any, any, any, any, any>;\n  name: TName;\n  options: SelectFieldOption;\n  label?: string;\n  placeholder?: string;\n  description?: string;\n  fieldProps?: React.ComponentProps<'div'> & { orientation?: 'vertical' | 'horizontal' | 'responsive' };\n}\n\nexport function SelectField<TFormData, TName extends DeepKeys<TFormData>>({\n  form,\n  name,\n  options,\n  label,\n  description,\n  placeholder,\n  fieldProps,\n  ...selectProps\n}: SelectFieldProps<TFormData, TName>) {\n  return (\n    <form.Field name={name}>\n      {(field) => {\n        const hasErrors = field.state.meta.errors.length > 0;\n        const errors = field.state.meta.errors.join(', ');\n\n        return (\n          <Field data-invalid={hasErrors} {...fieldProps}>\n            {label && <FieldLabel>{label}</FieldLabel>}\n            <Select\n              value={field.state.value as string}\n              onValueChange={(value) => field.handleChange(value as any)}\n              {...selectProps}\n            >\n              <SelectTrigger>\n                <SelectValue placeholder={placeholder} />\n              </SelectTrigger>\n              <SelectContent>\n                {Object.entries(options).map(([label, value]) => (\n                  <SelectItem key={value} value={value}>\n                    {label}\n                  </SelectItem>\n                ))}\n              </SelectContent>\n            </Select>\n            {description && <FieldDescription>{description}</FieldDescription>}\n            {hasErrors && <FieldError>{errors}</FieldError>}\n          </Field>\n        );\n      }}\n    </form.Field>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/tanstack-form/select-field.tsx"
+    }
+  ]
+}

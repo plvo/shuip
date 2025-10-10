@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tsf-input-field-composed",
+  "type": "registry:ui",
+  "dependencies": ["@tanstack/react-form"],
+  "registryDependencies": ["field", "input", "button"],
+  "files": [
+    {
+      "path": "./registry/ui/tsf-input-field-composed.tsx",
+      "content": "import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';\nimport { Input } from '@/components/ui/input';\nimport { useFieldContext } from '../hooks/tsf-context';\n\nexport interface InputFieldProps {\n  label?: string;\n  description?: string;\n  inputProps?: React.ComponentProps<'input'>;\n  fieldProps?: React.ComponentProps<'div'> & { orientation?: 'vertical' | 'horizontal' | 'responsive' };\n}\n\nexport function InputField({ label, description, fieldProps, inputProps }: InputFieldProps) {\n  const field = useFieldContext<string>();\n\n  const hasErrors = field.state.meta.errors.length > 0;\n  const errors = field.state.meta.errors.map((e) => e?.message).join(', ');\n\n  return (\n    <Field data-invalid={hasErrors} {...fieldProps}>\n      {label && <FieldLabel>{label}</FieldLabel>}\n      <Input\n        type='text'\n        id={field.name}\n        name={field.name}\n        value={field.state.value}\n        onChange={(e) => field.handleChange(e.target.value)}\n        onBlur={field.handleBlur}\n        aria-invalid={hasErrors}\n        {...inputProps}\n      />\n      {description && <FieldDescription>{description}</FieldDescription>}\n      {errors && <FieldError>{errors}</FieldError>}\n    </Field>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/tanstack-form/input-field-composed.tsx"
+    }
+  ]
+}

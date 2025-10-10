@@ -11,6 +11,8 @@ import { ThemeButton } from '@/components/ui/shuip/theme-button';
 import { cn, filenameToTitle } from '@/lib/utils';
 import { Button } from './ui/button';
 
+const GROUP_ORDER = ['docs', 'blocks', 'components', 'react-hook-form', 'tanstack-form'];
+
 export function DocsSidebar({ pathsByCategory }: { pathsByCategory: PathsByCategory }) {
   return (
     <div className='md:grid md:grid-cols-[220px_minmax(0,1fr)]'>
@@ -78,10 +80,8 @@ function MobileDrawer({ pathsByCategory }: { pathsByCategory: PathsByCategory })
 function DocsNav({ pathsByCategory }: { pathsByCategory: PathsByCategory }) {
   const pathname = usePathname();
 
-  const groupOrder = ['docs', 'blocks', 'components', 'react-hook-form'];
-
   const orderedPathsByCategory = Object.entries(pathsByCategory).sort((a, b) => {
-    return groupOrder.indexOf(a[0]) - groupOrder.indexOf(b[0]);
+    return GROUP_ORDER.indexOf(a[0]) - GROUP_ORDER.indexOf(b[0]);
   });
 
   return orderedPathsByCategory.map(([category, paths]) => {

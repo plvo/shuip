@@ -1,0 +1,378 @@
+---
+title: Input Field (Composed)
+description: Context-based input field component designed for complex applications with multiple forms and reusable components.
+registryName: tsf-input-field-composed
+position: 3
+---
+
+## Context-based form field integration
+
+The composed input field pattern uses React Context to access form state, eliminating prop drilling and enabling advanced composition patterns. This approach is ideal for applications with multiple forms and reusable field components.
+
+## Core characteristics
+
+- **Context-driven**: Fields access form state via `useFieldContext` hook
+- **Minimal props**: Only field-specific props needed (label, description)
+- **Composition-friendly**: Works with `form.AppField` render props
+- **Lazy loading support**: Compatible with `React.lazy()` for code splitting
+- **Type-safe**: Full TypeScript support through context inference
+
+## Prerequisites
+
+This component requires the TanStack Form context setup:
+
+<CodeHighlight code={`// Install the context hooks first
+npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-context"`} language='bash' />
+
+## Basic usage
+
+<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/components/ui/tsf-context'
+
+function RegistrationForm() {
+    const form = useAppForm({
+      defaultValues: {
+        email: '',
+        username: '',
+        password: '',
+      },
+      onSubmit: async ({ value }) => {
+        await registerUser(value)
+      },
+    })
+  
+    return (
+      <TanstackForm form={form}>
+        <form.AppField name='email'>
+          {(field) => (
+            <field.InputField
+              label='Email'
+              description='Your email address'
+            />
+          )}
+        </form.AppField>
+  
+        <form.AppField name='username'>
+          {(field) => <field.InputField label='Username' />}
+        </form.AppField>
+  
+        <form.AppField name='password'>
+          {(field) => (
+            <field.InputField
+              label='Password'
+              inputProps={{ type: 'password' }}
+            />
+          )}
+        </form.AppField>
+  
+        <form.SubmitButton>Create Account</form.SubmitButton>
+      </TanstackForm>
+    )
+}`} language='tsx' />
+
+## How context works
+
+The composed pattern uses three key pieces:
+
+1. **Context creation**: `createFormHookContexts()` generates form and field contexts
+2. **Custom hook**: `createFormHook()` binds contexts to form components
+3. **Context provider**: `TanstackForm` wraps the form and provides context
+
+<CodeHighlight code={`// In tsf-context.tsx (already provided)
+import { createFormHook, createFormHookContexts } from '@tanstack/react-form'
+
+// 1. Create contexts
+export const { fieldContext, formContext, useFieldContext, useFormContext } =
+    createFormHookContexts()
+
+// 2. Create custom form hook with registered components
+export const { useAppForm } = createFormHook({
+    fieldContext,
+    formContext,
+    fieldComponents: {
+      InputField, // Registered for use with form.AppField
+    },
+    formComponents: {
+      SubmitButton, // Accessible via form.SubmitButton
+    },
+})
+
+// 3. Provider component
+export const TanstackForm = ({ form, children }) => (
+    <formContext.Provider value={form}>
+      <form onSubmit={(e) => {
+        e.preventDefault()
+        form.handleSubmit()
+      }}>
+        {children}
+      </form>
+    </formContext.Provider>
+)`} language='tsx' />
+
+## Type inference with context
+
+The composed pattern maintains full type safety through the context:
+
+<CodeHighlight code={`type UserProfile = {
+    personal: {
+      firstName: string
+      lastName: string
+    }
+    contact: {
+      email: string
+    }
+}
+
+const form = useAppForm({
+    defaultValues: {
+      personal: { firstName: '', lastName: '' },
+      contact: { email: '' },
+    }
+})
+
+// Type-safe nested field names
+<form.AppField name='personal.firstName'>
+    {(field) => <field.InputField label='First Name' />}
+</form.AppField>
+
+<form.AppField name='contact.email'>
+    {(field) => <field.InputField label='Email' />}
+</form.AppField>`} language='tsx' />
+
+## Validation with composed fields
+
+Validation is declared on `form.AppField`, not on the input component:
+
+<CodeHighlight code={`<form.AppField
+    name='username'
+    validators={{
+      // Synchronous validation
+      onChange: ({ value }) =>
+        value.length < 3
+          ? 'Username must be at least 3 characters'
+          : undefined,
+  
+      // Async validation with debouncing
+      onChangeAsyncDebounceMs: 500,
+      onChangeAsync: async ({ value }) => {
+        const available = await checkUsernameAvailability(value)
+        return available ? undefined : 'Username is already taken'
+      },
+  
+      // Validation on blur
+      onBlur: ({ value }) =>
+        !value ? 'Username is required' : undefined,
+    }}
+>
+    {(field) => <field.InputField label='Username' />}
+</form.AppField>`} language='tsx' />
+
+## Accessing field state
+
+The field instance provides comprehensive state information:
+
+<CodeHighlight code={`<form.AppField name='email'>
+    {(field) => (
+      <div>
+        <field.InputField label='Email' />
+  
+        {/* Access field metadata */}
+        {field.state.meta.isTouched && (
+          <p>Field has been interacted with</p>
+        )}
+  
+        {field.state.meta.isValidating && (
+          <p>Validating...</p>
+        )}
+  
+        {field.state.meta.isDirty && (
+          <p>Field value has changed from initial</p>
+        )}
+      </div>
+    )}
+</form.AppField>`} language='tsx' />
+
+## Error handling
+
+Errors are automatically handled by the InputField component:
+
+<CodeHighlight code={`// The composed InputField accesses errors via useFieldContext
+function InputField({ label, description }) {
+    const field = useFieldContext<string>()
+  
+    const hasErrors = field.state.meta.errors.length > 0
+    const errors = field.state.meta.errors.map((e) => e?.message).join(', ')
+  
+    return (
+      <Field data-invalid={hasErrors}>
+        {label && <FieldLabel>{label}</FieldLabel>}
+        <Input
+          value={field.state.value}
+          onChange={(e) => field.handleChange(e.target.value)}
+          onBlur={field.handleBlur}
+          aria-invalid={hasErrors}
+        />
+        {errors && <FieldError>{errors}</FieldError>}
+      </Field>
+    )
+}`} language='tsx' />
+
+## Reusable field components
+
+Create custom field components that leverage the same context:
+
+<CodeHighlight code={`import { useFieldContext } from '@/components/ui/tsf-context'
+
+function CustomEmailField({ label }: { label: string }) {
+    const field = useFieldContext<string>()
+  
+    return (
+      <div>
+        <label>{label}</label>
+        <input
+          type='email'
+          value={field.state.value}
+          onChange={(e) => field.handleChange(e.target.value)}
+          onBlur={field.handleBlur}
+        />
+        {field.state.meta.errors.length > 0 && (
+          <span>{field.state.meta.errors.join(', ')}</span>
+        )}
+      </div>
+    )
+}
+
+// Register in createFormHook
+const { useAppForm } = createFormHook({
+    fieldComponents: {
+      CustomEmailField,
+    },
+})
+
+// Use in forms
+<form.AppField name='email'>
+    {(field) => <field.CustomEmailField label='Email Address' />}
+</form.AppField>`} language='tsx' />
+
+## Lazy loading components
+
+The composed pattern supports code splitting with React.lazy:
+
+<CodeHighlight code={`import { lazy } from 'react'
+import { createFormHook } from '@tanstack/react-form'
+
+// Lazy load field components
+const InputField = lazy(() => import('./input-field-composed'))
+const SelectField = lazy(() => import('./select-field-composed'))
+
+const { useAppForm } = createFormHook({
+    fieldComponents: {
+      InputField,
+      SelectField,
+    },
+})
+
+// Wrap in Suspense
+import { Suspense } from 'react'
+
+<Suspense fallback={<LoadingSpinner />}>
+    <TanstackForm form={form}>
+      <form.AppField name='email'>
+        {(field) => <field.InputField label='Email' />}
+      </form.AppField>
+    </TanstackForm>
+</Suspense>`} language='tsx' />
+
+## Multiple forms in the same app
+
+The context pattern shines when managing multiple forms:
+
+<CodeHighlight code={`// Login form
+function LoginForm() {
+    const form = useAppForm({
+      defaultValues: { email: '', password: '' }
+    })
+  
+    return (
+      <TanstackForm form={form}>
+        <form.AppField name='email'>
+          {(field) => <field.InputField label='Email' />}
+        </form.AppField>
+        <form.SubmitButton>Login</form.SubmitButton>
+      </TanstackForm>
+    )
+}
+
+// Registration form (uses same InputField component)
+function RegistrationForm() {
+    const form = useAppForm({
+      defaultValues: { email: '', username: '', password: '' }
+    })
+  
+    return (
+      <TanstackForm form={form}>
+        <form.AppField name='email'>
+          {(field) => <field.InputField label='Email' />}
+        </form.AppField>
+        <form.AppField name='username'>
+          {(field) => <field.InputField label='Username' />}
+        </form.AppField>
+        <form.SubmitButton>Sign Up</form.SubmitButton>
+      </TanstackForm>
+    )
+}`} language='tsx' />
+
+## When to use this pattern
+
+**Ideal for:**
+- Applications with 5+ different forms
+- Large forms with 10+ fields
+- Reusable form component libraries
+- Projects using code splitting and lazy loading
+- Teams building consistent form UX
+
+**Use the simple pattern when:**
+- Building a single form
+- Prototyping quickly
+- Form has fewer than 10 fields
+- Context setup feels like overkill
+
+## Migration from simple pattern
+
+Migrating between patterns is straightforward:
+
+<CodeHighlight code={`// Before (Simple)
+<InputField form={form} name='email' label='Email' />
+
+// After (Composed)
+<form.AppField name='email'>
+    {(field) => <field.InputField label='Email' />}
+</form.AppField>
+
+// Form logic and validation remain identical`} language='tsx' />
+
+<ItemExamples registryName='tsf-input-field-composed' />
+
+<PropTable props={[
+  {
+    name: 'label',
+    type: 'string?',
+    description: 'Label displayed above the input field',
+  },
+  {
+    name: 'description',
+    type: 'string?',
+    description: 'Helper text displayed below the input field',
+  },
+  {
+    name: 'inputProps',
+    type: 'React.ComponentProps<"input">?',
+    description: 'All native HTML input attributes (type, placeholder, min, max, etc.)',
+  },
+  {
+    name: 'fieldProps',
+    type: 'React.ComponentProps<"div"> & { orientation? }',
+    description: 'Container props, including layout orientation (vertical, horizontal, responsive)',
+  },
+]} />
+
+Note: The `form` and `name` props are handled by `form.AppField` and accessed via context.

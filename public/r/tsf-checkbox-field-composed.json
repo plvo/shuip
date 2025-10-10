@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tsf-checkbox-field-composed",
+  "type": "registry:ui",
+  "dependencies": ["@tanstack/react-form"],
+  "registryDependencies": ["field", "checkbox"],
+  "files": [
+    {
+      "path": "./registry/ui/tsf-checkbox-field-composed.tsx",
+      "content": "'use client';\n\nimport { Checkbox } from '@/components/ui/checkbox';\nimport { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';\nimport { useFieldContext } from '../hooks/tsf-context';\n\nexport interface CheckboxFieldProps extends Omit<React.ComponentProps<typeof Checkbox>, 'checked' | 'onCheckedChange'> {\n  label: string;\n  boxLabel?: string;\n  description?: string;\n  fieldProps?: React.ComponentProps<'div'> & { orientation?: 'vertical' | 'horizontal' | 'responsive' };\n}\n\nexport function CheckboxField({ label, boxLabel, description, fieldProps, ...checkboxProps }: CheckboxFieldProps) {\n  const field = useFieldContext<boolean>();\n\n  const hasErrors = field.state.meta.errors.length > 0;\n  const errors = field.state.meta.errors.join(', ');\n\n  return (\n    <Field data-invalid={hasErrors} {...fieldProps}>\n      <FieldLabel className='flex items-center justify-between'>\n        {label}\n        {hasErrors && <FieldError className='max-sm:hidden text-sm'>{errors}</FieldError>}\n      </FieldLabel>\n      <div className='flex items-center gap-2'>\n        <Checkbox\n          checked={field.state.value}\n          onCheckedChange={(checked) => field.handleChange(checked as boolean)}\n          id={field.name}\n          {...checkboxProps}\n        />\n        {boxLabel && (\n          <label htmlFor={field.name} className='text-sm cursor-pointer'>\n            {boxLabel}\n          </label>\n        )}\n      </div>\n      {description && <FieldDescription>{description}</FieldDescription>}\n      {hasErrors && <FieldError className='sm:hidden text-xs text-left'>{errors}</FieldError>}\n    </Field>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/tanstack-form/checkbox-field-composed.tsx"
+    }
+  ]
+}

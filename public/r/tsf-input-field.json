@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tsf-input-field",
+  "type": "registry:ui",
+  "dependencies": ["@tanstack/react-form"],
+  "registryDependencies": ["field", "input"],
+  "files": [
+    {
+      "path": "./registry/ui/tsf-input-field.tsx",
+      "content": "'use client';\n\nimport type { DeepKeys, DeepValue, ReactFormApi } from '@tanstack/react-form';\nimport { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';\nimport { Input } from '@/components/ui/input';\n\nexport interface InputFieldProps<\n  TFormData,\n  TName extends DeepKeys<TFormData>,\n  // TData extends DeepValue<TFormData, TName> = DeepValue<TFormData, TName>,\n> {\n  form: ReactFormApi<TFormData, any, any, any, any, any, any, any, any, any, any, any>;\n  name: TName;\n  label?: string;\n  description?: string;\n  inputProps?: React.ComponentProps<'input'>;\n  fieldProps?: React.ComponentProps<'div'> & { orientation?: 'vertical' | 'horizontal' | 'responsive' };\n}\n\nexport function InputField<\n  TFormData,\n  TName extends DeepKeys<TFormData>,\n  TData extends DeepValue<TFormData, TName> = DeepValue<TFormData, TName>,\n>({ form, name, label, description, fieldProps, inputProps }: InputFieldProps<TFormData, TName>) {\n  return (\n    <form.Field name={name}>\n      {(field) => {\n        const hasErrors = field.state.meta.errors.length > 0;\n        const errors = field.state.meta.errors.map((e) => e?.message).join(', ');\n\n        return (\n          <Field data-invalid={hasErrors} {...fieldProps}>\n            {label && <FieldLabel>{label}</FieldLabel>}\n            <Input\n              type='text'\n              id={field.name}\n              name={field.name}\n              value={field.state.value as string}\n              onChange={(e) => field.handleChange(e.target.value as TData)}\n              onBlur={field.handleBlur}\n              aria-invalid={hasErrors}\n              {...inputProps}\n            />\n            {description && <FieldDescription>{description}</FieldDescription>}\n            {hasErrors && <FieldError>{errors}</FieldError>}\n          </Field>\n        );\n      }}\n    </form.Field>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/tanstack-form/input-field.tsx"
+    }
+  ]
+}
