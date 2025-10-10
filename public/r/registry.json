@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "shuip",
-  "homepage": "https://shuip.xyz",
+  "homepage": "https://shuip.plvo.dev",
   "items": [
     {
       "name": "title-section",
@@ -201,6 +201,58 @@
           "path": "./registry/ui/copy-button.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/copy-button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-context",
+      "type": "registry:hook",
+      "dependencies": ["@tanstack/react-form"],
+      "files": [
+        {
+          "path": "./registry/hooks/tsf-context.tsx",
+          "type": "registry:hook",
+          "target": "./lib/shuip/tanstack-form/context.ts"
+        }
+      ]
+    },
+    {
+      "name": "tsf-input-field",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form"],
+      "registryDependencies": ["field", "input"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-input-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/input-field.tsx"
+        }
+      ]
+    },
+
+    {
+      "name": "tsf-input-field-composed",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form"],
+      "registryDependencies": ["field", "input", "button"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-input-field-composed.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/input-field-composed.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-submit-button",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form"],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-submit-button.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/submit-button.tsx"
         }
       ]
     }

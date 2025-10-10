@@ -1,0 +1,269 @@
+---
+title: Input Field (Simple)
+description: Standalone input field component that receives the form instance directly. Ideal for simple forms and quick prototypes.
+registryName: tsf-input-field
+position: 2
+---
+
+## Standalone form field integration
+
+The simple input field pattern provides a straightforward way to integrate TanStack Form with minimal setup. Each field receives the form instance as a prop, offering excellent type inference and explicit data flow.
+
+## Core characteristics
+
+- **Zero configuration**: No context setup required
+- **Type-safe field names**: Autocomplete for nested paths via `DeepKeys<TFormData>`
+- **Explicit dependencies**: Form instance passed directly to each field
+- **Excellent type inference**: TypeScript infers field types from form schema
+
+## Basic usage
+
+<CodeHighlight code={`import { useForm } from '@tanstack/react-form'
+import { InputField } from '@/components/ui/tsf-input-field'
+
+function LoginForm() {
+    const form = useForm({
+      defaultValues: {
+        email: '',
+        password: '',
+      },
+      onSubmit: async ({ value }) => {
+        await loginUser(value)
+      },
+    })
+
+    return (
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          form.handleSubmit()
+        }}
+      >
+        <InputField
+          form={form}
+          name='email'
+          label='Email'
+          description='Your login email'
+        />
+        <InputField
+          form={form}
+          name='password'
+          label='Password'
+          inputProps={{ type: 'password' }}
+        />
+        <button type='submit'>Login</button>
+      </form>
+    )
+}`} language='tsx' />
+
+## Type inference
+
+The component provides full type safety through generic parameters:
+
+<CodeHighlight code={`type UserProfile = {
+    name: string
+    age: number
+    contact: {
+      email: string
+      phone: string
+    }
+}
+
+const form = useForm<UserProfile>({
+    defaultValues: {
+      name: '',
+      age: 0,
+      contact: {
+        email: '',
+        phone: '',
+      }
+    }
+})
+
+// TypeScript autocompletes: 'name', 'age', 'contact.email', 'contact.phone'
+<InputField form={form} name='contact.email' label='Email' />
+//                              ^^^^^^^^^^^^^
+//                              Type-safe nested path`} language='tsx' />
+
+The `name` prop is constrained to `DeepKeys<TFormData>`, ensuring only valid field paths are accepted.
+
+## Validation integration
+
+TanStack Form supports multiple validation triggers:
+
+<CodeHighlight code={`const form = useForm({
+    defaultValues: { username: '' },
+})
+
+<form.Field
+    name='username'
+    validators={{
+      // Synchronous validation on change
+      onChange: ({ value }) =>
+        value.length < 3 ? 'Username must be at least 3 characters' : undefined,
+  
+      // Validation on blur
+      onBlur: ({ value }) =>
+        !value ? 'Username is required' : undefined,
+  
+      // Async validation with debouncing
+      onChangeAsyncDebounceMs: 500,
+      onChangeAsync: async ({ value }) => {
+        const available = await checkUsernameAvailability(value)
+        return available ? undefined : 'Username already taken'
+      },
+    }}
+>
+    {(field) => (
+      <InputField
+        form={form}
+        name='username'
+        label='Username'
+      />
+    )}
+</form.Field>`} language='tsx' />
+
+## Error handling
+
+The component automatically displays validation errors from field metadata:
+
+<CodeHighlight code={`// Errors are shown when field.state.meta.errors is populated
+<InputField form={form} name='email' label='Email' />
+
+// Field state provides error information:
+// - field.state.meta.errors: Array of error messages
+// - field.state.meta.isTouched: User has interacted with field
+// - field.state.meta.isValid: Field passes all validators
+// - field.state.meta.isValidating: Async validation in progress`} language='tsx' />
+
+## Custom input props
+
+All native input attributes can be passed through `inputProps`:
+
+<CodeHighlight code={`<InputField
+    form={form}
+    name='age'
+    label='Age'
+    inputProps={{
+      type: 'number',
+      min: 0,
+      max: 120,
+      step: 1,
+    }}
+/>
+
+<InputField
+    form={form}
+    name='email'
+    label='Email'
+    inputProps={{
+      type: 'email',
+      autoComplete: 'email',
+      placeholder: 'user@example.com',
+    }}
+/>`} language='tsx' />
+
+## Field layout customization
+
+Control the field container layout with `fieldProps`:
+
+<CodeHighlight code={`<InputField
+    form={form}
+    name='name'
+    label='Full Name'
+    fieldProps={{
+      orientation: 'horizontal', // 'vertical' | 'horizontal' | 'responsive'
+      className: 'gap-4',
+    }}
+/>`} language='tsx' />
+
+## Working with nested data
+
+TanStack Form supports deeply nested field paths:
+
+<CodeHighlight code={`type FormData = {
+    user: {
+      profile: {
+        contact: {
+          primary: string
+          secondary: string
+        }
+      }
+    }
+}
+
+// Access nested fields with dot notation
+<InputField
+    form={form}
+    name='user.profile.contact.primary'
+    label='Primary Contact'
+/>`} language='tsx' />
+
+## Form submission
+
+Handle form submission with the `onSubmit` callback:
+
+<CodeHighlight code={`const form = useForm({
+    defaultValues: { email: '', password: '' },
+    onSubmit: async ({ value }) => {
+      // value is fully typed based on defaultValues
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        body: JSON.stringify(value),
+      })
+  
+      if (!response.ok) {
+        // Handle errors
+      }
+    },
+})`} language='tsx' />
+
+## When to use this pattern
+
+**Ideal for:**
+- Simple forms with fewer than 10 fields
+- Quick prototypes
+- One-off forms in your application
+- Forms without complex composition needs
+- Learning TanStack Form basics
+
+**Consider the composed pattern when:**
+- Building multiple forms across your app
+- Creating reusable form component libraries
+- Need lazy loading for large forms
+- Want to minimize props on field components
+
+<ItemExamples registryName='tsf-input-field' />
+
+<PropTable props={[
+  {
+    name: 'form',
+    type: 'ReactFormApi<TFormData>',
+    description: 'The form instance from useForm hook',
+  },
+  {
+    name: 'name',
+    type: 'DeepKeys<TFormData>',
+    description: 'Type-safe field name, supports nested paths with dot notation',
+  },
+  {
+    name: 'label',
+    type: 'string?',
+    description: 'Label displayed above the input field',
+  },
+  {
+    name: 'description',
+    type: 'string?',
+    description: 'Helper text displayed below the input field',
+  },
+  {
+    name: 'inputProps',
+    type: 'React.ComponentProps<"input">?',
+    description: 'All native HTML input attributes (type, placeholder, min, max, etc.)',
+  },
+  {
+    name: 'fieldProps',
+    type: 'React.ComponentProps<"div"> & { orientation? }',
+    description: 'Container props, including layout orientation (vertical, horizontal, responsive)',
+  },
+]} />

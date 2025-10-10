@@ -19,11 +19,11 @@ export function SubmitButton({
   children,
   disabled,
   loading,
-  icon = <ReloadIcon className='mr-2 size-4 animate-spin' />,
+  icon = <ReloadIcon className='mr-2 size-4 animate-spin' aria-label='Loading' />,
   ...props
 }: SubmitButtonProps) {
   return (
-    <Button type='submit' variant={'default'} className={'w-full'} disabled={disabled || loading} {...props}>
+    <Button type='submit' aria-label='Submit' className={'w-full'} disabled={disabled || loading} {...props}>
       {loading && icon}
       {children}
     </Button>

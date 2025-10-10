@@ -1,6 +1,6 @@
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { useFieldContext } from './hooks';
+import { useFieldContext } from '../hooks/tsf-context';
 
 export interface InputFieldProps {
   label?: string;
@@ -17,7 +17,7 @@ export function InputField({ label, description, fieldProps, inputProps }: Input
 
   return (
     <Field data-invalid={hasErrors} {...fieldProps}>
-      <FieldLabel>{label}</FieldLabel>
+      {label && <FieldLabel>{label}</FieldLabel>}
       <Input
         type='text'
         id={field.name}
