@@ -2,7 +2,7 @@
 
 import { useForm } from '@tanstack/react-form';
 import { CheckboxField } from '#/registry/ui/tsf-checkbox-field';
-import { SubmitButton } from '@/components/ui/shuip/submit-button';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
 export default function TsfCheckboxFieldExample() {
   const form = useForm({
@@ -24,42 +24,28 @@ export default function TsfCheckboxFieldExample() {
       }}
       className='space-y-4'
     >
-      <form.Field
+      <CheckboxField
+        form={form}
         name='terms'
-        validators={{
-          onChange: ({ value }) => (!value ? 'You must accept the terms and conditions' : undefined),
+        label='Terms and Conditions'
+        boxLabel='I accept the terms and conditions'
+        description='You must accept the terms to continue'
+        formProps={{
+          validators: {
+            onChange: ({ value }) => (!value ? 'You must accept the terms and conditions' : undefined),
+          },
         }}
-      >
-        {(field) => (
-          <CheckboxField
-            form={form}
-            name='terms'
-            label='Terms and Conditions'
-            boxLabel='I accept the terms and conditions'
-            description='You must accept the terms to continue'
-          />
-        )}
-      </form.Field>
+      />
 
-      <form.Field name='marketing'>
-        {(field) => (
-          <CheckboxField
-            form={form}
-            name='marketing'
-            label='Marketing'
-            boxLabel='Send me promotional emails'
-            description='Optional: Receive updates about new features'
-          />
-        )}
-      </form.Field>
+      <CheckboxField
+        form={form}
+        name='marketing'
+        label='Marketing'
+        boxLabel='Send me promotional emails'
+        description='Optional: Receive updates about new features'
+      />
 
-      <form.Subscribe selector={(state) => [state.isSubmitting]}>
-        {([isSubmitting]) => (
-          <SubmitButton type='submit' disabled={isSubmitting} loading={isSubmitting}>
-            Submit
-          </SubmitButton>
-        )}
-      </form.Subscribe>
+      <SubmitButton form={form} type='submit' />
     </form>
   );
 }

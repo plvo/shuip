@@ -2,7 +2,7 @@
 
 import { useForm } from '@tanstack/react-form';
 import { RadioField } from '#/registry/ui/tsf-radio-field';
-import { SubmitButton } from '@/components/ui/shuip/submit-button';
+import { SubmitButton } from '#/registry/ui/tsf-submit-button';
 
 export default function TsfRadioFieldExample() {
   const form = useForm({
@@ -23,30 +23,24 @@ export default function TsfRadioFieldExample() {
       }}
       className='space-y-4'
     >
-      <form.Field
+      <RadioField
+        form={form}
         name='plan'
-        validators={{
-          onChange: ({ value }) => (!value ? 'Please select a plan' : undefined),
+        options={[
+          { label: 'Free', value: 'free' },
+          { label: 'Pro', value: 'pro' },
+          { label: 'Enterprise', value: 'enterprise' },
+        ]}
+        label='Subscription Plan'
+        description='Choose your subscription plan'
+        formProps={{
+          validators: {
+            onChange: ({ value }) => (!value ? 'Please select a plan' : undefined),
+          },
         }}
-      >
-        {(field) => (
-          <RadioField
-            form={form}
-            name='plan'
-            options={['Free', 'Pro', 'Enterprise']}
-            label='Subscription Plan'
-            description='Choose your subscription plan'
-          />
-        )}
-      </form.Field>
+      />
 
-      <form.Subscribe selector={(state) => [state.isSubmitting]}>
-        {([isSubmitting]) => (
-          <SubmitButton type='submit' disabled={isSubmitting} loading={isSubmitting}>
-            Submit
-          </SubmitButton>
-        )}
-      </form.Subscribe>
+      <SubmitButton form={form} type='submit' />
     </form>
   );
 }

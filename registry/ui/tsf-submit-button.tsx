@@ -1,20 +1,19 @@
+import type { ReactFormApi } from '@tanstack/react-form';
 import type { VariantProps } from 'class-variance-authority';
 import { Loader2Icon } from 'lucide-react';
 import { Button, type buttonVariants } from '@/components/ui/button';
-import { useFormContext } from '../hooks/tsf-context';
 
 type ButtonProps = React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
   };
 
-export interface SubmitButtonProps extends ButtonProps {
+export interface SubmitButtonProps extends Omit<ButtonProps, 'form'> {
+  form: ReactFormApi<any, any, any, any, any, any, any, any, any, any, any, any>;
   children?: React.ReactNode;
 }
 
-export function SubmitButton({ children = 'Submit', ...props }: SubmitButtonProps) {
-  const form = useFormContext();
-
+export function SubmitButton({ form, children = 'Submit', ...props }: SubmitButtonProps) {
   return (
     <form.Subscribe selector={(state) => [state.isSubmitting, state.canSubmit]}>
       {([isSubmitting, canSubmit]) => (

@@ -2,7 +2,7 @@
 
 import { useForm } from '@tanstack/react-form';
 import { InputField } from '#/registry/ui/tsf-input-field';
-import { SubmitButton } from '@/components/ui/shuip/submit-button';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
 export default function TsfInputFieldExample() {
   const form = useForm({
@@ -24,31 +24,31 @@ export default function TsfInputFieldExample() {
       }}
       className='space-y-4'
     >
-      <form.Field
+      <InputField
+        form={form}
         name='name'
-        validators={{
-          onChange: ({ value }) => (value.length < 3 ? 'Name must be at least 3 characters' : undefined),
+        label='Name'
+        description='Your full name'
+        formProps={{
+          validators: {
+            onChange: (value) => (value < 3 ? 'Name must be at least 3 characters' : undefined),
+          },
         }}
-      >
-        {(field) => <InputField form={form} name='name' label='Name' description='Your full name' />}
-      </form.Field>
+      />
 
-      <form.Field
+      <InputField
+        form={form}
         name='email'
-        validators={{
-          onChange: ({ value }) => (!value.includes('@') ? 'Invalid email address' : undefined),
+        label='Email'
+        inputProps={{ type: 'email' }}
+        formProps={{
+          validators: {
+            onChange: ({ value }) => (!value.includes('@') ? 'Invalid email address' : undefined),
+          },
         }}
-      >
-        {(field) => <InputField form={form} name='email' label='Email' inputProps={{ type: 'email' }} />}
-      </form.Field>
+      />
 
-      <form.Subscribe selector={(state) => [state.isSubmitting]}>
-        {([isSubmitting]) => (
-          <SubmitButton type='submit' disabled={isSubmitting} loading={isSubmitting}>
-            Submit
-          </SubmitButton>
-        )}
-      </form.Subscribe>
+      <SubmitButton form={form} type='submit' />
     </form>
   );
 }

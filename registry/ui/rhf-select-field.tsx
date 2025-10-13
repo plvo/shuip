@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
  *   'Third': '3',
  * };
  */
-export type SelectFieldOption<T extends string = string> = Record<string, T>;
+export type SelectFieldOption = Record<string, string>;
 
 export interface SelectFieldProps<TFieldValues extends FieldValues> extends SelectProps {
   register: UseFormRegisterReturn<FieldPath<TFieldValues>>;
