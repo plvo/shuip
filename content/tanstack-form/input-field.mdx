@@ -1,5 +1,5 @@
 ---
-title: Input Field (Simple)
+title: Input Field
 description: Standalone input field component that receives the form instance directly. Ideal for simple forms and quick prototypes.
 registryName: tsf-input-field
 position: 2
@@ -19,12 +19,12 @@ The simple input field pattern provides a straightforward way to integrate TanSt
 ## Basic usage
 
 <CodeHighlight code={`import { useForm } from '@tanstack/react-form'
-import { InputField } from '@/components/ui/tsf-input-field'
+import { InputField } from '@/components/ui/tanstack-form/input-field'
 
 function LoginForm() {
     const form = useForm({
       defaultValues: {
-        email: '',
+        username: '',
         password: '',
       },
       onSubmit: async ({ value }) => {
@@ -41,9 +41,9 @@ function LoginForm() {
       >
         <InputField
           form={form}
-          name='email'
-          label='Email'
-          description='Your login email'
+          name='username'
+          label='Username'
+          description='Your login username'
         />
         <InputField
           form={form}

@@ -1,0 +1,378 @@
+---
+title: Radio Field (Composed)
+description: Context-based radio group field component designed for complex applications with multiple forms. Perfect for reusable single-choice selections.
+registryName: tsf-radio-field-composed
+position: 7
+---
+
+## Context-based radio group integration
+
+The composed radio field pattern uses React Context to access form state, eliminating prop drilling and enabling advanced composition patterns. This approach is ideal for applications with multiple forms and reusable field components.
+
+## Core characteristics
+
+- **Context-driven**: Fields access form state via `useFieldContext` hook
+- **Minimal props**: Only field-specific props needed (options, label, description)
+- **Composition-friendly**: Works with `form.AppField` render props
+- **Type-safe**: Full TypeScript support through context inference
+- **Array-based options**: Simple string array for radio choices
+
+## Prerequisites
+
+This component requires the TanStack Form context setup:
+
+<CodeHighlight code={`// Install the context hooks first
+npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-context"`} language='bash' />
+
+## Basic usage
+
+<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/components/ui/tanstack-form/context'
+
+function SubscriptionForm() {
+  const form = useAppForm({
+    defaultValues: {
+      plan: '',
+    },
+    onSubmit: async ({ value }) => {
+      await selectPlan(value.plan)
+    },
+  })
+
+  return (
+    <TanstackForm form={form}>
+      <form.AppField name='plan'>
+        {(field) => (
+          <field.RadioField
+            options={['Free', 'Pro', 'Enterprise']}
+            label='Subscription Plan'
+            description='Choose your subscription tier'
+          />
+        )}
+      </form.AppField>
+
+      <form.SubmitButton>Continue</form.SubmitButton>
+    </TanstackForm>
+  )
+}`} language='tsx' />
+
+## How context works
+
+The composed pattern uses the field context to access form state:
+
+<CodeHighlight code={`// In tsf-radio-field-composed.tsx
+import { useFieldContext } from '../hooks/tsf-context'
+
+export function RadioField({ options, label }) {
+  // Access field from context (no form or name props needed)
+  const field = useFieldContext<string>()
+
+  return (
+    <RadioGroup
+      value={field.state.value}
+      onValueChange={field.handleChange}
+    >
+      {options.map((value) => (
+        <RadioGroupItem key={value} value={value} />
+      ))}
+    </RadioGroup>
+  )
+}`} language='tsx' />
+
+## Type inference with context
+
+The composed pattern maintains full type safety:
+
+<CodeHighlight code={`type FormData = {
+  plan: 'free' | 'pro' | 'enterprise'
+  billing: 'monthly' | 'yearly'
+}
+
+const form = useAppForm({
+  defaultValues: {
+    plan: 'free',
+    billing: 'monthly',
+  }
+})
+
+// Type-safe field names
+<form.AppField name='plan'>
+  {(field) => (
+    <field.RadioField
+      options={['free', 'pro', 'enterprise']}
+      label='Plan'
+    />
+  )}
+</form.AppField>`} language='tsx' />
+
+## Validation with composed fields
+
+Validation is declared on `form.AppField`, not on the radio component:
+
+<CodeHighlight code={`<form.AppField
+  name='plan'
+  validators={{
+    // Require a selection
+    onChange: ({ value }) =>
+      !value ? 'Please select a plan' : undefined,
+
+    // Custom validation
+    onBlur: ({ value }) =>
+      value === 'enterprise' && !isPremiumUser()
+        ? 'Enterprise plan requires premium account'
+        : undefined,
+  }}
+>
+  {(field) => (
+    <field.RadioField
+      options={['free', 'pro', 'enterprise']}
+      label='Subscription Plan'
+    />
+  )}
+</form.AppField>`} language='tsx' />
+
+## Accessing field state
+
+The field instance provides comprehensive state information:
+
+<CodeHighlight code={`<form.AppField name='plan'>
+  {(field) => (
+    <div>
+      <field.RadioField
+        options={['Free', 'Pro', 'Enterprise']}
+        label='Plan'
+      />
+
+      {/* Access field metadata */}
+      {field.state.meta.isTouched && (
+        <p>You have selected: {field.state.value}</p>
+      )}
+
+      {field.state.meta.isValidating && (
+        <p>Validating...</p>
+      )}
+    </div>
+  )}
+</form.AppField>`} language='tsx' />
+
+## Error handling
+
+Errors are automatically handled by the RadioField component:
+
+<CodeHighlight code={`// The composed RadioField accesses errors via useFieldContext
+function RadioField({ options, label }) {
+  const field = useFieldContext<string>()
+
+  const hasErrors = field.state.meta.errors.length > 0
+  const errors = field.state.meta.errors.join(', ')
+
+  return (
+    <Field data-invalid={hasErrors}>
+      <FieldLabel>{label}</FieldLabel>
+      <RadioGroup value={field.state.value} onValueChange={field.handleChange}>
+        {/* Radio items */}
+      </RadioGroup>
+      {hasErrors && <FieldError>{errors}</FieldError>}
+    </Field>
+  )
+}`} language='tsx' />
+
+## Dynamic options
+
+Options can be computed based on form state:
+
+<CodeHighlight code={`function PricingForm() {
+  const form = useAppForm({
+    defaultValues: {
+      userType: 'individual',
+      plan: '',
+    }
+  })
+
+  const userType = useWatch({ form, name: 'userType' })
+
+  const plans = userType === 'business'
+    ? ['Team', 'Business', 'Enterprise']
+    : ['Free', 'Pro']
+
+  return (
+    <TanstackForm form={form}>
+      <form.AppField name='userType'>
+        {(field) => (
+          <field.RadioField
+            options={['individual', 'business']}
+            label='Account Type'
+          />
+        )}
+      </form.AppField>
+
+      <form.AppField name='plan'>
+        {(field) => (
+          <field.RadioField
+            options={plans}
+            label='Plan'
+          />
+        )}
+      </form.AppField>
+    </TanstackForm>
+  )
+}`} language='tsx' />
+
+## Reusable field components
+
+Create custom radio field variants:
+
+<CodeHighlight code={`import { useFieldContext } from '@/components/ui/tanstack-form/context'
+
+function PriorityRadioField({ label }: { label: string }) {
+  const field = useFieldContext<string>()
+
+  return (
+    <RadioGroup
+      value={field.state.value}
+      onValueChange={field.handleChange}
+      className='flex gap-4'
+    >
+      <div className='flex items-center space-x-2'>
+        <RadioGroupItem value='low' id='low' />
+        <label htmlFor='low'>🟢 Low</label>
+      </div>
+      <div className='flex items-center space-x-2'>
+        <RadioGroupItem value='medium' id='medium' />
+        <label htmlFor='medium'>🟡 Medium</label>
+      </div>
+      <div className='flex items-center space-x-2'>
+        <RadioGroupItem value='high' id='high' />
+        <label htmlFor='high'>🔴 High</label>
+      </div>
+    </RadioGroup>
+  )
+}
+
+// Register in createFormHook
+const { useAppForm } = createFormHook({
+  fieldComponents: {
+    PriorityRadioField,
+  },
+})
+
+// Use in forms
+<form.AppField name='priority'>
+  {(field) => <field.PriorityRadioField label='Priority' />}
+</form.AppField>`} language='tsx' />
+
+## Multiple forms in the same app
+
+The context pattern shines when managing multiple forms:
+
+<CodeHighlight code={`// Settings form
+function SettingsForm() {
+  const form = useAppForm({
+    defaultValues: { theme: 'light' }
+  })
+
+  return (
+    <TanstackForm form={form}>
+      <form.AppField name='theme'>
+        {(field) => (
+          <field.RadioField
+            options={['light', 'dark', 'system']}
+            label='Theme'
+          />
+        )}
+      </form.AppField>
+      <form.SubmitButton>Save</form.SubmitButton>
+    </TanstackForm>
+  )
+}
+
+// Notification form (uses same RadioField component)
+function NotificationForm() {
+  const form = useAppForm({
+    defaultValues: { frequency: 'daily' }
+  })
+
+  return (
+    <TanstackForm form={form}>
+      <form.AppField name='frequency'>
+        {(field) => (
+          <field.RadioField
+            options={['never', 'daily', 'weekly']}
+            label='Notification Frequency'
+          />
+        )}
+      </form.AppField>
+      <form.SubmitButton>Save</form.SubmitButton>
+    </TanstackForm>
+  )
+}`} language='tsx' />
+
+## When to use this pattern
+
+**Ideal for:**
+- Applications with 5+ different forms
+- Large forms with 10+ fields
+- Reusable form component libraries
+- Projects using code splitting and lazy loading
+- Teams building consistent form UX
+
+**Use the simple pattern when:**
+- Building a single form
+- Prototyping quickly
+- Form has fewer than 10 fields
+- Context setup feels like overkill
+
+## Migration from simple pattern
+
+Migrating between patterns is straightforward:
+
+<CodeHighlight code={`// Before (Simple)
+<RadioField
+  form={form}
+  name='plan'
+  options={['Free', 'Pro', 'Enterprise']}
+  label='Plan'
+/>
+
+// After (Composed)
+<form.AppField name='plan'>
+  {(field) => (
+    <field.RadioField
+      options={['Free', 'Pro', 'Enterprise']}
+      label='Plan'
+    />
+  )}
+</form.AppField>
+
+// Form logic and validation remain identical`} language='tsx' />
+
+<ItemExamples registryName='tsf-radio-field-composed' />
+
+<PropTable props={[
+  {
+    name: 'options',
+    type: 'string[]',
+    description: 'Array of string options for radio buttons',
+  },
+  {
+    name: 'label',
+    type: 'string?',
+    description: 'Label displayed above the radio group',
+  },
+  {
+    name: 'description',
+    type: 'string?',
+    description: 'Helper text displayed below the radio group',
+  },
+  {
+    name: 'fieldProps',
+    type: 'React.ComponentProps<"div"> & { orientation? }',
+    description: 'Container props, including layout orientation',
+  },
+  {
+    name: '...radioGroupProps',
+    type: 'RadioGroupProps',
+    description: 'All RadioGroup component props (className, disabled, etc.)',
+  },
+]} />
+
+Note: The `form` and `name` props are handled by `form.AppField` and accessed via context.

@@ -26,7 +26,7 @@ npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-context"`} language='bash' /
 
 ## Basic usage
 
-<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/components/ui/tsf-context'
+<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/hooks/shuip/tsf-context'
 
 function RegistrationForm() {
     const form = useAppForm({
@@ -44,10 +44,10 @@ function RegistrationForm() {
       <TanstackForm form={form}>
         <form.AppField name='email'>
           {(field) => (
-            <field.InputField
-              label='Email'
-              description='Your email address'
-            />
+            <field.InputField 
+              label='Email' 
+              description='Your email address' 
+              inputProps={{ type: 'email' }} />
           )}
         </form.AppField>
   
@@ -57,10 +57,7 @@ function RegistrationForm() {
   
         <form.AppField name='password'>
           {(field) => (
-            <field.InputField
-              label='Password'
-              inputProps={{ type: 'password' }}
-            />
+            <field.InputField label='Password' inputProps={{ type: 'password' }} />
           )}
         </form.AppField>
   
@@ -220,7 +217,7 @@ function InputField({ label, description }) {
 
 Create custom field components that leverage the same context:
 
-<CodeHighlight code={`import { useFieldContext } from '@/components/ui/tsf-context'
+<CodeHighlight code={`import { useFieldContext } from '@/hooks/shuip/tsf-context'
 
 function CustomEmailField({ label }: { label: string }) {
     const field = useFieldContext<string>()

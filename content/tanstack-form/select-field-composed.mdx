@@ -1,0 +1,63 @@
+---
+title: Select Field (Composed)
+description: Context-based select dropdown field component designed for complex applications with multiple forms.
+registryName: tsf-select-field-composed
+position: 5
+---
+
+## Context-based select field integration
+
+The composed select field pattern uses React Context to access form state. This approach is ideal for applications with multiple forms and reusable select components.
+
+## Prerequisites
+
+<CodeHighlight code={`npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-context"`} language='bash' />
+
+## Basic usage
+
+<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/components/ui/tanstack-form/context'
+
+function CountryForm() {
+  const form = useAppForm({
+    defaultValues: { country: '' },
+  })
+
+  return (
+    <TanstackForm form={form}>
+      <form.AppField name='country'>
+        {(field) => (
+          <field.SelectField
+            options={{
+              'United States': 'us',
+              'United Kingdom': 'uk',
+              'France': 'fr',
+            }}
+            label='Country'
+            placeholder='Select a country'
+          />
+        )}
+      </form.AppField>
+      <form.SubmitButton>Submit</form.SubmitButton>
+    </TanstackForm>
+  )
+}`} language='tsx' />
+
+## Validation
+
+<CodeHighlight code={`<form.AppField
+  name='country'
+  validators={{
+    onChange: ({ value }) => !value ? 'Please select a country' : undefined,
+  }}
+>
+  {(field) => <field.SelectField options={countries} label='Country' />}
+</form.AppField>`} language='tsx' />
+
+<ItemExamples registryName='tsf-select-field-composed' />
+
+<PropTable props={[
+  { name: 'options', type: 'Record<string, string>', description: 'Object mapping labels to values' },
+  { name: 'label', type: 'string?', description: 'Label above the select' },
+  { name: 'placeholder', type: 'string?', description: 'Placeholder when no value selected' },
+  { name: 'description', type: 'string?', description: 'Helper text below' },
+]} />

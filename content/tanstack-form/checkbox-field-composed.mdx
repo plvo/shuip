@@ -1,0 +1,77 @@
+---
+title: Checkbox Field (Composed)
+description: Context-based checkbox field component designed for complex applications with multiple forms.
+registryName: tsf-checkbox-field-composed
+position: 9
+---
+
+## Context-based checkbox integration
+
+The composed checkbox field pattern uses React Context to access form state. This approach is ideal for applications with multiple forms and reusable boolean toggles.
+
+## Prerequisites
+
+<CodeHighlight code={`npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-context"`} language='bash' />
+
+## Basic usage
+
+<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/components/ui/tanstack-form/context'
+
+function TermsForm() {
+  const form = useAppForm({
+    defaultValues: {
+      terms: false,
+      newsletter: false,
+    },
+  })
+
+  return (
+    <TanstackForm form={form}>
+      <form.AppField name='terms'>
+        {(field) => (
+          <field.CheckboxField
+            label='Terms and Conditions'
+            boxLabel='I accept the terms and conditions'
+            description='Required to continue'
+          />
+        )}
+      </form.AppField>
+
+      <form.AppField name='newsletter'>
+        {(field) => (
+          <field.CheckboxField
+            label='Newsletter'
+            boxLabel='Send me updates'
+            description='Optional'
+          />
+        )}
+      </form.AppField>
+
+      <form.SubmitButton>Sign Up</form.SubmitButton>
+    </TanstackForm>
+  )
+}`} language='tsx' />
+
+## Validation
+
+<CodeHighlight code={`<form.AppField
+  name='terms'
+  validators={{
+    onChange: ({ value }) => !value ? 'You must accept the terms' : undefined,
+  }}
+>
+  {(field) => (
+    <field.CheckboxField
+      label='Terms'
+      boxLabel='I accept'
+    />
+  )}
+</form.AppField>`} language='tsx' />
+
+<ItemExamples registryName='tsf-checkbox-field-composed' />
+
+<PropTable props={[
+  { name: 'label', type: 'string', description: 'Field label (required)' },
+  { name: 'boxLabel', type: 'string?', description: 'Label next to checkbox' },
+  { name: 'description', type: 'string?', description: 'Helper text below' },
+]} />

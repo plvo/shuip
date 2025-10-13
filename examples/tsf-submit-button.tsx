@@ -23,7 +23,11 @@ export default function TsfSubmitButtonExample() {
         }}
       >
         {(field) => (
-          <field.InputField label='Email' description='Subscribe to our newsletter' inputProps={{ type: 'email' }} />
+          <field.InputField
+            label='Email'
+            description='Subscribe to our newsletter'
+            inputProps={{ type: 'email', placeholder: 'Email' }}
+          />
         )}
       </form.AppField>
 

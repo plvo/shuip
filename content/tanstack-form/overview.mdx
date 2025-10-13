@@ -23,7 +23,7 @@ Direct form integration where each field receives the form instance as a prop.
 - Straightforward to understand
 
 <CodeHighlight code={`import { useForm } from '@tanstack/react-form'
-import { InputField } from '@/components/ui/tsf-input-field'
+import { InputField } from '@/components/ui/tanstack-form/input-field'
 
 const form = useForm({
     defaultValues: { email: '', username: '' },
@@ -54,7 +54,7 @@ Uses React Context to provide form state to nested components, reducing prop dri
 - Used with `form.AppField` wrapper
 - Supports lazy loading via `React.lazy()`
 
-<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/components/ui/tsf-context'
+<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/components/ui/tanstack-form/context'
 
 const form = useAppForm({
     defaultValues: { email: '', username: '' }

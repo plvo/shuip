@@ -1,0 +1,349 @@
+---
+title: Select Field
+description: Standalone select dropdown field component that receives the form instance directly. Ideal for selecting from predefined options.
+registryName: tsf-select-field
+position: 4
+---
+
+## Standalone select field integration
+
+The simple select field pattern provides a straightforward way to implement dropdown selections with TanStack Form. Each field receives the form instance as a prop, offering excellent type inference and explicit data flow.
+
+## Core characteristics
+
+- **Zero configuration**: No context setup required
+- **Type-safe field names**: Autocomplete for nested paths via `DeepKeys<TFormData>`
+- **Object-based options**: Key-value pairs where key is label, value is the stored value
+- **Explicit dependencies**: Form instance passed directly to each field
+- **Radix UI integration**: Built on top of Radix UI Select for accessibility
+
+## Basic usage
+
+<CodeHighlight code={`import { useForm } from '@tanstack/react-form'
+import { SelectField } from '@/components/ui/tanstack-form/select-field'
+
+function CountryForm() {
+  const form = useForm({
+    defaultValues: {
+      country: '',
+    },
+    onSubmit: async ({ value }) => {
+      await saveCountry(value.country)
+    },
+  })
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        form.handleSubmit()
+      }}
+    >
+      <SelectField
+        form={form}
+        name='country'
+        options={{
+          'United States': 'us',
+          'United Kingdom': 'uk',
+          'France': 'fr',
+          'Germany': 'de',
+        }}
+        label='Country'
+        placeholder='Select a country'
+        description='Choose your country of residence'
+      />
+      <button type='submit'>Continue</button>
+    </form>
+  )
+}`} language='tsx' />
+
+## Options format
+
+The `options` prop uses an object where keys are display labels and values are stored values:
+
+<CodeHighlight code={`// Key (label) → Value (stored in form)
+const options = {
+  'Display Label': 'stored_value',
+  'Another Option': 'another_value',
+}
+
+<SelectField
+  form={form}
+  name='field'
+  options={{
+    'Option A': 'a',  // Shows "Option A", stores "a"
+    'Option B': 'b',  // Shows "Option B", stores "b"
+  }}
+  label='Choose One'
+/>`} language='tsx' />
+
+## Type inference
+
+The component provides full type safety for select values:
+
+<CodeHighlight code={`type FormData = {
+  priority: 'low' | 'medium' | 'high'
+  status: 'pending' | 'active' | 'completed'
+}
+
+const form = useForm<FormData>({
+  defaultValues: {
+    priority: 'medium',
+    status: 'pending',
+  }
+})
+
+// TypeScript ensures 'priority' is a valid field name
+<SelectField
+  form={form}
+  name='priority'
+  options={{
+    'Low Priority': 'low',
+    'Medium Priority': 'medium',
+    'High Priority': 'high',
+  }}
+  label='Priority Level'
+/>`} language='tsx' />
+
+The `name` prop is constrained to `DeepKeys<TFormData>`, ensuring only valid field paths are accepted.
+
+## Validation integration
+
+TanStack Form supports validation on select field values:
+
+<CodeHighlight code={`const form = useForm({
+  defaultValues: { country: '' },
+})
+
+<form.Field
+  name='country'
+  validators={{
+    // Require a selection
+    onChange: ({ value }) =>
+      !value ? 'Please select a country' : undefined,
+
+    // Async validation (e.g., check if shipping available)
+    onChangeAsync: async ({ value }) => {
+      const available = await checkShippingAvailability(value)
+      return available ? undefined : 'Shipping not available to this country'
+    },
+  }}
+>
+  {(field) => (
+    <SelectField
+      form={form}
+      name='country'
+      options={{
+        'United States': 'us',
+        'Canada': 'ca',
+      }}
+      label='Shipping Country'
+    />
+  )}
+</form.Field>`} language='tsx' />
+
+## Error handling
+
+The component automatically displays validation errors:
+
+<CodeHighlight code={`// Errors are shown when field.state.meta.errors is populated
+<SelectField
+  form={form}
+  name='country'
+  options={countries}
+  label='Country'
+  placeholder='Select...'
+/>
+
+// Field state provides error information:
+// - field.state.meta.errors: Array of error messages
+// - field.state.meta.isTouched: User has interacted with field
+// - field.state.meta.isValid: Field passes all validators
+// - field.state.meta.isValidating: Async validation in progress`} language='tsx' />
+
+## Dynamic options
+
+Options can be computed based on state or props:
+
+<CodeHighlight code={`function ShippingForm() {
+  const region = useRegion()
+
+  const countries = region === 'europe'
+    ? {
+        'France': 'fr',
+        'Germany': 'de',
+        'Spain': 'es',
+      }
+    : {
+        'United States': 'us',
+        'Canada': 'ca',
+        'Mexico': 'mx',
+      }
+
+  return (
+    <SelectField
+      form={form}
+      name='country'
+      options={countries}
+      label='Shipping Country'
+    />
+  )
+}`} language='tsx' />
+
+## Working with nested data
+
+Select fields support deeply nested paths:
+
+<CodeHighlight code={`type FormData = {
+  user: {
+    preferences: {
+      language: string
+      timezone: string
+    }
+  }
+}
+
+<SelectField
+  form={form}
+  name='user.preferences.language'
+  options={{
+    'English': 'en',
+    'French': 'fr',
+    'German': 'de',
+  }}
+  label='Language'
+/>
+
+<SelectField
+  form={form}
+  name='user.preferences.timezone'
+  options={{
+    'Eastern Time': 'America/New_York',
+    'Pacific Time': 'America/Los_Angeles',
+    'Central Europe': 'Europe/Paris',
+  }}
+  label='Timezone'
+/>`} language='tsx' />
+
+## Disabled state
+
+Disable the select field conditionally:
+
+<CodeHighlight code={`<SelectField
+  form={form}
+  name='shipping'
+  options={shippingMethods}
+  label='Shipping Method'
+  disabled={!hasAddress}
+  description={!hasAddress ? 'Add an address first' : undefined}
+/>`} language='tsx' />
+
+## Custom placeholder
+
+Provide a helpful placeholder when no value is selected:
+
+<CodeHighlight code={`<SelectField
+  form={form}
+  name='category'
+  options={categories}
+  label='Category'
+  placeholder='Choose a category...'
+/>`} language='tsx' />
+
+## Large option lists
+
+For large lists, consider organizing options or implementing search:
+
+<CodeHighlight code={`// Group options by region
+const countries = {
+  // North America
+  'United States': 'us',
+  'Canada': 'ca',
+  'Mexico': 'mx',
+  // Europe
+  'France': 'fr',
+  'Germany': 'de',
+  'United Kingdom': 'uk',
+  // Asia
+  'Japan': 'jp',
+  'China': 'cn',
+  'India': 'in',
+}
+
+<SelectField
+  form={form}
+  name='country'
+  options={countries}
+  label='Country'
+  placeholder='Select your country'
+/>`} language='tsx' />
+
+## Accessibility
+
+The component implements proper accessibility patterns via Radix UI Select:
+
+- Keyboard navigation (arrow keys, Enter, Escape)
+- ARIA attributes for screen readers
+- Focus management
+- Proper labeling via `htmlFor` and `id`
+- Invalid state indication
+
+## When to use this pattern
+
+**Ideal for:**
+- Simple forms with fewer than 10 fields
+- Quick prototypes
+- Single-choice selections from 5+ options
+- Forms without complex composition needs
+- Static or semi-static option lists
+
+**Consider the composed pattern when:**
+- Building multiple forms across your app
+- Creating reusable form component libraries
+- Need lazy loading for large forms
+- Want to minimize props on field components
+
+<ItemExamples registryName='tsf-select-field' />
+
+<PropTable props={[
+  {
+    name: 'form',
+    type: 'ReactFormApi<TFormData>',
+    description: 'The form instance from useForm hook',
+  },
+  {
+    name: 'name',
+    type: 'DeepKeys<TFormData>',
+    description: 'Type-safe field name, supports nested paths with dot notation',
+  },
+  {
+    name: 'options',
+    type: 'Record<string, string>',
+    description: 'Object mapping display labels (keys) to stored values (values)',
+  },
+  {
+    name: 'label',
+    type: 'string?',
+    description: 'Label displayed above the select field',
+  },
+  {
+    name: 'placeholder',
+    type: 'string?',
+    description: 'Placeholder text shown when no value is selected',
+  },
+  {
+    name: 'description',
+    type: 'string?',
+    description: 'Helper text displayed below the select field',
+  },
+  {
+    name: 'fieldProps',
+    type: 'React.ComponentProps<"div"> & { orientation? }',
+    description: 'Container props, including layout orientation',
+  },
+  {
+    name: '...selectProps',
+    type: 'SelectProps',
+    description: 'All Radix UI Select props (disabled, required, etc.)',
+  },
+]} />

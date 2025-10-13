@@ -2,7 +2,7 @@
 title: Submit Button
 description: Context-aware submit button that automatically manages loading and disabled states based on form validation and submission status.
 registryName: tsf-submit-button
-position: 4
+position: 10
 ---
 
 ## Context-driven submit button
@@ -26,7 +26,7 @@ npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-context"`} language='bash' /
 
 ## Basic usage
 
-<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/components/ui/tsf-context'
+<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/hooks/shuip/tsf-context'
 
 function LoginForm() {
     const form = useAppForm({
@@ -66,7 +66,7 @@ function LoginForm() {
 
 The submit button subscribes to form state changes using `form.Subscribe`:
 
-<CodeHighlight code={`import { useFormContext } from '@/components/ui/tsf-context'
+<CodeHighlight code={`import { useFormContext } from '@/hooks/shuip/tsf-context'
 
 export function SubmitButton({ children = 'Submit', ...props }) {
     const form = useFormContext()
@@ -149,7 +149,7 @@ The button automatically prevents double submissions:
 
 Complete example showing the submission lifecycle:
 
-<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/components/ui/tsf-context'
+<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/hooks/shuip/tsf-context'
 
 function ContactForm() {
     const form = useAppForm({

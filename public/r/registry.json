@@ -212,7 +212,7 @@
         {
           "path": "./registry/hooks/tsf-context.tsx",
           "type": "registry:hook",
-          "target": "./lib/shuip/tanstack-form/context.ts"
+          "target": "./hooks/shuip/tsf-context.ts"
         }
       ]
     },

@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en' suppressHydrationWarning>
-      <body className={`${geistSans.variable} antialiased overflow-x-hidden`}>
+      <body className={`${geistSans.variable} antialiased overflow-x-hidden`} suppressHydrationWarning>
         <RootProvider>{children}</RootProvider>
         <Analytics />
       </body>
