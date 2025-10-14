@@ -1,7 +1,7 @@
 'use client';
 
 import { useForm } from '@tanstack/react-form';
-import { SelectField } from '#/registry/ui/tsf-select-field';
+import { SelectField } from '@/components/ui/shuip/tanstack-form/select-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
 export default function TsfSelectFieldExample() {
@@ -9,6 +9,7 @@ export default function TsfSelectFieldExample() {
     defaultValues: {
       country: '',
     },
+
     onSubmit: async ({ value }) => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       alert(JSON.stringify(value, null, 2));
@@ -42,7 +43,7 @@ export default function TsfSelectFieldExample() {
         }}
       />
 
-      <SubmitButton form={form} type='submit' />
+      <SubmitButton form={form} />
     </form>
   );
 }

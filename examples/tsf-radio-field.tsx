@@ -1,14 +1,15 @@
 'use client';
 
 import { useForm } from '@tanstack/react-form';
-import { RadioField } from '#/registry/ui/tsf-radio-field';
-import { SubmitButton } from '#/registry/ui/tsf-submit-button';
+import { RadioField } from '@/components/ui/shuip/tanstack-form/radio-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
 export default function TsfRadioFieldExample() {
   const form = useForm({
     defaultValues: {
       plan: '',
     },
+
     onSubmit: async ({ value }) => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       alert(JSON.stringify(value, null, 2));
@@ -40,7 +41,7 @@ export default function TsfRadioFieldExample() {
         }}
       />
 
-      <SubmitButton form={form} type='submit' />
+      <SubmitButton form={form} />
     </form>
   );
 }

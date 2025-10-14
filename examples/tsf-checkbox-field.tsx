@@ -45,7 +45,7 @@ export default function TsfCheckboxFieldExample() {
         description='Optional: Receive updates about new features'
       />
 
-      <SubmitButton form={form} type='submit' />
+      <SubmitButton form={form} />
     </form>
   );
 }

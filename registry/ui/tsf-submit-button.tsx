@@ -1,4 +1,4 @@
-import type { ReactFormApi } from '@tanstack/react-form';
+import type { FormAsyncValidateOrFn, FormValidateOrFn, ReactFormApi } from '@tanstack/react-form';
 import type { VariantProps } from 'class-variance-authority';
 import { Loader2Icon } from 'lucide-react';
 import { Button, type buttonVariants } from '@/components/ui/button';
@@ -8,12 +8,26 @@ type ButtonProps = React.ComponentProps<'button'> &
     asChild?: boolean;
   };
 
-export interface SubmitButtonProps extends Omit<ButtonProps, 'form'> {
-  form: ReactFormApi<any, any, any, any, any, any, any, any, any, any, any, any>;
+export interface SubmitButtonProps<TFormData> {
+  form: ReactFormApi<
+    TFormData,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    any
+  >;
   children?: React.ReactNode;
+  props?: ButtonProps;
 }
 
-export function SubmitButton({ form, children = 'Submit', ...props }: SubmitButtonProps) {
+export function SubmitButton<TFormData>({ form, children = 'Submit', props }: SubmitButtonProps<TFormData>) {
   return (
     <form.Subscribe selector={(state) => [state.isSubmitting, state.canSubmit]}>
       {([isSubmitting, canSubmit]) => (

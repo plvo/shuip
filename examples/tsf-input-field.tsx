@@ -1,7 +1,7 @@
 'use client';
 
 import { useForm } from '@tanstack/react-form';
-import { InputField } from '#/registry/ui/tsf-input-field';
+import { InputField } from '@/components/ui/shuip/tanstack-form/input-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
 export default function TsfInputFieldExample() {
@@ -10,6 +10,7 @@ export default function TsfInputFieldExample() {
       name: '',
       email: '',
     },
+
     onSubmit: async ({ value }) => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       alert(JSON.stringify(value, null, 2));
@@ -31,7 +32,7 @@ export default function TsfInputFieldExample() {
         description='Your full name'
         formProps={{
           validators: {
-            onChange: (value) => (value < 3 ? 'Name must be at least 3 characters' : undefined),
+            onChange: ({ value }) => (value.length < 3 ? 'Name must be at least 3 characters' : undefined),
           },
         }}
       />
@@ -40,7 +41,7 @@ export default function TsfInputFieldExample() {
         form={form}
         name='email'
         label='Email'
-        inputProps={{ type: 'email' }}
+        props={{ type: 'email' }}
         formProps={{
           validators: {
             onChange: ({ value }) => (!value.includes('@') ? 'Invalid email address' : undefined),
@@ -48,7 +49,9 @@ export default function TsfInputFieldExample() {
         }}
       />
 
-      <SubmitButton form={form} type='submit' />
+      <SubmitButton form={form} props={{ variant: 'outline' }}>
+        Register
+      </SubmitButton>
     </form>
   );
 }

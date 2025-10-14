@@ -1,7 +1,13 @@
-'use client';
-
-import type { SelectProps } from '@radix-ui/react-select';
-import type { DeepKeys, DeepValue, FieldComponent, ReactFormApi } from '@tanstack/react-form';
+import type {
+  DeepKeys,
+  DeepValue,
+  FieldAsyncValidateOrFn,
+  FieldOptions,
+  FieldValidateOrFn,
+  FormAsyncValidateOrFn,
+  FormValidateOrFn,
+  ReactFormApi,
+} from '@tanstack/react-form';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -16,17 +22,48 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
  */
 export type SelectFieldOption = Record<string, string>;
 
-export interface SelectFieldProps<TFormData, TName extends DeepKeys<TFormData>>
-  extends Omit<SelectProps, 'value' | 'onValueChange' | 'form'> {
-  form: ReactFormApi<TFormData, any, any, any, any, any, any, any, any, any, any, any>;
+export interface SelectFieldProps<
+  TFormData,
+  TName extends DeepKeys<TFormData>,
+  TData extends DeepValue<TFormData, TName> = DeepValue<TFormData, TName>,
+> {
+  form: ReactFormApi<
+    TFormData,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    any
+  >;
   name: TName;
   options: SelectFieldOption;
   label?: string;
   placeholder?: string;
   description?: string;
-  formProps?: FieldComponent<TFormData, any, any, any, any, any, any, any, any, any, any, any>;
+  formProps?: Partial<
+    FieldOptions<
+      TFormData,
+      TName,
+      TData,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>
+    >
+  >;
   fieldProps?: React.ComponentProps<'div'> & { orientation?: 'vertical' | 'horizontal' | 'responsive' };
-  selectProps?: React.ComponentProps<typeof Select>;
+  props?: React.ComponentProps<typeof Select>;
 }
 
 export function SelectField<
@@ -42,8 +79,8 @@ export function SelectField<
   placeholder,
   formProps,
   fieldProps,
-  selectProps,
-}: SelectFieldProps<TFormData, TName>) {
+  props,
+}: SelectFieldProps<TFormData, TName, TData>) {
   return (
     <form.Field name={name} {...formProps}>
       {(field) => {
@@ -58,7 +95,7 @@ export function SelectField<
               value={field.state.value as string}
               onValueChange={(value) => field.handleChange(value as TData)}
               aria-invalid={!isValid}
-              {...selectProps}
+              {...props}
             >
               <SelectTrigger>
                 <SelectValue placeholder={placeholder} />

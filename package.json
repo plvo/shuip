@@ -22,7 +22,7 @@
     "lint": "biome lint --write .",
     "build": "next build --turbopack",
     "build:analyze": "ANALYZE=true next build",
-    "build:full": "next build && bun run registry:generate && bun run registry:build",
+    "build:full": "bun run registry:generate && bun run registry:build && next build",
     "dev": "next dev",
     "start": "next start",
     "registry:build": "shadcn build",

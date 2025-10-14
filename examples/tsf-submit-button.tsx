@@ -9,8 +9,8 @@ export default function TsfSubmitButtonExample() {
     defaultValues: {
       email: '',
     },
+
     onSubmit: async ({ value }) => {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
       alert(`Subscribed: ${value.email}`);
     },
@@ -29,10 +29,13 @@ export default function TsfSubmitButtonExample() {
         name='email'
         label='Email'
         description='Subscribe to our newsletter'
-        validators={{
-          onChange: ({ value }) => (!value ? 'Email is required' : !value.includes('@') ? 'Invalid email' : undefined),
+        formProps={{
+          validators: {
+            onChange: ({ value }) =>
+              !value ? 'Email is required' : !value.includes('@') ? 'Invalid email' : undefined,
+          },
         }}
-        inputProps={{ type: 'email', placeholder: 'Email' }}
+        props={{ type: 'email', placeholder: 'Email' }}
       />
 
       <SubmitButton form={form}>Subscribe</SubmitButton>

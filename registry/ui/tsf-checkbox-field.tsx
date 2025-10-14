@@ -1,18 +1,57 @@
-'use client';
-
-import type { DeepKeys, DeepValue, FieldOptions, ReactFormApi } from '@tanstack/react-form';
+import type {
+  DeepKeys,
+  DeepValue,
+  FieldAsyncValidateOrFn,
+  FieldOptions,
+  FieldValidateOrFn,
+  FormAsyncValidateOrFn,
+  FormValidateOrFn,
+  ReactFormApi,
+} from '@tanstack/react-form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 
-export interface CheckboxFieldProps<TFormData, TName extends DeepKeys<TFormData>> {
-  form: ReactFormApi<TFormData, any, any, any, any, any, any, any, any, any, any, any>;
+export interface CheckboxFieldProps<
+  TFormData,
+  TName extends DeepKeys<TFormData>,
+  TData extends DeepValue<TFormData, TName> = DeepValue<TFormData, TName>,
+> {
+  form: ReactFormApi<
+    TFormData,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    any
+  >;
   name: TName;
   label: string;
   boxLabel?: string;
   description?: string;
-  formProps?: FieldOptions<TFormData, any, any, any, any, any, any, any, any, any, any, any>;
+  formProps?: Partial<
+    FieldOptions<
+      TFormData,
+      TName,
+      TData,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>
+    >
+  >;
   fieldProps?: React.ComponentProps<'div'> & { orientation?: 'vertical' | 'horizontal' | 'responsive' };
-  checkboxProps?: React.ComponentProps<typeof Checkbox>;
+  props?: React.ComponentProps<typeof Checkbox>;
 }
 
 export function CheckboxField<
@@ -27,8 +66,8 @@ export function CheckboxField<
   description,
   formProps,
   fieldProps,
-  ...checkboxProps
-}: CheckboxFieldProps<TFormData, TName>) {
+  props,
+}: CheckboxFieldProps<TFormData, TName, TData>) {
   return (
     <form.Field name={name} {...formProps}>
       {(field) => {
@@ -45,7 +84,7 @@ export function CheckboxField<
                 onCheckedChange={(checked) => field.handleChange(checked as TData)}
                 onBlur={field.handleBlur}
                 aria-invalid={!isValid}
-                {...checkboxProps}
+                {...props}
               />
               {boxLabel && (
                 <label htmlFor={field.name} className='text-sm cursor-pointer'>

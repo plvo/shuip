@@ -1,7 +1,13 @@
-'use client';
-
-import type { SelectProps } from '@radix-ui/react-select';
-import type { DeepKeys, ReactFormApi } from '@tanstack/react-form';
+import type {
+  DeepKeys,
+  DeepValue,
+  FieldAsyncValidateOrFn,
+  FieldOptions,
+  FieldValidateOrFn,
+  FormAsyncValidateOrFn,
+  FormValidateOrFn,
+  ReactFormApi,
+} from '@tanstack/react-form';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -14,42 +20,82 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
  *   'Third': '3',
  * };
  */
-export type SelectFieldOption<T extends string = string> = Record<string, T>;
+export type SelectFieldOption = Record<string, string>;
 
-export interface SelectFieldProps<TFormData, TName extends DeepKeys<TFormData>>
-  extends Omit<SelectProps, 'value' | 'onValueChange' | 'form'> {
-  form: ReactFormApi<TFormData, any, any, any, any, any, any, any, any, any, any, any>;
+export interface SelectFieldProps<
+  TFormData,
+  TName extends DeepKeys<TFormData>,
+  TData extends DeepValue<TFormData, TName> = DeepValue<TFormData, TName>,
+> {
+  form: ReactFormApi<
+    TFormData,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    undefined | FormAsyncValidateOrFn<TFormData>,
+    any
+  >;
   name: TName;
   options: SelectFieldOption;
   label?: string;
   placeholder?: string;
   description?: string;
+  formProps?: Partial<
+    FieldOptions<
+      TFormData,
+      TName,
+      TData,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldValidateOrFn<TFormData, TName, TData>,
+      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>
+    >
+  >;
   fieldProps?: React.ComponentProps<'div'> & { orientation?: 'vertical' | 'horizontal' | 'responsive' };
+  props?: React.ComponentProps<typeof Select>;
 }
 
-export function SelectField<TFormData, TName extends DeepKeys<TFormData>>({
+export function SelectField<
+  TFormData,
+  TName extends DeepKeys<TFormData>,
+  TData extends DeepValue<TFormData, TName> = DeepValue<TFormData, TName>,
+>({
   form,
   name,
   options,
   label,
   description,
   placeholder,
+  formProps,
   fieldProps,
-  ...selectProps
-}: SelectFieldProps<TFormData, TName>) {
+  props,
+}: SelectFieldProps<TFormData, TName, TData>) {
   return (
-    <form.Field name={name}>
+    <form.Field name={name} {...formProps}>
       {(field) => {
-        const hasErrors = field.state.meta.errors.length > 0;
-        const errors = field.state.meta.errors.join(', ');
+        const errors = field.state.meta.errors;
+        const isValid = field.state.meta.isValid && errors.length === 0;
 
         return (
-          <Field data-invalid={hasErrors} {...fieldProps}>
+          <Field data-invalid={!isValid} {...fieldProps}>
             {label && <FieldLabel>{label}</FieldLabel>}
             <Select
+              name={field.name}
               value={field.state.value as string}
-              onValueChange={(value) => field.handleChange(value as any)}
-              {...selectProps}
+              onValueChange={(value) => field.handleChange(value as TData)}
+              aria-invalid={!isValid}
+              {...props}
             >
               <SelectTrigger>
                 <SelectValue placeholder={placeholder} />
@@ -63,7 +109,7 @@ export function SelectField<TFormData, TName extends DeepKeys<TFormData>>({
               </SelectContent>
             </Select>
             {description && <FieldDescription>{description}</FieldDescription>}
-            {hasErrors && <FieldError>{errors}</FieldError>}
+            {!isValid && <FieldError errors={errors} />}
           </Field>
         );
       }}
