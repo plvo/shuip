@@ -1,20 +1,4 @@
-'use client';
-
-import { useForm } from '@tanstack/react-form';
-import { InputField } from '#/registry/ui/tsf-input-field';
-import { SubmitButton } from '#/registry/ui/tsf-submit-button';
-
 export default function HomePage() {
-  const form = useForm({
-    defaultValues: {
-      password: '',
-    },
-    onSubmit: async ({ value }) => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert(JSON.stringify(value, null, 2));
-    },
-  });
-
   return (
     <main className='flex flex-col items-center justify-center h-screen gap-8'>
       <h1 className='text-4xl hover:text-amber-400'>
@@ -35,22 +19,6 @@ export default function HomePage() {
           /docs
         </a>
       </div>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          form.handleSubmit();
-        }}
-      >
-        <InputField
-          form={form}
-          name='password'
-          label='Email'
-          tooltip='Enter your email'
-          fieldProps={{ orientation: 'responsive' }}
-        />
-
-        <SubmitButton form={form}>Submit</SubmitButton>
-      </form>
     </main>
   );
 }
