@@ -4,24 +4,8 @@ import { useForm } from '@tanstack/react-form';
 import { InputField } from '@/components/ui/shuip/tanstack-form/input-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
-type UserProfile = {
-  user: {
-    email: string;
-    profile: {
-      firstName: string;
-      lastName: string;
-      bio: string;
-    };
-    address: {
-      street: string;
-      city: string;
-      zipCode: string;
-    };
-  };
-};
-
 export default function TsfInputFieldNestedPathExample() {
-  const form = useForm<UserProfile>({
+  const form = useForm({
     defaultValues: {
       user: {
         email: '',
