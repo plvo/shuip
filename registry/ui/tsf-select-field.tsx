@@ -84,20 +84,18 @@ export function SelectField<
   return (
     <form.Field name={name} {...formProps}>
       {(field) => {
-        const errors = field.state.meta.errors.map((error) => ({ message: error ?? '' }));
-        const isValid = field.state.meta.isValid && errors.length === 0;
+        const { isValid, errors } = field.state.meta;
 
         return (
-          <Field data-invalid={!isValid} {...fieldProps}>
+          <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
             {label && <FieldLabel>{label}</FieldLabel>}
             <Select
               name={field.name}
               value={field.state.value as string}
               onValueChange={(value) => field.handleChange(value as TData)}
-              aria-invalid={!isValid}
               {...props}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={!isValid}>
                 <SelectValue placeholder={placeholder} />
               </SelectTrigger>
               <SelectContent>
@@ -108,8 +106,10 @@ export function SelectField<
                 ))}
               </SelectContent>
             </Select>
-            {description && <FieldDescription>{description}</FieldDescription>}
-            {!isValid && <FieldError errors={errors} />}
+            {!isValid && (
+              <FieldError className='text-xs text-left' errors={errors.map((error) => ({ message: error }))} />
+            )}
+            {description && <FieldDescription className='text-xs'>{description}</FieldDescription>}
           </Field>
         );
       }}

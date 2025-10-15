@@ -61,11 +61,10 @@ export function CheckboxField<
   return (
     <form.Field name={name} {...formProps}>
       {(field) => {
-        const errors: Array<{ message: string }> = field.state.meta.errors.map((error) => ({ message: error ?? '' }));
-        const isValid = field.state.meta.isValid && errors.length === 0;
+        const { isValid, errors } = field.state.meta;
 
         return (
-          <Field data-invalid={!isValid} {...fieldProps}>
+          <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
             <div className='flex items-center gap-2'>
               <Checkbox
                 name={field.name}
@@ -79,8 +78,10 @@ export function CheckboxField<
                 {label}
               </FieldLabel>
             </div>
-            {description && <FieldDescription>{description}</FieldDescription>}
-            {!isValid && <FieldError errors={errors} />}
+            {!isValid && (
+              <FieldError className='text-xs text-left' errors={errors.map((error) => ({ message: error }))} />
+            )}
+            {description && <FieldDescription className='text-xs'>{description}</FieldDescription>}
           </Field>
         );
       }}

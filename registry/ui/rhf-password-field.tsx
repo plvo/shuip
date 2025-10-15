@@ -1,26 +1,32 @@
 'use client';
 
-import { InfoIcon } from 'lucide-react';
-import type * as React from 'react';
+import { Eye, EyeOff, InfoIcon } from 'lucide-react';
+import * as React from 'react';
 import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export interface InputFieldProps<T extends FieldValues> extends React.ComponentProps<typeof InputGroupInput> {
+export interface PasswordFieldProps<T extends FieldValues> extends React.ComponentProps<typeof InputGroupInput> {
   register: UseFormRegisterReturn<FieldPath<T>>;
   label?: string;
   description?: string;
   tooltip?: React.ReactNode;
 }
 
-export function InputField<T extends FieldValues>({
+export function PasswordField<T extends FieldValues>({
   register,
   label,
   description,
   tooltip,
   ...props
-}: InputFieldProps<T>) {
+}: PasswordFieldProps<T>) {
+  const [showPassword, setShowPassword] = React.useState(false);
+
+  const handleTogglePassword = React.useCallback(() => {
+    setShowPassword((prev) => !prev);
+  }, []);
+
   return (
     <FormField
       {...register}
@@ -30,8 +36,18 @@ export function InputField<T extends FieldValues>({
             {label && <FormLabel>{label}</FormLabel>}
             <FormControl>
               <InputGroup>
-                <InputGroupInput {...field} type='text' aria-invalid={fieldState.invalid} {...props} />
+                <InputGroupInput
+                  {...field}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder='Enter password'
+                  aria-invalid={fieldState.invalid}
+                  {...props}
+                />
                 <InputGroupAddon align='inline-end'>
+                  <InputGroupButton aria-label='Toggle password' onClick={handleTogglePassword}>
+                    {showPassword ? <EyeOff className='size-4' /> : <Eye className='size-4' />}
+                  </InputGroupButton>
+
                   {tooltip && (
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -45,7 +61,7 @@ export function InputField<T extends FieldValues>({
                 </InputGroupAddon>
               </InputGroup>
             </FormControl>
-            <FormMessage className='text-xs text-left' />
+            <FormMessage className='text-xs text-left opacity-80' />
             {description && <FormDescription className='text-xs'>{description}</FormDescription>}
           </FormItem>
         );

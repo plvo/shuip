@@ -80,6 +80,19 @@
       ]
     },
     {
+      "name": "rhf-password-field",
+      "type": "registry:ui",
+      "dependencies": ["react-hook-form", "lucide-react"],
+      "registryDependencies": ["form", "input-group", "tooltip"],
+      "files": [
+        {
+          "path": "./registry/ui/rhf-password-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/password-field.tsx"
+        }
+      ]
+    },
+    {
       "name": "rhf-radio-field",
       "type": "registry:ui",
       "dependencies": ["react-hook-form"],

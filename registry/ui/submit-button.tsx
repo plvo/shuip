@@ -23,9 +23,9 @@ export function SubmitButton({
   ...props
 }: SubmitButtonProps) {
   return (
-    <Button type='submit' aria-label='Submit' className={'w-full'} disabled={disabled || loading} {...props}>
+    <Button type='submit' aria-label='Submit' disabled={disabled || loading} {...props}>
       {loading && icon}
-      {children}
+      {children || 'Submit'}
     </Button>
   );
 }

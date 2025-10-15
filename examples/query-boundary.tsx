@@ -2,7 +2,7 @@
 'use client';
 
 import { LoaderCircle } from 'lucide-react';
-import { QueryBoundary } from '@/components/ui/shuip/query-boundary';
+import { QueryBoundary } from '@/components/ui/shuip/react-hook-form/query-boundary';
 
 export default function QueryBoundaryExample() {
   const queryKeys = ['data', Math.random().toString(36).substring(2, 15)];

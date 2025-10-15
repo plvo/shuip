@@ -19,28 +19,31 @@ export function RadioField<T extends FieldValues>({
   return (
     <FormField
       {...register}
-      render={({ field }) => (
-        <FormItem className='space-y-1.5'>
-          <FormLabel>{label}</FormLabel>
+      render={({ field, fieldState }) => (
+        <FormItem className='space-y-1.5' data-invalid={fieldState.invalid}>
+          {label && <FormLabel>{label}</FormLabel>}
           <FormControl>
             <RadioGroup
               onValueChange={field.onChange}
               defaultValue={field.value}
               className='flex flex-col space-y-1'
+              aria-invalid={fieldState.invalid}
               {...props}
             >
-              {options.map((value: any) => (
+              {options.map((value) => (
                 <FormItem key={value} className='flex items-center space-x-3 space-y-0'>
                   <FormControl>
-                    <RadioGroupItem value={value} />
+                    <RadioGroupItem value={value} id={`${field.name}-${value}`} aria-invalid={fieldState.invalid} />
                   </FormControl>
-                  <FormLabel className='font-normal'>{value}</FormLabel>
+                  <FormLabel htmlFor={`${field.name}-${value}`} className='font-normal'>
+                    {value}
+                  </FormLabel>
                 </FormItem>
               ))}
             </RadioGroup>
           </FormControl>
-          {description && <FormDescription>{description}</FormDescription>}
-          <FormMessage className='sm:hidden text-xs text-left' />
+          <FormMessage className='text-xs text-left' />
+          {description && <FormDescription className='text-xs'>{description}</FormDescription>}
         </FormItem>
       )}
     />

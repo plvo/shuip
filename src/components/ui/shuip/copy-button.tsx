@@ -40,7 +40,6 @@ export function CopyButton({ value, copiedIcon = <CheckIcon />, notCopiedIcon = 
         copyToClipboardWithMeta(value);
         setHasCopied(true);
       }}
-      
       {...props}
     >
       <span className='sr-only'>Copy</span>

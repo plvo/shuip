@@ -78,11 +78,10 @@ export function PasswordField<TFormData, TName extends DeepKeys<TFormData>, TDat
   return (
     <form.Field name={name} {...formProps}>
       {(field) => {
-        const errors: Array<{ message: string }> = field.state.meta.errors.map((error) => ({ message: error ?? '' }));
-        const isValid = field.state.meta.isValid && errors.length === 0;
+        const { isValid, errors } = field.state.meta;
 
         return (
-          <Field data-invalid={!isValid} {...fieldProps}>
+          <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
             {label && <FieldLabel>{label}</FieldLabel>}
             <InputGroup>
               <InputGroupInput
@@ -112,8 +111,10 @@ export function PasswordField<TFormData, TName extends DeepKeys<TFormData>, TDat
                 )}
               </InputGroupAddon>
             </InputGroup>
-            {description && <FieldDescription>{description}</FieldDescription>}
-            {!isValid && <FieldError errors={errors} />}
+            {!isValid && (
+              <FieldError className='text-xs text-left' errors={errors.map((error) => ({ message: error }))} />
+            )}
+            {description && <FieldDescription className='text-xs'>{description}</FieldDescription>}
           </Field>
         );
       }}
