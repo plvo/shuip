@@ -1,15 +1,15 @@
 'use client';
 
 import { useForm } from '@tanstack/react-form';
-import { CheckboxField } from '@/components/ui/shuip/tanstack-form/checkbox-field';
+import { PasswordField } from '@/components/ui/shuip/tanstack-form/password-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
-export default function TsfCheckboxFieldExample() {
+export default function TsfPasswordFieldExample() {
   const form = useForm({
     defaultValues: {
-      terms: false,
-      marketing: false,
+      password: '',
     },
+
     onSubmit: async ({ value }) => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       alert(JSON.stringify(value, null, 2));
@@ -24,22 +24,15 @@ export default function TsfCheckboxFieldExample() {
       }}
       className='space-y-4'
     >
-      <CheckboxField
+      <PasswordField
         form={form}
-        name='terms'
-        label='I accept the terms and conditions'
+        name='password'
+        label='Password'
         formProps={{
           validators: {
-            onChange: ({ value }) => (!value ? 'You must accept the terms and conditions' : undefined),
+            onChange: ({ value }) => (value.length < 8 ? 'Password must be at least 8 characters' : undefined),
           },
         }}
-      />
-
-      <CheckboxField
-        form={form}
-        name='marketing'
-        label='Send me promotional emails'
-        description='Optional: Receive updates about new features'
       />
 
       <SubmitButton form={form} />

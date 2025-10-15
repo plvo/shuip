@@ -62,7 +62,7 @@ export interface SelectFieldProps<
       undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>
     >
   >;
-  fieldProps?: React.ComponentProps<'div'> & { orientation?: 'vertical' | 'horizontal' | 'responsive' };
+  fieldProps?: React.ComponentProps<typeof Field>;
   props?: React.ComponentProps<typeof Select>;
 }
 

@@ -32,7 +32,6 @@ export interface CheckboxFieldProps<
   >;
   name: TName;
   label: string;
-  boxLabel?: string;
   description?: string;
   formProps?: Partial<
     FieldOptions<
@@ -50,7 +49,7 @@ export interface CheckboxFieldProps<
       undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>
     >
   >;
-  fieldProps?: React.ComponentProps<'div'> & { orientation?: 'vertical' | 'horizontal' | 'responsive' };
+  fieldProps?: React.ComponentProps<typeof Field>;
   props?: React.ComponentProps<typeof Checkbox>;
 }
 
@@ -58,25 +57,15 @@ export function CheckboxField<
   TFormData,
   TName extends DeepKeys<TFormData>,
   TData extends DeepValue<TFormData, TName> = DeepValue<TFormData, TName>,
->({
-  form,
-  name,
-  label,
-  boxLabel,
-  description,
-  formProps,
-  fieldProps,
-  props,
-}: CheckboxFieldProps<TFormData, TName, TData>) {
+>({ form, name, label, description, formProps, fieldProps, props }: CheckboxFieldProps<TFormData, TName, TData>) {
   return (
     <form.Field name={name} {...formProps}>
       {(field) => {
-        const errors = field.state.meta.errors;
+        const errors: Array<{ message: string }> = field.state.meta.errors.map((error) => ({ message: error ?? '' }));
         const isValid = field.state.meta.isValid && errors.length === 0;
 
         return (
           <Field data-invalid={!isValid} {...fieldProps}>
-            <FieldLabel className='flex items-center justify-between'>{label}</FieldLabel>
             <div className='flex items-center gap-2'>
               <Checkbox
                 name={field.name}
@@ -86,11 +75,9 @@ export function CheckboxField<
                 aria-invalid={!isValid}
                 {...props}
               />
-              {boxLabel && (
-                <label htmlFor={field.name} className='text-sm cursor-pointer'>
-                  {boxLabel}
-                </label>
-              )}
+              <FieldLabel htmlFor={field.name} className='text-sm cursor-pointer'>
+                {label}
+              </FieldLabel>
             </div>
             {description && <FieldDescription>{description}</FieldDescription>}
             {!isValid && <FieldError errors={errors} />}

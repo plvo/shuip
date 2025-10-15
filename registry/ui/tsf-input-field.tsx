@@ -8,8 +8,10 @@ import type {
   FormValidateOrFn,
   ReactFormApi,
 } from '@tanstack/react-form';
+import { InfoIcon } from 'lucide-react';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export interface InputFieldProps<
   TFormData,
@@ -49,8 +51,9 @@ export interface InputFieldProps<
       undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>
     >
   >;
-  fieldProps?: React.ComponentProps<'div'> & { orientation?: 'vertical' | 'horizontal' | 'responsive' };
+  fieldProps?: React.ComponentProps<typeof Field>;
   props?: React.ComponentProps<'input'>;
+  tooltip?: React.ReactNode;
 }
 
 export function InputField<TFormData, TName extends DeepKeys<TFormData>, TData extends DeepValue<TFormData, TName>>({
@@ -61,6 +64,7 @@ export function InputField<TFormData, TName extends DeepKeys<TFormData>, TData e
   formProps,
   fieldProps,
   props,
+  tooltip,
 }: InputFieldProps<TFormData, TName, TData>) {
   return (
     <form.Field name={name} {...formProps}>
@@ -71,15 +75,29 @@ export function InputField<TFormData, TName extends DeepKeys<TFormData>, TData e
         return (
           <Field data-invalid={!isValid} {...fieldProps}>
             {label && <FieldLabel>{label}</FieldLabel>}
-            <Input
-              type='text'
-              name={field.name}
-              value={field.state.value as string}
-              onChange={(e) => field.handleChange(e.target.value as TData)}
-              onBlur={field.handleBlur}
-              aria-invalid={!isValid}
-              {...props}
-            />
+            <InputGroup>
+              <InputGroupInput
+                type='text'
+                name={field.name}
+                value={field.state.value as string}
+                onChange={(e) => field.handleChange(e.target.value as TData)}
+                onBlur={field.handleBlur}
+                aria-invalid={!isValid}
+                {...props}
+              />
+              {tooltip && (
+                <InputGroupAddon align='inline-end'>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InputGroupButton aria-label='Info' size='icon-xs'>
+                        <InfoIcon />
+                      </InputGroupButton>
+                    </TooltipTrigger>
+                    <TooltipContent>{tooltip}</TooltipContent>
+                  </Tooltip>
+                </InputGroupAddon>
+              )}
+            </InputGroup>
             {description && <FieldDescription>{description}</FieldDescription>}
             {!isValid && <FieldError errors={errors} />}
           </Field>

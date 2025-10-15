@@ -1,186 +1,91 @@
 ---
 title: Overview
-description: TanStack Form is a headless form library that provides powerful type-safe form state management. These components integrate TanStack Form with shuip's field components, offering two distinct patterns to fit different project needs.
+description: TanStack Form is a headless form library that provides powerful type-safe form state management. These components integrate TanStack Form with shuip's field components for a streamlined development experience.
 position: 1
 ---
 
-## Two Complementary Patterns
-
-### Simple Pattern (Standalone)
-
-Direct form integration where each field receives the form instance as a prop.
-
-**Best for:**
-- Simple forms with few fields
-- Quick prototypes
-- One-off forms
-- Projects without complex form composition needs
-
-**Characteristics:**
-- Zero configuration required
-- Explicit form prop on each field
-- Excellent type inference through generics
-- Straightforward to understand
+## Type-safe forms with zero boilerplate
 
 <CodeHighlight code={`import { useForm } from '@tanstack/react-form'
-import { InputField } from '@/components/ui/tanstack-form/input-field'
+import { InputField } from '@/components/ui/shuip/tanstack-form/input-field'
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button'
 
 const form = useForm({
-    defaultValues: { email: '', username: '' },
+  defaultValues: { email: '', username: '' },
+  onSubmit: async ({ value }) => {
+    await saveUser(value)
+  }
 })
 
 <form onSubmit={(e) => {
-    e.preventDefault()
-    form.handleSubmit()
+  e.preventDefault()
+  form.handleSubmit()
 }}>
-    <InputField form={form} name='email' label='Email' />
-    <InputField form={form} name='username' label='Username' />
-    <button type='submit'>Submit</button>
+  <InputField form={form} name='email' label='Email' />
+  <InputField form={form} name='username' label='Username' />
+  <SubmitButton form={form}>Submit</SubmitButton>
 </form>`} language='tsx' />
 
-### Composed Pattern (Context-based)
+## Built-in features
 
-Uses React Context to provide form state to nested components, reducing prop drilling.
+- **Full type inference**: Autocomplete for field names and values
+- **Nested field support**: Deep paths like `user.profile.email`
+- **Async validation**: Built-in support for API validation
+- **Field metadata**: Access to touched, dirty, validating states
+- **Tooltip support**: InfoIcon with contextual help
+- **InputGroup integration**: shadcn InputGroup for addons and buttons
 
-**Best for:**
-- Applications with multiple complex forms
-- Reusable form components across the app
-- Large forms with many fields
-- Projects using code splitting with lazy loading
+## Common validation patterns
 
-**Characteristics:**
-- Requires initial context setup
-- Fields access form via `useFieldContext` hook
-- Used with `form.AppField` wrapper
-- Supports lazy loading via `React.lazy()`
+<CodeHighlight code={`// Synchronous validation
+<InputField
+  form={form}
+  name='email'
+  label='Email'
+  formProps={{
+    validators: {
+      onChange: ({ value }) =>
+        !value.includes('@') ? 'Invalid email' : undefined
+    }
+  }}
+/>
 
-<CodeHighlight code={`import { useAppForm, TanstackForm } from '@/components/ui/tanstack-form/context'
-
-const form = useAppForm({
-    defaultValues: { email: '', username: '' }
-})
-
-<TanstackForm form={form}>
-    <form.AppField name='email'>
-      {(field) => <field.InputField label='Email' />}
-    </form.AppField>
-    <form.AppField name='username'>
-      {(field) => <field.InputField label='Username' />}
-    </form.AppField>
-    <form.SubmitButton>Submit</form.SubmitButton>
-</TanstackForm>`} language='tsx' />
-
-## Architecture Comparison
-
-<ComparisonTable rows={[
-  {
-    aspect: 'Setup complexity',
-    simple: 'None',
-    composed: 'Contexts + createFormHook'
-  },
-  {
-    aspect: 'Props per field',
-    simple: 'form + field props',
-    composed: 'Field props only'
-  },
-  {
-    aspect: 'Type inference',
-    simple: 'Via form prop',
-    composed: 'Via useFieldContext'
-  },
-  {
-    aspect: 'Code splitting',
-    simple: 'Standard',
-    composed: 'Supports React.lazy()'
-  },
-  {
-    aspect: 'Context API',
-    simple: 'Not used',
-    composed: 'Required'
-  },
-  {
-    aspect: 'Verbosity',
-    simple: 'Low',
-    composed: 'Medium (render props)'
-  }
-]} />
-
-## Type Safety
-
-Both patterns provide full TypeScript support:
-
-- **DeepKeys**: Autocomplete for nested field names
-- **DeepValue**: Correct type inference for field values
-- **Generic constraints**: Compile-time validation of field names
-
-<CodeHighlight code={`// Both patterns support nested paths with type safety
-type FormData = {
-    user: {
-      email: string
-      profile: {
-        age: number
+// Async validation
+<InputField
+  form={form}
+  name='username'
+  label='Username'
+  formProps={{
+    validators: {
+      onChangeAsync: async ({ value }) => {
+        const available = await checkAvailability(value)
+        return available ? undefined : 'Username taken'
       }
     }
-}
+  }}
+/>
 
-// Type-safe field names: 'user.email', 'user.profile.age'
-<InputField form={form} name='user.email' label='Email' />`} language='tsx' />
-
-## Field State Management
-
-All components provide access to field metadata:
-
-- `field.state.value` - Current field value
-- `field.state.meta.errors` - Validation errors
-- `field.state.meta.isTouched` - User interaction status
-- `field.state.meta.isDirty` - Modified state
-- `field.state.meta.isValidating` - Async validation status
-
-## Validation
-
-TanStack Form supports multiple validation strategies:
-
-<CodeHighlight code={`<form.Field
-    name='email'
-    validators={{
+// Multiple validators
+<InputField
+  form={form}
+  name='password'
+  label='Password'
+  formProps={{
+    validators: {
       onChange: ({ value }) =>
-        !value.includes('@') ? 'Invalid email' : undefined,
+        value.length < 8 ? 'Too short' : undefined,
       onBlur: ({ value }) =>
-        !value ? 'Email is required' : undefined,
-      onChangeAsync: async ({ value }) => {
-        const available = await checkEmailAvailability(value)
-        return available ? undefined : 'Email already taken'
-      }
-    }}
->
-    {(field) => <InputField {...field} />}
-</form.Field>`} language='tsx' />
+        !/[A-Z]/.test(value) ? 'Need uppercase' : undefined
+    }
+  }}
+/>`} language='tsx' />
 
-## Choosing a Pattern
+## Available components
 
-**Choose Simple Pattern when:**
-- Building a single form
-- Prototyping quickly
-- Form has fewer than 10 fields
-- No need for lazy loading
-
-**Choose Composed Pattern when:**
-- Building multiple forms in the app
-- Creating reusable form components
-- Form has many fields (10+)
-- Need code splitting and lazy loading
-- Want minimal props on field components
-
-## Migration Between Patterns
-
-Both patterns use the same underlying TanStack Form API, making migration straightforward:
-
-<CodeHighlight code={`// From Simple
-<InputField form={form} name='email' label='Email' />
-
-// To Composed
-<form.AppField name='email'>
-    {(field) => <field.InputField label='Email' />}
-</form.AppField>`} language='tsx' />
-
-The form logic and validation remain identical across both patterns.
+- **[InputField](/tanstack-form/input-field)** - Text inputs with validation
+- **[PasswordField](/tanstack-form/password-field)** - Password input with visibility toggle
+- **[TextareaField](/tanstack-form/textarea-field)** - Multi-line text inputs
+- **[SelectField](/tanstack-form/select-field)** - Dropdown selections
+- **[RadioField](/tanstack-form/radio-field)** - Radio button groups
+- **[CheckboxField](/tanstack-form/checkbox-field)** - Boolean toggles
+- **[SubmitButton](/tanstack-form/submit-button)** - Form submission with loading state

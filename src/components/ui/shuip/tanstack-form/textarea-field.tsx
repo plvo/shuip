@@ -8,10 +8,12 @@ import type {
   FormValidateOrFn,
   ReactFormApi,
 } from '@tanstack/react-form';
-import { Checkbox } from '@/components/ui/checkbox';
+import { InfoIcon } from 'lucide-react';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from '@/components/ui/input-group';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export interface CheckboxFieldProps<
+export interface TextareaFieldProps<
   TFormData,
   TName extends DeepKeys<TFormData>,
   TData extends DeepValue<TFormData, TName> = DeepValue<TFormData, TName>,
@@ -31,7 +33,7 @@ export interface CheckboxFieldProps<
     any
   >;
   name: TName;
-  label: string;
+  label?: string;
   description?: string;
   formProps?: Partial<
     FieldOptions<
@@ -50,35 +52,56 @@ export interface CheckboxFieldProps<
     >
   >;
   fieldProps?: React.ComponentProps<typeof Field>;
-  props?: React.ComponentProps<typeof Checkbox>;
+  props?: any;
+  // props?: React.ComponentProps<typeof InputGroupTextarea>;
+  tooltip?: React.ReactNode;
 }
 
-export function CheckboxField<
+export function TextareaField<
   TFormData,
   TName extends DeepKeys<TFormData>,
   TData extends DeepValue<TFormData, TName> = DeepValue<TFormData, TName>,
->({ form, name, label, description, formProps, fieldProps, props }: CheckboxFieldProps<TFormData, TName, TData>) {
+>({
+  form,
+  name,
+  label,
+  description,
+  formProps,
+  fieldProps,
+  props,
+  tooltip,
+}: TextareaFieldProps<TFormData, TName, TData>) {
   return (
     <form.Field name={name} {...formProps}>
       {(field) => {
-        const errors: Array<{ message: string }> = field.state.meta.errors.map((error) => ({ message: error ?? '' }));
+        const errors = field.state.meta.errors;
         const isValid = field.state.meta.isValid && errors.length === 0;
 
         return (
           <Field data-invalid={!isValid} {...fieldProps}>
-            <div className='flex items-center gap-2'>
-              <Checkbox
+            {label && <FieldLabel>{label}</FieldLabel>}
+            <InputGroup>
+              <InputGroupTextarea
                 name={field.name}
-                checked={field.state.value as boolean}
-                onCheckedChange={(checked) => field.handleChange(checked as TData)}
+                value={field.state.value as string}
+                onChange={(e) => field.handleChange(e.target.value as TData)}
                 onBlur={field.handleBlur}
                 aria-invalid={!isValid}
                 {...props}
               />
-              <FieldLabel htmlFor={field.name} className='text-sm cursor-pointer'>
-                {label}
-              </FieldLabel>
-            </div>
+              {tooltip && (
+                <InputGroupAddon align='block-end' className='justify-end'>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InputGroupButton aria-label='Info' size='icon-xs'>
+                        <InfoIcon />
+                      </InputGroupButton>
+                    </TooltipTrigger>
+                    <TooltipContent>{tooltip}</TooltipContent>
+                  </Tooltip>
+                </InputGroupAddon>
+              )}
+            </InputGroup>
             {description && <FieldDescription>{description}</FieldDescription>}
             {!isValid && <FieldError errors={errors} />}
           </Field>

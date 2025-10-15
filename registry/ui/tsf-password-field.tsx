@@ -1,3 +1,5 @@
+'use client';
+
 import type {
   DeepKeys,
   DeepValue,
@@ -8,13 +10,16 @@ import type {
   FormValidateOrFn,
   ReactFormApi,
 } from '@tanstack/react-form';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Eye, EyeOff, InfoIcon } from 'lucide-react';
+import React from 'react';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export interface CheckboxFieldProps<
+export interface PasswordFieldProps<
   TFormData,
   TName extends DeepKeys<TFormData>,
-  TData extends DeepValue<TFormData, TName> = DeepValue<TFormData, TName>,
+  TData extends DeepValue<TFormData, TName>,
 > {
   form: ReactFormApi<
     TFormData,
@@ -31,7 +36,7 @@ export interface CheckboxFieldProps<
     any
   >;
   name: TName;
-  label: string;
+  label?: string;
   description?: string;
   formProps?: Partial<
     FieldOptions<
@@ -50,14 +55,26 @@ export interface CheckboxFieldProps<
     >
   >;
   fieldProps?: React.ComponentProps<typeof Field>;
-  props?: React.ComponentProps<typeof Checkbox>;
+  props?: React.ComponentProps<'input'>;
+  tooltip?: React.ReactNode;
 }
 
-export function CheckboxField<
-  TFormData,
-  TName extends DeepKeys<TFormData>,
-  TData extends DeepValue<TFormData, TName> = DeepValue<TFormData, TName>,
->({ form, name, label, description, formProps, fieldProps, props }: CheckboxFieldProps<TFormData, TName, TData>) {
+export function PasswordField<TFormData, TName extends DeepKeys<TFormData>, TData extends DeepValue<TFormData, TName>>({
+  form,
+  name,
+  label,
+  description,
+  formProps,
+  fieldProps,
+  props,
+  tooltip,
+}: PasswordFieldProps<TFormData, TName, TData>) {
+  const [showPassword, setShowPassword] = React.useState(false);
+
+  const handleTogglePassword = React.useCallback(() => {
+    setShowPassword((prev) => !prev);
+  }, []);
+
   return (
     <form.Field name={name} {...formProps}>
       {(field) => {
@@ -66,19 +83,35 @@ export function CheckboxField<
 
         return (
           <Field data-invalid={!isValid} {...fieldProps}>
-            <div className='flex items-center gap-2'>
-              <Checkbox
+            {label && <FieldLabel>{label}</FieldLabel>}
+            <InputGroup>
+              <InputGroupInput
+                type={showPassword ? 'text' : 'password'}
+                placeholder='Enter password'
                 name={field.name}
-                checked={field.state.value as boolean}
-                onCheckedChange={(checked) => field.handleChange(checked as TData)}
+                value={field.state.value as string}
+                onChange={(e) => field.handleChange(e.target.value as TData)}
                 onBlur={field.handleBlur}
                 aria-invalid={!isValid}
                 {...props}
               />
-              <FieldLabel htmlFor={field.name} className='text-sm cursor-pointer'>
-                {label}
-              </FieldLabel>
-            </div>
+              <InputGroupAddon align='inline-end'>
+                <InputGroupButton aria-label='Toggle password' onClick={handleTogglePassword}>
+                  {showPassword ? <EyeOff className='size-4' /> : <Eye className='size-4' />}
+                </InputGroupButton>
+
+                {tooltip && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InputGroupButton aria-label='Info' size='icon-xs'>
+                        <InfoIcon />
+                      </InputGroupButton>
+                    </TooltipTrigger>
+                    <TooltipContent>{tooltip}</TooltipContent>
+                  </Tooltip>
+                )}
+              </InputGroupAddon>
+            </InputGroup>
             {description && <FieldDescription>{description}</FieldDescription>}
             {!isValid && <FieldError errors={errors} />}
           </Field>

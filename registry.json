@@ -208,7 +208,7 @@
       "name": "tsf-input-field",
       "type": "registry:ui",
       "dependencies": ["@tanstack/react-form"],
-      "registryDependencies": ["field", "input"],
+      "registryDependencies": ["field", "input-group", "tooltip"],
       "files": [
         {
           "path": "./registry/ui/tsf-input-field.tsx",
@@ -266,6 +266,32 @@
           "path": "./registry/ui/tsf-checkbox-field.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/tanstack-form/checkbox-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-password-field",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form", "lucide-react"],
+      "registryDependencies": ["field", "input-group", "tooltip"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-password-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/password-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-textarea-field",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form"],
+      "registryDependencies": ["field", "input-group", "tooltip"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-textarea-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/textarea-field.tsx"
         }
       ]
     }

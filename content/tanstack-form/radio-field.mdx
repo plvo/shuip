@@ -1,256 +1,125 @@
 ---
 title: Radio Field
-description: Standalone radio group field component that receives the form instance directly. Perfect for single-choice selections.
-registryName: tsf-radio-field
+description: Radio button group component integrated with TanStack Form. Options are defined as Array<{label, value}>.
 position: 6
+registryName: tsf-radio-field
 ---
 
-## Standalone radio group integration
+## Built-in features
 
-The simple radio field pattern provides a straightforward way to implement radio button groups with TanStack Form. Each field receives the form instance as a prop, offering excellent type inference and explicit data flow.
+- **Type-safe options**: Options as `Array<{label: string; value: string}>`
+- **Type-safe field names**: Autocomplete with `DeepKeys<TFormData>`
+- **Validation**: Sync and async validation support
+- **Accessible**: Proper label associations and ARIA attributes
 
-## Core characteristics
-
-- **Zero configuration**: No context setup required
-- **Type-safe field names**: Autocomplete for nested paths via `DeepKeys<TFormData>`
-- **Array-based options**: Simple string array for radio choices
-- **Explicit dependencies**: Form instance passed directly to each field
-- **Automatic layout**: Vertical stacking of radio items with proper spacing
-
-## Basic usage
-
-<CodeHighlight code={`import { useForm } from '@tanstack/react-form'
-import { RadioField } from '@/components/ui/tanstack-form/radio-field'
-
-function SubscriptionForm() {
-  const form = useForm({
-    defaultValues: {
-      plan: '',
-    },
-    onSubmit: async ({ value }) => {
-      await selectPlan(value.plan)
-    },
-  })
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        form.handleSubmit()
-      }}
-    >
-      <RadioField
-        form={form}
-        name='plan'
-        options={['Free', 'Pro', 'Enterprise']}
-        label='Subscription Plan'
-        description='Choose your subscription tier'
-      />
-      <button type='submit'>Continue</button>
-    </form>
-  )
-}`} language='tsx' />
-
-## Type inference
-
-The component provides full type safety for radio selections:
-
-<CodeHighlight code={`type FormData = {
-  plan: 'free' | 'pro' | 'enterprise'
-  billing: 'monthly' | 'yearly'
-}
-
-const form = useForm<FormData>({
-  defaultValues: {
-    plan: 'free',
-    billing: 'monthly',
-  }
-})
-
-// TypeScript ensures 'plan' is a valid field name
-<RadioField
-  form={form}
-  name='plan'
-  options={['free', 'pro', 'enterprise']}
-  label='Plan'
-/>`} language='tsx' />
-
-The `name` prop is constrained to `DeepKeys<TFormData>`, ensuring only valid field paths are accepted.
-
-## Validation integration
-
-TanStack Form supports validation on radio field selections:
+## Common use cases
 
 <CodeHighlight code={`const form = useForm({
-  defaultValues: { plan: '' },
+  defaultValues: {
+    plan: '',
+    paymentMethod: '',
+    shippingSpeed: '',
+  },
+  onSubmit: async ({ value }) => {
+    await saveData(value)
+  },
 })
 
-<form.Field
-  name='plan'
-  validators={{
-    // Require a selection
-    onChange: ({ value }) =>
-      !value ? 'Please select a plan' : undefined,
-
-    // Custom validation
-    onBlur: ({ value }) =>
-      value === 'enterprise' && !isPremiumUser()
-        ? 'Enterprise plan requires premium account'
-        : undefined,
-  }}
->
-  {(field) => (
-    <RadioField
-      form={form}
-      name='plan'
-      options={['Free', 'Pro', 'Enterprise']}
-      label='Subscription Plan'
-    />
-  )}
-</form.Field>`} language='tsx' />
-
-## Error handling
-
-The component automatically displays validation errors:
-
-<CodeHighlight code={`// Errors are shown when field.state.meta.errors is populated
+// Basic radio group
 <RadioField
   form={form}
   name='plan'
-  options={['Free', 'Pro', 'Enterprise']}
-  label='Plan'
+  options={[
+    { label: 'Free', value: 'free' },
+    { label: 'Pro', value: 'pro' },
+    { label: 'Enterprise', value: 'enterprise' },
+  ]}
+  label='Subscription Plan'
+  description='Choose your subscription plan'
 />
 
-// Field state provides error information:
-// - field.state.meta.errors: Array of error messages
-// - field.state.meta.isTouched: User has interacted with field
-// - field.state.meta.isValid: Field passes all validators`} language='tsx' />
-
-## Custom styling
-
-Customize the radio group appearance:
-
-<CodeHighlight code={`<RadioField
-  form={form}
-  name='theme'
-  options={['Light', 'Dark', 'System']}
-  label='Theme Preference'
-  fieldProps={{
-    className: 'space-y-3',
-  }}
-  className='gap-4'
-/>`} language='tsx' />
-
-## Conditional options
-
-Options can be computed dynamically:
-
-<CodeHighlight code={`function PricingForm() {
-  const isPremium = usePremiumStatus()
-
-  const plans = isPremium
-    ? ['Free', 'Pro', 'Enterprise', 'Ultimate']
-    : ['Free', 'Pro']
-
-  return (
-    <RadioField
-      form={form}
-      name='plan'
-      options={plans}
-      label='Available Plans'
-    />
-  )
-}`} language='tsx' />
-
-## Working with nested data
-
-Radio fields support nested paths:
-
-<CodeHighlight code={`type FormData = {
-  preferences: {
-    notifications: {
-      frequency: 'never' | 'daily' | 'weekly'
-    }
-  }
-}
-
+// Required selection
 <RadioField
   form={form}
-  name='preferences.notifications.frequency'
-  options={['never', 'daily', 'weekly']}
-  label='Notification Frequency'
-/>`} language='tsx' />
+  name='paymentMethod'
+  options={[
+    { label: 'Credit Card', value: 'card' },
+    { label: 'PayPal', value: 'paypal' },
+    { label: 'Bank Transfer', value: 'bank' },
+  ]}
+  label='Payment Method'
+  formProps={{
+    validators: {
+      onChange: ({ value }) =>
+        !value ? 'Please select a payment method' : undefined
+    }
+  }}
+/>
 
-## Horizontal layout
-
-By default, radio items are stacked vertically. The layout is controlled by the RadioGroup component:
-
-<CodeHighlight code={`<RadioField
+// With conditional validation
+<RadioField
   form={form}
-  name='gender'
-  options={['Male', 'Female', 'Other']}
-  label='Gender'
-  className='flex-row gap-6'
+  name='shippingSpeed'
+  options={[
+    { label: 'Standard (5-7 days)', value: 'standard' },
+    { label: 'Express (2-3 days)', value: 'express' },
+    { label: 'Overnight', value: 'overnight' },
+  ]}
+  label='Shipping Speed'
+  formProps={{
+    validators: {
+      onChange: ({ value }) => {
+        const total = form.getFieldValue('total')
+        if (value === 'overnight' && total < 50) {
+          return 'Overnight shipping requires minimum order of $50'
+        }
+        return undefined
+      }
+    }
+  }}
 />`} language='tsx' />
 
-## Accessibility
-
-The component implements proper accessibility patterns:
-
-- Each radio item has a unique `id` based on field name and value
-- Labels are properly associated with radio inputs via `htmlFor`
-- ARIA attributes for invalid state
-- Keyboard navigation support (arrow keys to navigate between options)
-
-## When to use this pattern
-
-**Ideal for:**
-- Simple forms with few fields
-- Quick prototypes
-- Single-choice selections from 2-5 options
-- Forms without complex composition needs
-
-**Consider the composed pattern when:**
-- Building multiple forms across your app
-- Creating reusable form component libraries
-- Need lazy loading for large forms
-
-<ItemExamples registryName='tsf-radio-field' />
+<ItemExamples registryName={'tsf-radio-field'} /> 
 
 <PropTable props={[
   {
     name: 'form',
     type: 'ReactFormApi<TFormData>',
-    description: 'The form instance from useForm hook',
+    description: 'Form instance from useForm hook'
   },
   {
     name: 'name',
     type: 'DeepKeys<TFormData>',
-    description: 'Type-safe field name, supports nested paths with dot notation',
+    description: 'Type-safe field name (supports nested paths like "user.plan")'
   },
   {
     name: 'options',
-    type: 'string[]',
-    description: 'Array of string options for radio buttons',
+    type: 'Array<{ label: string; value: string }>',
+    description: 'Array of radio button options with label and value'
   },
   {
     name: 'label',
     type: 'string?',
-    description: 'Label displayed above the radio group',
+    description: 'Field label text'
   },
   {
     name: 'description',
     type: 'string?',
-    description: 'Helper text displayed below the radio group',
+    description: 'Helper text displayed below the radio group'
+  },
+  {
+    name: 'formProps',
+    type: 'Partial<FieldOptions>?',
+    description: 'TanStack Form field options (validators, etc.)'
   },
   {
     name: 'fieldProps',
-    type: 'React.ComponentProps<"div"> & { orientation? }',
-    description: 'Container props, including layout orientation',
+    type: 'React.ComponentProps<typeof Field>?',
+    description: 'Props passed to the Field wrapper component'
   },
   {
-    name: '...radioGroupProps',
-    type: 'RadioGroupProps',
-    description: 'All RadioGroup component props (className, disabled, etc.)',
-  },
+    name: 'props',
+    type: 'React.ComponentProps<typeof RadioGroup>?',
+    description: 'Props passed to the RadioGroup component'
+  }
 ]} />

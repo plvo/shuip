@@ -1,377 +1,122 @@
 ---
 title: Checkbox Field
-description: Standalone checkbox field component that receives the form instance directly. Perfect for boolean toggles and agreements.
+description: Checkbox component integrated with TanStack Form for type-safe boolean field management. Features label and boxLabel props.
+position: 7
 registryName: tsf-checkbox-field
-position: 8
 ---
 
-## Standalone checkbox integration
+## Built-in features
 
-The simple checkbox field pattern provides a straightforward way to implement boolean toggles with TanStack Form. Each field receives the form instance as a prop, offering excellent type inference and explicit data flow.
+- **Dual labels**: `label` (top) and `boxLabel` (next to checkbox, clickable)
+- **Type-safe**: Full TypeScript support with TanStack Form
+- **Validation**: Sync and async validation support
+- **Accessible**: Proper label associations and ARIA attributes
 
-## Core characteristics
-
-- **Zero configuration**: No context setup required
-- **Type-safe field names**: Autocomplete for nested paths via `DeepKeys<TFormData>`
-- **Boolean values**: Handles `true`/`false` states
-- **Explicit dependencies**: Form instance passed directly to each field
-- **Dual labeling**: Supports both field label and checkbox-specific label
-
-## Basic usage
-
-<CodeHighlight code={`import { useForm } from '@tanstack/react-form'
-import { CheckboxField } from '@/components/ui/tanstack-form/checkbox-field'
-
-function TermsForm() {
-  const form = useForm({
-    defaultValues: {
-      terms: false,
-      newsletter: false,
-    },
-    onSubmit: async ({ value }) => {
-      if (value.terms) {
-        await createAccount(value)
-      }
-    },
-  })
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        form.handleSubmit()
-      }}
-    >
-      <CheckboxField
-        form={form}
-        name='terms'
-        label='Terms and Conditions'
-        boxLabel='I accept the terms and conditions'
-        description='You must accept to continue'
-      />
-
-      <CheckboxField
-        form={form}
-        name='newsletter'
-        label='Newsletter'
-        boxLabel='Subscribe to our newsletter'
-        description='Optional: Receive updates about new features'
-      />
-
-      <button type='submit'>Sign Up</button>
-    </form>
-  )
-}`} language='tsx' />
-
-## Label structure
-
-The component supports two types of labels:
-
-<CodeHighlight code={`<CheckboxField
-  form={form}
-  name='marketing'
-  label='Marketing Preferences'          // Field label (above checkbox)
-  boxLabel='Send me promotional emails'  // Checkbox label (next to checkbox)
-  description='You can unsubscribe anytime'
-/>
-
-// Visual layout:
-// Marketing Preferences             ← label
-// [ ] Send me promotional emails    ← boxLabel
-// You can unsubscribe anytime       ← description`} language='tsx' />
-
-## Type inference
-
-The component provides full type safety for boolean values:
-
-<CodeHighlight code={`type FormData = {
-  terms: boolean
-  privacy: boolean
-  marketing: boolean
-}
-
-const form = useForm<FormData>({
-  defaultValues: {
-    terms: false,
-    privacy: false,
-    marketing: false,
-  }
-})
-
-// TypeScript ensures 'terms' is a valid boolean field
-<CheckboxField
-  form={form}
-  name='terms'
-  label='Agreements'
-  boxLabel='I agree to the terms'
-/>`} language='tsx' />
-
-The `name` prop is constrained to `DeepKeys<TFormData>`, ensuring only valid field paths are accepted.
-
-## Validation integration
-
-TanStack Form supports validation on checkbox fields:
+## Common use cases
 
 <CodeHighlight code={`const form = useForm({
-  defaultValues: { terms: false },
+  defaultValues: {
+    terms: false,
+    marketing: false,
+    newsletter: false,
+  },
+  onSubmit: async ({ value }) => {
+    await saveData(value)
+  },
 })
 
-<form.Field
-  name='terms'
-  validators={{
-    // Require checkbox to be checked
-    onChange: ({ value }) =>
-      !value ? 'You must accept the terms and conditions' : undefined,
-
-    // Custom validation
-    onBlur: ({ value }) =>
-      value && !hasReadTerms()
-        ? 'Please read the terms before accepting'
-        : undefined,
-  }}
->
-  {(field) => (
-    <CheckboxField
-      form={form}
-      name='terms'
-      label='Terms'
-      boxLabel='I have read and accept the terms'
-    />
-  )}
-</form.Field>`} language='tsx' />
-
-## Error handling
-
-The component displays validation errors in two locations:
-
-<CodeHighlight code={`// Errors shown in two places:
-// 1. Next to label (hidden on mobile)
-// 2. Below checkbox (shown on mobile)
-
+// Required checkbox
 <CheckboxField
   form={form}
   name='terms'
   label='Terms and Conditions'
-  boxLabel='I accept'
-/>
-
-// Field state provides error information:
-// - field.state.meta.errors: Array of error messages
-// - field.state.meta.isTouched: User has interacted with field
-// - field.state.meta.isValid: Field passes all validators`} language='tsx' />
-
-## Required checkbox
-
-Implement a required checkbox pattern:
-
-<CodeHighlight code={`<form.Field
-  name='terms'
-  validators={{
-    onChange: ({ value }) =>
-      !value ? 'Required' : undefined,
-  }}
->
-  {(field) => (
-    <CheckboxField
-      form={form}
-      name='terms'
-      label='Terms and Conditions'
-      boxLabel='I accept the terms and conditions (required)'
-      required
-    />
-  )}
-</form.Field>`} language='tsx' />
-
-## Optional checkbox
-
-For optional checkboxes, omit validation:
-
-<CodeHighlight code={`<CheckboxField
-  form={form}
-  name='newsletter'
-  label='Newsletter Subscription'
-  boxLabel='Send me weekly updates'
-  description='Optional: You can change this later in settings'
-/>`} language='tsx' />
-
-## Working with nested data
-
-Checkbox fields support nested paths:
-
-<CodeHighlight code={`type FormData = {
-  preferences: {
-    notifications: {
-      email: boolean
-      sms: boolean
-      push: boolean
+  boxLabel='I accept the terms and conditions'
+  description='You must accept the terms to continue'
+  formProps={{
+    validators: {
+      onChange: ({ value }) =>
+        !value ? 'You must accept the terms' : undefined
     }
-  }
-}
-
-<CheckboxField
-  form={form}
-  name='preferences.notifications.email'
-  label='Email Notifications'
-  boxLabel='Receive notifications via email'
+  }}
 />
 
+// Optional checkbox
 <CheckboxField
-  form={form}
-  name='preferences.notifications.sms'
-  label='SMS Notifications'
-  boxLabel='Receive notifications via SMS'
-/>
-
-<CheckboxField
-  form={form}
-  name='preferences.notifications.push'
-  label='Push Notifications'
-  boxLabel='Receive push notifications'
-/>`} language='tsx' />
-
-## Disabled state
-
-Disable the checkbox conditionally:
-
-<CodeHighlight code={`<CheckboxField
   form={form}
   name='marketing'
-  label='Marketing Emails'
-  boxLabel='Send me promotional content'
-  disabled={!hasVerifiedEmail}
-  description={!hasVerifiedEmail ? 'Verify your email first' : undefined}
+  label='Marketing'
+  boxLabel='Send me promotional emails'
+  description='Optional: Receive updates about new features'
+/>
+
+// Without boxLabel (standalone)
+<CheckboxField
+  form={form}
+  name='newsletter'
+  label='Enable Newsletter'
+  description='Toggle newsletter subscription'
+/>
+
+// With conditional validation
+<CheckboxField
+  form={form}
+  name='sameAsShipping'
+  label='Billing Address'
+  boxLabel='Same as shipping address'
+  formProps={{
+    validators: {
+      onChange: ({ value }) => {
+        const shipping = form.getFieldValue('shippingAddress')
+        if (value && !shipping) {
+          return 'Please enter a shipping address first'
+        }
+        return undefined
+      }
+    }
+  }}
 />`} language='tsx' />
 
-## Conditional visibility
-
-Show/hide checkboxes based on other field values:
-
-<CodeHighlight code={`function NotificationForm() {
-  const enableNotifications = useWatch({
-    form,
-    name: 'enableNotifications',
-  })
-
-  return (
-    <>
-      <CheckboxField
-        form={form}
-        name='enableNotifications'
-        label='Notifications'
-        boxLabel='Enable notifications'
-      />
-
-      {enableNotifications && (
-        <>
-          <CheckboxField
-            form={form}
-            name='emailNotifications'
-            label='Email'
-            boxLabel='Receive email notifications'
-          />
-          <CheckboxField
-            form={form}
-            name='pushNotifications'
-            label='Push'
-            boxLabel='Receive push notifications'
-          />
-        </>
-      )}
-    </>
-  )
-}`} language='tsx' />
-
-## Group of checkboxes
-
-Create a related group of checkboxes:
-
-<CodeHighlight code={`<div className='space-y-4'>
-  <h3>Privacy Settings</h3>
-
-  <CheckboxField
-    form={form}
-    name='analytics'
-    label='Analytics'
-    boxLabel='Allow analytics tracking'
-  />
-
-  <CheckboxField
-    form={form}
-    name='personalization'
-    label='Personalization'
-    boxLabel='Enable personalized content'
-  />
-
-  <CheckboxField
-    form={form}
-    name='thirdParty'
-    label='Third-party Cookies'
-    boxLabel='Allow third-party cookies'
-  />
-</div>`} language='tsx' />
-
-## Accessibility
-
-The component implements proper accessibility patterns:
-
-- Checkbox has a unique `id` based on field name
-- Label is properly associated via `htmlFor`
-- ARIA attributes for invalid state
-- Keyboard navigation (Space to toggle)
-- Focus ring for keyboard users
-- Screen reader support
-
-## When to use this pattern
-
-**Ideal for:**
-- Simple forms with fewer than 10 fields
-- Quick prototypes
-- Boolean toggles and agreements
-- Forms without complex composition needs
-- Terms acceptance, preferences, opt-ins
-
-**Consider the composed pattern when:**
-- Building multiple forms across your app
-- Creating reusable form component libraries
-- Need lazy loading for large forms
-- Want to minimize props on field components
-
-<ItemExamples registryName='tsf-checkbox-field' />
+<ItemExamples registryName={'tsf-checkbox-field'} /> 
 
 <PropTable props={[
   {
     name: 'form',
     type: 'ReactFormApi<TFormData>',
-    description: 'The form instance from useForm hook',
+    description: 'Form instance from useForm hook'
   },
   {
     name: 'name',
     type: 'DeepKeys<TFormData>',
-    description: 'Type-safe field name, supports nested paths with dot notation',
+    description: 'Type-safe field name (supports nested paths like "preferences.notifications")'
   },
   {
     name: 'label',
     type: 'string',
-    description: 'Field label displayed above the checkbox (required)',
+    description: 'Main field label displayed at the top (required)'
   },
   {
     name: 'boxLabel',
     type: 'string?',
-    description: 'Label displayed next to the checkbox itself',
+    description: 'Text displayed next to the checkbox (clickable)'
   },
   {
     name: 'description',
     type: 'string?',
-    description: 'Helper text displayed below the checkbox',
+    description: 'Helper text displayed below the checkbox'
+  },
+  {
+    name: 'formProps',
+    type: 'Partial<FieldOptions>?',
+    description: 'TanStack Form field options (validators, etc.)'
   },
   {
     name: 'fieldProps',
-    type: 'React.ComponentProps<"div"> & { orientation? }',
-    description: 'Container props, including layout orientation',
+    type: 'React.ComponentProps<typeof Field>?',
+    description: 'Props passed to the Field wrapper component'
   },
   {
-    name: '...checkboxProps',
-    type: 'CheckboxProps',
-    description: 'All Checkbox component props (disabled, required, etc.)',
-  },
+    name: 'props',
+    type: 'React.ComponentProps<typeof Checkbox>?',
+    description: 'Props passed to the Checkbox component'
+  }
 ]} />
