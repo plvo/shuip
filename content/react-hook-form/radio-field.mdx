@@ -1,11 +1,22 @@
 ---
 title: Radio Field
-description: A radio button group designed to be used with react-hook-form and Zod for validation. It combines a label, radio button options, error handling, and optional description into a single reusable component.
-position: 4
+description: Radio button group component integrated with React Hook Form for single-choice selections with automatic option rendering.
 registryName: rhf-radio-field
 ---
 
-## Less verbose code in forms
+Radio buttons are used for single-choice selections from a predefined set of options. `RadioField` automatically renders radio button options from an array, handling all the form integration and layout concerns.
+
+The component eliminates the need to manually create individual radio items and their labels. It provides consistent spacing, proper accessibility attributes, and automatic form state management for radio groups.
+
+#### Built-in features
+
+- **Automatic option rendering**: Pass an array of strings and get fully functional radio buttons
+- **Consistent layout**: Pre-configured spacing and alignment for radio groups  
+- **Accessibility support**: Proper ARIA attributes and keyboard navigation
+- **Zod validation**: Native integration with react-hook-form and Zod schemas
+- **Error display**: Automatic validation error messages
+
+## Less boilerplate
 
 <CodeHighlight code={`<FormField
   control={form.control}
@@ -44,35 +55,12 @@ registryName: rhf-radio-field
   )}
 />`} language='tsx' />
 
-With `RadioField`, the same result in a single line:
+With `RadioField`, this reduces to a single declarative component:
 
 <CodeHighlight code={`<RadioField 
-      register={form.register('theme')} 
-      label="Select a theme" 
-      options={['light', 'dark', 'system' ]}
-/>`} language='tsx' />
-
-#### Built-in features
-
-- **Automatic radio rendering**: Pass an array of options and they're rendered as radio buttons
-- **Clean layout**: Pre-configured spacing and alignment for radio groups
-- **Zod validation**: Native integration with react-hook-form and Zod
-- **Responsive design**: Optimized for both desktop and mobile
-- **Error display**: Automatic error message display
-
-### react-hook-form integration
-
-The component is specifically designed for react-hook-form:
-
-<CodeHighlight code={`const form = useForm({
-      defaultValues: { plan: 'basic' },
-      resolver: zodResolver(schema),
-});
-
-<RadioField 
-      register={form.register('plan')} 
-      label="Choose your plan" 
-      options={{ Basic: 'basic', Pro: 'pro', Enterprise: 'enterprise' }}
+  register={form.register('theme')} 
+  label="Select a theme" 
+  options={['light', 'dark', 'system']}
 />`} language='tsx' />
 
 <ItemExamples registryName={'rhf-radio-field'} /> 

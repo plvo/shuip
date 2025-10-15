@@ -3,6 +3,7 @@ import { filenameToTitle } from '@/lib/utils';
 import { useMDXComponents } from '@/mdx-components';
 import { InstallationCmd } from './item-installation';
 import { ItemPreview, Preview } from './item-preview';
+
 export interface ItemHeaderProps {
   registryName: string;
   text?: string;

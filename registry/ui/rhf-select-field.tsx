@@ -36,12 +36,12 @@ export function SelectField<TFieldValues extends FieldValues>({
     <FormField
       {...register}
       defaultValue={defaultValue}
-      render={({ field }) => (
-        <FormItem>
+      render={({ field, fieldState }) => (
+        <FormItem data-invalid={fieldState.invalid}>
           {label && <FormLabel>{label}</FormLabel>}
-          <Select onValueChange={field.onChange} defaultValue={field.value} {...props}>
+          <Select defaultValue={field.value} onValueChange={field.onChange} {...props}>
             <FormControl>
-              <SelectTrigger>
+              <SelectTrigger aria-invalid={fieldState.invalid} className='w-full'>
                 <SelectValue placeholder={placeholder} />
               </SelectTrigger>
             </FormControl>
@@ -53,8 +53,8 @@ export function SelectField<TFieldValues extends FieldValues>({
               ))}
             </SelectContent>
           </Select>
-          {description && <FormDescription>{description}</FormDescription>}
-          <FormMessage />
+          <FormMessage className='text-xs text-left' />
+          {description && <FormDescription className='text-xs'>{description}</FormDescription>}
         </FormItem>
       )}
     />

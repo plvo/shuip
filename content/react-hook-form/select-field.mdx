@@ -1,11 +1,22 @@
 ---
 title: Select Field
-description: A select form field designed to be used with react-hook-form and Zod for validation. It combines a label, select dropdown, error handling, and optional description into a single reusable component.
-position: 2
+description: Select dropdown component integrated with React Hook Form for single-choice selections from key-value option pairs.
 registryName: rhf-select-field
 ---
 
-## Less verbose code in forms
+Select dropdowns provide single-choice selection from a list of options with labels and values. `SelectField` automatically renders select options from a key-value object, where keys become display labels and values become form data.
+
+The component handles the complexity of connecting Radix UI's Select with React Hook Form, including proper value binding, change handlers, and validation state management.
+
+#### Built-in features
+
+- **Automatic option rendering**: Pass a key-value object and get a fully functional select dropdown
+- **Label-value mapping**: Keys display to users, values are stored in form data
+- **Placeholder support**: Optional placeholder text for unselected state
+- **Zod validation**: Native integration with react-hook-form and Zod schemas
+- **Accessibility support**: Full keyboard navigation and screen reader compatibility
+
+## Less boilerplate
 
 <CodeHighlight code={`<FormField
   control={form.control}
@@ -33,36 +44,14 @@ registryName: rhf-select-field
   )}
 />`} language='tsx' />
 
-With `SelectField`, the same result in a single line:
+With `SelectField`, this reduces to a single declarative component:
 
 <CodeHighlight code={`<SelectField 
-      register={form.register('country')} 
-      label="Country" 
-      placeholder="Select a country"
-      description="Choose your country"
-      options={{ 'United States': 'us', 'Canada': 'ca', 'France': 'fr' }}
-/>`} language='tsx' />
-
-## react-hook-form integration
-
-The component is specifically designed for react-hook-form:
-
-<CodeHighlight code={`const form = useForm({
-      defaultValues: { category: '' },
-      resolver: zodResolver(schema),
-});
-
-const options = {
-      'Technology': 'tech',
-      'Design': 'design', 
-      'Business': 'business',
-};
-
-// Direct usage with form register
-<SelectField 
-      register={form.register('category')} 
-      label="Category" 
-      options={options}
+  register={form.register('country')} 
+  label="Country" 
+  placeholder="Select a country"
+  description="Choose your country"
+  options={{ 'United States': 'us', 'Canada': 'ca', 'France': 'fr' }}
 />`} language='tsx' />
 
 <ItemExamples registryName="rhf-select-field" />

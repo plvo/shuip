@@ -68,29 +68,29 @@ export function RadioField<
   return (
     <form.Field name={name} {...formProps}>
       {(field) => {
-        const errors = field.state.meta.errors;
-        const isValid = field.state.meta.isValid && errors.length === 0;
+        const { isValid, errors } = field.state.meta;
 
         return (
-          <Field data-invalid={!isValid} {...fieldProps}>
+          <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
             {label && <FieldLabel>{label}</FieldLabel>}
             <RadioGroup
               name={field.name}
               value={field.state.value as string}
               onValueChange={(value) => field.handleChange(value as TData)}
               onBlur={field.handleBlur}
-              aria-invalid={!isValid}
               {...props}
             >
               {options.map(({ label, value }) => (
                 <div key={value} className='flex items-center space-x-3 space-y-0'>
-                  <RadioGroupItem value={value} id={`${field.name}-${value}`} />
+                  <RadioGroupItem id={`${field.name}-${value}`} value={value} aria-invalid={!isValid} />
                   <Label htmlFor={`${field.name}-${value}`}>{label}</Label>
                 </div>
               ))}
             </RadioGroup>
-            {description && <FieldDescription>{description}</FieldDescription>}
-            {!isValid && <FieldError errors={errors} />}
+            {!isValid && (
+              <FieldError className='text-xs text-left' errors={errors.map((error) => ({ message: error }))} />
+            )}
+            {description && <FieldDescription className='text-xs'>{description}</FieldDescription>}
           </Field>
         );
       }}

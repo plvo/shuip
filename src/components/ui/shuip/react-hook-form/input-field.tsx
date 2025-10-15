@@ -1,83 +1,53 @@
-'use client';
+import { InfoIcon } from 'lucide-react';
+import type * as React from 'react';
+import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-import { Eye, EyeOff } from 'lucide-react';
-import * as React from 'react';
-import type { ControllerRenderProps, FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-
-export interface InputFieldProps<T extends FieldValues> extends React.ComponentProps<typeof Input> {
+export interface InputFieldProps<T extends FieldValues> extends React.ComponentProps<typeof InputGroupInput> {
   register: UseFormRegisterReturn<FieldPath<T>>;
   label?: string;
   description?: string;
+  tooltip?: React.ReactNode;
 }
 
-export function InputField<T extends FieldValues>({ register, label, description, ...props }: InputFieldProps<T>) {
-  const [showPassword, setShowPassword] = React.useState(false);
-
-  const getInputType = () => {
-    if (props.type === 'password') {
-      return showPassword ? 'text' : 'password';
-    }
-    return props.type ?? 'text';
-  };
-
-  const onChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: ControllerRenderProps<FieldValues, FieldPath<FieldValues>>,
-  ) => {
-    const value = e.target.value;
-    if (props.type === 'number') return field.onChange(value === '' ? '' : Number(value));
-    if (props.type === 'date') return field.onChange(value === '' ? '' : new Date(value));
-    return field.onChange(value);
-  };
-
+export function InputField<T extends FieldValues>({
+  register,
+  label,
+  description,
+  tooltip,
+  ...props
+}: InputFieldProps<T>) {
   return (
     <FormField
       {...register}
-      render={({ field }) => {
+      render={({ field, fieldState }) => {
         return (
-          <FormItem>
-            <FormLabel className='flex items-center justify-between'>
-              {label}
-              <FormMessage className='max-sm:hidden text-xs opacity-80' />
-            </FormLabel>
+          <FormItem data-invalid={fieldState.invalid}>
+            {label && <FormLabel>{label}</FormLabel>}
             <FormControl>
-              <div className='relative'>
-                <Input {...field} {...props} type={getInputType()} onChange={(e) => onChange(e, field)} />
-                {props.type === 'password' && (
-                  <PasswordButton showPassword={showPassword} setShowPassword={setShowPassword} />
+              <InputGroup>
+                <InputGroupInput {...field} type='text' aria-invalid={fieldState.invalid} {...props} />
+                {tooltip && (
+                  <InputGroupAddon align='inline-end'>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <InputGroupButton aria-label='Info' size='icon-xs'>
+                          <InfoIcon />
+                        </InputGroupButton>
+                      </TooltipTrigger>
+                      <TooltipContent>{tooltip}</TooltipContent>
+                    </Tooltip>
+                  </InputGroupAddon>
                 )}
-              </div>
+              </InputGroup>
             </FormControl>
-            {description && <p className='text-muted-foreground text-xs'>{description}</p>}
-            <FormMessage className='sm:hidden text-xs text-left opacity-80' />
+            <FormMessage className='text-xs text-left' />
+            {description && <FormDescription className='text-xs'>{description}</FormDescription>}
           </FormItem>
         );
       }}
     />
-  );
-}
-
-interface PasswordButtonProps {
-  showPassword: boolean;
-  setShowPassword: (showPassword: boolean) => void;
-}
-
-function PasswordButton({ showPassword, setShowPassword }: PasswordButtonProps) {
-  return (
-    <Button
-      type='button'
-      variant='ghost'
-      size='sm'
-      className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
-      onClick={() => setShowPassword(!showPassword)}
-      tabIndex={-1}
-      aria-label={showPassword ? 'Hide password' : 'Show password'}
-    >
-      {showPassword ? <EyeOff className='size-4' aria-hidden='true' /> : <Eye className='size-4' aria-hidden='true' />}
-      <span className='sr-only'>{showPassword ? 'Hide password' : 'Show password'}</span>
-    </Button>
   );
 }

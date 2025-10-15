@@ -18,30 +18,19 @@ export interface CopyButtonProps extends ButtonProps {
   notCopiedIcon?: React.ReactNode;
 }
 
-async function copyToClipboardWithMeta(value: string) {
-  navigator.clipboard.writeText(value);
-}
-
 export function CopyButton({ value, copiedIcon = <CheckIcon />, notCopiedIcon = <Copy />, ...props }: CopyButtonProps) {
   const [hasCopied, setHasCopied] = React.useState(false);
 
-  React.useEffect(() => {
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value);
+    setHasCopied(true);
     setTimeout(() => {
       setHasCopied(false);
     }, DEFAULT_TIMEOUT);
-  }, [hasCopied]);
+  };
 
   return (
-    <Button
-      size='icon'
-      variant={'ghost'}
-      className={'z-10 size-4'}
-      onClick={() => {
-        copyToClipboardWithMeta(value);
-        setHasCopied(true);
-      }}
-      {...props}
-    >
+    <Button size='icon' variant={'ghost'} className={'z-10 size-4'} onClick={handleCopy} {...props}>
       <span className='sr-only'>Copy</span>
       {hasCopied ? copiedIcon : notCopiedIcon}
     </Button>

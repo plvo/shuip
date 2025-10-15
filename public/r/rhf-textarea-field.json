@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "rhf-textarea-field",
+  "type": "registry:ui",
+  "dependencies": ["react-hook-form"],
+  "registryDependencies": ["form", "textarea", "input-group"],
+  "files": [
+    {
+      "path": "./registry/ui/rhf-textarea-field.tsx",
+      "content": "import { InfoIcon } from 'lucide-react';\nimport type * as React from 'react';\nimport type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';\nimport { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';\nimport { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from '@/components/ui/input-group';\nimport { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';\n\nexport interface TextareaFieldProps<T extends FieldValues> extends React.ComponentProps<typeof InputGroupTextarea> {\n  register: UseFormRegisterReturn<FieldPath<T>>;\n  label?: string;\n  description?: string;\n  tooltip?: React.ReactNode;\n}\n\nexport function TextareaField<T extends FieldValues>({\n  register,\n  label,\n  description,\n  tooltip,\n  ...props\n}: TextareaFieldProps<T>) {\n  return (\n    <FormField\n      {...register}\n      render={({ field, fieldState }) => {\n        return (\n          <FormItem data-invalid={fieldState.invalid}>\n            {label && <FormLabel>{label}</FormLabel>}\n            <FormControl>\n              <InputGroup>\n                <InputGroupTextarea {...field} aria-invalid={fieldState.invalid} {...props} />\n                {tooltip && (\n                  <InputGroupAddon align='block-end' className='justify-end'>\n                    <Tooltip>\n                      <TooltipTrigger asChild>\n                        <InputGroupButton aria-label='Info' size='icon-xs'>\n                          <InfoIcon />\n                        </InputGroupButton>\n                      </TooltipTrigger>\n                      <TooltipContent>{tooltip}</TooltipContent>\n                    </Tooltip>\n                  </InputGroupAddon>\n                )}\n              </InputGroup>\n            </FormControl>\n            <FormMessage className='text-xs text-left' />\n            {description && <FormDescription className='text-xs'>{description}</FormDescription>}\n          </FormItem>\n        );\n      }}\n    />\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/react-hook-form/textarea-field.tsx"
+    }
+  ]
+}

@@ -16,7 +16,7 @@ export function ItemPreview({ registryName }: ItemPreviewProps) {
   return (
     <Tabs defaultValue='preview'>
       <article className='rounded-lg'>
-        <TabsList className='flex justify-between p-2 bg-card'>
+        <TabsList className='flex justify-between p-2 bg-accent'>
           <div className='px-0 py-2'>
             <TabsTrigger value='preview' className='tabs-trigger-mdx'>
               Preview
@@ -57,9 +57,7 @@ export function Preview({ registryName }: { registryName: string }) {
   }, [registryName]);
 
   return (
-    <div
-      className={'w-full min-h-[150px] flex items-center justify-center p-8 bg-accent border border-border rounded-md'}
-    >
+    <div className='w-full min-h-[150px] flex items-center justify-center p-8 bg-card border border-border rounded-md'>
       <React.Suspense
         fallback={
           <div className='flex w-full items-center justify-center text-sm text-muted-foreground'>
