@@ -1,0 +1,70 @@
+---
+title: Submit Button
+description: Form submission button that automatically manages loading and disabled states based on form validation and submission status.
+registryName: tsf-submit-button
+position: 10
+---
+
+Submit buttons need to prevent double submissions and show loading feedback. `SubmitButton` subscribes to the form's state via `form.Subscribe` to track `isSubmitting` and `canSubmit`, automatically disabling the button when the form is invalid or already submitting.
+
+The component displays a `Loader2Icon` spinner when `isSubmitting` is true, providing visual feedback without manual state management. It accepts a `props` parameter for Button variants (outline, destructive, etc.) and all native button attributes.
+
+### Built-in features
+
+- **Auto-disabled** when `!canSubmit` or `isSubmitting`
+- **Loading spinner** via `Loader2Icon` during submission
+- **Form subscription** tracks state with zero boilerplate
+- **Button variants** via `props.variant` and `props.size`
+
+## Usage with validation
+
+<CodeHighlight code={`const form = useForm({
+    defaultValues: { email: '' },
+    onSubmit: async ({ value }) => {
+      await saveData(value)
+    }
+})
+
+<InputField
+    form={form}
+    name='email'
+    label='Email'
+    formProps={{
+      validators: {
+        onChange: ({ value }) => !value.includes('@') ? 'Invalid' : undefined
+      }
+    }}
+/>
+
+{/* Button disabled until email is valid */}
+<SubmitButton form={form}>Submit</SubmitButton>`} language='tsx' />
+
+## Custom variants
+
+<CodeHighlight code={`<SubmitButton form={form} props={{ variant: 'outline' }}>
+    Save Draft
+</SubmitButton>
+
+<SubmitButton form={form} props={{ variant: 'destructive', size: 'lg' }}>
+    Delete Account
+</SubmitButton>`} language='tsx' />
+
+<ItemExamples registryName='tsf-submit-button' />
+
+<PropTable props={[
+  {
+    name: 'form',
+    type: 'ReactFormApi<TFormData>',
+    description: 'Form instance from useForm hook (required)'
+  },
+  {
+    name: 'children',
+    type: 'React.ReactNode?',
+    description: 'Button label or content (default: "Submit")',
+  },
+  {
+    name: 'props',
+    type: 'ButtonProps?',
+    description: 'Button props including variant, size, className, and all native button attributes',
+  }
+]} />

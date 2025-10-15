@@ -1,0 +1,150 @@
+---
+title: Overview
+description: TanStack Form is a headless form library that provides powerful type-safe form state management. These components integrate TanStack Form with shuip's field components for a streamlined development experience.
+position: 1
+---
+
+## What is this?
+
+TanStack Form is a headless UI library for building forms with strong TypeScript support and framework-agnostic validation. Unlike traditional form libraries that couple form state with UI components, TanStack Form handles only the state management—leaving you free to choose your UI layer.
+
+These shuip components bridge TanStack Form with shadcn/ui, providing pre-built field components that reduce boilerplate and speed up development. They handle the repetitive setup work while preserving TanStack Form's type safety and validation capabilities.
+
+## How it works under the hood
+
+When you use a field component like [`InputField`](/tanstack-form/input-field), it:
+
+1. **Creates a `form.Field`** instance for your field name
+2. **Accesses field state** via `field.state.value` and `field.state.meta`
+3. **Wires up event handlers** (`field.handleChange`, `field.handleBlur`)
+4. **Renders shadcn UI components** (`Field`, `FieldLabel`, `FieldError`, etc.)
+5. **Manages validation** through the `formProps.validators` configuration
+
+The field's `state.meta` object contains:
+- `errors`: array of validation error messages
+- `isTouched`: whether the user has interacted with the field
+- `isDirty`: whether the value differs from initial
+- `isValidating`: whether async validation is in progress
+- `isValid`: whether all validators pass
+
+## Integration with shadcn/ui
+
+All field components are built on shadcn's primitives:
+
+- **`Field`**: Wrapper component that manages invalid states
+- **`FieldLabel`, `FieldDescription`, `FieldError`**: Consistent field UI
+- **`InputGroup`**: For password toggle buttons, tooltips, and addons
+- **`Select`, `RadioGroup`, `Checkbox`**: Radix UI form primitives
+
+This ensures visual consistency with your shadcn-based application while adding TanStack Form's powerful state management.
+
+## Type safety
+
+Full TypeScript support with automatic type inference:
+
+<CodeHighlight code={`type UserForm = {
+   user: {
+     email: string
+     profile: {
+       age: number
+     }
+   }
+}
+
+const form = useForm<UserForm>({
+    defaultValues: {
+      user: { email: '', profile: { age: 0 } }
+    }
+})
+
+// TypeScript autocompletes nested paths: 'user.email', 'user.profile.age'
+<InputField form={form} name='user.email' label='Email' />
+<InputField form={form} name='user.profile.age' label='Age' props={{ type: 'number' }} />`} language='tsx' />
+
+The `name` prop uses `DeepKeys<TFormData>` for compile-time validation of field paths, and values are typed as `DeepValue<TFormData, TName>` for correct inference.
+
+## Validation system
+
+TanStack Form supports multiple validation strategies:
+
+<CodeHighlight code={`<InputField
+    form={form}
+    name='email'
+    label='Email'
+    formProps={{
+      validators: {
+        // Runs on every change
+        onChange: ({ value }) =>
+          !value.includes('@') ? 'Invalid email' : undefined,
+  
+        // Runs when field loses focus
+        onBlur: ({ value }) =>
+          !value ? 'Email is required' : undefined,
+  
+        // Async validation with debounce
+        onChangeAsync: async ({ value }) => {
+          const available = await checkEmailAvailability(value)
+          return available ? undefined : 'Email already taken'
+        },
+        onChangeAsyncDebounceMs: 500,
+  
+        // Runs on form submission
+        onSubmit: ({ value }) =>
+          !value ? 'This field is required' : undefined
+      }
+    }}
+/>`} language='tsx' />
+
+Validators receive `{ value, fieldApi }` and must return `undefined` for valid or an error string for invalid.
+
+## Linked field validation
+
+Use `onChangeListenTo` to validate one field based on another's value:
+
+<CodeHighlight code={`<PasswordField
+    form={form}
+    name='password'
+    label='Password'
+/>
+
+<PasswordField
+    form={form}
+    name='confirmPassword'
+    label='Confirm Password'
+    formProps={{
+      validators: {
+        onChangeListenTo: ['password'],
+        onChange: ({ value, fieldApi }) => {
+          const password = fieldApi.form.getFieldValue('password')
+          return value !== password ? 'Passwords do not match' : undefined
+        }
+      }
+    }}
+/>`} language='tsx' />
+
+When `password` changes, `confirmPassword` is automatically re-validated.
+
+## Form submission
+
+Handle form submission with the `onSubmit` callback:
+
+<CodeHighlight code={`const form = useForm({
+    defaultValues: { email: '', password: '' },
+    onSubmit: async ({ value }) => {
+      // value is fully typed based on defaultValues
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        body: JSON.stringify(value),
+      })
+  
+      if (!response.ok) {
+        // Handle server errors
+      }
+    },
+    // Optional: handle submit errors
+    onSubmitInvalid: ({ formApi }) => {
+      toast.error('Please fix form errors')
+    }
+})`} language='tsx' />
+
+Use `<SubmitButton form={form}>` to get automatic loading states and disabled handling.

@@ -1,6 +1,5 @@
 'use client';
 
-import { Terminal } from 'lucide-react';
 import React from 'react';
 import { CopyButton } from '@/components/ui/shuip/copy-button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,32 +18,21 @@ export function InstallationCmd({ registryPath, manualCode, ...props }: Installa
   const choices = ['npm', 'pnpm', 'bun', manualCode ? 'manual' : undefined].filter(Boolean) as PackageManager[];
 
   return (
-    <Tabs value={pkg} onValueChange={(v) => setValue(v as PackageManager)} className={'w-full rounded-lg'} {...props}>
+    <Tabs value={pkg} onValueChange={(v) => setValue(v as PackageManager)} className={'w-full rounded-md'} {...props}>
       <TabsList className='flex justify-between p-2 bg-card'>
         <div className='px-0 py-2'>
           {choices.map((manager) => (
-            <TabsTrigger
-              key={manager}
-              value={manager}
-              className={'px-2 data-[state=active]:bg-transparent data-[state=active]:text-foreground'}
-            >
+            <TabsTrigger key={manager} value={manager} className={'tabs-trigger-mdx'} aria-label={manager}>
               {manager}
             </TabsTrigger>
           ))}
         </div>
-        <CopyButton value={code} />
+        <CopyButton value={code} className='r-2' />
       </TabsList>
 
       {choices.map((cmd) => (
-        <TabsContent className='rounded-lg border border-secondary overflow-hidden' key={cmd} value={cmd}>
-          {cmd === 'manual' && manualCode ? (
-            <CodePreview onlyCode code={manualCode} />
-          ) : (
-            <pre className='flex items-center p-3'>
-              <Terminal className='size-4 mr-2 text-muted-foreground' />
-              <code className='overflow-x-auto'>{code}</code>
-            </pre>
-          )}
+        <TabsContent key={cmd} value={cmd} className='rounded-md border border-border overflow-hidden'>
+          <CodePreview {...(cmd === 'manual' && manualCode ? { code: manualCode } : { code, language: 'bash' })} />
         </TabsContent>
       ))}
     </Tabs>

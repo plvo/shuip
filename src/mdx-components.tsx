@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type React from 'react';
 import { CopyButton } from '#/registry/ui/copy-button';
 import { CodeHighlight, type CodeHighlightProps } from './components/mdx/code-preview';
+import { ComparisonTable, type ComparisonTableProps } from './components/mdx/comparison-table';
 import {
   ItemExamples,
   type ItemExamplesProps,
@@ -83,6 +84,7 @@ export const mdxComponents = {
   ItemHeader: ({ registryName, text }: ItemHeaderProps) => <ItemHeader registryName={registryName} text={text} />,
   ItemExamples: ({ registryName }: ItemExamplesProps) => <ItemExamples registryName={registryName} />,
   PropTable: ({ props, title }: { props: Prop[]; title?: string }) => <PropTable props={props} title={title} />,
+  ComparisonTable: ({ rows, headers }: ComparisonTableProps) => <ComparisonTable rows={rows} headers={headers} />,
 };
 
 declare global {

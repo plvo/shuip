@@ -11,6 +11,7 @@
     "ignoreUnknown": true,
     "includes": [
       "**",
+      "!src/public/**/*",
       "!src/components/ui/**/*",
       "!src/styles/**/*",
       "!**/*.css",
@@ -60,6 +61,7 @@
         "noStaticElementInteractions": "off"
       },
       "correctness": {
+        "noChildrenProp": "off",
         "noUnusedVariables": {
           "level": "info",
           "fix": "unsafe"

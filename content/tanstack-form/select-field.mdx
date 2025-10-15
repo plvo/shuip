@@ -1,0 +1,97 @@
+---
+title: Select Field
+description: Dropdown select component integrated with TanStack Form. Options are defined as Record<string, string> where keys are labels.
+position: 5
+registryName: tsf-select-field
+---
+
+Dropdowns present a list of options in a compact UI. `SelectField` uses Radix UI's Select primitive wrapped with TanStack Form state management. The `options` prop accepts a `Record<string, string>` where keys are the display labels and values are what gets stored in the form state.
+
+This format makes it simple to define options inline or map from API responses. For dependent selects (e.g., country → states), use [`useStore`](https://tanstack.com/form/latest/docs/framework/react/reference/functions/usestore) to watch one field and update another field's options dynamically with `setFieldValue`.
+
+### Built-in features
+
+- **Record-based options** for clean label/value mapping
+- **Dynamic options** via state or API data
+- **Dependent selects** with `form.useStore` and `setFieldValue`
+- **Empty state placeholder** via `placeholder` prop
+
+## Options format
+
+<CodeHighlight code={`const options = {
+    'Display Label 1': 'value1',
+    'Display Label 2': 'value2',
+}
+
+<SelectField
+    form={form}
+    name='choice'
+    options={options}
+    label='Select an option'
+    placeholder='Choose...'
+/>`} language='tsx' />
+
+## Dependent selects
+
+<CodeHighlight code={`const [states, setStates] = React.useState<Record<string, string>>({})
+
+// Watch country changes
+form.useStore((state) => state.values.country, {
+    onChange: (country) => {
+      setStates(country === 'us' ? { 'California': 'ca', 'Texas': 'tx' } : {})
+      form.setFieldValue('state', '') // Reset state field
+    }
+})
+
+<SelectField form={form} name='country' options={{ 'United States': 'us' }} label='Country' />
+<SelectField form={form} name='state' options={states} label='State' placeholder='Select country first' />`} language='tsx' />
+
+<ItemExamples registryName={'tsf-select-field'} /> 
+
+<PropTable props={[
+  {
+    name: 'form',
+    type: 'ReactFormApi<TFormData>',
+    description: 'Form instance from useForm hook'
+  },
+  {
+    name: 'name',
+    type: 'DeepKeys<TFormData>',
+    description: 'Type-safe field name (supports nested paths like "user.country")'
+  },
+  {
+    name: 'options',
+    type: 'Record<string, string>',
+    description: 'Options as key-value pairs where key is the label and value is the field value'
+  },
+  {
+    name: 'label',
+    type: 'string?',
+    description: 'Field label text'
+  },
+  {
+    name: 'placeholder',
+    type: 'string?',
+    description: 'Placeholder text shown when no value is selected'
+  },
+  {
+    name: 'description',
+    type: 'string?',
+    description: 'Helper text displayed below the select'
+  },
+  {
+    name: 'formProps',
+    type: 'Partial<FieldOptions>?',
+    description: 'TanStack Form field options (validators, etc.)'
+  },
+  {
+    name: 'fieldProps',
+    type: 'React.ComponentProps<typeof Field>?',
+    description: 'Props passed to the Field wrapper component'
+  },
+  {
+    name: 'props',
+    type: 'React.ComponentProps<typeof Select>?',
+    description: 'Props passed to the Select component'
+  }
+]} />

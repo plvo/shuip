@@ -40,7 +40,7 @@ With `CheckboxField`, the same result in a single line:
       description="You agree to our Terms of Service and Privacy Policy."
 />`} language='tsx' />
 
-## Built-in features
+### Built-in features
 
 - **react-hook-form integration**: Native support for `control` and `name` props
 - **Flexible labeling**: Main label above checkbox, optional `boxLabel` next to checkbox
@@ -53,11 +53,11 @@ With `CheckboxField`, the same result in a single line:
 The component is specifically designed for react-hook-form:
 
 <CodeHighlight code={`const form = useForm({
-      defaultValues: { 
-        terms: false,
-        newsletter: false 
-      },
-      resolver: zodResolver(schema),
+    defaultValues: { 
+      terms: false,
+      newsletter: false 
+    },
+    resolver: zodResolver(schema),
 });
 
 // Basic usage

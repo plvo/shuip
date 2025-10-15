@@ -1,0 +1,14 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tsf-context",
+  "type": "registry:hook",
+  "dependencies": ["@tanstack/react-form"],
+  "files": [
+    {
+      "path": "./registry/hooks/tsf-context.tsx",
+      "content": "import { createFormHook, createFormHookContexts } from '@tanstack/react-form';\n// import { CheckboxField } from '@/components/ui/tanstack-form/checkbox-field-composed';\n// import { InputField } from '@/components/ui/tanstack-form/input-field-composed';\n// import { RadioField } from '@/components/ui/tanstack-form/radio-field-composed';\n// import { SelectField } from '@/components/ui/tanstack-form/select-field-composed';\n// import { SubmitButton } from '@/components/ui/tanstack-form/submit-button';\n\nexport const { fieldContext, useFieldContext, formContext, useFormContext } = createFormHookContexts();\n\nexport const { useAppForm, withFieldGroup, withForm } = createFormHook({\n  fieldContext,\n  formContext,\n  fieldComponents: {\n    // InputField,\n    // RadioField,\n    // SelectField,\n    // CheckboxField,\n  },\n  formComponents: {\n    // SubmitButton,\n  },\n});\n\nexport interface TanstackFormProps extends React.ComponentProps<'form'> {\n  form: any;\n  children: React.ReactNode;\n}\n\nexport const TanstackForm = ({ form, children, ...formProps }: TanstackFormProps) => {\n  return (\n    <formContext.Provider value={form}>\n      <form\n        onSubmit={(e) => {\n          e.preventDefault();\n          form.handleSubmit();\n        }}\n        {...formProps}\n      >\n        {children}\n      </form>\n    </formContext.Provider>\n  );\n};\n",
+      "type": "registry:hook",
+      "target": "./hooks/shuip/tsf-context.ts"
+    }
+  ]
+}

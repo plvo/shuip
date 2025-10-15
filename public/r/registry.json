@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "shuip",
-  "homepage": "https://shuip.xyz",
+  "homepage": "https://shuip.plvo.dev",
   "items": [
     {
       "name": "title-section",
@@ -131,15 +131,15 @@
       ]
     },
     {
-      "name": "query-boundary",
+      "name": "rhf-query-boundary",
       "type": "registry:ui",
       "dependencies": ["@tanstack/react-query", "react-error-boundary", "lucide-react"],
       "registryDependencies": ["button"],
       "files": [
         {
-          "path": "./registry/ui/query-boundary.tsx",
+          "path": "./registry/ui/rhf-query-boundary.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/query-boundary.tsx"
+          "target": "./components/ui/shuip/react-hook-form/query-boundary.tsx"
         }
       ]
     },
@@ -201,6 +201,97 @@
           "path": "./registry/ui/copy-button.tsx",
           "type": "registry:ui",
           "target": "./components/ui/shuip/copy-button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-input-field",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form"],
+      "registryDependencies": ["field", "input-group", "tooltip"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-input-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/input-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-submit-button",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form"],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-submit-button.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/submit-button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-radio-field",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form"],
+      "registryDependencies": ["field", "radio-group"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-radio-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/radio-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-select-field",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form", "@radix-ui/react-select"],
+      "registryDependencies": ["field", "select"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-select-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/select-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-checkbox-field",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form"],
+      "registryDependencies": ["field", "checkbox"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-checkbox-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/checkbox-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-password-field",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form", "lucide-react"],
+      "registryDependencies": ["field", "input-group", "tooltip"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-password-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/password-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-textarea-field",
+      "type": "registry:ui",
+      "dependencies": ["@tanstack/react-form"],
+      "registryDependencies": ["field", "input-group", "tooltip"],
+      "files": [
+        {
+          "path": "./registry/ui/tsf-textarea-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/textarea-field.tsx"
         }
       ]
     }
