@@ -5,45 +5,41 @@ import * as React from 'react';
 import { REGISTRY_INDEX } from '#/registry/__index__';
 import { CodePreview } from '@/components/mdx/code-preview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
 import { CopyButton } from '../ui/shuip/copy-button';
 
-export interface ItemPreviewProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface ItemPreviewProps {
   registryName: string;
 }
 
-export function ItemPreview({ registryName, ...props }: ItemPreviewProps) {
+export function ItemPreview({ registryName }: ItemPreviewProps) {
   const code = REGISTRY_INDEX[registryName]?.code;
   return (
-    <div className={cn('flex flex-col space-y-2')} {...props}>
-      <Tabs defaultValue='preview' className='relative mr-auto w-full'>
-        <div className='flex items-center justify-between pb-2'>
-          <TabsList className='w-full justify-start rounded-none border-b bg-transparent p-0'>
-            <TabsTrigger value='preview' className='table-trigger'>
+    <Tabs defaultValue='preview'>
+      <article className='rounded-lg'>
+        <TabsList className='flex justify-between p-2 bg-card'>
+          <div className='px-0 py-2'>
+            <TabsTrigger value='preview' className='tabs-trigger-mdx'>
               Preview
             </TabsTrigger>
-            <TabsTrigger value='code' className='table-trigger'>
+            <TabsTrigger value='code' className='tabs-trigger-mdx'>
               Code
             </TabsTrigger>
-          </TabsList>
-        </div>
-        <TabsContent value='preview' className='relative rounded-md border'>
-          <div className='flex items-center justify-between p-2 border-b'>
-            <CopyButton value={code || ''} />
           </div>
-          <React.Suspense fallback={<div>Loading...</div>}>
-            <Preview registryName={registryName} isJustPreview={false} />
-          </React.Suspense>
+          <CopyButton value={code || ''} className='r-2' />
+        </TabsList>
+
+        <TabsContent value='preview'>
+          <Preview registryName={registryName} />
         </TabsContent>
-        <TabsContent value='code'>
+        <TabsContent value='code' className='rounded-md border border-border overflow-hidden'>
           <CodePreview code={code || ''} />
         </TabsContent>
-      </Tabs>
-    </div>
+      </article>
+    </Tabs>
   );
 }
 
-export function Preview({ registryName, isJustPreview = true }: { registryName: string; isJustPreview?: boolean }) {
+export function Preview({ registryName }: { registryName: string }) {
   const PreviewComponent = React.useMemo(() => {
     const Comp = REGISTRY_INDEX[registryName]?.component;
 
@@ -62,10 +58,7 @@ export function Preview({ registryName, isJustPreview = true }: { registryName: 
 
   return (
     <div
-      className={cn(
-        'w-full min-h-[150px] flex items-center justify-center p-8 bg-card',
-        isJustPreview && 'border rounded-md',
-      )}
+      className={'w-full min-h-[150px] flex items-center justify-center p-8 bg-accent border border-border rounded-md'}
     >
       <React.Suspense
         fallback={

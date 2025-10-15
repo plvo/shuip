@@ -131,15 +131,15 @@
       ]
     },
     {
-      "name": "query-boundary",
+      "name": "rhf-query-boundary",
       "type": "registry:ui",
       "dependencies": ["@tanstack/react-query", "react-error-boundary", "lucide-react"],
       "registryDependencies": ["button"],
       "files": [
         {
-          "path": "./registry/ui/query-boundary.tsx",
+          "path": "./registry/ui/rhf-query-boundary.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/query-boundary.tsx"
+          "target": "./components/ui/shuip/react-hook-form/query-boundary.tsx"
         }
       ]
     },

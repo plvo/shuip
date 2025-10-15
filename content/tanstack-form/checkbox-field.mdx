@@ -1,79 +1,33 @@
 ---
 title: Checkbox Field
-description: Checkbox component integrated with TanStack Form for type-safe boolean field management. Features label and boxLabel props.
+description: Checkbox component integrated with TanStack Form for type-safe boolean field management.
 position: 7
 registryName: tsf-checkbox-field
 ---
 
-## Built-in features
+Checkboxes are binary inputs for opting in or accepting terms. `CheckboxField` combines Radix UI's Checkbox with an inline clickable label, making the entire label area interactive—not just the checkbox itself.
 
-- **Dual labels**: `label` (top) and `boxLabel` (next to checkbox, clickable)
-- **Type-safe**: Full TypeScript support with TanStack Form
-- **Validation**: Sync and async validation support
-- **Accessible**: Proper label associations and ARIA attributes
+Common patterns include required checkboxes for terms acceptance (validated with `!value` check) or grouped checkboxes for multi-select options (using nested field paths like `features.notifications`).
 
-## Common use cases
+### Built-in features
 
-<CodeHighlight code={`const form = useForm({
-  defaultValues: {
-    terms: false,
-    marketing: false,
-    newsletter: false,
-  },
-  onSubmit: async ({ value }) => {
-    await saveData(value)
-  },
-})
+- **Clickable inline label** positioned next to checkbox
+- **Boolean field type** for true/false state
+- **Required validation** for terms acceptance
+- **Nested paths** for grouped checkboxes
 
-// Required checkbox
-<CheckboxField
-  form={form}
-  name='terms'
-  label='Terms and Conditions'
-  boxLabel='I accept the terms and conditions'
-  description='You must accept the terms to continue'
-  formProps={{
-    validators: {
-      onChange: ({ value }) =>
-        !value ? 'You must accept the terms' : undefined
-    }
-  }}
-/>
+## Required checkbox
 
-// Optional checkbox
-<CheckboxField
-  form={form}
-  name='marketing'
-  label='Marketing'
-  boxLabel='Send me promotional emails'
-  description='Optional: Receive updates about new features'
-/>
-
-// Without boxLabel (standalone)
-<CheckboxField
-  form={form}
-  name='newsletter'
-  label='Enable Newsletter'
-  description='Toggle newsletter subscription'
-/>
-
-// With conditional validation
-<CheckboxField
-  form={form}
-  name='sameAsShipping'
-  label='Billing Address'
-  boxLabel='Same as shipping address'
-  formProps={{
-    validators: {
-      onChange: ({ value }) => {
-        const shipping = form.getFieldValue('shippingAddress')
-        if (value && !shipping) {
-          return 'Please enter a shipping address first'
-        }
-        return undefined
+<CodeHighlight code={`<CheckboxField
+    form={form}
+    name='terms'
+    label='I accept the terms and conditions'
+    formProps={{
+      validators: {
+        onChange: ({ value }) =>
+          !value ? 'You must accept the terms' : undefined
       }
-    }
-  }}
+    }}
 />`} language='tsx' />
 
 <ItemExamples registryName={'tsf-checkbox-field'} /> 
@@ -92,12 +46,7 @@ registryName: tsf-checkbox-field
   {
     name: 'label',
     type: 'string',
-    description: 'Main field label displayed at the top (required)'
-  },
-  {
-    name: 'boxLabel',
-    type: 'string?',
-    description: 'Text displayed next to the checkbox (clickable)'
+    description: 'Clickable label displayed next to the checkbox (required)'
   },
   {
     name: 'description',

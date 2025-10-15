@@ -1,28 +1,19 @@
+'use client';
+
 import { Highlight, themes } from 'prism-react-renderer';
-import { CopyButton } from '@/components/ui/shuip/copy-button';
 
 export interface CodePreviewProps {
   code?: string;
   language?: string;
-  onlyCode?: boolean;
 }
 
-export function CodePreview({ code, language = 'tsx', onlyCode = false }: CodePreviewProps) {
+export function CodePreview({ code, language }: CodePreviewProps) {
   return (
-    <div className='w-full max-w-[880px] border rounded-md [&_pre]:my-0 [&_pre]:max-h-[350px] [&_pre]:overflow-auto'>
+    <div className='w-full max-w-[880px] rounded-md [&_pre]:my-0 [&_pre]:max-h-[350px] [&_pre]:overflow-auto'>
       {code ? (
-        <div>
-          <div
-            data-only-code={onlyCode}
-            className='flex items-center justify-between p-2 border-b data-[only-code=true]:hidden'
-          >
-            {/* TODO V0 */}
-            <CopyButton value={code} />
-          </div>
-          <CodeHighlight code={code} language={language} />
-        </div>
+        <CodeHighlight code={code} language={language} />
       ) : (
-        <p className='text-sm text-muted-foreground'>Component not found in registry.</p>
+        <p className='text-sm text-muted-foreground'>Code not found.</p>
       )}
     </div>
   );

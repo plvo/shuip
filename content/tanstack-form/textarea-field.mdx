@@ -5,60 +5,34 @@ position: 4
 registryName: tsf-textarea-field
 ---
 
-## Built-in features
+Multi-line text inputs are essential for longer content like descriptions, comments, or messages. `TextareaField` wraps a textarea element with InputGroup to enable an optional tooltip button positioned at the bottom-right corner—useful for character limits or formatting guidelines without cluttering the label area.
 
-- **InputGroup integration**: Uses shadcn InputGroup for clean UI
-- **Tooltip support**: InfoIcon with contextual help at bottom-right
-- **Type-safe**: Full TypeScript support with TanStack Form
-- **Validation**: Sync and async validation support
-- **Auto-resize**: Supports textarea props like rows, maxLength
+The component accepts native textarea props like `rows` and `maxLength` through the `props` parameter. Common patterns include pairing `maxLength` with a character counter (accessible via `form.useStore`) or implementing minimum length validation for meaningful input.
 
-## Common use cases
+#### Built-in features
 
-<CodeHighlight code={`const form = useForm({
-  defaultValues: {
-    bio: '',
-    message: '',
-    notes: '',
-  },
-  onSubmit: async ({ value }) => {
-    await saveData(value)
-  },
-})
+- **Bottom-right tooltip** positioned via InputGroup `align='block-end'`
+- **Native textarea props** support (rows, maxLength, placeholder)
+- **Character limit validation** with min/max length validators
+- **Multi-line error display** for longer validation messages
 
-// Basic textarea
-<TextareaField
-  form={form}
-  name='bio'
-  label='Biography'
-  description='Tell us about yourself'
-  props={{ rows: 4 }}
-/>
+## Length validation
 
-// With validation
-<TextareaField
-  form={form}
-  name='message'
-  label='Message'
-  props={{ rows: 6, maxLength: 500 }}
-  formProps={{
-    validators: {
-      onChange: ({ value }) => {
-        if (value.length < 10) return 'Message too short (min 10 characters)'
-        if (value.length > 500) return 'Message too long (max 500 characters)'
-        return undefined
+<CodeHighlight code={`<TextareaField
+    form={form}
+    name='feedback'
+    label='Feedback'
+    description='Share your thoughts (10-500 characters)'
+    props={{ rows: 6, maxLength: 500, placeholder: 'Your feedback...' }}
+    formProps={{
+      validators: {
+        onChange: ({ value }) => {
+          if (value.length < 10) return 'Please provide at least 10 characters'
+          if (value.length > 500) return 'Maximum 500 characters allowed'
+          return undefined
+        }
       }
-    }
-  }}
-/>
-
-// With tooltip
-<TextareaField
-  form={form}
-  name='notes'
-  label='Notes'
-  tooltip='These notes will be visible to your team members'
-  props={{ rows: 5, placeholder: 'Add your notes here...' }}
+    }}
 />`} language='tsx' />
 
 <ItemExamples registryName={'tsf-textarea-field'} /> 

@@ -7,8 +7,8 @@ import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button'
 export default function TsfCheckboxFieldExample() {
   const form = useForm({
     defaultValues: {
-      terms: false,
-      marketing: false,
+      termsExample: false,
+      marketingExample: false,
     },
     onSubmit: async ({ value }) => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -26,7 +26,7 @@ export default function TsfCheckboxFieldExample() {
     >
       <CheckboxField
         form={form}
-        name='terms'
+        name='termsExample'
         label='I accept the terms and conditions'
         formProps={{
           validators: {
@@ -37,7 +37,7 @@ export default function TsfCheckboxFieldExample() {
 
       <CheckboxField
         form={form}
-        name='marketing'
+        name='marketingExample'
         label='Send me promotional emails'
         description='Optional: Receive updates about new features'
       />

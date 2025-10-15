@@ -5,78 +5,29 @@ position: 6
 registryName: tsf-radio-field
 ---
 
-## Built-in features
+Radio groups let users select a single option from a list. `RadioField` uses Radix UI's RadioGroup with automatic label associations and proper ARIA attributes. Unlike `SelectField`, radio buttons show all options upfront—ideal for 2-5 choices where comparison is important.
 
-- **Type-safe options**: Options as `Array<{label: string; value: string}>`
-- **Type-safe field names**: Autocomplete with `DeepKeys<TFormData>`
-- **Validation**: Sync and async validation support
-- **Accessible**: Proper label associations and ARIA attributes
+The `options` prop takes an array of `{label, value}` objects, making it easy to map from data structures. Each radio button gets a unique ID combining the field name and value, ensuring proper accessibility.
 
-## Common use cases
+### Built-in features
 
-<CodeHighlight code={`const form = useForm({
-  defaultValues: {
-    plan: '',
-    paymentMethod: '',
-    shippingSpeed: '',
-  },
-  onSubmit: async ({ value }) => {
-    await saveData(value)
-  },
-})
+- **Visible all-at-once** for easy comparison
+- **Array-based options** with label/value structure
+- **Automatic label linking** with unique IDs per option
+- **Single-selection enforcement** via RadioGroup
 
-// Basic radio group
+## Options structure
+
+<CodeHighlight code={`const options = [
+    { label: 'Display Text 1', value: 'val1' },
+    { label: 'Display Text 2', value: 'val2' },
+]
+
 <RadioField
-  form={form}
-  name='plan'
-  options={[
-    { label: 'Free', value: 'free' },
-    { label: 'Pro', value: 'pro' },
-    { label: 'Enterprise', value: 'enterprise' },
-  ]}
-  label='Subscription Plan'
-  description='Choose your subscription plan'
-/>
-
-// Required selection
-<RadioField
-  form={form}
-  name='paymentMethod'
-  options={[
-    { label: 'Credit Card', value: 'card' },
-    { label: 'PayPal', value: 'paypal' },
-    { label: 'Bank Transfer', value: 'bank' },
-  ]}
-  label='Payment Method'
-  formProps={{
-    validators: {
-      onChange: ({ value }) =>
-        !value ? 'Please select a payment method' : undefined
-    }
-  }}
-/>
-
-// With conditional validation
-<RadioField
-  form={form}
-  name='shippingSpeed'
-  options={[
-    { label: 'Standard (5-7 days)', value: 'standard' },
-    { label: 'Express (2-3 days)', value: 'express' },
-    { label: 'Overnight', value: 'overnight' },
-  ]}
-  label='Shipping Speed'
-  formProps={{
-    validators: {
-      onChange: ({ value }) => {
-        const total = form.getFieldValue('total')
-        if (value === 'overnight' && total < 50) {
-          return 'Overnight shipping requires minimum order of $50'
-        }
-        return undefined
-      }
-    }
-  }}
+    form={form}
+    name='choice'
+    options={options}
+    label='Select one'
 />`} language='tsx' />
 
 <ItemExamples registryName={'tsf-radio-field'} /> 

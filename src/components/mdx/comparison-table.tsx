@@ -1,5 +1,3 @@
-import type React from 'react';
-
 export interface ComparisonRow {
   aspect: string;
   simple: string;

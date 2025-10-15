@@ -5,104 +5,118 @@ position: 2
 registryName: tsf-input-field
 ---
 
-## Less verbose code
+`InputField` is a text input component that encapsulates TanStack Form's field management with shadcn/ui's design system. It handles all the boilerplate of connecting form state to an input element: wiring event handlers, displaying errors, managing touched states, and rendering consistent UI.
 
-<CodeHighlight code={`// Traditional TanStack Form
-<form.Field
+This component is useful when you want to quickly add form inputs without manually setting up `form.Field` render props, input bindings, and error display logic for every field.
+
+#### Built-in features
+
+- **Type-safe field names**: Uses `DeepKeys<TFormData>` for autocomplete and compile-time validation
+- **Nested path support**: Access deeply nested values like `user.profile.email`
+- **Tooltip integration**: Optional InfoIcon button with tooltip content via `tooltip` prop
+- **InputGroup ready**: Supports shadcn InputGroup for seamless addon integration
+- **Async validation**: Built-in debouncing and loading states for API validation
+- **Full type inference**: Field value types automatically inferred from form schema
+
+## Less boilerplate
+
+TanStack Form's standard approach uses render props to access field state:
+
+<CodeHighlight code={`<form.Field
   name="email"
   validators={{
-    onChange: ({ value }) => !value.includes('@') ? 'Invalid' : undefined
+    onChange: ({ value }) => !value.includes('@') ? 'Invalid email' : undefined
   }}
 >
   {(field) => (
-    <div>
-      <label>{field.name}</label>
-      <input 
+    <>
+      <label htmlFor={field.name}>Email</label>
+      <input
+        id={field.name}
+        name={field.name}
+        type="email"
         value={field.state.value}
         onChange={(e) => field.handleChange(e.target.value)}
         onBlur={field.handleBlur}
       />
-      {field.state.meta.errors && <span>{field.state.meta.errors}</span>}
-    </div>
+      {!field.state.meta.isValid && (
+        <span>{field.state.meta.errors.join(', ')}</span>
+      )}
+    </>
   )}
 </form.Field>`} language='tsx' />
 
-With `InputField`, the same result in a single component:
+With `InputField`, this reduces to a single declarative component:
 
 <CodeHighlight code={`<InputField
-  form={form}
-  name='email'
-  label='Email'
-  formProps={{
-    validators: {
-      onChange: ({ value }) => !value.includes('@') ? 'Invalid' : undefined
-    }
-  }}
+    form={form}
+    name='email'
+    label='Email'
+    props={{ type: 'email' }}
+    formProps={{
+      validators: {
+        onChange: ({ value }) => !value.includes('@') ? 'Invalid email' : undefined
+      }
+    }}
 />`} language='tsx' />
 
-## Built-in features
 
-- **Type-safe names**: Autocomplete for field names with `DeepKeys<TFormData>`
-- **Tooltip support**: InfoIcon with contextual help
-- **InputGroup ready**: Supports shadcn InputGroup for addons/buttons
-- **Async validation**: Built-in support for API validation
-- **Full type inference**: Value types inferred from form schema
 
 ## Common use cases
 
 <CodeHighlight code={`const form = useForm({
-  defaultValues: {
-    name: '',
-    email: '',
-    age: 0,
-  },
-  onSubmit: async ({ value }) => {
-    await saveData(value)
-  },
+    defaultValues: {
+      name: '',
+      email: '',
+      age: 0,
+    },
+    onSubmit: async ({ value }) => {
+      await saveData(value)
+    },
 })
 
 // Basic text input
 <InputField
-  form={form}
-  name='name'
-  label='Name'
-  description='Your full name'
+    form={form}
+    name='name'
+    label='Name'
+    description='Your full name'
 />
 
 // Email with validation
 <InputField
-  form={form}
-  name='email'
-  label='Email'
-  props={{ type: 'email' }}
-  formProps={{
-    validators: {
-      onChange: ({ value }) =>
-        !value.includes('@') ? 'Invalid email' : undefined
-    }
-  }}
+    form={form}
+    name='email'
+    label='Email'
+    props={{ type: 'email' }}
+    formProps={{
+      validators: {
+        onChange: ({ value }) =>
+          !value.includes('@') ? 'Invalid email' : undefined
+      }
+    }}
 />
 
 // With tooltip
 <InputField
-  form={form}
-  name='username'
-  label='Username'
-  tooltip='Username must be unique and 3-20 characters'
-  formProps={{
-    validators: {
-      onChange: ({ value }) =>
-        value.length < 3 ? 'Too short' : undefined
-    }
-  }}
+    form={form}
+    name='username'
+    label='Username'
+    tooltip='Username must be unique and 3-20 characters'
+    formProps={{
+      validators: {
+        onChange: ({ value }) =>
+          value.length < 3 ? 'Too short' : undefined
+      }
+    }}
 />
 
 // Number input
 <InputField
-  form={form}
-  name='age'
-  label='Age'
-  props={{ type: 'number', min: 0, max: 120 }}
+    form={form}
+    name='age'
+    label='Age'
+    props={{ type: 'number', min: 0, max: 120 }}
 />`} language='tsx' />
 
 <ItemExamples registryName={'tsf-input-field'} /> 

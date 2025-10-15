@@ -5,80 +5,46 @@ position: 5
 registryName: tsf-select-field
 ---
 
-## Built-in features
+Dropdowns present a list of options in a compact UI. `SelectField` uses Radix UI's Select primitive wrapped with TanStack Form state management. The `options` prop accepts a `Record<string, string>` where keys are the display labels and values are what gets stored in the form state.
 
-- **Type-safe options**: Options as `Record<string, string>` (key = label, value = field value)
-- **Type-safe field names**: Autocomplete with `DeepKeys<TFormData>`
-- **Validation**: Sync and async validation support
-- **Full type inference**: Value types inferred from form schema
+This format makes it simple to define options inline or map from API responses. For dependent selects (e.g., country → states), use [`useStore`](https://tanstack.com/form/latest/docs/framework/react/reference/functions/usestore) to watch one field and update another field's options dynamically with `setFieldValue`.
 
-## Common use cases
+### Built-in features
 
-<CodeHighlight code={`const form = useForm({
-  defaultValues: {
-    country: '',
-    plan: '',
-    region: '',
-  },
-  onSubmit: async ({ value }) => {
-    await saveData(value)
-  },
+- **Record-based options** for clean label/value mapping
+- **Dynamic options** via state or API data
+- **Dependent selects** with `form.useStore` and `setFieldValue`
+- **Empty state placeholder** via `placeholder` prop
+
+## Options format
+
+<CodeHighlight code={`const options = {
+    'Display Label 1': 'value1',
+    'Display Label 2': 'value2',
+}
+
+<SelectField
+    form={form}
+    name='choice'
+    options={options}
+    label='Select an option'
+    placeholder='Choose...'
+/>`} language='tsx' />
+
+## Dependent selects
+
+<CodeHighlight code={`const [states, setStates] = React.useState<Record<string, string>>({})
+
+// Watch country changes
+form.useStore((state) => state.values.country, {
+    onChange: (country) => {
+      setStates(country === 'us' ? { 'California': 'ca', 'Texas': 'tx' } : {})
+      form.setFieldValue('state', '') // Reset state field
+    }
 })
 
-// Basic select
-<SelectField
-  form={form}
-  name='country'
-  options={{
-    'United States': 'us',
-    'United Kingdom': 'uk',
-    'France': 'fr',
-    'Germany': 'de',
-  }}
-  label='Country'
-  placeholder='Select a country'
-  description='Choose your country'
-/>
-
-// Required selection
-<SelectField
-  form={form}
-  name='plan'
-  options={{
-    'Free': 'free',
-    'Pro': 'pro',
-    'Enterprise': 'enterprise',
-  }}
-  label='Subscription Plan'
-  placeholder='Choose a plan'
-  formProps={{
-    validators: {
-      onChange: ({ value }) =>
-        !value ? 'Please select a plan' : undefined
-    }
-  }}
-/>
-
-// With async validation
-<SelectField
-  form={form}
-  name='region'
-  options={{
-    'North America': 'na',
-    'Europe': 'eu',
-    'Asia Pacific': 'apac',
-  }}
-  label='Region'
-  formProps={{
-    validators: {
-      onChangeAsync: async ({ value }) => {
-        if (!value) return undefined
-        const available = await checkRegionAvailability(value)
-        return available ? undefined : 'This region is currently unavailable'
-      }
-    }
-  }}
-/>`} language='tsx' />
+<SelectField form={form} name='country' options={{ 'United States': 'us' }} label='Country' />
+<SelectField form={form} name='state' options={states} label='State' placeholder='Select country first' />`} language='tsx' />
 
 <ItemExamples registryName={'tsf-select-field'} /> 
 

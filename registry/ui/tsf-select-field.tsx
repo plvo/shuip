@@ -84,7 +84,7 @@ export function SelectField<
   return (
     <form.Field name={name} {...formProps}>
       {(field) => {
-        const errors = field.state.meta.errors;
+        const errors = field.state.meta.errors.map((error) => ({ message: error ?? '' }));
         const isValid = field.state.meta.isValid && errors.length === 0;
 
         return (
