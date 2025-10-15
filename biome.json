@@ -12,6 +12,7 @@
     "includes": [
       "**",
       "!src/public/**/*",
+      "!registry/__index__.ts",
       "!src/components/ui/**/*",
       "!src/styles/**/*",
       "!**/*.css",

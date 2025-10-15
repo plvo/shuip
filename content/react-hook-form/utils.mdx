@@ -1,0 +1,108 @@
+---
+title: Utils
+description: TypeScript utilities for form management, change detection, and Zod schema default value generation.
+registryName: rhf-utils
+---
+
+Form utilities that streamline common React Hook Form patterns. These functions handle change detection between form states and automatic default value generation from Zod schemas.
+
+The utilities reduce boilerplate when working with complex forms, especially for update operations where you need to detect modified fields or when setting up forms with proper default values.
+
+#### Built-in features
+
+- **Change detection**: Deep comparison to identify modified fields between objects
+- **Zod integration**: Automatic default value generation from schema definitions
+- **Type safety**: Full TypeScript support with proper type inference
+- **Performance optimized**: Efficient algorithms for deep object comparison
+- **Edge case handling**: Robust null/undefined value management
+
+## getChangedFields
+
+Identifies modified fields between two objects using deep comparison. Returns only the fields that have changed, useful for optimized API updates.
+
+<CodeHighlight code={`// Basic usage
+const oldData = { name: "John", age: 25 };
+const newData = { name: "John", age: 30 };
+const changes = getChangedFields(oldData, newData);
+// Result: { age: 30 }
+
+// With React Hook Form
+const handleSubmit = (data: FormData) => {
+  const changedFields = getChangedFields(form.formState.defaultValues, data);
+  await updateUser(changedFields); // Send only modified fields
+};`} language="typescript" />
+
+## getZodDefaultValues
+
+Automatically generates typed default values from Zod schemas. Supports nested objects and optional data overrides.
+
+<CodeHighlight code={`const userSchema = z.object({
+  name: z.string(),
+  age: z.number(),
+  address: z.object({
+    street: z.string(),
+    city: z.string(),
+  }),
+});
+
+// Generate defaults
+const defaultValues = getZodDefaultValues(userSchema);
+// Result: { name: "", age: 0, address: { street: "", city: "" } }
+
+// With React Hook Form
+const form = useForm({
+  resolver: zodResolver(userSchema),
+  defaultValues: getZodDefaultValues(userSchema, {
+    name: 'John Doe', // Override specific fields
+  }),
+});`} language="typescript" />
+
+## Type mapping
+
+The `zodTypeDefaultValue` function maps Zod types to appropriate defaults:
+
+- `z.string()` → `""`
+- `z.number()` → `0` 
+- `z.boolean()` → `false`
+- `z.array()` → `[]`
+- `z.object()` → Recursively initialized object
+- `z.optional()` → `undefined`
+- `z.nullable()` → `null`
+
+## Complete example
+
+<CodeHighlight code={`import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { getChangedFields, getZodDefaultValues } from '@/lib/rhf-utils';
+
+const userSchema = z.object({
+  name: z.string(),
+  age: z.number(),
+  settings: z.object({
+    theme: z.string().optional(),
+    notifications: z.boolean(),
+  }),
+});
+
+export function UserForm() {
+  const form = useForm({
+    resolver: zodResolver(userSchema),
+    defaultValues: getZodDefaultValues(userSchema, {
+      name: 'John Doe',
+    }),
+  });
+
+  const handleSubmit = (data) => {
+    const changes = getChangedFields(form.formState.defaultValues, data);
+    console.log('Only modified fields:', changes);
+    // Send optimized update to API
+  };
+
+  return (
+    <form onSubmit={form.handleSubmit(handleSubmit)}>
+      {/* Your form fields */}
+    </form>
+  );
+}`} language="typescript" />
+
+<ItemExamples registryName={'rhf-utils'} />

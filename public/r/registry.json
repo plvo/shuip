@@ -93,6 +93,19 @@
       ]
     },
     {
+      "name": "rhf-textarea-field",
+      "type": "registry:ui",
+      "dependencies": ["react-hook-form"],
+      "registryDependencies": ["form", "textarea", "input-group"],
+      "files": [
+        {
+          "path": "./registry/ui/rhf-textarea-field.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/textarea-field.tsx"
+        }
+      ]
+    },
+    {
       "name": "rhf-radio-field",
       "type": "registry:ui",
       "dependencies": ["react-hook-form"],
@@ -122,7 +135,7 @@
       "name": "rhf-checkbox-field",
       "type": "registry:ui",
       "dependencies": ["react-hook-form"],
-      "registryDependencies": ["form", "checkbox"],
+      "registryDependencies": ["form", "checkbox", "label"],
       "files": [
         {
           "path": "./registry/ui/rhf-checkbox-field.tsx",
@@ -157,15 +170,15 @@
       ]
     },
     {
-      "name": "address-field",
+      "name": "rhf-address-field",
       "type": "registry:ui",
       "dependencies": ["react-hook-form", "zod", "lucide-react"],
       "registryDependencies": ["form", "input", "button", "popover", "command"],
       "files": [
         {
-          "path": "./registry/ui/address-field.tsx",
+          "path": "./registry/ui/rhf-address-field.tsx",
           "type": "registry:ui",
-          "target": "./components/ui/shuip/address-field.tsx"
+          "target": "./components/ui/shuip/react-hook-form/address-field.tsx"
         },
         {
           "path": "./registry/actions/places.ts",

@@ -88,8 +88,15 @@ function DocsNav({ pathsByCategory }: { pathsByCategory: PathsByCategory }) {
     const needToSort = paths[0].metadata.position !== undefined;
 
     const handledPaths = needToSort
-      ? paths.sort((a, b) => ((a.metadata.position as any) - (b.metadata.position as any)) as any)
-      : paths;
+      ? paths.sort((a, b) => (a.metadata.position as any) - (b.metadata.position as any))
+      : paths.sort((a, b) => {
+          if (!a.metadata.registryName && !b.metadata.registryName) {
+            return (a.metadata.title ?? '').localeCompare(b.metadata.title ?? '');
+          }
+          if (!a.metadata.registryName) return -1;
+          if (!b.metadata.registryName) return 1;
+          return (a.metadata.title ?? '').localeCompare(b.metadata.title ?? '');
+        });
 
     return (
       <NavGroup key={category} title={filenameToTitle(category)}>

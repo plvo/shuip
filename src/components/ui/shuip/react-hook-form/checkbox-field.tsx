@@ -1,8 +1,6 @@
-'use client';
-
 import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FormControl, FormDescription, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 export interface CheckboxFieldProps<T extends FieldValues> extends React.ComponentProps<typeof Checkbox> {
   register: UseFormRegisterReturn<FieldPath<T>>;
@@ -22,7 +20,7 @@ export function CheckboxField<T extends FieldValues>({
       {...register}
       render={({ field, fieldState }) => {
         return (
-          <FormItem className='space-y-1.5' data-invalid={fieldState.invalid}>
+          <FormItem data-invalid={fieldState.invalid}>
             <FormControl>
               <div className='flex items-center gap-2'>
                 <Checkbox
@@ -32,9 +30,7 @@ export function CheckboxField<T extends FieldValues>({
                   aria-invalid={fieldState.invalid}
                   {...props}
                 />
-                <label htmlFor={field.name} className='text-sm cursor-pointer'>
-                  {label}
-                </label>
+                <FormLabel htmlFor={field.name}>{label}</FormLabel>
               </div>
             </FormControl>
             <FormMessage className='text-xs text-left' />

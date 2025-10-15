@@ -41,7 +41,7 @@ export function SelectField<TFieldValues extends FieldValues>({
           {label && <FormLabel>{label}</FormLabel>}
           <Select defaultValue={field.value} onValueChange={field.onChange} {...props}>
             <FormControl>
-              <SelectTrigger aria-invalid={fieldState.invalid}>
+              <SelectTrigger aria-invalid={fieldState.invalid} className='w-full'>
                 <SelectValue placeholder={placeholder} />
               </SelectTrigger>
             </FormControl>

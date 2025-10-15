@@ -1,0 +1,139 @@
+---
+title: Address Field
+description: Address input component with Google Places autocomplete integration. Automatically parses and validates complete address data.
+registryName: rhf-address-field
+---
+
+`AddressField` is an address input component that integrates Google Places API autocomplete with React Hook Form. It provides a single input that automatically parses complete address information including street, city, postal code, and country data.
+
+The component reduces form complexity by replacing multiple address fields with a single autocomplete input. Users can quickly find and select their address from Google's database, reducing errors and improving form completion rates.
+
+#### Built-in features
+
+- **Google Places autocomplete**: Fast, accurate address suggestions powered by Google's API
+- **Automatic address parsing**: Extracts street, city, postal code, country, and place ID
+- **Debounced search**: Optimized API calls with configurable delay
+- **Popover suggestions**: Clean dropdown interface for address selection
+- **Form integration**: Native React Hook Form and Zod validation support
+- **Customizable regions**: Configurable country and language settings
+
+## Configuration
+
+This component requires a Google Places API key. Add `GOOGLE_PLACES_API_KEY` to your `.env` file:
+
+<CodeHighlight code={`GOOGLE_PLACES_API_KEY=your_api_key_here`} language='bash' />
+
+To customize the default country or language, edit the constants in the component:
+
+<CodeHighlight code={`const DEFAULT_COUNTRY = 'US'; // Country code for suggestions
+const LANGUAGE_RESULT = 'en';  // Language code for results  
+const DEBOUNCE_TIME = 300;     // API call delay in milliseconds`} language='ts' />
+
+## Less boilerplate
+
+Traditional address forms require multiple fields and manual validation:
+
+<CodeHighlight code={`<Input name="street" placeholder="Street" />
+<Input name="city" placeholder="City" />
+<Input name="postalCode" placeholder="Postal Code" />
+<Input name="country" placeholder="Country" />
+// ...manual validation and state management`} language='tsx' />
+
+With `AddressField`, this reduces to a single component with automatic validation:
+
+<CodeHighlight code={`<AddressField 
+  register={form.register('address')} 
+  placeholder="Enter your address" 
+/>`} language='tsx' />
+
+## Usage patterns
+
+Basic address field with schema validation:
+
+<CodeHighlight code={`import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AddressField, addressSchema } from '@/components/ui/shuip/address-field';
+
+const schema = z.object({
+  address: addressSchema,
+});
+
+const form = useForm({
+  defaultValues: {
+    address: {
+      street: '',
+      city: '',
+      postalCode: '',
+      country: '',
+      fullAddress: '',
+      placeId: '',
+    },
+  },
+  resolver: zodResolver(schema),
+});
+
+<AddressField 
+  register={form.register('address')} 
+  placeholder="Enter your address" 
+/>`} language='tsx' />
+
+Custom configuration for different regions:
+
+<CodeHighlight code={`<AddressField
+  register={form.register('address')}
+  label="Shipping Address"
+  description="We only ship to valid addresses"
+  country="FR"
+  placeholder="Entrez votre adresse"
+/>`} language='tsx' />
+
+The component returns structured address data:
+
+<CodeHighlight code={`{
+  address: {
+    street: '123 Main St',
+    city: 'Paris', 
+    postalCode: '75001',
+    country: 'France',
+    fullAddress: '123 Main St, 75001 Paris, France',
+    placeId: 'abcdef123456'
+  }
+}`} language='json' />
+
+<ItemExamples registryName={'rhf-address-field'} />
+
+<PropTable props={[
+  {
+    name: 'register',
+    type: 'UseFormRegisterReturn',
+    description: 'React Hook Form register function result'
+  },
+  {
+    name: 'label',
+    type: 'string?',
+    description: 'Field label text'
+  },
+  {
+    name: 'placeholder',
+    type: 'string?',
+    description: 'Placeholder text for the input'
+  },
+  {
+    name: 'description',
+    type: 'string?',
+    description: 'Helper text displayed below the field'
+  },
+  {
+    name: 'country',
+    type: 'string?',
+    description: 'Country code for address suggestions (default: US)'
+  },
+  {
+    name: 'props',
+    type: 'React.ComponentProps<typeof Input>?',
+    description: 'Native HTML input props (disabled, className, etc.)'
+  }
+]} />
+
+
+

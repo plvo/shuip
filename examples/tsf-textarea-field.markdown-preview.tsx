@@ -63,7 +63,7 @@ export default function TsfTextareaFieldMarkdownPreviewExample() {
 
         <Card className='p-4 min-h-[300px]'>
           {content ? (
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: demo
             <div className='prose prose-sm max-w-none' dangerouslySetInnerHTML={{ __html: htmlContent }} />
           ) : (
             <p className='text-muted-foreground'>Nothing to preview yet. Write some content to see the preview.</p>

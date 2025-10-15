@@ -1,0 +1,84 @@
+---
+title: Textarea Field
+description: Multi-line text input component with optional tooltip. Built on shadcn InputGroup for enhanced UI.
+registryName: rhf-textarea-field
+---
+
+Multi-line text inputs are essential for longer content like descriptions, comments, or messages. `TextareaField` wraps a textarea element with InputGroup to enable an optional tooltip button positioned at the bottom-right corner—useful for character limits or formatting guidelines without cluttering the label area.
+
+The component accepts native textarea props like `rows` and `maxLength` directly. Common patterns include pairing `maxLength` with Zod validation for minimum length requirements or using the `description` prop to display character count guidance.
+
+#### Built-in features
+
+- **Bottom-right tooltip** positioned via InputGroup `align='block-end'`
+- **Native textarea props** support (rows, maxLength, placeholder)
+- **Zod validation**: Native integration with react-hook-form and Zod schemas
+- **Multi-line error display** for longer validation messages
+
+## Usage patterns
+
+<CodeHighlight code={`const schema = z.object({
+  bio: z.string().min(10, 'Bio must be at least 10 characters'),
+  feedback: z.string().max(500, 'Maximum 500 characters'),
+})
+
+const form = useForm({
+  defaultValues: { bio: '', feedback: '' },
+  resolver: zodResolver(schema),
+})
+
+// Basic textarea
+<TextareaField
+  register={form.register('bio')}
+  label='Bio'
+  description='Tell us about yourself'
+  rows={4}
+/>
+
+// With character limit
+<TextareaField
+  register={form.register('feedback')}
+  label='Feedback'
+  description='Share your thoughts (max 500 characters)'
+  rows={6}
+  maxLength={500}
+  placeholder='Your feedback...'
+/>
+
+// With tooltip
+<TextareaField
+  register={form.register('notes')}
+  label='Notes'
+  tooltip='Supports plain text only. Markdown coming soon.'
+  rows={8}
+/>`} language='tsx' />
+
+<ItemExamples registryName={'rhf-textarea-field'} />
+
+<PropTable props={[
+  {
+    name: 'register',
+    type: 'UseFormRegisterReturn',
+    description: 'React Hook Form register function result'
+  },
+  {
+    name: 'label',
+    type: 'string?',
+    description: 'Field label text'
+  },
+  {
+    name: 'description',
+    type: 'string?',
+    description: 'Helper text displayed below the textarea'
+  },
+  {
+    name: 'tooltip',
+    type: 'React.ReactNode?',
+    description: 'Tooltip content displayed in an info icon button at bottom-right'
+  },
+  {
+    name: 'props',
+    type: "React.ComponentProps<typeof InputGroupTextarea>?",
+    description: 'Native HTML textarea props (rows, maxLength, placeholder, etc.)'
+  }
+]} />

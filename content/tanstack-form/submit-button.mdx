@@ -2,7 +2,6 @@
 title: Submit Button
 description: Form submission button that automatically manages loading and disabled states based on form validation and submission status.
 registryName: tsf-submit-button
-position: 10
 ---
 
 Submit buttons need to prevent double submissions and show loading feedback. `SubmitButton` subscribes to the form's state via `form.Subscribe` to track `isSubmitting` and `canSubmit`, automatically disabling the button when the form is invalid or already submitting.

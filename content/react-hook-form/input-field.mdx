@@ -1,11 +1,24 @@
 ---
 title: Input Field
-description: A form field input designed to be used with react-hook-form and Zod for validation. It combines a label, input, error handling, and optional description into a single reusable component.
-position: 1
+description: Text input component integrated with React Hook Form. Supports tooltips and InputGroup integration for addons and buttons.
 registryName: rhf-input-field
 ---
 
-## Less verbose code in forms
+`InputField` is a text input component that encapsulates React Hook Form's field management with shadcn/ui's design system. It handles all the boilerplate of connecting form state to an input element: wiring event handlers, displaying errors, managing touched states, and rendering consistent UI.
+
+This component is useful when you want to quickly add form inputs without manually setting up `FormField` render props, input bindings, and error display logic for every field.
+
+#### Built-in features
+
+- **Type-safe registration**: Uses `register` from React Hook Form for validation
+- **Tooltip integration**: Optional InfoIcon button with tooltip content via `tooltip` prop
+- **InputGroup ready**: Built on shadcn InputGroup for seamless addon integration
+- **Zod validation**: Native integration with react-hook-form and Zod schemas
+- **Full type inference**: Field value types automatically inferred from form schema
+
+## Less boilerplate
+
+React Hook Form's standard approach uses render props to access field state:
 
 <CodeHighlight code={`<FormField
   control={form.control}
@@ -24,62 +37,41 @@ registryName: rhf-input-field
   )}
 />`} language='tsx' />
 
-With `InputField`, the same result in a single line:
+With `InputField`, this reduces to a single declarative component:
 
-<CodeHighlight code={`<InputField 
-      register={form.register('email')} 
-      label="Email" 
-      description="Your email address"
-      placeholder="your@email.com" 
+<CodeHighlight code={`<InputField
+  register={form.register('email')}
+  label="Email"
+  description="Your email address"
+  placeholder="your@email.com"
 />`} language='tsx' />
 
-### Built-in features
-
-- **Automatic type handling**: Native support for `text`, `password`, `number`
-- **Visibility toggle**: Automatic eye/eye-off button for password fields
-- **Zod validation**: Native integration with react-hook-form and Zod
-- **Error display**: Responsive error messages (hidden on mobile at top, shown at bottom)
-- **Automatic conversion**: `number` fields automatically convert values
-
-## react-hook-form integration
-
-The component is specifically designed for react-hook-form:
-
-<CodeHighlight code={`const form = useForm({
-      defaultValues: { name: '', age: 0 },
-      resolver: zodResolver(schema),
-});
-
-// Direct usage with form register
-<InputField register={form.register('name')} label="Name" />
-<InputField register={form.register('age')} label="Age" type="number" />`} language='tsx' />
-
-<ItemExamples registryName={'rhf-input-field'} /> 
+<ItemExamples registryName={'rhf-input-field'} />
 
 <PropTable props={[
   {
     name: 'register',
     type: 'UseFormRegisterReturn',
-    description: 'react-hook-form register function result',
+    description: 'React Hook Form register function result'
   },
   {
     name: 'label',
-    type: 'string',
-    description: 'Label displayed above the field',
+    type: 'string?',
+    description: 'Field label text'
   },
   {
     name: 'description',
     type: 'string?',
-    description: 'Optional description below the field',
+    description: 'Helper text displayed below the input'
   },
   {
-    name: 'type',
-    type: 'string?',
-    description: 'HTML field type (text, password, email, number...)',
+    name: 'tooltip',
+    type: 'React.ReactNode?',
+    description: 'Tooltip content displayed in an info icon button'
   },
   {
-    name: '...props',
-    type: 'InputProps',
-    description: 'All shadcn/ui Input props',
-  },
+    name: 'props',
+    type: "React.ComponentProps<typeof InputGroupInput>?",
+    description: 'Native HTML input props (type, placeholder, disabled, etc.)'
+  }
 ]} />

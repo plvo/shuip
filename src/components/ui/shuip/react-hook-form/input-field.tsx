@@ -1,5 +1,3 @@
-'use client';
-
 import { InfoIcon } from 'lucide-react';
 import type * as React from 'react';
 import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
@@ -31,8 +29,8 @@ export function InputField<T extends FieldValues>({
             <FormControl>
               <InputGroup>
                 <InputGroupInput {...field} type='text' aria-invalid={fieldState.invalid} {...props} />
-                <InputGroupAddon align='inline-end'>
-                  {tooltip && (
+                {tooltip && (
+                  <InputGroupAddon align='inline-end'>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <InputGroupButton aria-label='Info' size='icon-xs'>
@@ -41,8 +39,8 @@ export function InputField<T extends FieldValues>({
                       </TooltipTrigger>
                       <TooltipContent>{tooltip}</TooltipContent>
                     </Tooltip>
-                  )}
-                </InputGroupAddon>
+                  </InputGroupAddon>
+                )}
               </InputGroup>
             </FormControl>
             <FormMessage className='text-xs text-left' />

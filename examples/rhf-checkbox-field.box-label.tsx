@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
-import CheckboxField from '@/components/ui/shuip/react-hook-form/checkbox-field';
+import { CheckboxField } from '@/components/ui/shuip/react-hook-form/checkbox-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
 const zodSchema = z.object({
