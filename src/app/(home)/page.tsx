@@ -1,5 +1,3 @@
-'use client';
-
 export default function HomePage() {
   return (
     <main className='flex flex-col items-center justify-center h-screen gap-8'>
@@ -14,7 +12,6 @@ export default function HomePage() {
       </p>
 
       <div className='flex flex-col gap-2 justify-center items-center'>
-        1
         <a href='https://github.com/plvo/shuip' className='hover:underline underline-offset-4'>
           github.com/plvo/shuip
         </a>

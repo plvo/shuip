@@ -29,6 +29,7 @@
     "registry:generate": "bun run scripts/generate-registry.ts",
     "registry:copy-local": "bun run scripts/copy-local-registry.ts",
     "registry:all-cli": "bun run scripts/all-registry-cli.ts",
+    "postinstall": "fumadocs-mdx",
     "prepare": "husky"
   },
   "dependencies": {
@@ -56,6 +57,9 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "fumadocs-core": "^16.4.4",
+    "fumadocs-mdx": "^14.2.4",
+    "fumadocs-ui": "^16.4.4",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.562.0",
     "next": "16.1.1",
