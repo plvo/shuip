@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "responsive-dialog",
-  "type": "registry:block",
   "registryDependencies": ["drawer"],
   "files": [
     {
@@ -16,5 +15,6 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/side-dialog.tsx"
     }
-  ]
+  ],
+  "type": "registry:block"
 }

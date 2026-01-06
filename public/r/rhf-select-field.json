@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "rhf-select-field",
-  "type": "registry:ui",
   "dependencies": ["react-hook-form", "@radix-ui/react-select"],
   "registryDependencies": ["form", "select"],
   "files": [
@@ -11,5 +10,6 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/react-hook-form/select-field.tsx"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

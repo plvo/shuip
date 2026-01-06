@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "submit-button",
-  "type": "registry:ui",
   "dependencies": ["@radix-ui/react-icons", "class-variance-authority"],
   "registryDependencies": ["button"],
   "files": [
@@ -11,5 +10,6 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/submit-button.tsx"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

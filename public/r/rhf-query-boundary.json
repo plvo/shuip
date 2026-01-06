@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "rhf-query-boundary",
-  "type": "registry:ui",
   "dependencies": ["@tanstack/react-query", "react-error-boundary", "lucide-react"],
   "registryDependencies": ["button"],
   "files": [
@@ -11,5 +10,6 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/react-hook-form/query-boundary.tsx"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

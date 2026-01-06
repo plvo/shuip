@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "rhf-utils",
-  "type": "registry:lib",
   "dependencies": ["zod"],
   "files": [
     {
@@ -10,5 +9,6 @@
       "type": "registry:lib",
       "target": "./lib/shuip/rhf-utils.ts"
     }
-  ]
+  ],
+  "type": "registry:lib"
 }
