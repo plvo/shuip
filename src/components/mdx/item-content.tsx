@@ -1,6 +1,6 @@
 import { REGISTRY_INDEX } from '#/registry/__index__';
 import { filenameToTitle } from '@/lib/utils';
-import { getMDXComponents } from '@/mdx-components';
+import { useMDXComponents } from '@/mdx-components';
 import { InstallationCmd } from './item-installation';
 import { ItemPreview, Preview } from './item-preview';
 
@@ -10,16 +10,15 @@ export interface ItemHeaderProps {
 }
 
 export async function ItemHeader({ registryName, text }: ItemHeaderProps) {
-  const { h2: H2 } = getMDXComponents();
+  const { h2: H2 } = useMDXComponents();
   const code = REGISTRY_INDEX[registryName]?.code;
 
   return (
-    <>
+    <div className='space-y-4'>
       {text && <p>{text}</p>}
       <InstallationCmd registryPath={registryName} manualCode={code} />
-      <H2>Preview</H2>
       <Preview registryName={`${registryName}.example`} />
-    </>
+    </div>
   );
 }
 
@@ -28,7 +27,7 @@ export interface ItemExamplesProps {
 }
 
 export async function ItemExamples({ registryName }: ItemExamplesProps) {
-  const { h2: H2, h3: H3 } = getMDXComponents();
+  const { h2: H2, h3: H3 } = useMDXComponents();
 
   const examples = Object.keys(REGISTRY_INDEX).filter((example) => {
     const splitted = example.split('.');
@@ -59,7 +58,7 @@ export interface Prop {
 }
 
 export function PropTable({ props, title }: { props: Prop[]; title?: string }) {
-  const { h2: H2 } = getMDXComponents();
+  const { h2: H2 } = useMDXComponents();
 
   return (
     <>

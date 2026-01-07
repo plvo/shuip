@@ -18,11 +18,16 @@ export function InstallationCmd({ registryPath, manualCode, ...props }: Installa
   const choices = ['npm', 'pnpm', 'bun', manualCode ? 'manual' : undefined].filter(Boolean) as PackageManager[];
 
   return (
-    <Tabs value={pkg} onValueChange={(v) => setValue(v as PackageManager)} className={'w-full rounded-md'} {...props}>
-      <TabsList className='flex justify-between p-2 bg-card'>
-        <div className='px-0 py-2'>
+    <Tabs value={pkg} onValueChange={(v) => setValue(v as PackageManager)} className={'w-full'} {...props}>
+      <TabsList className='flex justify-between bg-card rounded-b-none -mb-4 pt-0 pb-4 h-12 border border-border'>
+        <div className='px-0'>
           {choices.map((manager) => (
-            <TabsTrigger key={manager} value={manager} className={'tabs-trigger-mdx'} aria-label={manager}>
+            <TabsTrigger
+              key={manager}
+              value={manager}
+              className={'tabs-trigger-mdx cursor-pointer'}
+              aria-label={manager}
+            >
               {manager}
             </TabsTrigger>
           ))}
@@ -31,7 +36,7 @@ export function InstallationCmd({ registryPath, manualCode, ...props }: Installa
       </TabsList>
 
       {choices.map((cmd) => (
-        <TabsContent key={cmd} value={cmd} className='rounded-md border border-border overflow-hidden'>
+        <TabsContent key={cmd} value={cmd} className='rounded-md border border-border overflow-hidden w-full p-0 m-0'>
           <CodePreview {...(cmd === 'manual' && manualCode ? { code: manualCode } : { code, language: 'bash' })} />
         </TabsContent>
       ))}
@@ -42,7 +47,7 @@ export function InstallationCmd({ registryPath, manualCode, ...props }: Installa
 type PackageManager = 'npm' | 'pnpm' | 'bun' | 'manual';
 
 function getCmd(pkg: PackageManager, filename: string): string {
-  const origin = typeof window !== 'undefined' ? window.location.origin : process.env.URL;
+  const origin = process.env.NEXT_PUBLIC_BASE_URL || 'https://shuip.plvo.dev';
   const url = `${origin}/r/${filename}.json`;
 
   switch (pkg) {

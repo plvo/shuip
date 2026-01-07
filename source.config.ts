@@ -1,8 +1,11 @@
 import { defineConfig, defineDocs, frontmatterSchema, metaSchema } from 'fumadocs-mdx/config';
+import { z } from 'zod';
 
 const defaultOptions = {
   docs: {
-    schema: frontmatterSchema,
+    schema: frontmatterSchema.extend({
+      registryName: z.string().optional(),
+    }),
     postprocess: {
       includeProcessedMarkdown: true,
     },
@@ -17,18 +20,11 @@ export const docs = defineDocs({
   ...defaultOptions,
 });
 
-export const components = defineDocs({
-  dir: 'content/components',
-  ...defaultOptions,
-});
-
 export const blocks = defineDocs({
   dir: 'content/blocks',
   ...defaultOptions,
 });
 
 export default defineConfig({
-  mdxOptions: {
-    // MDX options
-  },
+  mdxOptions: {},
 });

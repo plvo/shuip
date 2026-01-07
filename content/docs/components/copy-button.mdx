@@ -1,0 +1,32 @@
+---
+title: Copy Button
+description: A button that copies text to the clipboard.
+registryName: copy-button
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+<ItemExamples registryName={'copy-button'} /> 
+
+## Props
+
+<TypeTable
+  type={{
+    value: {
+      description: 'The text to copy to the clipboard.',
+      type: 'string',
+    },
+    copiedIcon: {
+      description: 'The icon to display when the text is copied.',
+      type: 'React.ReactNode',
+    },
+    notCopiedIcon: {
+      description: 'The icon to display when the text is not copied.',
+      type: 'React.ReactNode',
+    },
+    "...props": {
+      description: 'The props to pass to the <Button /> component.',
+      type: 'ButtonProps',
+    },
+  }}
+/>

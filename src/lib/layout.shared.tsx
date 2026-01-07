@@ -5,7 +5,7 @@ export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
       enabled: true,
-      transparentMode: 'always',
+      transparentMode: 'top',
       title: (
         <div className='flex items-center gap-0.5'>
           <Image src='/shuip-light.png' alt='sh(ui)p' width={64} height={64} className='size-7 dark:hidden' />
@@ -27,19 +27,11 @@ export function baseOptions(): BaseLayoutProps {
         text: 'Documentation',
         url: '/docs',
         on: 'nav',
-        active: 'none',
-      },
-      {
-        text: 'Components',
-        url: '/components',
-        on: 'nav',
-        active: 'none',
       },
       {
         text: 'Blocks',
         url: '/blocks',
         on: 'nav',
-        active: 'none',
       },
       {
         type: 'icon',

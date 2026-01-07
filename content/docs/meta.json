@@ -2,5 +2,20 @@
   "title": "Documentation",
   "description": "Documentation for the project",
   "root": true,
-  "pages": ["---DOCUMENTATION---", "index", "configuration", "contribution", "changelog"]
+  "pages": [
+    "---DOCUMENTATION---",
+    "index",
+    "configuration",
+    "contribution",
+    "changelog",
+
+    "---COMPONENTS---",
+    "...components/index",
+    "...components",
+    "---REACT HOOK FORM---",
+    "...react-hook-form",
+    "---TANSTACK FORM---",
+    "...tanstack-form/overview",
+    "...tanstack-form"
+  ]
 }

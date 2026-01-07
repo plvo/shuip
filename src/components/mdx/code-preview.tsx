@@ -9,7 +9,7 @@ export interface CodePreviewProps {
 
 export function CodePreview({ code, language }: CodePreviewProps) {
   return (
-    <div className='w-full max-w-[880px] rounded-md [&_pre]:my-0 [&_pre]:max-h-[350px] [&_pre]:overflow-auto'>
+    <div className='w-full max-w-[900px] rounded-md [&_pre]:my-0 [&_pre]:max-h-[350px] [&_pre]:overflow-auto'>
       {code ? (
         <CodeHighlight code={code} language={language} />
       ) : (
