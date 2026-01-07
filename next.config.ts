@@ -1,5 +1,7 @@
-import createMDX from '@next/mdx';
+import { createMDX } from 'fumadocs-mdx/next';
 import type { NextConfig } from 'next';
+
+const withMDX = createMDX();
 
 const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
@@ -27,9 +29,5 @@ const nextConfig: NextConfig = {
     ],
   },
 };
-
-const withMDX = createMDX({
-  extension: /\.(md|mdx)$/,
-});
 
 export default withMDX(nextConfig);

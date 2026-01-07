@@ -4,6 +4,7 @@ import { defineConfig, defineDocs, frontmatterSchema, metaSchema } from 'fumadoc
 // see https://fumadocs.dev/docs/mdx/collections
 export const docs = defineDocs({
   dir: 'content/docs',
+
   docs: {
     schema: frontmatterSchema,
     postprocess: {

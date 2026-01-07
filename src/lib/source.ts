@@ -7,6 +7,14 @@ import { docs } from '#/.source';
 export const source = loader({
   baseUrl: '/docs',
   source: docs.toFumadocsSource(),
+  url(slugs) {
+    if (slugs[0] === 'blocks') {
+      return `/blocks/${slugs.slice(1).join('/')}`;
+    }
+    console.log(`/docs/${slugs.join('/')}`);
+    return `/docs/${slugs.join('/')}`;
+  },
+
   icon(icon) {
     if (!icon) {
       return;

@@ -1,10 +1,9 @@
 import { Analytics } from '@vercel/analytics/next';
+import { RootProvider } from 'fumadocs-ui/provider/next';
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
-import RootProvider from '@/providers/root-provider';
+import { AppProvider } from '@/components/app-provider';
 import '@/styles/globals.css';
-import { Toaster } from 'sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,8 +30,7 @@ export default function RootLayout({
     <html lang='en' suppressHydrationWarning>
       <body className={`${geistSans.variable} antialiased overflow-x-hidden`} suppressHydrationWarning>
         <RootProvider>
-          <TooltipProvider>{children}</TooltipProvider>
-          <Toaster richColors />
+          <AppProvider>{children}</AppProvider>
         </RootProvider>
         <Analytics />
       </body>
