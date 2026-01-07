@@ -218,68 +218,71 @@ const [open, setOpen] = useState(false);
   </SideDialogHeader>
 </SideDialogContent>`} language='tsx' />
 
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
 <ItemExamples registryName={'side-dialog'} />
 
-<PropTable props={[
-  {
-    name: 'open',
-    type: 'boolean?',
-    description: 'Controlled open state (optional)',
-  },
-  {
-    name: 'onOpenChange',
-    type: '(open: boolean) => void?',
-    description: 'Callback when open state changes',
-  },
-  {
-    name: 'position',
-    type: 'SideDialogPosition?',
-    description: 'Position of the dialog: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "left" | "right" (default: "bottom-right")',
-  },
-  {
-    name: 'size',
-    type: 'SideDialogSize?',
-    description: 'Size of the dialog: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" with automatic responsive constraints (default: "sm")',
-  },
-  {
-    name: 'children',
-    type: 'React.ReactNode',
-    description: 'Dialog content (SideDialogTrigger and SideDialogContent)',
-  },
-]} />
+## Props
 
-<PropTable title='SideDialogContent Props' props={[
-  {
-    name: 'showCloseButton',
-    type: 'boolean?',
-    description: 'Whether to show the default close button (default: true)',
-  },
-  {
-    name: 'className',
-    type: 'string?',
-    description: 'Additional CSS classes',
-  },
-  {
-    name: 'children',
-    type: 'React.ReactNode',
-    description: 'Dialog content',
-  },
-]} />
+<TypeTable
+  type={{
+    open: {
+      description: 'Controlled open state (optional)',
+      type: 'boolean?',
+    },
+    onOpenChange: {
+      description: 'Callback when open state changes',
+      type: '(open: boolean) => void?',
+    },
+    position: {
+      description: 'Position of the dialog: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "left" | "right" (default: "bottom-right")',
+      type: 'SideDialogPosition?',
+    },
+    size: {
+      description: 'Size of the dialog: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" with automatic responsive constraints (default: "sm")',
+      type: 'SideDialogSize?',
+    },
+    children: {
+      description: 'Dialog content (SideDialogTrigger and SideDialogContent)',
+      type: 'React.ReactNode',
+    },
+  }}
+/>
 
-<PropTable title='SideDialogTrigger Props' props={[
-  {
-    name: 'asChild',
-    type: 'boolean?',
-    description: 'Render as child element instead of button',
-  },
-  {
-    name: 'children',
-    type: 'React.ReactNode',
-    description: 'Trigger content',
-  },
-  {
-    name: '...props',
-    type: 'ButtonHTMLAttributes<HTMLButtonElement>',
-    description: 'All button HTML attributes',
-  },
-]} />
+## SideDialogContent Props
+
+<TypeTable
+  type={{
+    showCloseButton: {
+      description: 'Whether to show the default close button (default: true)',
+      type: 'boolean?',
+    },
+    className: {
+      description: 'Additional CSS classes',
+      type: 'string?',
+    },
+    children: {
+      description: 'Dialog content',
+      type: 'React.ReactNode',
+    },
+  }}
+/>
+
+## SideDialogTrigger Props
+
+<TypeTable
+  type={{
+    asChild: {
+      description: 'Render as child element instead of button',
+      type: 'boolean?',
+    },
+    children: {
+      description: 'Trigger content',
+      type: 'React.ReactNode',
+    },
+    "...props": {
+      description: 'All button HTML attributes',
+      type: 'ButtonHTMLAttributes<HTMLButtonElement>',
+    },
+  }}
+/>

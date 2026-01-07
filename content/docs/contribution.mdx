@@ -56,13 +56,20 @@ Each shuip component follows this structure:
 
 	# ...
 
-	<ItemExamples registryName={'my-component'} /> <PropTable props={[
-	    {
-	      name: 'label',
-	      type: 'string',
+	import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+	<ItemExamples registryName={'my-component'} /> 
+
+	## Props
+
+	<TypeTable
+	  type={{
+	    label: {
 	      description: 'The label of the component',
+	      type: 'string',
 	    },
-	]} />
+	  }}
+	/>
 	`} language='python' />
 
 ## Submit your contribution

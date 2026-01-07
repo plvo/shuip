@@ -48,22 +48,25 @@ The component displays a `Loader2Icon` spinner when `isSubmitting` is true, prov
     Delete Account
 </SubmitButton>`} language='tsx' />
 
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
 <ItemExamples registryName='tsf-submit-button' />
 
-<PropTable props={[
-  {
-    name: 'form',
-    type: 'ReactFormApi<TFormData>',
-    description: 'Form instance from useForm hook (required)'
-  },
-  {
-    name: 'children',
-    type: 'React.ReactNode?',
-    description: 'Button label or content (default: "Submit")',
-  },
-  {
-    name: 'props',
-    type: 'ButtonProps?',
-    description: 'Button props including variant, size, className, and all native button attributes',
-  }
-]} />
+## Props
+
+<TypeTable
+  type={{
+    form: {
+      description: 'Form instance from useForm hook (required)',
+      type: 'ReactFormApi<TFormData>',
+    },
+    children: {
+      description: 'Button label or content (default: "Submit")',
+      type: 'React.ReactNode?',
+    },
+    props: {
+      description: 'Button props including variant, size, className, and all native button attributes',
+      type: 'ButtonProps?',
+    },
+  }}
+/>

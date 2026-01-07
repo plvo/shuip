@@ -46,32 +46,33 @@ With `InputField`, this reduces to a single declarative component:
   placeholder="your@email.com"
 />`} language='tsx' />
 
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
 <ItemExamples registryName={'rhf-input-field'} />
 
-<PropTable props={[
-  {
-    name: 'register',
-    type: 'UseFormRegisterReturn',
-    description: 'React Hook Form register function result'
-  },
-  {
-    name: 'label',
-    type: 'string?',
-    description: 'Field label text'
-  },
-  {
-    name: 'description',
-    type: 'string?',
-    description: 'Helper text displayed below the input'
-  },
-  {
-    name: 'tooltip',
-    type: 'React.ReactNode?',
-    description: 'Tooltip content displayed in an info icon button'
-  },
-  {
-    name: 'props',
-    type: "React.ComponentProps<typeof InputGroupInput>?",
-    description: 'Native HTML input props (type, placeholder, disabled, etc.)'
-  }
-]} />
+## Props
+
+<TypeTable
+  type={{
+    register: {
+      description: 'React Hook Form register function result',
+      type: 'UseFormRegisterReturn',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the input',
+      type: 'string?',
+    },
+    tooltip: {
+      description: 'Tooltip content displayed in an info icon button',
+      type: 'React.ReactNode?',
+    },
+    props: {
+      description: 'Native HTML input props (type, placeholder, disabled, etc.)',
+      type: "React.ComponentProps<typeof InputGroupInput>?",
+    },
+  }}
+/>

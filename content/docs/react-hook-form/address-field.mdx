@@ -100,40 +100,40 @@ The component returns structured address data:
   }
 }`} language='json' />
 
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
 <ItemExamples registryName={'rhf-address-field'} />
 
-<PropTable props={[
-  {
-    name: 'register',
-    type: 'UseFormRegisterReturn',
-    description: 'React Hook Form register function result'
-  },
-  {
-    name: 'label',
-    type: 'string?',
-    description: 'Field label text'
-  },
-  {
-    name: 'placeholder',
-    type: 'string?',
-    description: 'Placeholder text for the input'
-  },
-  {
-    name: 'description',
-    type: 'string?',
-    description: 'Helper text displayed below the field'
-  },
-  {
-    name: 'country',
-    type: 'string?',
-    description: 'Country code for address suggestions (default: US)'
-  },
-  {
-    name: 'props',
-    type: 'React.ComponentProps<typeof Input>?',
-    description: 'Native HTML input props (disabled, className, etc.)'
-  }
-]} />
+## Props
+
+<TypeTable
+  type={{
+    register: {
+      description: 'React Hook Form register function result',
+      type: 'UseFormRegisterReturn',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    placeholder: {
+      description: 'Placeholder text for the input',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the field',
+      type: 'string?',
+    },
+    country: {
+      description: 'Country code for address suggestions (default: US)',
+      type: 'string?',
+    },
+    props: {
+      description: 'Native HTML input props (disabled, className, etc.)',
+      type: 'React.ComponentProps<typeof Input>?',
+    },
+  }}
+/>
 
 
 

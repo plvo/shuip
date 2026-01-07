@@ -54,42 +54,41 @@ With `SelectField`, this reduces to a single declarative component:
   options={{ 'United States': 'us', 'Canada': 'ca', 'France': 'fr' }}
 />`} language='tsx' />
 
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
 <ItemExamples registryName="rhf-select-field" />
 
-<PropTable props={[
-  {
-    name: 'register',
-    type: 'UseFormRegisterReturn',
-    description: 'react-hook-form register function result',
-  },
-  {
-    name: 'options',
-    type: 'Record<string, string>',
-    description: 'Object where keys are labels and values are form values',
-  },
-  {
-    name: 'label',
-    type: 'string?',
-    description: 'Label displayed above the field',
-  },
-  {
-    name: 'placeholder',
-    type: 'string?',
-    description: 'Placeholder text in the select',
-  },
-  {
-    name: 'description',
-    type: 'string?',
-    description: 'Optional description below the field',
-  },
-  {
-    name: 'defaultValue',
-    type: 'TFieldValues[FieldPath<TFieldValues>]?',
-    description: 'Default selected value',
-  },
-  {
-    name: '...props',
-    type: 'SelectProps',
-    description: 'All Radix Select props',
-  },
-]} />
+## Props
+
+<TypeTable
+  type={{
+    register: {
+      description: 'react-hook-form register function result',
+      type: 'UseFormRegisterReturn',
+    },
+    options: {
+      description: 'Object where keys are labels and values are form values',
+      type: 'Record<string, string>',
+    },
+    label: {
+      description: 'Label displayed above the field',
+      type: 'string?',
+    },
+    placeholder: {
+      description: 'Placeholder text in the select',
+      type: 'string?',
+    },
+    description: {
+      description: 'Optional description below the field',
+      type: 'string?',
+    },
+    defaultValue: {
+      description: 'Default selected value',
+      type: 'TFieldValues[FieldPath<TFieldValues>]?',
+    },
+    "...props": {
+      description: 'All Radix Select props',
+      type: 'SelectProps',
+    },
+  }}
+/>

@@ -29,47 +29,45 @@ The `options` prop takes an array of `{label, value}` objects, making it easy to
     label='Select one'
 />`} language='tsx' />
 
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
 <ItemExamples registryName={'tsf-radio-field'} /> 
 
-<PropTable props={[
-  {
-    name: 'form',
-    type: 'ReactFormApi<TFormData>',
-    description: 'Form instance from useForm hook'
-  },
-  {
-    name: 'name',
-    type: 'DeepKeys<TFormData>',
-    description: 'Type-safe field name (supports nested paths like "user.plan")'
-  },
-  {
-    name: 'options',
-    type: 'Array<{ label: string; value: string }>',
-    description: 'Array of radio button options with label and value'
-  },
-  {
-    name: 'label',
-    type: 'string?',
-    description: 'Field label text'
-  },
-  {
-    name: 'description',
-    type: 'string?',
-    description: 'Helper text displayed below the radio group'
-  },
-  {
-    name: 'formProps',
-    type: 'Partial<FieldOptions>?',
-    description: 'TanStack Form field options (validators, etc.)'
-  },
-  {
-    name: 'fieldProps',
-    type: 'React.ComponentProps<typeof Field>?',
-    description: 'Props passed to the Field wrapper component'
-  },
-  {
-    name: 'props',
-    type: 'React.ComponentProps<typeof RadioGroup>?',
-    description: 'Props passed to the RadioGroup component'
-  }
-]} />
+## Props
+
+<TypeTable
+  type={{
+    form: {
+      description: 'Form instance from useForm hook',
+      type: 'ReactFormApi<TFormData>',
+    },
+    name: {
+      description: 'Type-safe field name (supports nested paths like "user.plan")',
+      type: 'DeepKeys<TFormData>',
+    },
+    options: {
+      description: 'Array of radio button options with label and value',
+      type: 'Array<{ label: string; value: string }>',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the radio group',
+      type: 'string?',
+    },
+    formProps: {
+      description: 'TanStack Form field options (validators, etc.)',
+      type: 'Partial<FieldOptions>?',
+    },
+    fieldProps: {
+      description: 'Props passed to the Field wrapper component',
+      type: 'React.ComponentProps<typeof Field>?',
+    },
+    props: {
+      description: 'Props passed to the RadioGroup component',
+      type: 'React.ComponentProps<typeof RadioGroup>?',
+    },
+  }}
+/>

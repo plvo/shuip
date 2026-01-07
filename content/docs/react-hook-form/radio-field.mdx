@@ -63,32 +63,33 @@ With `RadioField`, this reduces to a single declarative component:
   options={['light', 'dark', 'system']}
 />`} language='tsx' />
 
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
 <ItemExamples registryName={'rhf-radio-field'} /> 
 
-<PropTable props={[
-  {
-    name: 'register',
-    type: 'UseFormRegisterReturn',
-    description: 'react-hook-form register function result',
-  },
-  {
-    name: 'options',
-    type: 'string[]',
-    description: 'Array of options to render as radio buttons',
-  },
-  {
-    name: 'label',
-    type: 'string?',
-    description: 'Label displayed above the radio group',
-  },
-  {
-    name: 'description',
-    type: 'string?',
-    description: 'Optional description below the field',
-  },
-  {
-    name: '...props',
-    type: 'RadioGroupProps',
-    description: 'All shadcn/ui RadioGroup props',
-  },
-]} />
+## Props
+
+<TypeTable
+  type={{
+    register: {
+      description: 'react-hook-form register function result',
+      type: 'UseFormRegisterReturn',
+    },
+    options: {
+      description: 'Array of options to render as radio buttons',
+      type: 'string[]',
+    },
+    label: {
+      description: 'Label displayed above the radio group',
+      type: 'string?',
+    },
+    description: {
+      description: 'Optional description below the field',
+      type: 'string?',
+    },
+    "...props": {
+      description: 'All shadcn/ui RadioGroup props',
+      type: 'RadioGroupProps',
+    },
+  }}
+/>

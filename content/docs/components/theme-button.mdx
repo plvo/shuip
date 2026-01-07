@@ -23,12 +23,17 @@ With `ThemeButton`, a complete theme switcher in one line:
 
 First, make sure you have [`next-themes`](https://ui.shadcn.com/docs/dark-mode/next) installed and configured:
 
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
 <ItemExamples registryName={'theme-button'} /> 
 
-<PropTable props={[
-  {
-    name: 'withText',
-    type: 'boolean?',
-    description: 'Whether to display the text',
-  },
-]} />
+## Props
+
+<TypeTable
+  type={{
+    withText: {
+      description: 'Whether to display the text',
+      type: 'boolean?',
+    },
+  }}
+/>

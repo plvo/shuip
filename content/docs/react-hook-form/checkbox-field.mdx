@@ -34,32 +34,33 @@ const form = useForm({
   description='Read our terms before proceeding'
 />`} language='tsx' />
 
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
 <ItemExamples registryName={'rhf-checkbox-field'} />
 
-<PropTable props={[
-  {
-    name: 'register',
-    type: 'UseFormRegisterReturn',
-    description: 'React Hook Form register function result'
-  },
-  {
-    name: 'label',
-    type: 'string',
-    description: 'Clickable label displayed next to the checkbox (required)'
-  },
-  {
-    name: 'description',
-    type: 'string?',
-    description: 'Helper text displayed below the checkbox'
-  },
-  {
-    name: 'boxLabel',
-    type: 'string?',
-    description: 'Alternative label format (deprecated, use label instead)'
-  },
-  {
-    name: 'props',
-    type: 'React.ComponentProps<typeof Checkbox>?',
-    description: 'Props passed to the Checkbox component'
-  }
-]} />
+## Props
+
+<TypeTable
+  type={{
+    register: {
+      description: 'React Hook Form register function result',
+      type: 'UseFormRegisterReturn',
+    },
+    label: {
+      description: 'Clickable label displayed next to the checkbox (required)',
+      type: 'string',
+    },
+    description: {
+      description: 'Helper text displayed below the checkbox',
+      type: 'string?',
+    },
+    boxLabel: {
+      description: 'Alternative label format (deprecated, use label instead)',
+      type: 'string?',
+    },
+    props: {
+      description: 'Props passed to the Checkbox component',
+      type: 'React.ComponentProps<typeof Checkbox>?',
+    },
+  }}
+/>

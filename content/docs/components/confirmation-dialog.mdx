@@ -67,37 +67,37 @@ With `ConfirmationDialog`, the same result in a clean, reusable component:
       onConfirm={() => deleteItem(id)}
 />`} language='tsx' />
 
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
 <ItemExamples registryName={'confirmation-dialog'} /> 
 
-<PropTable props={[
-  {
-    name: 'trigger',
-    type: 'React.ReactNode',
-    description: 'The trigger to open the dialog',
-  },
-  {
-    name: 'title',
-    type: 'string',
-    description: 'The title of the dialog',
-  },
-  {
-    name: 'description',
-    type: 'string',
-    description: 'The description of the dialog',
-  },
-  {
-    name: 'labelConfirmButton',
-    type: 'string',
-    description: 'The label of the confirmation button',
-  },
-  {
-    name: 'onConfirm',
-    type: '() => void',
-    description: 'The function to call when the confirmation button is clicked',
-  },
-  {
-    name: '...props',
-    type: 'React.RefAttributes<HTMLDialogElement>',
-    description: 'All props to apply to the dialog',
-  },
-]} />
+## Props
+
+<TypeTable
+  type={{
+    trigger: {
+      description: 'The trigger to open the dialog',
+      type: 'React.ReactNode',
+    },
+    title: {
+      description: 'The title of the dialog',
+      type: 'string',
+    },
+    description: {
+      description: 'The description of the dialog',
+      type: 'string',
+    },
+    labelConfirmButton: {
+      description: 'The label of the confirmation button',
+      type: 'string',
+    },
+    onConfirm: {
+      description: 'The function to call when the confirmation button is clicked',
+      type: '() => void',
+    },
+    "...props": {
+      description: 'All props to apply to the dialog',
+      type: 'React.RefAttributes<HTMLDialogElement>',
+    },
+  }}
+/>

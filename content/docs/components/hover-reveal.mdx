@@ -62,17 +62,21 @@ registryName: hover-reveal
     </span>
 </HoverReveal>`} language='tsx' />
 
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
 <ItemExamples registryName={'hover-reveal'} /> 
 
-<PropTable props={[
-  {
-    name: 'children',
-    type: 'React.ReactNode',
-    description: 'The content to reveal',
-  },
-  {
-    name: 'content',
-    type: 'React.ReactNode',
-    description: 'The content to reveal',
-  },
-]} />
+## Props
+
+<TypeTable
+  type={{
+    children: {
+      description: 'The content to reveal',
+      type: 'React.ReactNode',
+    },
+    content: {
+      description: 'The content to reveal',
+      type: 'React.ReactNode',
+    },
+  }}
+/>
