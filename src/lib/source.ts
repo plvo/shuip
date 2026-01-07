@@ -1,29 +1,36 @@
 import { type InferPageType, loader } from 'fumadocs-core/source';
 import { icons } from 'lucide-react';
 import React from 'react';
-import { docs } from '#/.source';
+import { blocks, components, docs } from '#/.source';
 
-// See https://fumadocs.dev/docs/headless/source-api for more info
-export const source = loader({
+const icon = (icon?: string) => {
+  if (!icon) {
+    return null;
+  }
+  if (icon in icons) return React.createElement(icons[icon as keyof typeof icons]);
+};
+
+export const docsSource = loader({
   baseUrl: '/docs',
   source: docs.toFumadocsSource(),
-  url(slugs) {
-    if (slugs[0] === 'blocks') {
-      return `/blocks/${slugs.slice(1).join('/')}`;
-    }
-    console.log(`/docs/${slugs.join('/')}`);
-    return `/docs/${slugs.join('/')}`;
-  },
-
-  icon(icon) {
-    if (!icon) {
-      return;
-    }
-    if (icon in icons) return React.createElement(icons[icon as keyof typeof icons]);
-  },
+  icon,
 });
 
-export function getPageImage(page: InferPageType<typeof source>) {
+export const componentsSource = loader({
+  baseUrl: '/components',
+  source: components.toFumadocsSource(),
+  icon,
+});
+
+export const blocksSource = loader({
+  baseUrl: '/blocks',
+  source: blocks.toFumadocsSource(),
+  icon,
+});
+
+export const sourcePages = [...docsSource.getPages(), ...blocksSource.getPages(), ...componentsSource.getPages()];
+
+export function getPageImage(page: InferPageType<typeof docsSource | typeof blocksSource>) {
   const segments = [...page.slugs, 'image.png'];
 
   return {
@@ -32,7 +39,7 @@ export function getPageImage(page: InferPageType<typeof source>) {
   };
 }
 
-export async function getLLMText(page: InferPageType<typeof source>) {
+export async function getLLMText(page: InferPageType<typeof docsSource | typeof blocksSource>) {
   const processed = await page.data.getText('processed');
 
   return `# ${page.data.title}

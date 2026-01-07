@@ -2,12 +2,12 @@ import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/page';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getPageImage, source } from '@/lib/source';
+import { blocksSource, getPageImage } from '@/lib/source';
 import { getMDXComponents } from '@/mdx-components';
 
-export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
+export default async function Page(props: PageProps<'/blocks/[[...slug]]'>) {
   const params = await props.params;
-  const page = source.getPage(params.slug);
+  const page = blocksSource.getPage(params.slug);
   if (!page) notFound();
 
   const MDX = page.data.body;
@@ -20,7 +20,7 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
         <MDX
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths
-            a: createRelativeLink(source, page),
+            a: createRelativeLink(blocksSource, page),
           })}
         />
       </DocsBody>
@@ -29,16 +29,16 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
 }
 
 export async function generateStaticParams() {
-  return source.generateParams();
+  return blocksSource.generateParams();
 }
 
-export async function generateMetadata(props: PageProps<'/docs/[[...slug]]'>): Promise<Metadata> {
+export async function generateMetadata(props: PageProps<'/blocks/[[...slug]]'>): Promise<Metadata> {
   const params = await props.params;
-  const page = source.getPage(params.slug);
+  const page = blocksSource.getPage(params.slug);
   if (!page) notFound();
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://create.plvo.dev';
-  const pageUrl = `${baseUrl}/docs/${page.slugs.join('/')}`;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://shuip.plvo.dev';
+  const pageUrl = `${baseUrl}/blocks/${page.slugs.join('/')}`;
   const ogImage = getPageImage(page).url;
 
   return {

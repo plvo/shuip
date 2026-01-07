@@ -1,10 +1,6 @@
 import { defineConfig, defineDocs, frontmatterSchema, metaSchema } from 'fumadocs-mdx/config';
 
-// You can customise Zod schemas for frontmatter and `meta.json` here
-// see https://fumadocs.dev/docs/mdx/collections
-export const docs = defineDocs({
-  dir: 'content/docs',
-
+const defaultOptions = {
   docs: {
     schema: frontmatterSchema,
     postprocess: {
@@ -14,6 +10,21 @@ export const docs = defineDocs({
   meta: {
     schema: metaSchema,
   },
+};
+
+export const docs = defineDocs({
+  dir: 'content/docs',
+  ...defaultOptions,
+});
+
+export const components = defineDocs({
+  dir: 'content/components',
+  ...defaultOptions,
+});
+
+export const blocks = defineDocs({
+  dir: 'content/blocks',
+  ...defaultOptions,
 });
 
 export default defineConfig({
