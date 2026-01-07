@@ -17,7 +17,8 @@ The component accepts native textarea props like `rows` and `maxLength` directly
 
 ## Usage patterns
 
-<CodeHighlight code={`const schema = z.object({
+```tsx
+const schema = z.object({
   bio: z.string().min(10, 'Bio must be at least 10 characters'),
   feedback: z.string().max(500, 'Maximum 500 characters'),
 })
@@ -51,7 +52,9 @@ const form = useForm({
   label='Notes'
   tooltip='Supports plain text only. Markdown coming soon.'
   rows={8}
-/>`} language='tsx' />
+/>
+```
+
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 

@@ -21,11 +21,13 @@ The component reduces form complexity by replacing multiple address fields with 
 
 This component requires a Google Places API key. Add `GOOGLE_PLACES_API_KEY` to your `.env` file:
 
-<CodeHighlight code={`GOOGLE_PLACES_API_KEY=your_api_key_here`} language='bash' />
+```tsx
+GOOGLE_PLACES_API_KEY=your_api_key_here`} language='bash' />
 
 To customize the default country or language, edit the constants in the component:
 
-<CodeHighlight code={`const DEFAULT_COUNTRY = 'US'; // Country code for suggestions
+```tsx
+const DEFAULT_COUNTRY = 'US'; // Country code for suggestions
 const LANGUAGE_RESULT = 'en';  // Language code for results  
 const DEBOUNCE_TIME = 300;     // API call delay in milliseconds`} language='ts' />
 
@@ -33,24 +35,31 @@ const DEBOUNCE_TIME = 300;     // API call delay in milliseconds`} language='ts'
 
 Traditional address forms require multiple fields and manual validation:
 
-<CodeHighlight code={`<Input name="street" placeholder="Street" />
+```tsx
+<Input name="street" placeholder="Street" />
 <Input name="city" placeholder="City" />
 <Input name="postalCode" placeholder="Postal Code" />
 <Input name="country" placeholder="Country" />
-// ...manual validation and state management`} language='tsx' />
+// ...manual validation and state management
+```
+
 
 With `AddressField`, this reduces to a single component with automatic validation:
 
-<CodeHighlight code={`<AddressField 
+```tsx
+<AddressField 
   register={form.register('address')} 
   placeholder="Enter your address" 
-/>`} language='tsx' />
+/>
+```
+
 
 ## Usage patterns
 
 Basic address field with schema validation:
 
-<CodeHighlight code={`import { useForm } from 'react-hook-form';
+```tsx
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AddressField, addressSchema } from '@/components/ui/shuip/address-field';
 
@@ -75,21 +84,27 @@ const form = useForm({
 <AddressField 
   register={form.register('address')} 
   placeholder="Enter your address" 
-/>`} language='tsx' />
+/>
+```
+
 
 Custom configuration for different regions:
 
-<CodeHighlight code={`<AddressField
+```tsx
+<AddressField
   register={form.register('address')}
   label="Shipping Address"
   description="We only ship to valid addresses"
   country="FR"
   placeholder="Entrez votre adresse"
-/>`} language='tsx' />
+/>
+```
+
 
 The component returns structured address data:
 
-<CodeHighlight code={`{
+```tsx
+{
   address: {
     street: '123 Main St',
     city: 'Paris', 

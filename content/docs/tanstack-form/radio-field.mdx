@@ -17,7 +17,8 @@ The `options` prop takes an array of `{label, value}` objects, making it easy to
 
 ## Options structure
 
-<CodeHighlight code={`const options = [
+```tsx
+const options = [
     { label: 'Display Text 1', value: 'val1' },
     { label: 'Display Text 2', value: 'val2' },
 ]
@@ -27,7 +28,9 @@ The `options` prop takes an array of `{label, value}` objects, making it easy to
     name='choice'
     options={options}
     label='Select one'
-/>`} language='tsx' />
+/>
+```
+
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 

@@ -21,7 +21,8 @@ This component is useful when you want to quickly add form inputs without manual
 
 TanStack Form's standard approach uses render props to access field state:
 
-<CodeHighlight code={`<form.Field
+```tsx
+<form.Field
   name="email"
   validators={{
     onChange: ({ value }) => !value.includes('@') ? 'Invalid email' : undefined
@@ -43,11 +44,14 @@ TanStack Form's standard approach uses render props to access field state:
       )}
     </>
   )}
-</form.Field>`} language='tsx' />
+</form.Field>
+```
+
 
 With `InputField`, this reduces to a single declarative component:
 
-<CodeHighlight code={`<InputField
+```tsx
+<InputField
     form={form}
     name='email'
     label='Email'
@@ -57,13 +61,16 @@ With `InputField`, this reduces to a single declarative component:
         onChange: ({ value }) => !value.includes('@') ? 'Invalid email' : undefined
       }
     }}
-/>`} language='tsx' />
+/>
+```
+
 
 
 
 ## Common use cases
 
-<CodeHighlight code={`const form = useForm({
+```tsx
+const form = useForm({
     defaultValues: {
       name: '',
       email: '',
@@ -116,7 +123,9 @@ With `InputField`, this reduces to a single declarative component:
     name='age'
     label='Age'
     props={{ type: 'number', min: 0, max: 120 }}
-/>`} language='tsx' />
+/>
+```
+
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 

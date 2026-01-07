@@ -13,7 +13,8 @@ registryName: submit-button
 
 ## Common use cases
 
-<CodeHighlight code={`// Basic form submission
+```tsx
+// Basic form submission
 <SubmitButton children="Save Changes" loading={isSaving} />
 
 <SubmitButton loading={isSaving}>
@@ -47,7 +48,9 @@ registryName: submit-button
       loading={isDeleting}
       className="bg-destructive hover:bg-destructive/90"
       disabled={!confirmed}
-/>`} language='tsx' />
+/>
+```
+
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 

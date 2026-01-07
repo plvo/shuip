@@ -17,7 +17,8 @@ This format makes it simple to define options inline or map from API responses. 
 
 ## Options format
 
-<CodeHighlight code={`const options = {
+```tsx
+const options = {
     'Display Label 1': 'value1',
     'Display Label 2': 'value2',
 }
@@ -28,11 +29,14 @@ This format makes it simple to define options inline or map from API responses. 
     options={options}
     label='Select an option'
     placeholder='Choose...'
-/>`} language='tsx' />
+/>
+```
+
 
 ## Dependent selects
 
-<CodeHighlight code={`const [states, setStates] = React.useState<Record<string, string>>({})
+```tsx
+const [states, setStates] = React.useState<Record<string, string>>({})
 
 // Watch country changes
 form.useStore((state) => state.values.country, {
@@ -43,7 +47,9 @@ form.useStore((state) => state.values.country, {
 })
 
 <SelectField form={form} name='country' options={{ 'United States': 'us' }} label='Country' />
-<SelectField form={form} name='state' options={states} label='State' placeholder='Select country first' />`} language='tsx' />
+<SelectField form={form} name='state' options={states} label='State' placeholder='Select country first' />
+```
+
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 

@@ -22,7 +22,8 @@ Unlike traditional centered dialogs, `SideDialog` provides a more contextual use
 
 The `position` prop controls where the dialog appears:
 
-<CodeHighlight code={`// Corner positions
+```tsx
+// Corner positions
 <SideDialog position="top-left">     {/* Top left corner */}
 <SideDialog position="top-right">    {/* Top right corner */}  
 <SideDialog position="bottom-left">  {/* Bottom left corner */}
@@ -30,13 +31,16 @@ The `position` prop controls where the dialog appears:
 
 // Side positions (vertically centered)
 <SideDialog position="left">   {/* Left side, centered */}
-<SideDialog position="right">  {/* Right side, centered */}`} language='tsx' />
+<SideDialog position="right">  {/* Right side, centered */}
+```
+
 
 ## Size options
 
 The `size` prop controls the dialog size with predefined responsive values:
 
-<CodeHighlight code={`// Predefined sizes (all automatically responsive)
+```tsx
+// Predefined sizes (all automatically responsive)
 <SideDialog size="xs">      {/* 320px max-width, adapts to small screens */}
 <SideDialog size="sm">      {/* 384px max-width (default) */}
 <SideDialog size="md">      {/* 448px max-width */}
@@ -47,7 +51,9 @@ The `size` prop controls the dialog size with predefined responsive values:
 // For custom sizes, use className with responsive constraints
 <SideDialogContent className="w-full max-w-[min(400px,calc(100vw-2rem))]">
   {/* Custom size with responsive protection */}
-</SideDialogContent>`} language='tsx' />
+</SideDialogContent>
+```
+
 
 ### Responsive behavior
 
@@ -61,7 +67,8 @@ All predefined sizes automatically include responsive constraints using CSS `min
 
 ### Notifications and alerts
 
-<CodeHighlight code={`// Success notification - top right
+```tsx
+// Success notification - top right
 <SideDialog position="top-right">
   <SideDialogTrigger asChild>
     <Button onClick={handleSave}>Save Changes</Button>
@@ -82,11 +89,13 @@ All predefined sizes automatically include responsive constraints using CSS `min
       <SideDialogDescription>Something went wrong. Please try again.</SideDialogDescription>
     </SideDialogHeader>
   </SideDialogContent>
-</SideDialog>`} language='tsx' />
+</SideDialog>
+```
 
 ### Different sizes for different content
 
-<CodeHighlight code={`// Small notification - xs size
+```tsx
+// Small notification - xs size
 <SideDialog position="top-right" size="xs">
   <SideDialogContent>
     <SideDialogHeader>
@@ -130,11 +139,14 @@ All predefined sizes automatically include responsive constraints using CSS `min
       </div>
     </div>
   </SideDialogContent>
-</SideDialog>`} language='tsx' />
+</SideDialog>
+```
+
 
 ### Help and information
 
-<CodeHighlight code={`// Help panel - bottom left
+```tsx
+// Help panel - bottom left
 <SideDialog position="bottom-left">
   <SideDialogTrigger asChild>
     <Button variant="outline" size="icon">
@@ -159,13 +171,16 @@ All predefined sizes automatically include responsive constraints using CSS `min
       </Button>
     </div>
   </SideDialogContent>
-</SideDialog>`} language='tsx' />
+</SideDialog>
+```
+
 
 ## State management
 
 The component supports both controlled and uncontrolled modes, automatically detecting which mode to use based on the props provided:
 
-<CodeHighlight code={`// Uncontrolled: Component manages its own state
+```tsx
+// Uncontrolled: Component manages its own state
 <SideDialog position="top-right">
   <SideDialogTrigger asChild>
     <Button>Open</Button>
@@ -188,13 +203,16 @@ const [open, setOpen] = useState(false);
       <SideDialogTitle>Controlled State</SideDialogTitle>
     </SideDialogHeader>
   </SideDialogContent>
-</SideDialog>`} language='tsx' />
+</SideDialog>
+```
+
 
 ## Advanced customization
 
 ### Custom close behavior
 
-<CodeHighlight code={`// Disable the default close button
+```tsx
+// Disable the default close button
 <SideDialogContent showCloseButton={false}>
   <SideDialogHeader>
     <SideDialogTitle>Custom Controls</SideDialogTitle>
@@ -207,16 +225,21 @@ const [open, setOpen] = useState(false);
       <Button>Confirm</Button>
     </SideDialogClose>
   </SideDialogFooter>
-</SideDialogContent>`} language='tsx' />
+</SideDialogContent>
+```
+
 
 ### Custom styling
 
-<CodeHighlight code={`// Custom dialog appearance
+```tsx
+// Custom dialog appearance
 <SideDialogContent className="border-primary shadow-xl bg-gradient-to-b from-background to-muted">
   <SideDialogHeader>
     <SideDialogTitle className="text-primary">Custom Style</SideDialogTitle>
   </SideDialogHeader>
-</SideDialogContent>`} language='tsx' />
+</SideDialogContent>
+```
+
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 

@@ -41,7 +41,8 @@ This ensures visual consistency with your shadcn-based application while adding 
 
 Full TypeScript support with automatic type inference:
 
-<CodeHighlight code={`type UserForm = {
+```tsx
+type UserForm = {
    user: {
      email: string
      profile: {
@@ -58,7 +59,9 @@ const form = useForm<UserForm>({
 
 // TypeScript autocompletes nested paths: 'user.email', 'user.profile.age'
 <InputField form={form} name='user.email' label='Email' />
-<InputField form={form} name='user.profile.age' label='Age' props={{ type: 'number' }} />`} language='tsx' />
+<InputField form={form} name='user.profile.age' label='Age' props={{ type: 'number' }} />
+```
+
 
 The `name` prop uses `DeepKeys<TFormData>` for compile-time validation of field paths, and values are typed as `DeepValue<TFormData, TName>` for correct inference.
 
@@ -66,7 +69,8 @@ The `name` prop uses `DeepKeys<TFormData>` for compile-time validation of field 
 
 TanStack Form supports multiple validation strategies:
 
-<CodeHighlight code={`<InputField
+```tsx
+<InputField
     form={form}
     name='email'
     label='Email'
@@ -92,7 +96,9 @@ TanStack Form supports multiple validation strategies:
           !value ? 'This field is required' : undefined
       }
     }}
-/>`} language='tsx' />
+/>
+```
+
 
 Validators receive `{ value, fieldApi }` and must return `undefined` for valid or an error string for invalid.
 
@@ -100,7 +106,8 @@ Validators receive `{ value, fieldApi }` and must return `undefined` for valid o
 
 Use `onChangeListenTo` to validate one field based on another's value:
 
-<CodeHighlight code={`<PasswordField
+```tsx
+<PasswordField
     form={form}
     name='password'
     label='Password'
@@ -119,7 +126,9 @@ Use `onChangeListenTo` to validate one field based on another's value:
         }
       }
     }}
-/>`} language='tsx' />
+/>
+```
+
 
 When `password` changes, `confirmPassword` is automatically re-validated.
 
@@ -127,7 +136,8 @@ When `password` changes, `confirmPassword` is automatically re-validated.
 
 Handle form submission with the `onSubmit` callback:
 
-<CodeHighlight code={`const form = useForm({
+```tsx
+const form = useForm({
     defaultValues: { email: '', password: '' },
     onSubmit: async ({ value }) => {
       // value is fully typed based on defaultValues
@@ -144,6 +154,8 @@ Handle form submission with the `onSubmit` callback:
     onSubmitInvalid: ({ formApi }) => {
       toast.error('Please fix form errors')
     }
-})`} language='tsx' />
+})
+```
+
 
 Use `<SubmitButton form={form}>` to get automatic loading states and disabled handling.

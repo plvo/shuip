@@ -11,20 +11,24 @@ shuip components are designed to be **easily customizable**. Each component acce
 
 The simplest way to customize a component:
 
-<CodeHighlight code={`import { SubmitButton } from '@/components/ui/shuip/submit-button'
+```tsx
+import { SubmitButton } from '@/components/ui/shuip/submit-button'
 
 <SubmitButton 
   	label="Send"
   	className="bg-blue-600 hover:bg-blue-700"
   	size="lg"
   	loading={isLoading}
-/>`} language='tsx' />
+/>
+```
+
 
 ### Method 2: Editing the Source Code
 
 Since the components are copied directly into your project, you can freely modify them:
 
-<CodeHighlight code={`// src/components/ui/shuip/submit-button.tsx
+```tsx
+// src/components/ui/shuip/submit-button.tsx
 
 export function SubmitButton({
     onClick,
@@ -47,4 +51,6 @@ export function SubmitButton({
         {label}
       </Button>
     );
-}`} language='tsx' />
+}
+```
+

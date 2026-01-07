@@ -17,7 +17,8 @@ The component displays a `Loader2Icon` spinner when `isSubmitting` is true, prov
 
 ## Usage with validation
 
-<CodeHighlight code={`const form = useForm({
+```tsx
+const form = useForm({
     defaultValues: { email: '' },
     onSubmit: async ({ value }) => {
       await saveData(value)
@@ -36,17 +37,22 @@ The component displays a `Loader2Icon` spinner when `isSubmitting` is true, prov
 />
 
 {/* Button disabled until email is valid */}
-<SubmitButton form={form}>Submit</SubmitButton>`} language='tsx' />
+<SubmitButton form={form}>Submit</SubmitButton>
+```
+
 
 ## Custom variants
 
-<CodeHighlight code={`<SubmitButton form={form} props={{ variant: 'outline' }}>
+```tsx
+<SubmitButton form={form} props={{ variant: 'outline' }}>
     Save Draft
 </SubmitButton>
 
 <SubmitButton form={form} props={{ variant: 'destructive', size: 'lg' }}>
     Delete Account
-</SubmitButton>`} language='tsx' />
+</SubmitButton>
+```
+
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 

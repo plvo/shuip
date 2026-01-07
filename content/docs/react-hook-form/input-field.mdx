@@ -20,7 +20,8 @@ This component is useful when you want to quickly add form inputs without manual
 
 React Hook Form's standard approach uses render props to access field state:
 
-<CodeHighlight code={`<FormField
+```tsx
+<FormField
   control={form.control}
   name="email"
   render={({ field }) => (
@@ -35,16 +36,21 @@ React Hook Form's standard approach uses render props to access field state:
       <FormMessage />
     </FormItem>
   )}
-/>`} language='tsx' />
+/>
+```
+
 
 With `InputField`, this reduces to a single declarative component:
 
-<CodeHighlight code={`<InputField
+```tsx
+<InputField
   register={form.register('email')}
   label="Email"
   description="Your email address"
   placeholder="your@email.com"
-/>`} language='tsx' />
+/>
+```
+
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 

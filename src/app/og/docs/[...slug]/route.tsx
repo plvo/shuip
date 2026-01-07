@@ -3,13 +3,13 @@
 import { generate as DefaultImage } from 'fumadocs-ui/og';
 import { notFound } from 'next/navigation';
 import { ImageResponse } from 'next/og';
-import { blocksSource, componentsSource, docsSource, getPageImage, sourcePages } from '@/lib/source';
+import { blocksSource, docsSource, getPageImage } from '@/lib/source';
 
 export const revalidate = false;
 
 export async function GET(_req: Request, { params }: RouteContext<'/og/docs/[...slug]'>) {
   const { slug } = await params;
-  const page = sourcePages.find((page) => page.slugs.join('/') === slug.join('/'));
+  const page = docsSource.getPage(slug);
   if (!page) notFound();
 
   const { title, description } = page.data;
@@ -34,7 +34,7 @@ export async function GET(_req: Request, { params }: RouteContext<'/og/docs/[...
 }
 
 export function generateStaticParams() {
-  return [...docsSource.getPages(), ...blocksSource.getPages(), ...componentsSource.getPages()].map((page) => ({
+  return [...docsSource.getPages(), ...blocksSource.getPages()].map((page) => ({
     lang: page.locale,
     slug: getPageImage(page).segments,
   }));

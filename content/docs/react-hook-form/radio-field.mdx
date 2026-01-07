@@ -18,7 +18,8 @@ The component eliminates the need to manually create individual radio items and 
 
 ## Less boilerplate
 
-<CodeHighlight code={`<FormField
+```tsx
+<FormField
   control={form.control}
   name="theme"
   render={({ field }) => (
@@ -53,15 +54,20 @@ The component eliminates the need to manually create individual radio items and 
       <FormMessage />
     </FormItem>
   )}
-/>`} language='tsx' />
+/>
+```
+
 
 With `RadioField`, this reduces to a single declarative component:
 
-<CodeHighlight code={`<RadioField 
+```tsx
+<RadioField 
   register={form.register('theme')} 
   label="Select a theme" 
   options={['light', 'dark', 'system']}
-/>`} language='tsx' />
+/>
+```
+
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 

@@ -1,17 +1,11 @@
+import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { MDXComponents } from 'mdx/types';
 import type React from 'react';
 import { CopyButton } from '#/registry/ui/copy-button';
 import { CodeHighlight, type CodeHighlightProps } from './components/mdx/code-preview';
 import { ComparisonTable, type ComparisonTableProps } from './components/mdx/comparison-table';
-import {
-  ItemExamples,
-  type ItemExamplesProps,
-  ItemHeader,
-  type ItemHeaderProps,
-  type Prop,
-  PropTable,
-} from './components/mdx/item-content';
+import { ItemExamples, type ItemExamplesProps, ItemHeader, type ItemHeaderProps } from './components/mdx/item-content';
 import { InstallationCmd, type InstallationCmdProps } from './components/mdx/item-installation';
 import { titleToFilename } from './lib/utils';
 
@@ -26,6 +20,14 @@ export function getMDXComponents(components?: MDXComponents) {
     ),
     h2: ({ ...props }: HeadingProps) => (
       <h2 id={titleToFilename(props.children?.toString() ?? '')} className={'h2-mdx'} {...props} />
+    ),
+    pre: ({
+      ref: _ref,
+      ...props
+    }: React.ComponentPropsWithoutRef<'pre'> & { ref?: React.RefObject<HTMLPreElement> }) => (
+      <CodeBlock {...props}>
+        <Pre>{props.children}</Pre>
+      </CodeBlock>
     ),
     CodeHighlight: ({
       code,
@@ -42,7 +44,6 @@ export function getMDXComponents(components?: MDXComponents) {
     ),
     ItemHeader: ({ registryName, text }: ItemHeaderProps) => <ItemHeader registryName={registryName} text={text} />,
     ItemExamples: ({ registryName }: ItemExamplesProps) => <ItemExamples registryName={registryName} />,
-    PropTable: ({ props, title }: { props: Prop[]; title?: string }) => <PropTable props={props} title={title} />,
     ComparisonTable: ({ rows, headers }: ComparisonTableProps) => <ComparisonTable rows={rows} headers={headers} />,
   };
 }

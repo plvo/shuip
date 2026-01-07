@@ -17,7 +17,8 @@ Common patterns include required checkboxes for terms acceptance (validated with
 
 ## Required checkbox
 
-<CodeHighlight code={`<CheckboxField
+```tsx
+<CheckboxField
     form={form}
     name='terms'
     label='I accept the terms and conditions'
@@ -27,7 +28,9 @@ Common patterns include required checkboxes for terms acceptance (validated with
           !value ? 'You must accept the terms' : undefined
       }
     }}
-/>`} language='tsx' />
+/>
+```
+
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 

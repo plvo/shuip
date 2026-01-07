@@ -17,7 +17,8 @@ Common patterns include required checkboxes for terms acceptance (validated with
 
 ## Required checkbox
 
-<CodeHighlight code={`const schema = z.object({
+```tsx
+const schema = z.object({
   terms: z.boolean().refine(val => val === true, {
     message: 'You must accept the terms and conditions',
   }),
@@ -32,7 +33,9 @@ const form = useForm({
   register={form.register('terms')}
   label='I accept the terms and conditions'
   description='Read our terms before proceeding'
-/>`} language='tsx' />
+/>
+```
+
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 

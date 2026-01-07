@@ -18,7 +18,8 @@ The component handles the complexity of connecting Radix UI's Select with React 
 
 ## Less boilerplate
 
-<CodeHighlight code={`<FormField
+```tsx
+<FormField
   control={form.control}
   name="country"
   render={({ field }) => (
@@ -42,17 +43,22 @@ The component handles the complexity of connecting Radix UI's Select with React 
       <FormMessage />
     </FormItem>
   )}
-/>`} language='tsx' />
+/>
+```
+
 
 With `SelectField`, this reduces to a single declarative component:
 
-<CodeHighlight code={`<SelectField 
+```tsx
+<SelectField 
   register={form.register('country')} 
   label="Country" 
   placeholder="Select a country"
   description="Choose your country"
   options={{ 'United States': 'us', 'Canada': 'ca', 'France': 'fr' }}
-/>`} language='tsx' />
+/>
+```
+
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 

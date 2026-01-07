@@ -20,7 +20,8 @@ The component eliminates the need to manually wrap components with multiple boun
 
 Wrap components that use TanStack Query hooks:
 
-<CodeHighlight code={`import { QueryBoundary } from '@/components/ui/shuip/query-boundary';
+```tsx
+import { QueryBoundary } from '@/components/ui/shuip/query-boundary';
 
 export default function App() {
   return (
@@ -46,7 +47,8 @@ function UsersList() {
 
 Override the default error fallback for custom error UI:
 
-<CodeHighlight code={`function CustomErrorFallback({ error, resetErrorBoundary }) {
+```tsx
+function CustomErrorFallback({ error, resetErrorBoundary }) {
   return (
     <div className="text-center p-8">
       <h3 className="text-lg font-semibold mb-2">Something went wrong</h3>
