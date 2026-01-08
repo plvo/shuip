@@ -19,24 +19,30 @@ The component accepts native textarea props like `rows` and `maxLength` directly
 
 ```tsx
 const schema = z.object({
-  bio: z.string().min(10, 'Bio must be at least 10 characters'),
   feedback: z.string().max(500, 'Maximum 500 characters'),
 })
 
 const form = useForm({
-  defaultValues: { bio: '', feedback: '' },
+  defaultValues: { feedback: '' },
   resolver: zodResolver(schema),
 })
 
-// Basic textarea
+```
+
+### Basic textarea
+
+```tsx
 <TextareaField
   register={form.register('bio')}
   label='Bio'
   description='Tell us about yourself'
   rows={4}
 />
+```
 
-// With character limit
+### With character limit
+
+```tsx
 <TextareaField
   register={form.register('feedback')}
   label='Feedback'
@@ -45,8 +51,11 @@ const form = useForm({
   maxLength={500}
   placeholder='Your feedback...'
 />
+```
 
-// With tooltip
+### With tooltip
+
+```tsx
 <TextareaField
   register={form.register('notes')}
   label='Notes'

@@ -13,6 +13,8 @@
     "...components",
     "---REACT HOOK FORM---",
     "...react-hook-form",
+    "---TANSTACK QUERY---",
+    "...tanstack-query",
     "---TANSTACK FORM---",
     "...tanstack-form/overview",
     "...tanstack-form"

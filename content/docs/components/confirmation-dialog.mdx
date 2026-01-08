@@ -40,8 +40,9 @@ With `ConfirmationDialog`, the same result in a clean, reusable component:
 
 ## Common use cases
 
+### Delete confirmation
+
 ```tsx	
-// Delete confirmation
 <ConfirmationDialog
   trigger={<Button variant="destructive">Delete Account</Button>}
   title="Delete Account"
@@ -49,8 +50,11 @@ With `ConfirmationDialog`, the same result in a clean, reusable component:
   labelConfirmButton="Delete Account"
   onConfirm={() => deleteAccount()}
 />
+```
 
-// Save confirmation
+### Save confirmation
+
+```tsx	
 <ConfirmationDialog
   trigger={<Button>Save Changes</Button>}
   title="Save Changes"
@@ -58,8 +62,11 @@ With `ConfirmationDialog`, the same result in a clean, reusable component:
   labelConfirmButton="Save"
   onConfirm={() => saveChanges()}
 />
+```
 
-// Custom trigger with icon
+### Custom trigger with icon
+
+```tsx	  
 <ConfirmationDialog
   trigger={
     <Button variant="ghost" size="icon">

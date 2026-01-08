@@ -1,0 +1,6 @@
+{
+  "title": "Blocks",
+  "description": "Blocks are a collection of ready-to-use React components designed to accelerate the development of your Next.js applications.",
+  "root": true,
+  "pages": ["overview", "..."]
+}

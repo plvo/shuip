@@ -13,7 +13,7 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | sh(ui)p 🚀',
+    template: '%s | sh(ui)p',
     default: 'sh(ui)p',
   },
   description:

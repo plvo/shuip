@@ -3,7 +3,7 @@ import { DocsPageBase, generateDocsPageMetadata } from '@/components/docs-page-b
 import { blocksSource } from '@/lib/source';
 
 export default async function BlocksPage(props: PageProps<'/blocks/[[...slug]]'>) {
-  return <DocsPageBase<'blocks'> props={props} />;
+  return <DocsPageBase<'blocks'> docsType='blocks' props={props} />;
 }
 
 export async function generateStaticParams() {

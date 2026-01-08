@@ -3,6 +3,7 @@
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import type React from 'react';
+import { CodeHighlight } from './item-preview';
 
 export interface InstallationCmdProps extends React.RefAttributes<HTMLDivElement> {
   registryPath: string;
@@ -36,7 +37,7 @@ export function InstallationCmd({ registryPath, manualCode, ...props }: Installa
       {manualCode && (
         <Tab>
           <CodeBlock keepBackground data-code>
-            <Pre>{manualCode}</Pre>
+            <CodeHighlight code={manualCode} language='tsx' />
           </CodeBlock>
         </Tab>
       )}

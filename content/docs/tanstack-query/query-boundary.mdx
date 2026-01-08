@@ -41,7 +41,8 @@ function UsersList() {
   });
 
   return <div>{data.map(user => user.name)}</div>;
-}`} language="typescript" />
+}
+```
 
 ## Custom error handling
 
@@ -66,7 +67,8 @@ function CustomErrorFallback({ error, resetErrorBoundary }) {
   loadingFallback={<div>Loading...</div>}
 >
   <Dashboard />
-</QueryBoundary>`} language="typescript" />
+</QueryBoundary>
+```
 
 ## Default error fallback
 

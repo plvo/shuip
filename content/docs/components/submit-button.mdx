@@ -13,8 +13,8 @@ registryName: submit-button
 
 ## Common use cases
 
-```tsx
-// Basic form submission
+### Basic form submission
+```tsx	
 <SubmitButton children="Save Changes" loading={isSaving} />
 
 <SubmitButton loading={isSaving}>
@@ -23,31 +23,40 @@ registryName: submit-button
     Send Message
   </span>
 </SubmitButton>
+```
 
-// With custom icon
+### With custom icon
+
+```tsx	
 <SubmitButton 
-      children="Processing Payment"
-      loading={isProcessing}
-      icon={<CreditCard className="mr-2 h-4 w-4 animate-pulse" />}
+  children="Processing Payment"
+  loading={isProcessing}
+  icon={<CreditCard className="mr-2 h-4 w-4 animate-pulse" />}
 />
+```
 
-// With JSX label
+### With JSX label
+
+```tsx	
 <SubmitButton 
-      children={
-        <span className="flex items-center">
-          <Send className="mr-2 h-4 w-4" />
-          Send Message
-        </span>
-      }
-      loading={isSending}
+  children={
+    <span className="flex items-center">
+      <Send className="mr-2 h-4 w-4" />
+      Send Message
+    </span>
+  }
+  loading={isSending}
 />
+```
 
-// Custom styling
+### Custom styling
+
+```tsx	
 <SubmitButton 
-      children="Delete Account"
-      loading={isDeleting}
-      className="bg-destructive hover:bg-destructive/90"
-      disabled={!confirmed}
+  children="Delete Account"
+  loading={isDeleting}
+  className="bg-destructive hover:bg-destructive/90"
+  disabled={!confirmed}
 />
 ```
 

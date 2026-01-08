@@ -1,8 +1,9 @@
 'use client';
 
 import { ReloadIcon } from '@radix-ui/react-icons';
-import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
+import { CodeBlock } from 'fumadocs-ui/components/codeblock';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Highlight, themes } from 'prism-react-renderer';
 import * as React from 'react';
 import { REGISTRY_INDEX } from '#/registry/__index__';
 
@@ -20,7 +21,7 @@ export function ItemPreview({ registryName }: ItemPreviewProps) {
       </Tab>
       <Tab>
         <CodeBlock className='px-4'>
-          <Pre>{code}</Pre>
+          <CodeHighlight code={code} language='tsx' />
         </CodeBlock>
       </Tab>
     </Tabs>
@@ -57,5 +58,28 @@ export function Preview({ registryName }: { registryName: string }) {
         <PreviewComponent />
       </React.Suspense>
     </div>
+  );
+}
+
+export interface CodeHighlightProps {
+  code: string;
+  language?: string;
+}
+
+export function CodeHighlight({ code, language = 'tsx' }: CodeHighlightProps) {
+  return (
+    <Highlight theme={themes.vsDark} code={code} language={language}>
+      {({ style: _, tokens, getLineProps, getTokenProps }) => (
+        <pre className='text-xs'>
+          {tokens.map((line, i) => (
+            <div key={i} {...getLineProps({ line })}>
+              {line.map((token, key) => (
+                <span key={key} {...getTokenProps({ token })} />
+              ))}
+            </div>
+          ))}
+        </pre>
+      )}
+    </Highlight>
   );
 }
