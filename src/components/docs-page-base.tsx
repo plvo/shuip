@@ -3,6 +3,7 @@ import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/page
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ItemHeader } from '@/components/item-content';
+import { LLMCopyButton } from '@/components/llm-copy-button';
 import { blocksSource, docsSource, getPageImage } from '@/lib/source';
 import { getMDXComponents } from '@/mdx-components';
 
@@ -22,10 +23,15 @@ export async function DocsPageBase<T extends DocsPageType>({
 
   const MDX = page.data.body;
 
+  const markdownUrl = `/${docsType}/llms.mdx/${page.slugs.join('/')}`;
+
   return (
     <DocsPage toc={page.data.toc} full={page.data.full} tableOfContent={{ style: 'clerk' }}>
-      <div className='mb-4'>
-        <DocsTitle className='font-mono text-4xl'>{page.data.title}</DocsTitle>
+      <div className='mb-4 space-y-4'>
+        <div className='flex items-center gap-2 justify-between'>
+          <DocsTitle className='font-mono text-4xl'>{page.data.title}</DocsTitle>
+          <LLMCopyButton markdownUrl={markdownUrl} />
+        </div>
         <DocsDescription className='mb-0'>{page.data.description}</DocsDescription>
       </div>
       <DocsBody>
@@ -52,7 +58,7 @@ export async function generateDocsPageMetadata<T extends DocsPageType>(
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://shuip.plvo.dev';
   const pageUrl = `${baseUrl}/${docsType}/${page.slugs.join('/')}`;
-  const ogImage = getPageImage(page).url;
+  const ogImage = getPageImage(page, docsType).url;
 
   return {
     title: page.data.title,

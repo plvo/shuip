@@ -1,5 +1,4 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
-import Image from 'next/image';
 
 export function baseOptions(): BaseLayoutProps {
   return {
@@ -8,9 +7,9 @@ export function baseOptions(): BaseLayoutProps {
       transparentMode: 'top',
       title: (
         <div className='flex items-center gap-0.5'>
-          <Image src='/shuip-light.png' alt='sh(ui)p' width={64} height={64} className='size-7 dark:hidden' />
-          <Image src='/shuip-dark.png' alt='sh(ui)p' width={64} height={64} className='size-7 hidden dark:block' />
-          <span className='font-bold font-bluunext whitespace-nowrap'>sh(ui)p</span>
+          {/* <Image src='/shuip-light.png' alt='sh(ui)p' width={64} height={64} className='size-7 dark:hidden' />
+          <Image src='/shuip-dark.png' alt='sh(ui)p' width={64} height={64} className='size-7 hidden dark:block' /> */}
+          <p className='font-bold whitespace-nowrap'>shuip</p>
         </div>
       ),
     },

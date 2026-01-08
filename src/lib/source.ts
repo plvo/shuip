@@ -32,19 +32,24 @@ export const combinedSource = loader(
   },
 );
 
-export function getPageImage(page: InferPageType<typeof docsSource | typeof blocksSource>) {
+export function getPageImage(
+  page: InferPageType<typeof docsSource | typeof blocksSource>,
+  docsType: 'docs' | 'blocks',
+) {
   const segments = [...page.slugs, 'image.png'];
+
+  console.log({ segments });
 
   return {
     segments,
-    url: `/og/docs/${segments.join('/')}`,
+    url: `http://localhost:3000/og/${docsType}/${segments.join('/')}`,
   };
 }
 
 export async function getLLMText(page: InferPageType<typeof docsSource | typeof blocksSource>) {
   const processed = await page.data.getText('processed');
 
-  return `# ${page.data.title}
+  return `# ${page.data.title} (${page.url})
 
 ${processed}`;
 }
