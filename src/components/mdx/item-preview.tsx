@@ -1,9 +1,9 @@
 'use client';
 
 import { ReloadIcon } from '@radix-ui/react-icons';
+import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
 import * as React from 'react';
 import { REGISTRY_INDEX } from '#/registry/__index__';
-import { CodePreview } from '@/components/mdx/code-preview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopyButton } from '../ui/shuip/copy-button';
 
@@ -33,7 +33,9 @@ export function ItemPreview({ registryName }: ItemPreviewProps) {
           <Preview registryName={registryName} />
         </TabsContent>
         <TabsContent value='code' className='rounded-md border border-border overflow-hidden'>
-          <CodePreview code={code || ''} />
+          <CodeBlock>
+            <Pre>{code}</Pre>
+          </CodeBlock>
         </TabsContent>
       </article>
     </Tabs>

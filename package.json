@@ -16,7 +16,7 @@
   "packageManager": "bun@1.2.10",
   "scripts": {
     "clean": "rimraf .next node_modules bun.lock package-lock.json",
-    "check:unused": "knip",
+    "unused": "knip",
     "format": "biome format --write .",
     "lint": "biome lint",
     "analyze": "next experimental-analyze",

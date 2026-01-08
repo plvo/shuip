@@ -2,8 +2,6 @@ import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import type { MDXComponents } from 'mdx/types';
 import type React from 'react';
-import { CopyButton } from '#/registry/ui/copy-button';
-import { CodeHighlight, type CodeHighlightProps } from './components/mdx/code-preview';
 import { ComparisonTable, type ComparisonTableProps } from './components/mdx/comparison-table';
 import { ItemExamples, type ItemExamplesProps, ItemHeader, type ItemHeaderProps } from './components/mdx/item-content';
 import { InstallationCmd, type InstallationCmdProps } from './components/mdx/item-installation';
@@ -29,16 +27,16 @@ export function getMDXComponents(components?: MDXComponents) {
         <Pre>{props.children}</Pre>
       </CodeBlock>
     ),
-    CodeHighlight: ({
-      code,
-      language = 'tsx',
-      ...props
-    }: CodeHighlightProps & React.HTMLAttributes<HTMLDivElement>) => (
-      <div className='flex justify-between rounded-lg border my-6 overflow-x-auto bg-[#1E1E1E]' {...props}>
-        <CodeHighlight code={code} language={language} />
-        <CopyButton value={code} className='pt-6 pr-6' />
-      </div>
-    ),
+    // CodeHighlight: ({
+    //   code,
+    //   language = 'tsx',
+    //   ...props
+    // }: CodeHighlightProps & React.HTMLAttributes<HTMLDivElement>) => (
+    //   <div className='flex justify-between rounded-lg border my-6 overflow-x-auto bg-[#1E1E1E]' {...props}>
+    //     <CodeHighlight code={code} language={language} />
+    //     <CopyButton value={code} className='pt-6 pr-6' />
+    //   </div>
+    // ),
     InstallationCmd: ({ registryPath, ...props }: InstallationCmdProps) => (
       <InstallationCmd registryPath={registryPath} {...props} />
     ),

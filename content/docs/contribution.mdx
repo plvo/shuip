@@ -3,25 +3,41 @@ title: Contribution
 description: Contribute to shuip to make it better.
 ---
 
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
 ## Configuration
 
-### Installation
-
-1. **Clone the repository**
-	```tsx
+<Steps>
+<Step>
+Clone the repository
+```bash
 git clone https://github.com/plvo/shuip.git 
-	cd shuip`} language='bash' />
-2. **Install dependencies**
-	```tsx
-bun install`} language='bash' />
+cd shuip
+```
+</Step>
 
-3. **Create a branch for your changes**
-	```tsx
-git checkout -b feat/my-component`} language='bash' />
 
-4. **Start the development server**
-	```tsx
-bun run dev`} language='bash' />
+<Step>
+Install dependencies
+```bash
+bun install
+```
+</Step>
+
+<Step>
+Create a branch for your changes
+```bash
+git checkout -b feat/my-component
+```
+</Step>
+
+<Step>
+Start the development server
+```bash
+bun run dev
+```
+</Step>
+</Steps>
 
 ## Add a component
 
@@ -29,7 +45,7 @@ bun run dev`} language='bash' />
 
 Each shuip component follows this structure:
 
-```tsx
+```bash
 ├── registry/
 │   ├── ui/
 │   │   └── my-component.tsx          	# Implementation of the component
@@ -39,54 +55,71 @@ Each shuip component follows this structure:
 │       └── my-component.disabled.tsx 	# Example with the title "Disabled"
 ├── docs/components/
 │       └── my-component.mdx          	# Documentation of the component
-└── registry.json                  		# Registry configuration`} 
-	language='bash' 
-/>
+└── registry.json                  		# Registry configuration
+```
 
 ### Detailed steps
 
-1. Create your component in `registry/ui/`
-2. Create at least one example in `registry/examples/` _(with the same name as the component file)_
-3. **Generate and build the registry files**
-	```tsx
+<Steps>
+<Step>
+Create your component in `registry/ui/`
+</Step>
+<Step>
+Create at least one example in `registry/examples/` _(with the same name as the component file)_
+</Step>
+<Step>
+**Generate and build the registry files**
+```bash
 bun run registry:generate # Generates the registry/__index__.tsx file
-	bun run registry:build # Generates the JSONs in public/r/*`} language='bash' />
-4. Create the component documentation in `content/components/`
-	```tsx
+bun run registry:build # Generates the JSONs in public/r/*
+```
+</Step>
+<Step>
+Create the component documentation in `content/components/`
+
+```bash
+bun run registry:generate # Generates the registry/__index__.tsx file
+bun run registry:build # Generates the JSONs in public/r/*`}
+```
+</Step>
+
+<Step>
+Create the component documentation in `content/components/`
+
+```yaml
 ---
-	title: My Component
-	description: Description of the component
-	
-	---
+title: My Component
+description: Description of the component
+---
 
+# Title
 
+import { TypeTable } from 'fumadocs-ui/components/type-table';
 
-	# ...
+<ItemExamples registryName={'my-component'} /> 
 
-	import { TypeTable } from 'fumadocs-ui/components/type-table';
+## Props
 
-	<ItemExamples registryName={'my-component'} /> 
-
-	## Props
-
-	<TypeTable
-	  type={{
-	    label: {
-	      description: 'The label of the component',
-	      type: 'string',
-	    },
-	  }}
-	/>
-	`} language='python' />
+<TypeTable
+  type={{
+    label: {
+      description: 'The label of the component',
+      type: 'string',
+    },
+  }}
+/>
+```
+</Step>
+</Steps>
 
 ## Submit your contribution
 
 ### Create a Pull Request
 
-```tsx
+```bash
 git add .
 git commit -m "feat: new component my-component"
-git push origin feat/my-component`} 
-language='bash' />
+git push origin feat/my-component
+```
 
 _Thank you for your contribution to shuip!_ 🚀
