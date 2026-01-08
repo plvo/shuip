@@ -13,11 +13,11 @@ const geistSans = Geist({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | sh(ui)p',
-    default: 'sh(ui)p',
+    template: '%s | shuip',
+    default: 'shuip',
   },
   description:
-    'Ship fast with sh(ui)p components, a collection of UI components for your next.js project, built with shadcn/ui.',
+    'Ship fast with shuip components, a collection of UI components for your next.js project, built with shadcn/ui.',
   keywords: ['javascript', 'components', 'next.js', 'tailwindcss', 'react', 'web', 'ui', 'design'],
 };
 
