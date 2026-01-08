@@ -10,7 +10,6 @@ export interface ItemHeaderProps {
 }
 
 export async function ItemHeader({ registryName, text }: ItemHeaderProps) {
-  const { h2: H2 } = useMDXComponents();
   const code = REGISTRY_INDEX[registryName]?.code;
 
   return (

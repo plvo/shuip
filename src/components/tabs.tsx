@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/correctness/useHookAtTopLevel: 0 */
 'use client';
 
 import * as React from 'react';

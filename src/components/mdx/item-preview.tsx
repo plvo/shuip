@@ -13,6 +13,7 @@ export interface ItemPreviewProps {
 
 export function ItemPreview({ registryName }: ItemPreviewProps) {
   const code = REGISTRY_INDEX[registryName]?.code;
+
   return (
     <Tabs defaultValue='preview'>
       <article className='rounded-lg'>

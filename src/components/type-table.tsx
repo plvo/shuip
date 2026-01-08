@@ -1,10 +1,10 @@
 'use client';
 
-import { ChevronDown } from 'lucide-react';
-import Link from 'fumadocs-core/link';
 import { cva } from 'class-variance-authority';
-import { cn } from '../lib/cn';
+import Link from 'fumadocs-core/link';
+import { ChevronDown } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
+import { cn } from '../lib/cn';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 
 export interface ParameterNode {
