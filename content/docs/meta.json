@@ -3,12 +3,11 @@
   "description": "Documentation for the project",
   "root": true,
   "pages": [
-    "---DOCUMENTATION---",
     "index",
     "configuration",
+    "installation",
     "contribution",
     "changelog",
-
     "---COMPONENTS---",
     "...components/index",
     "...components",

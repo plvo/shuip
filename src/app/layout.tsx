@@ -14,7 +14,7 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: {
     template: '%s | sh(ui)p 🚀',
-    default: 'sh(ui)p 🚀',
+    default: 'sh(ui)p',
   },
   description:
     'Ship fast with sh(ui)p components, a collection of UI components for your next.js project, built with shadcn/ui.',

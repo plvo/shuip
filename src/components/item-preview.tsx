@@ -2,10 +2,9 @@
 
 import { ReloadIcon } from '@radix-ui/react-icons';
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import * as React from 'react';
 import { REGISTRY_INDEX } from '#/registry/__index__';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CopyButton } from '../ui/shuip/copy-button';
 
 export interface ItemPreviewProps {
   registryName: string;
@@ -15,29 +14,15 @@ export function ItemPreview({ registryName }: ItemPreviewProps) {
   const code = REGISTRY_INDEX[registryName]?.code;
 
   return (
-    <Tabs defaultValue='preview'>
-      <article className='rounded-lg'>
-        <TabsList className='flex justify-between p-2 bg-accent'>
-          <div className='px-0 py-2'>
-            <TabsTrigger value='preview' className='tabs-trigger-mdx'>
-              Preview
-            </TabsTrigger>
-            <TabsTrigger value='code' className='tabs-trigger-mdx'>
-              Code
-            </TabsTrigger>
-          </div>
-          <CopyButton value={code || ''} className='r-2' />
-        </TabsList>
-
-        <TabsContent value='preview'>
-          <Preview registryName={registryName} />
-        </TabsContent>
-        <TabsContent value='code' className='rounded-md border border-border overflow-hidden'>
-          <CodeBlock>
-            <Pre>{code}</Pre>
-          </CodeBlock>
-        </TabsContent>
-      </article>
+    <Tabs items={['preview', 'code']}>
+      <Tab className='p-0'>
+        <Preview registryName={registryName} />
+      </Tab>
+      <Tab>
+        <CodeBlock className='px-4'>
+          <Pre>{code}</Pre>
+        </CodeBlock>
+      </Tab>
     </Tabs>
   );
 }

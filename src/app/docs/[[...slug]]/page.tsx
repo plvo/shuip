@@ -3,7 +3,7 @@ import { DocsPageBase, generateDocsPageMetadata } from '@/components/docs-page-b
 import { docsSource } from '@/lib/source';
 
 export default async function DocsPage(props: PageProps<'/docs/[[...slug]]'>) {
-  return <DocsPageBase docsType='docs' props={props} />;
+  return <DocsPageBase<'docs'> props={props} />;
 }
 
 export async function generateStaticParams() {

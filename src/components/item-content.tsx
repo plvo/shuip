@@ -26,28 +26,23 @@ export interface ItemExamplesProps {
 }
 
 export async function ItemExamples({ registryName }: ItemExamplesProps) {
-  const { h2: H2, h3: H3 } = useMDXComponents();
+  const { h3: H3 } = useMDXComponents();
 
   const examples = Object.keys(REGISTRY_INDEX).filter((example) => {
     const splitted = example.split('.');
     return splitted.shift() === registryName && splitted.pop() === 'example';
   });
 
-  return (
-    <>
-      <H2>Examples</H2>
-      {examples.length ? (
-        examples.sort().map((example) => (
-          <div key={example} className='my-6 space-y-4'>
-            <H3>{example === `${registryName}.example` ? 'Default' : filenameToTitle(example.split('.')[1])}</H3>
-            <ItemPreview registryName={example} />
-          </div>
-        ))
-      ) : (
-        <p className='text-sm text-muted-foreground'>No examples</p>
-      )}
-    </>
-  );
+  if (!examples.length) {
+    return <p className='text-sm text-muted-foreground'>No examples</p>;
+  }
+
+  return examples.sort().map((example) => (
+    <div key={example} className='my-6 space-y-4'>
+      <H3>{example === `${registryName}.example` ? 'Default' : filenameToTitle(example.split('.')[1])}</H3>
+      <ItemPreview registryName={example} />
+    </div>
+  ));
 }
 
 export interface Prop {

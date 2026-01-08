@@ -2,21 +2,15 @@ import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/page';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { ItemHeader } from '@/components/mdx/item-content';
-import { blocksSource, docsSource, getPageImage } from '@/lib/source';
+import { ItemHeader } from '@/components/item-content';
+import { combinedSource, getPageImage } from '@/lib/source';
 import { getMDXComponents } from '@/mdx-components';
 
 type DocsPageType = 'docs' | 'blocks';
 
-export async function DocsPageBase({
-  docsType,
-  props,
-}: {
-  docsType: DocsPageType;
-  props: PageProps<`/${DocsPageType}/[[...slug]]`>;
-}) {
+export async function DocsPageBase<T extends DocsPageType>({ props }: { props: PageProps<`/${T}/[[...slug]]`> }) {
   const params = await props.params;
-  const page = docsType === 'docs' ? docsSource.getPage(params.slug) : blocksSource.getPage(params.slug);
+  const page = combinedSource.getPage(params.slug);
   if (!page) notFound();
 
   const MDX = page.data.body;
@@ -24,13 +18,13 @@ export async function DocsPageBase({
   return (
     <DocsPage toc={page.data.toc} full={page.data.full} tableOfContent={{ style: 'clerk' }}>
       <DocsTitle className='font-mono'>{page.data.title}</DocsTitle>
-      <DocsDescription>{page.data.description}</DocsDescription>
+      <DocsDescription className='mb-0'>{page.data.description}</DocsDescription>
       <DocsBody>
         {page.data.registryName && <ItemHeader registryName={page.data.registryName} />}
         <MDX
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths
-            a: createRelativeLink(docsType === 'docs' ? docsSource : blocksSource, page),
+            a: createRelativeLink(combinedSource, page),
           })}
         />
       </DocsBody>
@@ -43,7 +37,7 @@ export async function generateDocsPageMetadata<T extends DocsPageType>(
   props: PageProps<`/${T}/[[...slug]]`>,
 ): Promise<Metadata> {
   const params = await props.params;
-  const page = docsType === 'docs' ? docsSource.getPage(params.slug) : blocksSource.getPage(params.slug);
+  const page = combinedSource.getPage(params.slug);
   if (!page) notFound();
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://shuip.plvo.dev';

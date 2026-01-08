@@ -1,11 +1,4 @@
 import { createFromSource } from 'fumadocs-core/search/server';
-import { blocksSource, docsSource } from '@/lib/source';
+import { combinedSource } from '@/lib/source';
 
-export const { GET } = createFromSource(docsSource, {
-  // https://docs.orama.com/docs/orama-js/supported-languages
-  language: 'english',
-});
-
-export const { GET: GETBlocks } = createFromSource(blocksSource, {
-  language: 'english',
-});
+export const { GET } = createFromSource(combinedSource, { language: 'english' });

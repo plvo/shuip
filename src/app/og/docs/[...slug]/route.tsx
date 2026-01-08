@@ -3,13 +3,13 @@
 import { generate as DefaultImage } from 'fumadocs-ui/og';
 import { notFound } from 'next/navigation';
 import { ImageResponse } from 'next/og';
-import { blocksSource, docsSource, getPageImage } from '@/lib/source';
+import { combinedSource, getPageImage } from '@/lib/source';
 
 export const revalidate = false;
 
 export async function GET(_req: Request, { params }: RouteContext<'/og/docs/[...slug]'>) {
   const { slug } = await params;
-  const page = docsSource.getPage(slug);
+  const page = combinedSource.getPage(slug);
   if (!page) notFound();
 
   const { title, description } = page.data;
@@ -19,7 +19,7 @@ export async function GET(_req: Request, { params }: RouteContext<'/og/docs/[...
 
   return new ImageResponse(
     <DefaultImage
-      site='create-faster'
+      site='sh(ui)p'
       title={<span style={{ color: 'rgb(5, 105, 255)' }}>{title}</span>}
       description={truncatedDescription}
       icon={<img src={getPageImage(page).url} alt={title} width={64} height={64} />}
@@ -34,7 +34,7 @@ export async function GET(_req: Request, { params }: RouteContext<'/og/docs/[...
 }
 
 export function generateStaticParams() {
-  return [...docsSource.getPages(), ...blocksSource.getPages()].map((page) => ({
+  return combinedSource.getPages().map((page) => ({
     lang: page.locale,
     slug: getPageImage(page).segments,
   }));

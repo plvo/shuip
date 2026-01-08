@@ -1,5 +1,5 @@
 import { blocks, docs } from 'fumadocs-mdx:collections/server';
-import { type InferPageType, loader } from 'fumadocs-core/source';
+import { type InferPageType, loader, multiple } from 'fumadocs-core/source';
 import { icons } from 'lucide-react';
 import React from 'react';
 
@@ -21,6 +21,16 @@ export const blocksSource = loader({
   source: blocks.toFumadocsSource(),
   icon,
 });
+
+export const combinedSource = loader(
+  multiple({
+    docs: docs.toFumadocsSource(),
+    blocks: blocks.toFumadocsSource(),
+  }),
+  {
+    baseUrl: '/',
+  },
+);
 
 export function getPageImage(page: InferPageType<typeof docsSource | typeof blocksSource>) {
   const segments = [...page.slugs, 'image.png'];
