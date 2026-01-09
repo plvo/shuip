@@ -25,7 +25,7 @@
     "predev": "bun run prebuild",
     "dev": "next dev",
     "start": "next start",
-    "registry:build": "shadcn build && biome format --write public/r",
+    "registry:build": "bun run scripts/shadcn-build.ts && biome format --write public/r",
     "registry:generate": "bun run scripts/generate-registry.ts",
     "registry:copy-local": "bun run scripts/copy-local-registry.ts",
     "registry:all-cli": "bun run scripts/all-registry-cli.ts",
