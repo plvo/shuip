@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "rhf-input-field",
-  "type": "registry:ui",
   "dependencies": ["react-hook-form", "lucide-react"],
   "registryDependencies": ["form", "input", "button"],
   "files": [
@@ -11,5 +10,6 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/react-hook-form/input-field.tsx"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

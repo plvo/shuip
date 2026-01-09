@@ -1,0 +1,22 @@
+{
+  "title": "Documentation",
+  "description": "Documentation for the project",
+  "root": true,
+  "pages": [
+    "index",
+    "configuration",
+    "installation",
+    "contribution",
+    "changelog",
+    "---COMPONENTS---",
+    "...components/index",
+    "...components",
+    "---REACT HOOK FORM---",
+    "...react-hook-form",
+    "---TANSTACK QUERY---",
+    "...tanstack-query",
+    "---TANSTACK FORM---",
+    "...tanstack-form/overview",
+    "...tanstack-form"
+  ]
+}

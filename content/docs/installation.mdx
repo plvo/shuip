@@ -1,7 +1,6 @@
 ---
 title: Installation
 description: Installation guide for integrating shuip into your project
-position: 2
 ---
 
 ## Prerequisites
@@ -20,9 +19,9 @@ Before installing shuip, make sure you have:
 
 Use the shadcn/ui CLI to add the shuip components you want to your project:
 
-<div className='my-6'>
-  <InstallationCmd registryPath={'input-field'} />
-</div>
+```npm
+npx shadcn@latest add https://shuip.plvo.dev/r/input-field
+```
 
 ### Method 2: Manual Copy-Paste
 
@@ -32,7 +31,8 @@ You can also copy and paste the code directly from each component’s documentat
 
 After installation, shuip components will be added to your project like this:
 
-<CodeHighlight code={`src/
+```bash
+src/
 ├── components/
 │   ├── block/
 │   │   └── shuip/                 # 🆕 shuip blocks
@@ -44,21 +44,23 @@ After installation, shuip components will be added to your project like this:
 │   │       ├── input-field.tsx
 │   │       ├── submit-button.tsx
 │   │       └── confirmation-dialog.tsx
-│   │       └── ...`}
-/>
+│   │       └── ...
+```
 
 ## TypeScript Configuration
 
 If you're using TypeScript, make sure your `tsconfig.json` includes the appropriate path aliases:
 
-<CodeHighlight code={`{
-    "compilerOptions": {
-      "baseUrl": ".",
-      "paths": {
-        "@/*": ["./src/*"] // or "@/*": ["./*"] if your project is rooted at the top level
-      }
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"] // or "@/*": ["./*"] if your project is rooted at the top level
     }
-}`} language='json' />
+  }
+}
+```
 
 ## Common Issues
 

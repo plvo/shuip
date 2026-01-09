@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "confirmation-dialog",
-  "type": "registry:ui",
   "dependencies": [],
   "registryDependencies": ["dialog", "button"],
   "files": [
@@ -11,5 +10,6 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/confirmation-dialog.tsx"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

@@ -1,0 +1,96 @@
+---
+title: Hover Reveal
+description: Provides an elegant way to display additional information on hover, creating a more interactive and informative interface without cluttering the main content.
+registryName: hover-reveal
+---
+
+## Common use cases
+
+```tsx	
+// Help text on hover
+<HoverReveal content="This field is required for account verification">
+    <Label>Email Address</Label>
+</HoverReveal>
+```
+
+### User profile preview
+
+```tsx	
+// User profile preview
+<HoverReveal 
+    content={
+      <div className="flex items-center space-x-2">
+        <Avatar>
+          <AvatarImage src={user.avatar} />
+          <AvatarFallback>{user.initials}</AvatarFallback>
+        </Avatar>
+        <div>
+          <p className="font-medium">{user.name}</p>
+          <p className="text-sm text-muted-foreground">{user.role}</p>
+        </div>
+      </div>
+    }
+>
+    @{user.username}
+</HoverReveal>
+```
+
+### Feature explanation
+
+```tsx	
+<HoverReveal 
+    content={
+      <div className="max-w-xs">
+        <h4 className="font-semibold mb-2">Premium Feature</h4>
+        <p className="text-sm">
+          This feature is available for premium subscribers. 
+          Upgrade your plan to access advanced analytics.
+        </p>
+      </div>
+    }
+>
+    <Button variant="outline" disabled>
+      <Lock className="mr-2 h-4 w-4" />
+      Advanced Analytics
+    </Button>
+</HoverReveal>
+```
+
+### Quick preview
+
+```tsx	
+<HoverReveal 
+    content={
+      <img 
+        src={image.url} 
+        alt={image.alt}
+        className="w-48 h-32 object-cover rounded"
+      />
+    }
+>
+    <span className="text-blue-600 hover:underline">
+      View image preview
+    </span>
+</HoverReveal>
+```
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'hover-reveal'} /> 
+
+## Props
+
+<TypeTable
+  type={{
+    children: {
+      description: 'The content to reveal',
+      type: 'React.ReactNode',
+    },
+    content: {
+      description: 'The content to reveal',
+      type: 'React.ReactNode',
+    },
+  }}
+/>

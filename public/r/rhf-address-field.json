@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "rhf-address-field",
-  "type": "registry:ui",
   "dependencies": ["react-hook-form", "zod", "lucide-react"],
   "registryDependencies": ["form", "input", "button", "popover", "command"],
   "files": [
@@ -17,5 +16,6 @@
       "type": "registry:file",
       "target": "./actions/shuip/places.ts"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

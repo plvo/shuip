@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "theme-button",
-  "type": "registry:ui",
   "dependencies": ["next-themes", "lucide-react", "class-variance-authority"],
   "registryDependencies": ["button"],
   "files": [
@@ -11,5 +10,6 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/theme-button.tsx"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

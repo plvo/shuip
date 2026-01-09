@@ -1,0 +1,48 @@
+---
+title: Theme Button
+description: Provides an elegant and user-friendly way to cycle through light, dark, and system themes. It's specifically designed to work with next-themes, the most popular theme management library for Next.js applications.
+registryName: theme-button
+---
+
+## Ready-to-use theme toggle
+
+The button automatically cycles through these states:
+- **System**: Uses the user's OS preference (🖥️ Laptop icon)
+- **Light**: Forces light mode (☀️ Sun icon)  
+- **Dark**: Forces dark mode (🌙 Moon icon)
+
+With `ThemeButton`, a complete theme switcher in one line:
+
+### With ThemeButton - simple and complete
+
+```tsx
+<ThemeButton />
+```
+
+### With text label
+
+```tsx
+<ThemeButton withText={true} />
+```
+
+
+## Setup with next-themes
+
+First, make sure you have [`next-themes`](https://ui.shadcn.com/docs/dark-mode/next) installed and configured:
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'theme-button'} /> 
+
+## Props
+
+<TypeTable
+  type={{
+    withText: {
+      description: 'Whether to display the text',
+      type: 'boolean?',
+    },
+  }}
+/>

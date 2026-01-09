@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "tsf-select-field",
-  "type": "registry:ui",
   "dependencies": ["@tanstack/react-form", "@radix-ui/react-select"],
   "registryDependencies": ["field", "select"],
   "files": [
@@ -11,5 +10,6 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/tanstack-form/select-field.tsx"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "tsf-textarea-field",
-  "type": "registry:ui",
   "dependencies": ["@tanstack/react-form"],
   "registryDependencies": ["field", "input-group", "tooltip"],
   "files": [
@@ -11,5 +10,6 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/tanstack-form/textarea-field.tsx"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

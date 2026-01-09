@@ -1,0 +1,71 @@
+---
+title: Checkbox Field
+description: Checkbox component integrated with React Hook Form for type-safe boolean field management.
+registryName: rhf-checkbox-field
+---
+
+Checkboxes are binary inputs for opting in or accepting terms. `CheckboxField` combines Radix UI's Checkbox with an inline clickable label, making the entire label area interactive—not just the checkbox itself.
+
+Common patterns include required checkboxes for terms acceptance (validated with Zod's `.refine()` method) or grouped checkboxes for multi-select options using separate field registrations.
+
+#### Built-in features
+
+- **Clickable inline label** positioned next to checkbox
+- **Boolean field type** for true/false state
+- **Required validation** for terms acceptance
+- **Zod validation**: Native integration with react-hook-form
+
+## Required checkbox
+
+```tsx
+const schema = z.object({
+  terms: z.boolean().refine(val => val === true, {
+    message: 'You must accept the terms and conditions',
+  }),
+})
+
+const form = useForm({
+  defaultValues: { terms: false },
+  resolver: zodResolver(schema),
+})
+
+<CheckboxField
+  register={form.register('terms')}
+  label='I accept the terms and conditions'
+  description='Read our terms before proceeding'
+/>
+```
+
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'rhf-checkbox-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    register: {
+      description: 'React Hook Form register function result',
+      type: 'UseFormRegisterReturn',
+    },
+    label: {
+      description: 'Clickable label displayed next to the checkbox (required)',
+      type: 'string',
+    },
+    description: {
+      description: 'Helper text displayed below the checkbox',
+      type: 'string?',
+    },
+    boxLabel: {
+      description: 'Alternative label format (deprecated, use label instead)',
+      type: 'string?',
+    },
+    props: {
+      description: 'Props passed to the Checkbox component',
+      type: 'React.ComponentProps<typeof Checkbox>?',
+    },
+  }}
+/>

@@ -1,0 +1,91 @@
+---
+title: Submit Button
+description: Specifically designed for form submission with built-in loading states, making it perfect for forms that need to show submission progress and prevent double submissions.
+registryName: submit-button
+---
+
+### Built-in features
+
+- **Automatic loading state**: Shows spinner icon when `loading` prop is true
+- **Full-width by default**: Optimized for form layouts
+- **Customizable icon**: Can override the default loading spinner
+- **Form integration**: Native `type="submit"` behavior
+
+## Common use cases
+
+### Basic form submission
+```tsx	
+<SubmitButton children="Save Changes" loading={isSaving} />
+
+<SubmitButton loading={isSaving}>
+  <span className="flex items-center">
+    <Send className="mr-2 h-4 w-4" />
+    Send Message
+  </span>
+</SubmitButton>
+```
+
+### With custom icon
+
+```tsx	
+<SubmitButton 
+  children="Processing Payment"
+  loading={isProcessing}
+  icon={<CreditCard className="mr-2 h-4 w-4 animate-pulse" />}
+/>
+```
+
+### With JSX label
+
+```tsx	
+<SubmitButton 
+  children={
+    <span className="flex items-center">
+      <Send className="mr-2 h-4 w-4" />
+      Send Message
+    </span>
+  }
+  loading={isSending}
+/>
+```
+
+### Custom styling
+
+```tsx	
+<SubmitButton 
+  children="Delete Account"
+  loading={isDeleting}
+  className="bg-destructive hover:bg-destructive/90"
+  disabled={!confirmed}
+/>
+```
+
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'submit-button'} /> 
+
+## Props
+
+<TypeTable
+  type={{
+    children: {
+      description: 'Label displayed above the field',
+      type: 'React.ReactNode | string',
+    },
+    disabled: {
+      description: 'Disabled state of the button',
+      type: 'boolean',
+    },
+    loading: {
+      description: 'Loading state of the button',
+      type: 'boolean',
+    },
+    icon: {
+      description: 'Icon displayed in the button',
+      type: 'React.JSX.Element?',
+    },
+  }}
+/>

@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "hover-reveal",
-  "type": "registry:ui",
   "dependencies": [],
   "registryDependencies": ["hover-card"],
   "files": [
@@ -11,5 +10,6 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/hover-reveal.tsx"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

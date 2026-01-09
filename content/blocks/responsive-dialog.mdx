@@ -4,6 +4,8 @@ description: A dialog component that adapts to screen size - side dialog on desk
 registryName: responsive-dialog
 ---
 
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
 ## About
 
 `ResponsiveDialog` is a smart dialog component that automatically adapts to the user's screen size:
@@ -22,23 +24,21 @@ Unlike traditional dialogs that force the same experience across all devices, `R
 - **Lightweight**: Combines existing components without additional overhead
 - **Accessible**: Inherits accessibility features from both SideDialog and Drawer
 
-## Installation
-
-
 ## Usage
 
 ### Basic responsive dialog
 
-<CodeHighlight code={`<ResponsiveDialog>
+```tsx	
+<ResponsiveDialog>
   <ResponsiveDialogTrigger asChild>
     <Button>Open Dialog</Button>
   </ResponsiveDialogTrigger>
   <ResponsiveDialogContent>
     <ResponsiveDialogHeader>
       <ResponsiveDialogTitle>Settings</ResponsiveDialogTitle>
-      <ResponsiveDialogDescription>
-        Manage your preferences and account settings.
-      </ResponsiveDialogDescription>
+        <ResponsiveDialogDescription>
+          Manage your preferences and account settings.
+        </ResponsiveDialogDescription>
     </ResponsiveDialogHeader>
     <ResponsiveDialogFooter>
       <ResponsiveDialogClose asChild>
@@ -47,13 +47,15 @@ Unlike traditional dialogs that force the same experience across all devices, `R
       <Button>Save</Button>
     </ResponsiveDialogFooter>
   </ResponsiveDialogContent>
-</ResponsiveDialog>`} language='tsx' />
+</ResponsiveDialog>
+```
 
 ### Different positions (desktop only)
 
 Desktop positions are ignored on mobile where the drawer behavior takes precedence:
 
-<CodeHighlight code={`// Notification from bottom-right
+```tsx	
+// Notification from bottom-right
 <ResponsiveDialog position="bottom-right">
   <ResponsiveDialogTrigger asChild>
     <Button>Show Notification</Button>
@@ -86,13 +88,15 @@ Desktop positions are ignored on mobile where the drawer behavior takes preceden
       </Button>
     </div>
   </ResponsiveDialogContent>
-</ResponsiveDialog>`} language='tsx' />
+</ResponsiveDialog>
+```
 
 ### Custom breakpoints
 
 Control when the dialog switches between desktop and mobile modes:
 
-<CodeHighlight code={`// Use predefined breakpoints
+```tsx	
+// Use predefined breakpoints
 <ResponsiveDialog breakpoint="sm">  {/* Switches at 640px */}
   <ResponsiveDialogTrigger asChild>
     <Button>Small Breakpoint</Button>
@@ -120,13 +124,15 @@ Control when the dialog switches between desktop and mobile modes:
       </ResponsiveDialogDescription>
     </ResponsiveDialogHeader>
   </ResponsiveDialogContent>
-</ResponsiveDialog>`} language='tsx' />
+</ResponsiveDialog>
+```
 
 ### Different sizes (desktop only)
 
 Size props affect the desktop side dialog appearance:
 
-<CodeHighlight code={`// Small dialog for quick actions
+```tsx	
+// Small dialog for quick actions
 <ResponsiveDialog size="xs">
   <ResponsiveDialogTrigger asChild>
     <Button variant="outline">Quick Action</Button>
@@ -154,13 +160,15 @@ Size props affect the desktop side dialog appearance:
       <Link href="/settings">Settings</Link>
     </nav>
   </ResponsiveDialogContent>
-</ResponsiveDialog>`} language='tsx' />
+</ResponsiveDialog>
+```
 
 ## Common use cases
 
 ### Mobile-first navigation
 
-<CodeHighlight code={`<ResponsiveDialog position="left" size="lg">
+```tsx	
+<ResponsiveDialog position="left" size="lg">
   <ResponsiveDialogTrigger asChild>
     <Button variant="outline" size="icon">
       <Menu className="size-4" />
@@ -182,34 +190,40 @@ Size props affect the desktop side dialog appearance:
       </Link>
     </nav>
   </ResponsiveDialogContent>
-</ResponsiveDialog>`} language='tsx' />
+</ResponsiveDialog>
+```
+
+## Examples
 
 <ItemExamples registryName={'responsive-dialog'} /> 
 
-<PropTable props={[
-  {
-    prop: 'open',
-    type: 'boolean',
-    description: 'Whether the dialog is open. Use with onOpenChange for controlled component.',
-  },
-  {
-    prop: 'onOpenChange',
+## Props
+
+<TypeTable
+  type={{
+    open: {
+      description: 'Whether the dialog is open. Use with onOpenChange for controlled component.',
+      type: 'boolean',
+    },
+  onOpenChange: {
+    description: 'Callback fired when the open state changes.',
     type: '(open: boolean) => void',
-    description: 'Callback fired when the dialog open state changes.',
   },
-  {
-    prop: 'position',
-    type: "'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'left' | 'right'",
-    description: 'Position of the dialog on desktop. Default is "bottom-right". Ignored on mobile.',
+  position: {
+    description:
+      'Position of the dialog on desktop screens (≥1024px). One of "top-left", "top-right", "bottom-left", "bottom-right", "left", or "right". Defaults to "bottom-right". Ignored on mobile.',
+    type: `"top-left" | "top-right" | "bottom-left" | "bottom-right" | "left" | "right"`,
   },
-  {
-    prop: 'size',
-    type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'",
-    description: 'Size of the dialog on desktop. Default is "sm". Ignored on mobile.',
+  size: {
+    description:
+      'Width of the desktop dialog. One of "xs", "sm", "md", "lg", "xl", or "2xl". Defaults to "sm". Ignored on mobile.',
+    type: `"xs" | "sm" | "md" | "lg" | "xl" | "2xl"`,
   },
-  {
-    prop: 'breakpoint',
-    type: "'sm' | 'md' | 'lg' | 'xl' | number",
-    description: 'Breakpoint at which the dialog switches to mobile mode. Default is "md" (768px). Can be a predefined breakpoint or custom pixel value.',
+  breakpoint: {
+    description:
+      'Breakpoint at which the dialog switches to mobile mode. Can be a predefined label ("sm", "md", "lg", "xl") or custom pixel value. Defaults to "md" (768px).',
+    type: `"sm" | "md" | "lg" | "xl" | number`,
   },
-]} />
+  }}
+/>
+  

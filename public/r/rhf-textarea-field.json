@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "rhf-textarea-field",
-  "type": "registry:ui",
   "dependencies": ["react-hook-form"],
   "registryDependencies": ["form", "textarea", "input-group"],
   "files": [
@@ -11,5 +10,6 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/react-hook-form/textarea-field.tsx"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

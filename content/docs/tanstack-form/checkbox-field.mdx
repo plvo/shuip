@@ -1,0 +1,74 @@
+---
+title: Checkbox Field
+description: Checkbox component integrated with TanStack Form for type-safe boolean field management.
+registryName: tsf-checkbox-field
+---
+
+Checkboxes are binary inputs for opting in or accepting terms. `CheckboxField` combines Radix UI's Checkbox with an inline clickable label, making the entire label area interactive—not just the checkbox itself.
+
+Common patterns include required checkboxes for terms acceptance (validated with `!value` check) or grouped checkboxes for multi-select options (using nested field paths like `features.notifications`).
+
+### Built-in features
+
+- **Clickable inline label** positioned next to checkbox
+- **Boolean field type** for true/false state
+- **Required validation** for terms acceptance
+- **Nested paths** for grouped checkboxes
+
+## Required checkbox
+
+```tsx
+<CheckboxField
+    form={form}
+    name='terms'
+    label='I accept the terms and conditions'
+    formProps={{
+      validators: {
+        onChange: ({ value }) =>
+          !value ? 'You must accept the terms' : undefined
+      }
+    }}
+/>
+```
+
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'tsf-checkbox-field'} /> 
+
+## Props
+
+<TypeTable
+  type={{
+    form: {
+      description: 'Form instance from useForm hook',
+      type: 'ReactFormApi<TFormData>',
+    },
+    name: {
+      description: 'Type-safe field name (supports nested paths like "preferences.notifications")',
+      type: 'DeepKeys<TFormData>',
+    },
+    label: {
+      description: 'Clickable label displayed next to the checkbox (required)',
+      type: 'string',
+    },
+    description: {
+      description: 'Helper text displayed below the checkbox',
+      type: 'string?',
+    },
+    formProps: {
+      description: 'TanStack Form field options (validators, etc.)',
+      type: 'Partial<FieldOptions>?',
+    },
+    fieldProps: {
+      description: 'Props passed to the Field wrapper component',
+      type: 'React.ComponentProps<typeof Field>?',
+    },
+    props: {
+      description: 'Props passed to the Checkbox component',
+      type: 'React.ComponentProps<typeof Checkbox>?',
+    },
+  }}
+/>

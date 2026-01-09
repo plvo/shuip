@@ -1,0 +1,104 @@
+---
+title: Query Boundary
+description: Error boundary and suspense wrapper for TanStack Query with automatic error recovery and loading states.
+registryName: rhf-query-boundary
+---
+
+`QueryBoundary` is a wrapper component that combines TanStack Query's error handling with React Suspense for comprehensive query state management. It automatically catches query errors, displays loading states, and provides retry functionality.
+
+The component eliminates the need to manually wrap components with multiple boundary providers. It handles both synchronous errors and async query failures with a unified interface and consistent error recovery patterns.
+
+#### Built-in features
+
+- **Automatic error catching**: Captures both sync and async query errors
+- **Suspense integration**: Built-in loading state management with React Suspense
+- **Error recovery**: One-click retry functionality with query reset
+- **Customizable fallbacks**: Override default loading and error UI components
+- **Query key tracking**: Optional debugging information for failed queries
+
+## Basic usage
+
+Wrap components that use TanStack Query hooks:
+
+```tsx
+import { QueryBoundary } from '@/components/ui/shuip/query-boundary';
+
+export default function App() {
+  return (
+    <QueryBoundary 
+      queryKeys={['users']}
+      loadingFallback={<div>Loading users...</div>}
+    >
+      <UsersList />
+    </QueryBoundary>
+  );
+}
+
+function UsersList() {
+  const { data } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUsers
+  });
+
+  return <div>{data.map(user => user.name)}</div>;
+}
+```
+
+## Custom error handling
+
+Override the default error fallback for custom error UI:
+
+```tsx
+function CustomErrorFallback({ error, resetErrorBoundary }) {
+  return (
+    <div className="text-center p-8">
+      <h3 className="text-lg font-semibold mb-2">Something went wrong</h3>
+      <p className="text-muted-foreground mb-4">{error.message}</p>
+      <button onClick={resetErrorBoundary}>
+        Try again
+      </button>
+    </div>
+  );
+}
+
+<QueryBoundary 
+  queryKeys={['users', 'posts']}
+  errorFallback={CustomErrorFallback}
+  loadingFallback={<div>Loading...</div>}
+>
+  <Dashboard />
+</QueryBoundary>
+```
+
+## Default error fallback
+
+The built-in error fallback includes:
+- Error icon and message display
+- Query key debugging information  
+- One-click retry functionality
+- Consistent styling with your design system
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Props
+
+<TypeTable
+  type={{
+    children: {
+      description: 'The child components to wrap in the boundary.',
+      type: 'React.ReactNode',
+    },
+    queryKeys: {
+      description: 'The query keys to monitor for debugging (optional).',
+      type: 'string[]',
+    },
+    loadingFallback: {
+      description: 'The fallback to display during loading (default: "Loading...").',
+      type: 'React.ReactNode',
+    },
+    errorFallback: {
+      description: 'The custom fallback to display on error (optional).',
+      type: '(props: FallbackProps) => React.ReactNode',
+    },
+  }}
+/>

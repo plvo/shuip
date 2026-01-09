@@ -1,7 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "tsf-submit-button",
-  "type": "registry:ui",
   "dependencies": ["@tanstack/react-form"],
   "registryDependencies": ["button"],
   "files": [
@@ -11,5 +10,6 @@
       "type": "registry:ui",
       "target": "./components/ui/shuip/tanstack-form/submit-button.tsx"
     }
-  ]
+  ],
+  "type": "registry:ui"
 }

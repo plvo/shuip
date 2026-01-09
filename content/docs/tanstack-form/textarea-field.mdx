@@ -1,0 +1,83 @@
+---
+title: Textarea Field
+description: Multi-line text input component with optional tooltip. Built on shadcn InputGroup for enhanced UI.
+registryName: tsf-textarea-field
+---
+
+Multi-line text inputs are essential for longer content like descriptions, comments, or messages. `TextareaField` wraps a textarea element with InputGroup to enable an optional tooltip button positioned at the bottom-right corner—useful for character limits or formatting guidelines without cluttering the label area.
+
+The component accepts native textarea props like `rows` and `maxLength` through the `props` parameter. Common patterns include pairing `maxLength` with a character counter (accessible via `form.useStore`) or implementing minimum length validation for meaningful input.
+
+#### Built-in features
+
+- **Bottom-right tooltip** positioned via InputGroup `align='block-end'`
+- **Native textarea props** support (rows, maxLength, placeholder)
+- **Character limit validation** with min/max length validators
+- **Multi-line error display** for longer validation messages
+
+## Length validation
+
+```tsx
+<TextareaField
+    form={form}
+    name='feedback'
+    label='Feedback'
+    description='Share your thoughts (10-500 characters)'
+    props={{ rows: 6, maxLength: 500, placeholder: 'Your feedback...' }}
+    formProps={{
+      validators: {
+        onChange: ({ value }) => {
+          if (value.length < 10) return 'Please provide at least 10 characters'
+          if (value.length > 500) return 'Maximum 500 characters allowed'
+          return undefined
+        }
+      }
+    }}
+/>
+```
+
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'tsf-textarea-field'} /> 
+
+## Props
+
+<TypeTable
+  type={{
+    form: {
+      description: 'Form instance from useForm hook',
+      type: 'ReactFormApi<TFormData>',
+    },
+    name: {
+      description: 'Type-safe field name (supports nested paths)',
+      type: 'DeepKeys<TFormData>',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the textarea',
+      type: 'string?',
+    },
+    tooltip: {
+      description: 'Tooltip content displayed in an info icon button at bottom-right',
+      type: 'React.ReactNode?',
+    },
+    formProps: {
+      description: 'TanStack Form field options (validators, etc.)',
+      type: 'Partial<FieldOptions>?',
+    },
+    fieldProps: {
+      description: 'Props passed to the Field wrapper component',
+      type: 'React.ComponentProps<typeof Field>?',
+    },
+    props: {
+      description: 'Native HTML textarea props (rows, maxLength, placeholder, etc.)',
+      type: "React.ComponentProps<'textarea'>?",
+    },
+  }}
+/>

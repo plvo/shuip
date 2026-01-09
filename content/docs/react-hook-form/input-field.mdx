@@ -1,0 +1,86 @@
+---
+title: Input Field
+description: Text input component integrated with React Hook Form. Supports tooltips and InputGroup integration for addons and buttons.
+registryName: rhf-input-field
+---
+
+`InputField` is a text input component that encapsulates React Hook Form's field management with shadcn/ui's design system. It handles all the boilerplate of connecting form state to an input element: wiring event handlers, displaying errors, managing touched states, and rendering consistent UI.
+
+This component is useful when you want to quickly add form inputs without manually setting up `FormField` render props, input bindings, and error display logic for every field.
+
+#### Built-in features
+
+- **Type-safe registration**: Uses `register` from React Hook Form for validation
+- **Tooltip integration**: Optional InfoIcon button with tooltip content via `tooltip` prop
+- **InputGroup ready**: Built on shadcn InputGroup for seamless addon integration
+- **Zod validation**: Native integration with react-hook-form and Zod schemas
+- **Full type inference**: Field value types automatically inferred from form schema
+
+## Less boilerplate
+
+React Hook Form's standard approach uses render props to access field state:
+
+```tsx
+<FormField
+  control={form.control}
+  name="email"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Email</FormLabel>
+      <FormControl>
+        <Input placeholder="your@email.com" {...field} />
+      </FormControl>
+      <FormDescription>
+        Your email address
+      </FormDescription>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+```
+
+
+With `InputField`, this reduces to a single declarative component:
+
+```tsx
+<InputField
+  register={form.register('email')}
+  label="Email"
+  description="Your email address"
+  placeholder="your@email.com"
+/>
+```
+
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'rhf-input-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    register: {
+      description: 'React Hook Form register function result',
+      type: 'UseFormRegisterReturn',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the input',
+      type: 'string?',
+    },
+    tooltip: {
+      description: 'Tooltip content displayed in an info icon button',
+      type: 'React.ReactNode?',
+    },
+    props: {
+      description: 'Native HTML input props (type, placeholder, disabled, etc.)',
+      type: "React.ComponentProps<typeof InputGroupInput>?",
+    },
+  }}
+/>

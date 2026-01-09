@@ -145,18 +145,6 @@
       ]
     },
     {
-      "name": "rhf-utils",
-      "type": "registry:lib",
-      "dependencies": ["zod"],
-      "files": [
-        {
-          "path": "./registry/lib/rhf-utils.ts",
-          "type": "registry:lib",
-          "target": "./lib/shuip/rhf-utils.ts"
-        }
-      ]
-    },
-    {
       "name": "rhf-query-boundary",
       "type": "registry:ui",
       "dependencies": ["@tanstack/react-query", "react-error-boundary", "lucide-react"],

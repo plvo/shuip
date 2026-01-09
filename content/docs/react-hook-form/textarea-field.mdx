@@ -1,0 +1,99 @@
+---
+title: Textarea Field
+description: Multi-line text input component with optional tooltip. Built on shadcn InputGroup for enhanced UI.
+registryName: rhf-textarea-field
+---
+
+Multi-line text inputs are essential for longer content like descriptions, comments, or messages. `TextareaField` wraps a textarea element with InputGroup to enable an optional tooltip button positioned at the bottom-right corner—useful for character limits or formatting guidelines without cluttering the label area.
+
+The component accepts native textarea props like `rows` and `maxLength` directly. Common patterns include pairing `maxLength` with Zod validation for minimum length requirements or using the `description` prop to display character count guidance.
+
+#### Built-in features
+
+- **Bottom-right tooltip** positioned via InputGroup `align='block-end'`
+- **Native textarea props** support (rows, maxLength, placeholder)
+- **Zod validation**: Native integration with react-hook-form and Zod schemas
+- **Multi-line error display** for longer validation messages
+
+## Usage patterns
+
+```tsx
+const schema = z.object({
+  feedback: z.string().max(500, 'Maximum 500 characters'),
+})
+
+const form = useForm({
+  defaultValues: { feedback: '' },
+  resolver: zodResolver(schema),
+})
+
+```
+
+### Basic textarea
+
+```tsx
+<TextareaField
+  register={form.register('bio')}
+  label='Bio'
+  description='Tell us about yourself'
+  rows={4}
+/>
+```
+
+### With character limit
+
+```tsx
+<TextareaField
+  register={form.register('feedback')}
+  label='Feedback'
+  description='Share your thoughts (max 500 characters)'
+  rows={6}
+  maxLength={500}
+  placeholder='Your feedback...'
+/>
+```
+
+### With tooltip
+
+```tsx
+<TextareaField
+  register={form.register('notes')}
+  label='Notes'
+  tooltip='Supports plain text only. Markdown coming soon.'
+  rows={8}
+/>
+```
+
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'rhf-textarea-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    register: {
+      description: 'React Hook Form register function result',
+      type: 'UseFormRegisterReturn',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the textarea',
+      type: 'string?',
+    },
+    tooltip: {
+      description: 'Tooltip content displayed in an info icon button at bottom-right',
+      type: 'React.ReactNode?',
+    },
+    props: {
+      description: 'Native HTML textarea props (rows, maxLength, placeholder, etc.)',
+      type: "React.ComponentProps<typeof InputGroupTextarea>?",
+    },
+  }}
+/>
