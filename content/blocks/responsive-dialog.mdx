@@ -20,6 +20,7 @@ Unlike traditional dialogs that force the same experience across all devices, `R
 - **Automatic responsive behavior**: Switches between side dialog and drawer based on screen size
 - **6 positions (desktop)**: Choose from `top-left`, `top-right`, `bottom-left`, `bottom-right`, `left`, `right`
 - **Flexible sizes (desktop)**: Predefined sizes (`xs`, `sm`, `md`, `lg`, `xl`, `2xl`)
+- **Scrollable body**: `ResponsiveDialogBody` keeps the header and footer anchored while the content scrolls on both desktop and mobile
 - **Mobile-optimized**: Uses native drawer with swipe gestures on mobile
 - **Lightweight**: Combines existing components without additional overhead
 - **Accessible**: Inherits accessibility features from both SideDialog and Drawer
@@ -36,9 +37,9 @@ Unlike traditional dialogs that force the same experience across all devices, `R
   <ResponsiveDialogContent>
     <ResponsiveDialogHeader>
       <ResponsiveDialogTitle>Settings</ResponsiveDialogTitle>
-        <ResponsiveDialogDescription>
-          Manage your preferences and account settings.
-        </ResponsiveDialogDescription>
+      <ResponsiveDialogDescription>
+        Manage your preferences and account settings.
+      </ResponsiveDialogDescription>
     </ResponsiveDialogHeader>
     <ResponsiveDialogFooter>
       <ResponsiveDialogClose asChild>
@@ -49,6 +50,29 @@ Unlike traditional dialogs that force the same experience across all devices, `R
   </ResponsiveDialogContent>
 </ResponsiveDialog>
 ```
+
+### With scrollable content
+
+Use `ResponsiveDialogBody` when the dialog content may overflow. The header and footer stay anchored while the body scrolls — on both desktop and mobile.
+
+```tsx
+<ResponsiveDialogContent>
+  <ResponsiveDialogHeader>
+    <ResponsiveDialogTitle>Activity Log</ResponsiveDialogTitle>
+    <ResponsiveDialogDescription>Recent actions across your workspace.</ResponsiveDialogDescription>
+  </ResponsiveDialogHeader>
+  <ResponsiveDialogBody>
+    {/* long list, form, or any overflowing content */}
+  </ResponsiveDialogBody>
+  <ResponsiveDialogFooter>
+    <ResponsiveDialogClose asChild>
+      <Button variant="outline">Close</Button>
+    </ResponsiveDialogClose>
+  </ResponsiveDialogFooter>
+</ResponsiveDialogContent>
+```
+
+On mobile, `ResponsiveDialogBody` automatically adds horizontal padding (`px-4 py-3`) to match the drawer's layout. On desktop, padding comes from `SideDialogContent`.
 
 ### Different positions (desktop only)
 
@@ -195,7 +219,7 @@ Size props affect the desktop side dialog appearance:
 
 ## Examples
 
-<ItemExamples registryName={'responsive-dialog'} /> 
+<ItemExamples registryName={'responsive-dialog'} />
 
 ## Props
 
@@ -224,6 +248,21 @@ Size props affect the desktop side dialog appearance:
       'Breakpoint at which the dialog switches to mobile mode. Can be a predefined label ("sm", "md", "lg", "xl") or custom pixel value. Defaults to "md" (768px).',
     type: `"sm" | "md" | "lg" | "xl" | number`,
   },
+  }}
+/>
+
+## ResponsiveDialogBody Props
+
+<TypeTable
+  type={{
+    className: {
+      description: 'Additional CSS classes. On mobile, px-4 py-3 padding is applied automatically.',
+      type: 'string?',
+    },
+    children: {
+      description: 'Scrollable body content. Header and footer remain anchored.',
+      type: 'React.ReactNode',
+    },
   }}
 />
   
