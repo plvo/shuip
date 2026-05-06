@@ -5,31 +5,80 @@
   "license": "MIT",
   "description": "Ship fast with sh(ui)p, a collection of components and blocks for your Next.js project, built with shadcn/ui",
   "homepage": "https://github.com/plvo/shuip",
-  "bugs": {
-    "url": "https://github.com/plvo/shuip/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/plvo/shuip"
-  },
+  "bugs": { "url": "https://github.com/plvo/shuip/issues" },
+  "repository": { "type": "git", "url": "git+https://github.com/plvo/shuip" },
   "type": "module",
+  "private": true,
   "packageManager": "bun@1.2.10",
+  "workspaces": {
+    "packages": ["apps/*", "packages/*"],
+    "catalog": {
+      "react": "^19.2.5",
+      "react-dom": "^19.2.5",
+      "@types/react": "^19.2.14",
+      "@types/react-dom": "^19.2.3",
+      "next": "16.2.4",
+      "typescript": "^6.0.3",
+      "tailwindcss": "^4.2.4",
+      "@tailwindcss/postcss": "^4.2.4",
+      "tailwind-merge": "^3.5.0",
+      "tailwindcss-animate": "^1.0.7",
+      "tw-animate-css": "^1.4.0",
+      "clsx": "^2.1.1",
+      "class-variance-authority": "^0.7.1",
+      "lucide-react": "^1.14.0",
+      "zod": "^4.4.3",
+      "cmdk": "^1.1.1",
+      "sonner": "^2.0.7",
+      "vaul": "^1.1.2",
+      "next-themes": "^0.4.6"
+    },
+    "catalogs": {
+      "fumadocs": {
+        "fumadocs-core": "^16.8.7",
+        "fumadocs-mdx": "14.3.2",
+        "fumadocs-ui": "^16.8.7",
+        "next-mdx-remote": "^6.0.0",
+        "@types/mdx": "^2.0.13",
+        "gray-matter": "^4.0.3",
+        "prism-react-renderer": "^2.4.1"
+      },
+      "radix": {
+        "@radix-ui/react-dialog": "^1.1.15",
+        "@radix-ui/react-popover": "^1.1.15",
+        "@radix-ui/react-select": "^2.2.6",
+        "@radix-ui/react-checkbox": "^1.3.3",
+        "@radix-ui/react-radio-group": "^1.3.8",
+        "@radix-ui/react-tooltip": "^1.2.8",
+        "@radix-ui/react-tabs": "^1.1.13",
+        "@radix-ui/react-collapsible": "^1.1.12",
+        "@radix-ui/react-hover-card": "^1.1.15",
+        "@radix-ui/react-label": "^2.1.8",
+        "@radix-ui/react-separator": "^1.1.8",
+        "@radix-ui/react-slot": "^1.2.4",
+        "@radix-ui/react-icons": "^1.3.2"
+      },
+      "forms": {
+        "react-hook-form": "^7.75.0",
+        "@hookform/resolvers": "^5.2.2",
+        "@tanstack/react-form": "^1.29.1",
+        "@tanstack/react-query": "^5.100.9",
+        "react-error-boundary": "^6.1.1"
+      }
+    }
+  },
   "scripts": {
-    "clean": "rimraf .next node_modules bun.lock package-lock.json",
-    "unused": "knip",
-    "format": "biome format --write .",
+    "dev": "turbo run dev",
+    "dev:docs": "turbo run dev --filter=@repo/docs",
+    "build": "turbo run build",
+    "build:docs": "turbo run build --filter=@repo/docs",
+    "registry:generate": "turbo run registry:generate --filter=@repo/registry",
+    "registry:build": "turbo run registry:build --filter=@repo/docs",
     "lint": "biome lint",
-    "analyze": "next experimental-analyze",
-    "prebuild": "bun run registry:generate && bun run registry:build",
-    "build": "next build",
-    "predev": "bun run prebuild",
-    "dev": "portless run next dev",
-    "start": "next start",
-    "registry:build": "bun run scripts/shadcn-build.ts && biome format --write public/r",
-    "registry:generate": "bun run scripts/generate-registry.ts",
-    "registry:copy-local": "bun run scripts/copy-local-registry.ts",
-    "registry:all-cli": "bun run scripts/all-registry-cli.ts",
-    "postinstall": "fumadocs-mdx",
+    "format": "biome format --write .",
+    "check": "biome check --write",
+    "check:unused": "knip",
+    "clean": "rimraf \"**/.turbo\" \"**/node_modules\" \"**/.next\" \"**/.source\" \"**/bun.lock\"",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -37,69 +86,14 @@
       "biome check --write --unsafe --no-errors-on-unmatched"
     ]
   },
-  "knip": {
-    "ignore": [
-      "registry/**",
-      "content/**",
-      "scripts/**",
-      "public/**"
-    ]
-  },
-  "dependencies": {
-    "@hookform/resolvers": "^5.2.2",
-    "@radix-ui/react-checkbox": "^1.3.3",
-    "@radix-ui/react-collapsible": "^1.1.12",
-    "@radix-ui/react-dialog": "^1.1.15",
-    "@radix-ui/react-hover-card": "^1.1.15",
-    "@radix-ui/react-icons": "^1.3.2",
-    "@radix-ui/react-label": "^2.1.8",
-    "@radix-ui/react-popover": "^1.1.15",
-    "@radix-ui/react-radio-group": "^1.3.8",
-    "@radix-ui/react-select": "^2.2.6",
-    "@radix-ui/react-separator": "^1.1.8",
-    "@radix-ui/react-slot": "^1.2.4",
-    "@radix-ui/react-tabs": "^1.1.13",
-    "@radix-ui/react-tooltip": "^1.2.8",
-    "@tailwindcss/postcss": "^4.2.4",
-    "@tanstack/react-form": "^1.29.1",
-    "@tanstack/react-query": "^5.100.9",
-    "@vercel/analytics": "^2.0.1",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "cmdk": "^1.1.1",
-    "fumadocs-core": "^16.8.7",
-    "fumadocs-mdx": "14.3.2",
-    "fumadocs-ui": "^16.8.7",
-    "gray-matter": "^4.0.3",
-    "lucide-react": "^1.14.0",
-    "next": "16.2.4",
-    "next-mdx-remote": "^6.0.0",
-    "next-themes": "^0.4.6",
-    "prism-react-renderer": "^2.4.1",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "react-error-boundary": "^6.1.1",
-    "react-hook-form": "^7.75.0",
-    "shadcn": "^4.7.0",
-    "sonner": "^2.0.7",
-    "tailwind-merge": "^3.5.0",
-    "tailwindcss-animate": "^1.0.7",
-    "vaul": "^1.1.2",
-    "zod": "^4.4.3"
-  },
   "devDependencies": {
     "@biomejs/biome": "^2.4.14",
-    "@types/mdx": "^2.0.13",
     "@types/node": "^25.6.0",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
     "husky": "^9.1.7",
     "knip": "^6.11.0",
     "lint-staged": "^17.0.0",
-    "postcss": "^8.5.14",
     "rimraf": "^6.1.3",
-    "tailwindcss": "^4.2.4",
-    "tw-animate-css": "^1.4.0",
-    "typescript": "^6.0.3"
+    "turbo": "^2.7.2",
+    "typescript": "catalog:"
   }
 }
