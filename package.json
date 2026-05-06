@@ -23,7 +23,7 @@
     "prebuild": "bun run registry:generate && bun run registry:build",
     "build": "next build",
     "predev": "bun run prebuild",
-    "dev": "next dev",
+    "dev": "portless run next dev",
     "start": "next start",
     "registry:build": "bun run scripts/shadcn-build.ts && biome format --write public/r",
     "registry:generate": "bun run scripts/generate-registry.ts",
