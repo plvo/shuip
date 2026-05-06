@@ -9,6 +9,7 @@ import { Form } from '@/components/ui/form';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import {
   SideDialog,
+  SideDialogBody,
   SideDialogClose,
   SideDialogContent,
   SideDialogDescription,
@@ -48,9 +49,9 @@ export default function SideDialogSimpleExample() {
               <SideDialogTitle>Form Side Dialog</SideDialogTitle>
               <SideDialogDescription>This is a form side dialog.</SideDialogDescription>
             </SideDialogHeader>
-            <div className='space-y-4'>
+            <SideDialogBody className='space-y-4'>
               <InputField register={form.register('name')} label='Name' description='This is a description' />
-            </div>
+            </SideDialogBody>
             <SideDialogFooter>
               <SideDialogClose asChild>
                 <Button variant='outline'>Cancel</Button>
