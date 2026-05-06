@@ -5,7 +5,7 @@ import { CodeBlock } from 'fumadocs-ui/components/codeblock';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import { Highlight, themes } from 'prism-react-renderer';
 import * as React from 'react';
-import { REGISTRY_INDEX } from '#/registry/__index__';
+import { REGISTRY_INDEX } from '@repo/registry/__index__';
 
 export interface ItemPreviewProps {
   registryName: string;

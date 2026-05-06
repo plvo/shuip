@@ -1,4 +1,4 @@
-import { REGISTRY_INDEX } from '#/registry/__index__';
+import { REGISTRY_INDEX } from '@repo/registry/__index__';
 import { filenameToTitle } from '@/lib/utils';
 import { useMDXComponents } from '@/mdx-components';
 import { InstallationCmd } from './item-installation';
