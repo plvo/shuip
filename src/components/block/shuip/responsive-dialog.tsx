@@ -262,6 +262,7 @@ export function ResponsiveDialogBody({ className, children, ...props }: Responsi
   return (
     <div
       className={cn('flex-1 min-h-0 overflow-y-auto overflow-x-hidden', isMobile && 'px-4 py-3', className)}
+      {...(isMobile && { 'data-vaul-no-drag': '' })}
       {...props}
     >
       {children}
