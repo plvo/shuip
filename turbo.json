@@ -1,0 +1,26 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "stream",
+  "tasks": {
+    "registry:generate": {
+      "inputs": ["items/**", "scripts/generate.ts"],
+      "outputs": ["registry.json", "__index__.ts", "stubs/**"]
+    },
+    "registry:build": {
+      "dependsOn": ["@repo/registry#registry:generate"],
+      "inputs": ["../../packages/registry/registry.json", "../../packages/registry/items/**"],
+      "outputs": ["public/r/**"]
+    },
+    "build": {
+      "dependsOn": ["^build", "registry:generate", "registry:build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "dev": {
+      "dependsOn": ["registry:generate"],
+      "inputs": ["$TURBO_DEFAULT$", ".env"],
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
