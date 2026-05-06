@@ -33,7 +33,7 @@ export default function RhfQueryBoundaryErrorHandlingExample() {
             <AlertTriangle className='text-destructive size-12' />
             <div>
               <h3 className='text-lg font-semibold mb-2'>Custom Error Handler</h3>
-              <p className='text-muted-foreground'>{error.message}</p>
+              <p className='text-muted-foreground'>{error instanceof Error ? error.message : 'An error occurred'}</p>
               <p className='text-xs text-muted-foreground mt-2'>Queries: {queryKeys.join(', ')}</p>
             </div>
             <Button onClick={resetErrorBoundary} variant='outline' className='gap-2'>
