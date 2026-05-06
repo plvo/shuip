@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "registry:build": "bun run scripts/shadcn-build.ts && biome format --write public/r",
+    "registry:build": "bun run scripts/shadcn-build.ts",
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
