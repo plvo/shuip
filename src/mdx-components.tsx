@@ -10,10 +10,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ...components,
     ItemHeader,
     ItemExamples,
-    pre: ({
-      ref: _ref,
-      ...props
-    }: React.ComponentPropsWithoutRef<'pre'> & { ref?: React.RefObject<HTMLPreElement> }) => (
+    pre: ({ ref: _ref, ...props }: React.ComponentPropsWithoutRef<'pre'> & { ref?: React.Ref<HTMLPreElement> }) => (
       <CodeBlock {...props}>
         <Pre>{props.children}</Pre>
       </CodeBlock>

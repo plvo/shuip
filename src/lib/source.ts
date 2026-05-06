@@ -46,7 +46,9 @@ export function getPageImage(
   };
 }
 
-export async function getLLMText(page: InferPageType<typeof docsSource | typeof blocksSource>) {
+export async function getLLMText(
+  page: InferPageType<typeof docsSource | typeof blocksSource> | InferPageType<typeof combinedSource>,
+) {
   const processed = await page.data.getText('processed');
 
   return `# ${page.data.title} (${page.url})
