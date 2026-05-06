@@ -2,7 +2,7 @@
 
 import { useCopyButton } from 'fumadocs-ui/utils/use-copy-button';
 import { Check } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
 
 export interface LLMCopyButtonProps {
   markdownUrl: string;

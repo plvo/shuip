@@ -14,7 +14,7 @@ const defaultOptions = {
 };
 
 export const docs = defineDocs({
-  dir: ['./content/docs', '../../packages/registry/items'],
+  dir: './content/docs',
   ...defaultOptions,
 });
 

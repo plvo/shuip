@@ -13,7 +13,7 @@ import {
   useState,
 } from 'react';
 import { cn } from '@/lib/utils';
-import * as Unstyled from './ui/tabs';
+import * as Unstyled from '@/components/ui/tabs';
 
 type CollectionKey = string | symbol;
 
