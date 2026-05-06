@@ -239,6 +239,10 @@ export function SideDialogContent({ showCloseButton = true, className, children,
         data-state={open ? 'open' : 'closed'}
         className={cn(getPositionClasses(position, size), 'p-6 duration-200', className)}
         {...props}
+        onClick={(e) => {
+          e.stopPropagation();
+          props.onClick?.(e);
+        }}
       >
         {children}
         {showCloseButton && (
