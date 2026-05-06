@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/drawer';
 import {
   SideDialog,
+  SideDialogBody,
   SideDialogClose,
   SideDialogContent,
   SideDialogDescription,
@@ -21,6 +22,7 @@ import {
   SideDialogTitle,
   SideDialogTrigger,
 } from '@/components/ui/shuip/side-dialog';
+import { cn } from '@/lib/utils';
 
 type ResponsiveDialogPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'left' | 'right';
 type ResponsiveDialogSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -64,6 +66,10 @@ export interface ResponsiveDialogFooterProps extends React.HTMLAttributes<HTMLDi
 export interface ResponsiveDialogCloseProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   asChild?: boolean;
   children?: React.ReactNode;
+}
+
+export interface ResponsiveDialogBodyProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
 }
 
 // Helper function to convert breakpoint to pixels
@@ -110,6 +116,10 @@ const ResponsiveDialogContext = React.createContext<{
   isMobile: false,
 });
 
+export function useResponsiveDialog() {
+  return React.useContext(ResponsiveDialogContext);
+}
+
 export function ResponsiveDialog({
   open,
   onOpenChange,
@@ -123,7 +133,7 @@ export function ResponsiveDialog({
   return (
     <ResponsiveDialogContext.Provider value={{ isMobile }}>
       {isMobile ? (
-        <Drawer open={open} onOpenChange={onOpenChange}>
+        <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
           {children}
         </Drawer>
       ) : (
@@ -163,8 +173,8 @@ export function ResponsiveDialogContent({
 
   if (isMobile) {
     return (
-      <DrawerContent className={className} {...props}>
-        {children}
+      <DrawerContent {...props}>
+        <div className={cn('flex flex-col max-h-[75dvh]', className)}>{children}</div>
       </DrawerContent>
     );
   }
@@ -181,7 +191,7 @@ export function ResponsiveDialogHeader({ className, children, ...props }: Respon
 
   if (isMobile) {
     return (
-      <DrawerHeader className={className} {...props}>
+      <DrawerHeader className={cn('shrink-0', className)} {...props}>
         {children}
       </DrawerHeader>
     );
@@ -235,7 +245,7 @@ export function ResponsiveDialogFooter({ className, children, ...props }: Respon
 
   if (isMobile) {
     return (
-      <DrawerFooter className={className} {...props}>
+      <DrawerFooter className={cn('shrink-0', className)} {...props}>
         {children}
       </DrawerFooter>
     );
@@ -245,6 +255,22 @@ export function ResponsiveDialogFooter({ className, children, ...props }: Respon
     <SideDialogFooter className={className} {...props}>
       {children}
     </SideDialogFooter>
+  );
+}
+
+export function ResponsiveDialogBody({ className, children, ...props }: ResponsiveDialogBodyProps) {
+  const { isMobile } = React.useContext(ResponsiveDialogContext);
+  if (isMobile) {
+    return (
+      <div className={cn('flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 py-3', className)} {...props}>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <SideDialogBody className={className} {...props}>
+      {children}
+    </SideDialogBody>
   );
 }
 

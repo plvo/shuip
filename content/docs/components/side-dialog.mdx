@@ -12,6 +12,7 @@ Unlike traditional centered dialogs, `SideDialog` provides a more contextual use
 
 - **6 positions**: Choose from `top-left`, `top-right`, `bottom-left`, `bottom-right`, `left`, `right`
 - **Flexible sizes**: Predefined sizes (`xs`, `sm`, `md`, `lg`, `xl`, `2xl`)
+- **Scrollable body**: `SideDialogBody` keeps the header and footer anchored while the content scrolls
 - **Lightweight**: Custom implementation without depending on shadcn dialog
 - **Accessible**: Keyboard support (Escape), focus management, and ARIA compliance
 - **Portal rendering**: Renders in `document.body` to avoid z-index issues
@@ -62,6 +63,29 @@ All predefined sizes automatically include responsive constraints using CSS `min
 - **Small screens**: Automatically reduces to `calc(100vw - 2rem)` when viewport is smaller
 - **Never overflows**: The dialog will always fit within the viewport with 1rem margin on each side
 - **CSS native**: Uses `min(targetSize, calc(100vw - 2rem))` for optimal performance
+
+## Scrollable content
+
+Use `SideDialogBody` when the dialog content may overflow. The header and footer stay anchored while the body scrolls independently.
+
+```tsx
+<SideDialogContent>
+  <SideDialogHeader>
+    <SideDialogTitle>Activity Log</SideDialogTitle>
+    <SideDialogDescription>Recent actions across your workspace.</SideDialogDescription>
+  </SideDialogHeader>
+  <SideDialogBody>
+    {/* long list or form content */}
+  </SideDialogBody>
+  <SideDialogFooter>
+    <SideDialogClose asChild>
+      <Button variant="outline">Close</Button>
+    </SideDialogClose>
+  </SideDialogFooter>
+</SideDialogContent>
+```
+
+Without `SideDialogBody`, content simply stacks inside the dialog — fine for short dialogs. Add it as soon as the content might exceed the viewport height.
 
 ## Common use cases
 
@@ -288,6 +312,21 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
     },
     children: {
       description: 'Dialog content',
+      type: 'React.ReactNode',
+    },
+  }}
+/>
+
+## SideDialogBody Props
+
+<TypeTable
+  type={{
+    className: {
+      description: 'Additional CSS classes',
+      type: 'string?',
+    },
+    children: {
+      description: 'Scrollable body content',
       type: 'React.ReactNode',
     },
   }}
