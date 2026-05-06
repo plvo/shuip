@@ -51,7 +51,9 @@ const computeStubPath = (cat: Category, name: string): string => {
 };
 
 const stubExportPath = (cat: Category, name: string): string => {
-  return `../items/${cat}/${name}/component`;
+  const inSubdir = cat !== 'components';
+  const prefix = inSubdir ? '../../' : '../';
+  return `${prefix}items/${cat}/${name}/component`;
 };
 
 // Parse TS imports from a source file. Returns named npm packages (and their submodules)
