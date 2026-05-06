@@ -74,6 +74,18 @@ Use `ResponsiveDialogBody` when the dialog content may overflow. The header and 
 
 On mobile, `ResponsiveDialogBody` automatically adds horizontal padding (`px-4 py-3`) to match the drawer's layout. On desktop, padding comes from `SideDialogContent`.
 
+> **Wrapper elements (e.g. `<form>`):** Any element wrapping `Header/Body/Footer` inside `ResponsiveDialogContent` must carry `className="flex flex-col flex-1 min-h-0"` so it participates in the flex layout. Without it the body has no bounded height and cannot scroll.
+>
+> ```tsx
+> <ResponsiveDialogContent>
+>   <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+>     <ResponsiveDialogHeader>...</ResponsiveDialogHeader>
+>     <ResponsiveDialogBody>...</ResponsiveDialogBody>
+>     <ResponsiveDialogFooter>...</ResponsiveDialogFooter>
+>   </form>
+> </ResponsiveDialogContent>
+> ```
+
 ### Different positions (desktop only)
 
 Desktop positions are ignored on mobile where the drawer behavior takes precedence:

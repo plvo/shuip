@@ -38,8 +38,6 @@ export function getPageImage(
 ) {
   const segments = [...page.slugs, 'image.png'];
 
-  console.log({ segments });
-
   return {
     segments,
     url: `http://localhost:3000/og/${docsType}/${segments.join('/')}`,

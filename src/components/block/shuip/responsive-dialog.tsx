@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/drawer';
 import {
   SideDialog,
+  SideDialogBody,
   SideDialogClose,
   SideDialogContent,
   SideDialogDescription,
@@ -259,14 +260,17 @@ export function ResponsiveDialogFooter({ className, children, ...props }: Respon
 
 export function ResponsiveDialogBody({ className, children, ...props }: ResponsiveDialogBodyProps) {
   const { isMobile } = React.useContext(ResponsiveDialogContext);
+  if (isMobile) {
+    return (
+      <div className={cn('flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 py-3', className)} {...props}>
+        {children}
+      </div>
+    );
+  }
   return (
-    <div
-      className={cn('flex-1 min-h-0 overflow-y-auto overflow-x-hidden', isMobile && 'px-4 py-3', className)}
-      {...(isMobile && { 'data-vaul-no-drag': '' })}
-      {...props}
-    >
+    <SideDialogBody className={className} {...props}>
       {children}
-    </div>
+    </SideDialogBody>
   );
 }
 

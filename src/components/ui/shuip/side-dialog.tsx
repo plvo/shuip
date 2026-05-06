@@ -241,7 +241,11 @@ export function SideDialogContent({ showCloseButton = true, className, children,
       <div
         data-slot='side-dialog-content'
         data-state={open ? 'open' : 'closed'}
-        className={cn(getPositionClasses(position, size), 'flex flex-col max-h-[calc(100dvh-2rem)] p-6 duration-200', className)}
+        className={cn(
+          getPositionClasses(position, size),
+          'flex flex-col max-h-[calc(100dvh-2rem)] p-6 duration-200',
+          className,
+        )}
         {...props}
         onClick={(e) => {
           e.stopPropagation();

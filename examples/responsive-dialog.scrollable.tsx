@@ -132,7 +132,7 @@ function LongFormDialog() {
       </ResponsiveDialogTrigger>
       <ResponsiveDialogContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col flex-1 min-h-0'>
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>Create Profile</ResponsiveDialogTitle>
               <ResponsiveDialogDescription>
@@ -159,6 +159,7 @@ function LongFormDialog() {
                   { value: 'viewer', label: 'Viewer' },
                 ]}
               />
+
               <SelectField
                 register={form.register('country')}
                 name='country'
