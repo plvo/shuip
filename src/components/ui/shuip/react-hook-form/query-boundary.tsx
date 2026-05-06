@@ -45,7 +45,7 @@ export function DefaultErrorFallback({
       <AlertTriangle className='text-destructive size-12' />
       <div>
         <h3 className='text-lg font-semibold mb-2'>Oops, something went wrong!</h3>
-        <p className='text-muted-foreground'>{error.message || 'Unexpected error'}</p>
+        <p className='text-muted-foreground'>{error instanceof Error ? error.message : 'Unexpected error'}</p>
         {queryKeys.length && (
           <p className='text-xs text-muted-foreground mt-2'>
             Concerned quer{queryKeys.length > 1 ? 'ies' : 'y'}: {queryKeys.join(', ')}
