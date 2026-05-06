@@ -151,27 +151,27 @@ function LongFormDialog() {
                 register={form.register('role')}
                 name='role'
                 label='Role'
-                options={[
-                  { value: 'admin', label: 'Admin' },
-                  { value: 'developer', label: 'Developer' },
-                  { value: 'designer', label: 'Designer' },
-                  { value: 'manager', label: 'Manager' },
-                  { value: 'viewer', label: 'Viewer' },
-                ]}
+                options={{
+                  Admin: 'admin',
+                  Developer: 'developer',
+                  Designer: 'designer',
+                  Manager: 'manager',
+                  Viewer: 'viewer',
+                }}
               />
 
               <SelectField
                 register={form.register('country')}
                 name='country'
                 label='Country'
-                options={[
-                  { value: 'fr', label: 'France' },
-                  { value: 'de', label: 'Germany' },
-                  { value: 'us', label: 'United States' },
-                  { value: 'gb', label: 'United Kingdom' },
-                  { value: 'ca', label: 'Canada' },
-                  { value: 'au', label: 'Australia' },
-                ]}
+                options={{
+                  France: 'fr',
+                  Germany: 'de',
+                  'United States': 'us',
+                  'United Kingdom': 'gb',
+                  Canada: 'ca',
+                  Australia: 'au',
+                }}
               />
               <TextareaField register={form.register('bio')} name='bio' label='Bio' rows={4} />
             </ResponsiveDialogBody>
