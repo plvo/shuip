@@ -41,5 +41,3 @@ export function CheckboxField<T extends FieldValues>({
     />
   );
 }
-
-export default CheckboxField;
