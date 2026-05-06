@@ -1,0 +1,35 @@
+{
+  "name": "@repo/registry",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./__index__": "./__index__.ts",
+    "./items/*": "./items/*",
+    "./stubs/*": "./stubs/*"
+  },
+  "scripts": {
+    "registry:generate": "bun run scripts/generate.ts"
+  },
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-hook-form": "catalog:forms",
+    "@hookform/resolvers": "catalog:forms",
+    "@tanstack/react-form": "catalog:forms",
+    "@tanstack/react-query": "catalog:forms",
+    "react-error-boundary": "catalog:forms",
+    "zod": "catalog:",
+    "lucide-react": "catalog:",
+    "class-variance-authority": "catalog:",
+    "@radix-ui/react-icons": "catalog:radix",
+    "@repo/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@repo/config": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "gray-matter": "catalog:fumadocs",
+    "typescript": "catalog:"
+  }
+}

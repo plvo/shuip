@@ -1,0 +1,12 @@
+{
+  "extends": "@repo/config/ts/react-library.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/components/ui/*": ["../ui/src/components/ui/*"],
+      "@/lib/utils": ["../ui/src/lib/utils"]
+    }
+  },
+  "include": ["items/**/*.ts", "items/**/*.tsx", "scripts/**/*.ts", "__index__.ts"],
+  "exclude": ["node_modules", "stubs"]
+}
