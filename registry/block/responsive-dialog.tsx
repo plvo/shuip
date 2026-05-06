@@ -179,11 +179,7 @@ export function ResponsiveDialogContent({
   }
 
   return (
-    <SideDialogContent
-      showCloseButton={showCloseButton}
-      className={cn('flex flex-col max-h-[calc(100dvh-2rem)]', className)}
-      {...props}
-    >
+    <SideDialogContent showCloseButton={showCloseButton} className={className} {...props}>
       {children}
     </SideDialogContent>
   );
@@ -201,7 +197,7 @@ export function ResponsiveDialogHeader({ className, children, ...props }: Respon
   }
 
   return (
-    <SideDialogHeader className={cn('shrink-0', className)} {...props}>
+    <SideDialogHeader className={className} {...props}>
       {children}
     </SideDialogHeader>
   );
@@ -255,7 +251,7 @@ export function ResponsiveDialogFooter({ className, children, ...props }: Respon
   }
 
   return (
-    <SideDialogFooter className={cn('shrink-0', className)} {...props}>
+    <SideDialogFooter className={className} {...props}>
       {children}
     </SideDialogFooter>
   );

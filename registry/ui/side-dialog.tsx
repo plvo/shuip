@@ -47,6 +47,10 @@ export interface SideDialogCloseProps extends React.ButtonHTMLAttributes<HTMLBut
   children?: React.ReactNode;
 }
 
+export interface SideDialogBodyProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+}
+
 // Context for managing dialog state
 const SideDialogContext = React.createContext<{
   open: boolean;
@@ -237,7 +241,11 @@ export function SideDialogContent({ showCloseButton = true, className, children,
       <div
         data-slot='side-dialog-content'
         data-state={open ? 'open' : 'closed'}
-        className={cn(getPositionClasses(position, size), 'p-6 duration-200', className)}
+        className={cn(
+          getPositionClasses(position, size),
+          'flex flex-col max-h-[calc(100dvh-2rem)] p-6 duration-200',
+          className,
+        )}
         {...props}
         onClick={(e) => {
           e.stopPropagation();
@@ -259,7 +267,7 @@ export function SideDialogContent({ showCloseButton = true, className, children,
 
 export function SideDialogHeader({ className, children, ...props }: SideDialogHeaderProps) {
   return (
-    <div data-slot='side-dialog-header' className={cn('flex flex-col gap-2 mb-4', className)} {...props}>
+    <div data-slot='side-dialog-header' className={cn('shrink-0 flex flex-col gap-2 mb-4', className)} {...props}>
       {children}
     </div>
   );
@@ -285,9 +293,17 @@ export function SideDialogFooter({ className, children, ...props }: SideDialogFo
   return (
     <div
       data-slot='side-dialog-footer'
-      className={cn('flex flex-col-reverse gap-2 mt-4 sm:flex-row sm:justify-end', className)}
+      className={cn('shrink-0 flex flex-col-reverse gap-2 mt-4 sm:flex-row sm:justify-end', className)}
       {...props}
     >
+      {children}
+    </div>
+  );
+}
+
+export function SideDialogBody({ className, children, ...props }: SideDialogBodyProps) {
+  return (
+    <div data-slot='side-dialog-body' className={cn('flex-1 min-h-0 overflow-y-auto', className)} {...props}>
       {children}
     </div>
   );
