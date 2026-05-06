@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   env: {
-    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'https://shuip.plvo.dev',
+    NEXT_PUBLIC_APP_URL: process.env.PORTLESS_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://shuip.plvo.dev',
   },
 
   compiler: {
