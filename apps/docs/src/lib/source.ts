@@ -42,7 +42,7 @@ export function getPageImage(
 
   return {
     segments,
-    url: `http://localhost:3000/og/${docsType}/${segments.join('/')}`,
+    url: `${process.env.NEXT_PUBLIC_APP_URL}/og/${docsType}/${segments.join('/')}`,
   };
 }
 
