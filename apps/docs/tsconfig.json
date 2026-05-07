@@ -2,6 +2,7 @@
   "extends": "@repo/config/ts/nextjs.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["./src/*"],
       "@/components/ui/shuip/*": ["../../packages/registry/stubs/*", "./src/components/ui/shuip/*"],

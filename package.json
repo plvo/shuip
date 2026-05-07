@@ -5,16 +5,44 @@
   "license": "MIT",
   "description": "Ship fast with sh(ui)p, a collection of components and blocks for your Next.js project, built with shadcn/ui",
   "homepage": "https://github.com/plvo/shuip",
-  "bugs": { "url": "https://github.com/plvo/shuip/issues" },
-  "repository": { "type": "git", "url": "git+https://github.com/plvo/shuip" },
+  "bugs": {
+    "url": "https://github.com/plvo/shuip/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/plvo/shuip"
+  },
   "type": "module",
   "private": true,
   "packageManager": "bun@1.2.10",
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:docs": "turbo run dev --filter=@repo/docs",
+    "build": "turbo run build",
+    "build:docs": "turbo run build --filter=@repo/docs",
+    "registry:generate": "turbo run registry:generate --filter=@repo/registry",
+    "registry:build": "turbo run registry:build --filter=@repo/docs",
+    "lint": "biome lint",
+    "format": "biome format --write .",
+    "check": "biome check --write",
+    "check:unused": "knip",
+    "clean": "rimraf \"**/.turbo\" \"**/node_modules\" \"**/.next\" \"**/.source\" \"**/bun.lock\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+      "biome check --write --unsafe --no-errors-on-unmatched"
+    ]
+  },
   "workspaces": {
-    "packages": ["apps/*", "packages/*"],
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
     "catalog": {
       "react": "^19.2.5",
       "react-dom": "^19.2.5",
+      "@types/node": "^25.6.0",
       "@types/react": "^19.2.14",
       "@types/react-dom": "^19.2.3",
       "next": "16.2.4",
@@ -67,25 +95,7 @@
       }
     }
   },
-  "scripts": {
-    "dev": "turbo run dev",
-    "dev:docs": "turbo run dev --filter=@repo/docs",
-    "build": "turbo run build",
-    "build:docs": "turbo run build --filter=@repo/docs",
-    "registry:generate": "turbo run registry:generate --filter=@repo/registry",
-    "registry:build": "turbo run registry:build --filter=@repo/docs",
-    "lint": "biome lint",
-    "format": "biome format --write .",
-    "check": "biome check --write",
-    "check:unused": "knip",
-    "clean": "rimraf \"**/.turbo\" \"**/node_modules\" \"**/.next\" \"**/.source\" \"**/bun.lock\"",
-    "prepare": "husky"
-  },
-  "lint-staged": {
-    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
-      "biome check --write --unsafe --no-errors-on-unmatched"
-    ]
-  },
+
   "devDependencies": {
     "@biomejs/biome": "^2.4.14",
     "@types/node": "^25.6.0",

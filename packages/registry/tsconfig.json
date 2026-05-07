@@ -2,11 +2,16 @@
   "extends": "@repo/config/ts/react-library.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "types": ["node"],
     "paths": {
+      "@/components/ui/shuip/*": ["./stubs/*"],
+      "@/components/block/shuip/*": ["./stubs/blocks/*"],
       "@/components/ui/*": ["../ui/src/components/ui/*"],
-      "@/lib/utils": ["../ui/src/lib/utils"]
+      "@/lib/utils": ["../ui/src/lib/utils"],
+      "@/actions/shuip/places": ["./items/react-hook-form/address-field/extras/places.action"]
     }
   },
-  "include": ["items/**/*.ts", "items/**/*.tsx", "scripts/**/*.ts", "__index__.ts"],
+  "include": ["items/**/*.ts", "items/**/*.tsx", "__index__.ts"],
   "exclude": ["node_modules", "stubs"]
 }

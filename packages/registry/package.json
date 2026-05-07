@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "gray-matter": "catalog:fumadocs",
