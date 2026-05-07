@@ -1,7 +1,7 @@
 'use client';
 
 import { useForm } from '@tanstack/react-form';
-import { CheckboxField } from '#/registry/ui/tsf-checkbox-field';
+import { CheckboxField } from '@/components/ui/shuip/tanstack-form/checkbox-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
 export default function TsfCheckboxFieldGroupExample() {
