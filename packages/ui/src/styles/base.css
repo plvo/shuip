@@ -1,9 +1,8 @@
-@import 'tailwindcss';
-@import 'fumadocs-ui/css/neutral.css';
-@import 'fumadocs-ui/css/preset.css';
 @import "tw-animate-css";
 
-@source "../../../registry/items";
+@source "../components/**/*.{ts,tsx}";
+@source "../../../registry/items/**/*.{ts,tsx}";
+@source "../../../../apps/docs/src/**/*.{ts,tsx}";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -95,8 +94,9 @@
     --sidebar-border: oklch(0.3533 0.0202 239.7347);
     --sidebar-ring: oklch(0.6442 0.1597 245.139);
   }
+}
 
-  @theme inline {
+@theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
     --color-card: var(--card);
@@ -148,7 +148,6 @@
     --tracking-wide: calc(var(--tracking-normal) + 0.025em);
     --tracking-wider: calc(var(--tracking-normal) + 0.05em);
     --tracking-widest: calc(var(--tracking-normal) + 0.1em);
-  }
 }
 
 @layer base {
@@ -159,79 +158,4 @@
     @apply bg-background text-foreground;
     font-family: var(--font-geist-sans);
   }
-}
-
-.table-trigger {
-  @apply relative h-9 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-/* Hide scrollbar for IE, Edge and Firefox */
-.no-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
-.h1-mdx {
-  @apply scroll-m-20 text-4xl font-extrabold tracking-tight;
-  @apply first:mt-0;
-}
-
-.h2-mdx {
-  @apply scroll-m-20 text-3xl font-semibold tracking-tight border-b;
-  @apply first:mt-0 pt-4 pb-2 mb-4 mt-10;
-}
-
-.h3-mdx {
-  @apply scroll-m-20 text-2xl font-semibold tracking-tight mt-4;
-}
-
-.h4-mdx {
-  @apply scroll-m-20 text-xl font-semibold tracking-tight;
-}
-
-.a-mdx {
-  @apply underline underline-offset-4;
-}
-
-.p-mdx {
-  @apply leading-8 [&:not(:first-child)]:mt-4;
-}
-
-.ul-mdx {
-  @apply my-6 ml-6 list-disc;
-}
-
-.ol-mdx {
-  @apply my-6 ml-6 list-decimal;
-}
-
-.li-mdx {
-  @apply mt-2;
-}
-
-.blockquote-mdx {
-  @apply mt-6 border-l-2 pl-6 italic;
-}
-
-.img-mdx {
-  @apply rounded-md;
-}
-
-.hr-mdx {
-  @apply my-4 md:my-8;
-}
-
-.code-mdx {
-  @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold;
-}
-
-.small-mdx {
-  @apply text-sm font-medium leading-none;
-}
-
-.tabs-trigger-mdx {
-  @apply px-2 data-[state=active]:bg-transparent opacity-50 dark:opacity-90 data-[state=active]:opacity-100 transition-all duration-300;
 }

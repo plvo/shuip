@@ -38,8 +38,6 @@ export function getPageImage(
 ) {
   const segments = [...page.slugs, 'image.png'];
 
-  console.log({ segments });
-
   return {
     segments,
     url: `${process.env.NEXT_PUBLIC_APP_URL}/og/${docsType}/${segments.join('/')}`,

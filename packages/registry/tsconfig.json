@@ -2,7 +2,6 @@
   "extends": "@repo/config/ts/react-library.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
     "types": ["node"],
     "paths": {
       "@/components/ui/shuip/*": ["./stubs/*"],

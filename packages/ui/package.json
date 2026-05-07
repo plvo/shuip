@@ -6,7 +6,7 @@
   "exports": {
     "./components/ui/*": "./src/components/ui/*",
     "./lib/utils": "./src/lib/utils.ts",
-    "./styles/globals.css": "./src/styles/globals.css"
+    "./styles/base.css": "./src/styles/base.css"
   },
   "dependencies": {
     "react": "catalog:",

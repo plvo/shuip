@@ -46,3 +46,10 @@ next-env.d.ts
 .contentlayer/
 
 .source
+
+*.tsbuildinfo
+
+# registry
+__index__.ts
+registry.json
+stubs/

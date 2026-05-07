@@ -1,4 +1,4 @@
 {
-  "files": [],
+  "extends": "@repo/config/ts/base.json",
   "references": [{ "path": "apps/docs" }, { "path": "packages/registry" }, { "path": "packages/ui" }]
 }
