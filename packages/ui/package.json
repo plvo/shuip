@@ -1,0 +1,43 @@
+{
+  "name": "@repo/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./components/ui/*": "./src/components/ui/*",
+    "./lib/utils": "./src/lib/utils.ts",
+    "./styles/base.css": "./src/styles/base.css"
+  },
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "tailwind-merge": "catalog:",
+    "clsx": "catalog:",
+    "class-variance-authority": "catalog:",
+    "lucide-react": "catalog:",
+    "tailwindcss-animate": "catalog:",
+    "cmdk": "catalog:",
+    "sonner": "catalog:",
+    "vaul": "catalog:",
+    "next-themes": "catalog:",
+    "@radix-ui/react-dialog": "catalog:radix",
+    "@radix-ui/react-popover": "catalog:radix",
+    "@radix-ui/react-select": "catalog:radix",
+    "@radix-ui/react-checkbox": "catalog:radix",
+    "@radix-ui/react-radio-group": "catalog:radix",
+    "@radix-ui/react-tooltip": "catalog:radix",
+    "@radix-ui/react-tabs": "catalog:radix",
+    "@radix-ui/react-collapsible": "catalog:radix",
+    "@radix-ui/react-hover-card": "catalog:radix",
+    "@radix-ui/react-label": "catalog:radix",
+    "@radix-ui/react-separator": "catalog:radix",
+    "@radix-ui/react-slot": "catalog:radix",
+    "@radix-ui/react-icons": "catalog:radix"
+  },
+  "devDependencies": {
+    "@repo/config": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:"
+  }
+}

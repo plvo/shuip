@@ -1,0 +1,288 @@
+#!/usr/bin/env bun
+/** biome-ignore-all lint/suspicious/noAssignInExpressions: script */
+import fs from 'node:fs';
+import path from 'node:path';
+
+const ROOT = path.resolve(import.meta.dir, '..');
+const ITEMS_DIR = path.join(ROOT, 'items');
+const STUBS_DIR = path.join(ROOT, 'stubs');
+const DOCS_CONTENT_DIR = path.resolve(ROOT, '../../apps/docs/content/docs');
+
+type Category = 'components' | 'react-hook-form' | 'tanstack-form' | 'blocks';
+
+interface RegistryFile {
+  path: string;
+  type: 'registry:ui' | 'registry:block' | 'registry:file';
+  target?: string;
+}
+
+interface RegistryItem {
+  name: string;
+  type: 'registry:ui' | 'registry:block';
+  dependencies?: string[];
+  registryDependencies?: string[];
+  files: RegistryFile[];
+}
+
+interface ItemMeta {
+  dependsOn?: string[];
+}
+
+const categoryToType = (cat: Category): 'registry:ui' | 'registry:block' =>
+  cat === 'blocks' ? 'registry:block' : 'registry:ui';
+
+const namePrefix = (cat: Category, name: string): string => {
+  if (cat === 'react-hook-form') return `rhf-${name}`;
+  if (cat === 'tanstack-form') return `tsf-${name}`;
+  return name;
+};
+
+const computeTarget = (cat: Category, name: string): string => {
+  if (cat === 'react-hook-form') return `./components/ui/shuip/react-hook-form/${name}.tsx`;
+  if (cat === 'tanstack-form') return `./components/ui/shuip/tanstack-form/${name}.tsx`;
+  if (cat === 'blocks') return `./components/block/shuip/${name}.tsx`;
+  return `./components/ui/shuip/${name}.tsx`;
+};
+
+const computeStubPath = (cat: Category, name: string): string => {
+  if (cat === 'react-hook-form') return path.join(STUBS_DIR, 'react-hook-form', `${name}.tsx`);
+  if (cat === 'tanstack-form') return path.join(STUBS_DIR, 'tanstack-form', `${name}.tsx`);
+  if (cat === 'blocks') return path.join(STUBS_DIR, 'blocks', `${name}.tsx`);
+  return path.join(STUBS_DIR, `${name}.tsx`);
+};
+
+const stubExportPath = (cat: Category, name: string): string => {
+  const inSubdir = cat !== 'components';
+  const prefix = inSubdir ? '../../' : '../';
+  return `${prefix}items/${cat}/${name}/component`;
+};
+
+// Parse TS imports from a source file. Returns named npm packages (and their submodules)
+// excluding @/* and @repo/* and relative imports.
+const parseImports = (source: string): string[] => {
+  const importRegex = /from\s+['"]([^'"]+)['"]/g;
+  const out = new Set<string>();
+  let m: RegExpExecArray | null;
+  while ((m = importRegex.exec(source)) !== null) {
+    const spec = m[1];
+    if (!spec) continue;
+    if (spec.startsWith('.') || spec.startsWith('@/') || spec.startsWith('@repo/') || spec.startsWith('#/')) continue;
+    const parts = spec.split('/');
+    if (spec.startsWith('@')) {
+      out.add(parts.slice(0, 2).join('/'));
+    } else {
+      out.add(parts[0]);
+    }
+  }
+  return Array.from(out).sort();
+};
+
+// Parse @/components/ui/<name> imports → registryDependencies (shadcn primitives).
+const parseRegistryDeps = (source: string): string[] => {
+  const regex = /from\s+['"]@\/components\/ui\/([^'"/]+)['"]/g;
+  const out = new Set<string>();
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(source)) !== null) {
+    if (m[1] && m[1] !== 'shuip') out.add(m[1]);
+  }
+  return Array.from(out).sort();
+};
+
+const readMeta = (itemDir: string): ItemMeta => {
+  const metaPath = path.join(itemDir, 'meta.shuip.json');
+  if (fs.existsSync(metaPath)) {
+    return JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+  }
+  return {};
+};
+
+interface ScannedItem {
+  category: Category;
+  folderName: string;
+  itemDir: string;
+  componentPath: string;
+  examples: { filename: string; absPath: string }[];
+  extras: { filename: string; absPath: string }[];
+  hasMdx: boolean;
+}
+
+const scanItems = (): ScannedItem[] => {
+  const out: ScannedItem[] = [];
+  if (!fs.existsSync(ITEMS_DIR)) return out;
+  const categories = fs.readdirSync(ITEMS_DIR).filter((d) => {
+    const p = path.join(ITEMS_DIR, d);
+    return fs.statSync(p).isDirectory();
+  }) as Category[];
+
+  for (const category of categories) {
+    const catDir = path.join(ITEMS_DIR, category);
+    const entries = fs.readdirSync(catDir).filter((d) => {
+      const p = path.join(catDir, d);
+      return fs.statSync(p).isDirectory();
+    });
+
+    for (const folderName of entries) {
+      const itemDir = path.join(catDir, folderName);
+      const componentPath = path.join(itemDir, 'component.tsx');
+      if (!fs.existsSync(componentPath)) {
+        console.warn(`[generate] skipping ${category}/${folderName}: no component.tsx`);
+        continue;
+      }
+      const examples = fs
+        .readdirSync(itemDir)
+        .filter((f) => f.endsWith('.example.tsx'))
+        .map((filename) => ({ filename, absPath: path.join(itemDir, filename) }));
+      const extrasDir = path.join(itemDir, 'extras');
+      const extras = fs.existsSync(extrasDir)
+        ? fs.readdirSync(extrasDir).map((filename) => ({ filename, absPath: path.join(extrasDir, filename) }))
+        : [];
+      const hasMdx = fs.existsSync(path.join(itemDir, 'index.mdx'));
+      out.push({ category, folderName, itemDir, componentPath, examples, extras, hasMdx });
+    }
+  }
+  return out;
+};
+
+const buildRegistryJson = (items: ScannedItem[]): { name: string; homepage: string; items: RegistryItem[] } => {
+  const out: RegistryItem[] = [];
+  for (const item of items) {
+    const { category, folderName, componentPath, extras } = item;
+    const source = fs.readFileSync(componentPath, 'utf-8');
+    const dependencies = parseImports(source);
+    const registryDependencies = parseRegistryDeps(source);
+    const meta = readMeta(item.itemDir);
+    const fullDeps = [...registryDependencies, ...(meta.dependsOn ?? [])].sort();
+    const itemName = namePrefix(category, folderName);
+    const target = computeTarget(category, folderName);
+    const componentRelPath = path.relative(ROOT, componentPath).replace(/\\/g, '/');
+    const files: RegistryFile[] = [
+      {
+        path: `./${componentRelPath}`,
+        type: categoryToType(category),
+        target,
+      },
+    ];
+    for (const extra of extras) {
+      const extraRel = path.relative(ROOT, extra.absPath).replace(/\\/g, '/');
+      let extraTarget: string;
+      if (extra.filename.endsWith('.action.ts')) {
+        const base = extra.filename.replace(/\.action\.ts$/, '');
+        extraTarget = `./actions/shuip/${base}.ts`;
+      } else {
+        extraTarget = `./components/ui/shuip/${extra.filename}`;
+      }
+      files.push({ path: `./${extraRel}`, type: 'registry:file', target: extraTarget });
+    }
+    const entry: RegistryItem = {
+      name: itemName,
+      type: categoryToType(category),
+      files,
+    };
+    if (dependencies.length) entry.dependencies = dependencies;
+    if (fullDeps.length) entry.registryDependencies = fullDeps;
+    out.push(entry);
+  }
+  out.sort((a, b) => a.name.localeCompare(b.name));
+  return { name: 'shuip', homepage: 'https://shuip.plvo.dev', items: out };
+};
+
+const buildIndexTs = (items: ScannedItem[]): string => {
+  let body = `// @ts-nocheck
+
+/**
+ * AUTO-GENERATED by packages/registry/scripts/generate.ts. Do not edit.
+ */
+
+import * as React from 'react';
+
+interface RegistryComponent {
+  path: string;
+  code: string;
+  component: any;
+}
+
+export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
+
+  for (const item of items) {
+    const { category, folderName, componentPath, examples } = item;
+    const itemName = namePrefix(category, folderName);
+    const importPath = `@repo/registry/items/${category}/${folderName}/component`;
+    const code = fs.readFileSync(componentPath, 'utf-8');
+    body += `
+  '${itemName}': {
+    path: '${importPath}',
+    code: ${JSON.stringify(code)},
+    component: React.lazy(() => import('${importPath}')),
+  },`;
+    for (const ex of examples) {
+      const variant = ex.filename.replace(/\.example\.tsx$/, '');
+      const exImport = `@repo/registry/items/${category}/${folderName}/${variant}.example`;
+      const exCode = fs.readFileSync(ex.absPath, 'utf-8');
+      const exKey = variant === 'default' ? `${itemName}.example` : `${itemName}.${variant}.example`;
+      body += `
+  '${exKey}': {
+    path: '${exImport}',
+    code: ${JSON.stringify(exCode)},
+    component: React.lazy(() => import('${exImport}')),
+  },`;
+    }
+  }
+
+  body += `
+};
+`;
+  return body;
+};
+
+const writeStubs = (items: ScannedItem[]): void => {
+  fs.rmSync(STUBS_DIR, { recursive: true, force: true });
+  for (const item of items) {
+    const stubPath = computeStubPath(item.category, item.folderName);
+    fs.mkdirSync(path.dirname(stubPath), { recursive: true });
+    const exportPath = stubExportPath(item.category, item.folderName);
+    const content = `// AUTO-GENERATED by packages/registry/scripts/generate.ts — DO NOT EDIT
+export * from '${exportPath}';
+`;
+    fs.writeFileSync(stubPath, content);
+  }
+};
+
+const writeDocSymlinks = (items: ScannedItem[]): void => {
+  const symlinksByCategory = new Map<string, string[]>();
+
+  for (const item of items) {
+    if (!item.hasMdx) continue;
+    const symlinkPath = path.join(DOCS_CONTENT_DIR, item.category, `${item.folderName}.mdx`);
+    const sourceMdx = path.join(item.itemDir, 'index.mdx');
+    const relTarget = path.relative(path.dirname(symlinkPath), sourceMdx);
+    fs.mkdirSync(path.dirname(symlinkPath), { recursive: true });
+    try {
+      fs.unlinkSync(symlinkPath);
+    } catch {
+      // file did not exist
+    }
+    fs.symlinkSync(relTarget, symlinkPath);
+
+    const existing = symlinksByCategory.get(item.category) ?? [];
+    existing.push(`${item.folderName}.mdx`);
+    symlinksByCategory.set(item.category, existing);
+  }
+
+  for (const [category, filenames] of symlinksByCategory) {
+    const gitignorePath = path.join(DOCS_CONTENT_DIR, category, '.gitignore');
+    const content = `# Auto-generated symlinks — do not commit (created by packages/registry/scripts/generate.ts)\n${filenames.sort().join('\n')}\n`;
+    fs.writeFileSync(gitignorePath, content);
+  }
+};
+
+const main = () => {
+  const items = scanItems();
+  const registry = buildRegistryJson(items);
+  fs.writeFileSync(path.join(ROOT, 'registry.json'), `${JSON.stringify(registry, null, 2)}\n`);
+  fs.writeFileSync(path.join(ROOT, '__index__.ts'), buildIndexTs(items));
+  writeStubs(items);
+  writeDocSymlinks(items);
+  console.log(`[generate] ${items.length} items processed`);
+};
+
+main();

@@ -14,7 +14,7 @@
 /coverage
 
 # next.js
-/.next/
+.next
 /out/
 
 # production
@@ -33,8 +33,17 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env
 
+.source
+
+**/r/**
+
+next-env.d.ts
+
 # vercel
 .vercel
+
+# turbo
+.turbo
 
 # typescript
 *.tsbuildinfo
@@ -43,3 +52,12 @@ next-env.d.ts
 .contentlayer/
 
 .source
+
+*.tsbuildinfo
+
+# registry
+__index__.ts
+registry.json
+stubs/
+
+*.tsbuildinfo

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.11/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
   "root": true,
   "vcs": {
     "enabled": false,
@@ -11,18 +11,21 @@
     "ignoreUnknown": true,
     "includes": [
       "**",
-      "!src/public/**/*",
-      "!.source",
-      "!registry/__index__.ts",
-      "!src/styles/**/*",
-      "!**/*.css",
-      "!**/.next/**/*",
       "!**/node_modules/**/*",
-      "!**/.husky/**/*",
+      "!**/.next/**/*",
+      "!**/.turbo/**/*",
+      "!**/.source/**/*",
       "!**/dist/**/*",
       "!**/out/**/*",
       "!**/generated/**/*",
-      "!**/.turbo/**/*"
+      "!**/.husky/**/*",
+      "!**/*.css",
+      "!packages/registry/__index__.ts",
+      "!packages/registry/registry.json",
+      "!packages/registry/stubs",
+      "!packages/ui/src/components/ui/**/*",
+      "!packages/ui/src/styles/**/*",
+      "!apps/docs/public/r"
     ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
@@ -44,11 +47,7 @@
       "trailingCommas": "all"
     }
   },
-  "json": {
-    "formatter": {
-      "trailingCommas": "none"
-    }
-  },
+  "json": { "formatter": { "trailingCommas": "none" } },
   "linter": {
     "rules": {
       "recommended": true,
@@ -63,14 +62,9 @@
       },
       "correctness": {
         "noChildrenProp": "off",
-        "noUnusedVariables": {
-          "level": "info",
-          "fix": "unsafe"
-        }
+        "noUnusedVariables": { "level": "info", "fix": "unsafe" }
       },
-      "complexity": {
-        "noForEach": "off"
-      },
+      "complexity": { "noForEach": "off" },
       "style": {}
     }
   }
