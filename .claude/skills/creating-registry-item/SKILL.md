@@ -29,7 +29,8 @@ Create `packages/registry/items/<category>/<name>/`. `<name>` has NO prefix — 
 
 - Import shadcn primitives via `@/components/ui/<name>`. These become `registryDependencies` (the consumer's shadcn CLI will install them).
 - Never import `@/components/ui/shuip/*` from a `component.tsx` — circular; stubs are for the docs app, not for items themselves.
-- Use the same `register: UseFormRegisterReturn<...>` prop pattern as the existing RHF fields (see `input-field/component.tsx`).
+- For RHF / TSF items, use the `register: UseFormRegisterReturn<FieldPath<T>>` prop signature as in `input-field/component.tsx`. **The transferable pattern is the RHF integration (register prop + `FormField` + render-props plumbing), not the underlying primitive.** Which shadcn primitive you wrap is a separate decision driven by the task — `input-field`/`password-field` wrap `InputGroupInput` for addon slots; `address-field` wraps bare `Input`. If the task spec names a specific primitive, follow the spec.
+- Add `'use client'` at the top only when the component uses client-only React features (state, refs, effects, browser APIs). Half the existing RHF components have it for that reason; the other half (purely presentational wrappers over `FormField`) correctly do not. Don't cargo-cult it.
 - **Schemas / types may be exported** when the item describes a domain shape — see `address-field/component.tsx` which exports `addressSchema` and `AddressData`. For format-only validation (E.164, URL, etc.), exporting a regex or zod schema next to the component is fine; consumers can opt in.
 
 ### 3. Write `default.example.tsx`
