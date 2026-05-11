@@ -155,6 +155,35 @@ done | grep -v 'catalog:\|workspace:\|^[^\t]*\t[^\t]*\t[0-9]' | grep -v 'biome\|
 
 (Some root-tools — biome, husky, knip, turbo, typescript, etc. — are intentionally not in catalogs because they're devtools, not shared libs. Adjust the exclusion list to taste.)
 
+### 12. `turbo.json` task outputs cover all generator side effects
+
+`generate.ts` writes to `packages/registry/{registry.json,__index__.ts,stubs/**}` AND to `apps/docs/content/docs/<cat>/<name>.mdx` (symlinks) AND to `apps/docs/content/docs/<cat>/.gitignore`. Turbo's `registry:generate` task declares only the first set in its `outputs`, so a cache hit on this task leaves the cross-workspace side effects unrestored — on a fresh checkout, fumadocs may see no MDX in per-category folders and 404 docs pages.
+
+```bash
+jq '.tasks["registry:generate"].outputs' turbo.json
+```
+
+Expected: every path the generator writes is either declared as an output OR the task has `"cache": false`. Today the cross-workspace symlinks/.gitignore are not declared. Cross-workspace `outputs` is awkward in turbo; setting `"cache": false` on the task is the smaller honest fix.
+
+### 13. `index.mdx` `registryName` frontmatter matches the prefixed folder name
+
+Each non-block item's `index.mdx` has frontmatter `registryName: <prefixed-name>`. The value must match what the generator produces for that folder (i.e., `<prefix>-<folder-name>` for `react-hook-form` / `tanstack-form` / `tanstack-query`, or the bare folder name for `components`). A mismatch means `<ItemExamples registryName={...}/>` looks up the wrong key in `REGISTRY_INDEX` and renders an empty preview.
+
+```bash
+for f in $(find packages/registry/items -name index.mdx); do
+  declared=$(grep -m1 '^registryName:' "$f" | sed 's/^registryName:[[:space:]]*//; s/[[:space:]]*$//')
+  folder=$(echo "$f" | sed 's|.*items/\([^/]*\)/\([^/]*\)/index.mdx|\1\t\2|')
+  cat=$(echo "$folder" | cut -f1); name=$(echo "$folder" | cut -f2)
+  case "$cat" in
+    react-hook-form) expected="rhf-$name" ;;
+    tanstack-form) expected="tsf-$name" ;;
+    tanstack-query) expected="tsq-$name" ;;
+    *) expected="$name" ;;
+  esac
+  [ "$declared" = "$expected" ] || echo "mismatch: $f declared=$declared expected=$expected"
+done
+```
+
 ## Reporting
 
 Group findings by severity. For each:
