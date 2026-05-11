@@ -21,8 +21,8 @@ The component reduces form complexity by replacing multiple address fields with 
 
 This component requires a Google Places API key. Add `GOOGLE_PLACES_API_KEY` to your `.env` file:
 
-```tsx
-GOOGLE_PLACES_API_KEY=your_api_key_here`}
+```bash
+GOOGLE_PLACES_API_KEY=your_api_key_here
 ```
 
 To customize the default country or language, edit the constants in the component:
@@ -30,7 +30,8 @@ To customize the default country or language, edit the constants in the componen
 ```tsx
 const DEFAULT_COUNTRY = 'US'; // Country code for suggestions
 const LANGUAGE_RESULT = 'en';  // Language code for results  
-const DEBOUNCE_TIME = 300;     // API call delay in milliseconds`} language='ts' />
+const DEBOUNCE_TIME = 300;     // API call delay in milliseconds
+```
 
 ## Less boilerplate
 
@@ -62,7 +63,7 @@ Basic address field with schema validation:
 ```tsx
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AddressField, addressSchema } from '@/components/ui/shuip/address-field';
+import { AddressField, addressSchema } from '@/components/ui/shuip/react-hook-form/address-field';
 
 const schema = z.object({
   address: addressSchema,
