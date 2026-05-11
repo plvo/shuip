@@ -4,7 +4,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@/components/ui/shuip/*": ["../../packages/registry/stubs/*", "./src/components/ui/shuip/*"],
+      "@/components/ui/shuip/*": ["../../packages/registry/stubs/*"],
+      "@/components/block/shuip/*": ["../../packages/registry/stubs/blocks/*"],
       "@/components/ui/*": ["../../packages/ui/src/components/ui/*"],
       "@/lib/utils": ["../../packages/ui/src/lib/utils"],
       "@/actions/shuip/places": ["../../packages/registry/items/react-hook-form/address-field/extras/places.action"],

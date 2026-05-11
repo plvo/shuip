@@ -15,10 +15,10 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { cn } from '@/lib/utils';
-import { mergeRefs } from '../lib/merge-refs';
 import { buttonVariants } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
+import { mergeRefs } from '../lib/merge-refs';
 
 export interface CodeBlockProps extends ComponentProps<'figure'> {
   /**

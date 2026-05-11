@@ -1,7 +1,7 @@
 import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
-import { blocksSource } from '@/lib/source';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { blocksSource } from '@/lib/source';
 
 export function BlocksList() {
   const blocksPages = blocksSource.getPages().filter((page) => page.data.info.path !== 'index.mdx');
