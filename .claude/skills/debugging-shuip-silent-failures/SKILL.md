@@ -49,9 +49,10 @@ A file using Tailwind classes that's outside every glob is invisible to the scan
 **Diagnostic**
 
 1. Pin down the file containing the unapplied class.
-2. Compute its path relative to `packages/ui/src/styles/base.css`.
+2. Compute its path relative to `packages/ui/src/styles/base.css` (use `realpath` if unsure — don't compute by hand).
 3. Check whether it matches any `@source` glob.
-4. If not, add a new `@source` line in `base.css`. The path must be relative to `base.css`. After editing, clear `.next/` and restart dev (`bun clean` is overkill; deleting `apps/docs/.next/` is enough).
+4. If not, add a new `@source` line in `base.css`, path relative to `base.css`. Prefer narrow globs (`packages/charts/src/**/*.{ts,tsx}` rather than `packages/charts/**`) — they scan faster.
+5. **Invalidate the dev cache after editing `@source`.** Tailwind's PostCSS plugin caches scan results inside `.next/` — without invalidation, the fix appears to do nothing. `rm -rf apps/docs/.next/` and restart dev. `bun clean` is overkill.
 
 **Common causes**
 
