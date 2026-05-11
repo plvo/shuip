@@ -34,9 +34,17 @@ Create `packages/registry/items/<category>/<name>/`. `<name>` has NO prefix — 
 
 ### 3. Write `default.example.tsx`
 
-- Import the new component via the stub alias: `@/components/ui/shuip/<cat-subdir>/<name>` where `<cat-subdir>` is `react-hook-form` / `tanstack-form` / `blocks`, or omitted for `components`.
-- Never import via relative `./component`. The example must exercise the same path consumers will use after `shadcn add`.
+- Import the new component via the stub alias (see table below). Never via relative `./component` — the example must exercise the same path consumers will use after `shadcn add`.
 - The default example is keyed as `<prefixed-name>.example` in `__index__.ts`.
+
+**Stub alias per category:**
+
+| Category | Stub import path |
+|----------|------------------|
+| `components` | `@/components/ui/shuip/<name>` |
+| `react-hook-form` | `@/components/ui/shuip/react-hook-form/<name>` |
+| `tanstack-form` | `@/components/ui/shuip/tanstack-form/<name>` |
+| `blocks` | `@/components/block/shuip/<name>` *(different prefix: `block`, not `ui`)* |
 
 ### 4. Add at least one variant example
 
@@ -44,7 +52,40 @@ Beyond the default, add `<variant>.example.tsx` showing a meaningful alternate u
 
 ### 5. Write `index.mdx` — but only for components / RHF / TSF
 
-Frontmatter must include `registryName: <prefixed-name>`. Use `<ItemExamples />` to render the previews and `<TypeTable />` for props. Model on a sibling item's mdx.
+Frontmatter must include `title`, `description`, and `registryName: <prefixed-name>`. Body uses `<ItemExamples registryName={'<prefixed-name>'} />` to render the previews and `<TypeTable>` for props.
+
+`ItemExamples` and `ItemHeader` are globally registered MDX components (defined in `apps/docs/src/mdx-components.tsx`) — no import line needed. `TypeTable` is from fumadocs-ui and **must be imported inline in the MDX**.
+
+Minimal skeleton:
+
+```mdx
+---
+title: <Display Name>
+description: <One-line description for SEO + docs sidebar>
+registryName: <prefixed-name>
+---
+
+<Prose explaining what this item does and when to use it.>
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'<prefixed-name>'} />
+
+## Props
+
+<TypeTable
+  type={{
+    propName: {
+      description: '...',
+      type: 'string?',
+    },
+  }}
+/>
+```
+
+Model on a sibling item's `index.mdx` for prose style and prop documentation patterns.
 
 **Blocks are different:** do NOT put `index.mdx` in `items/blocks/<name>/`. Block docs are real MDX files in `apps/docs/content/blocks/<name>.mdx` (a separate fumadocs collection). Putting `index.mdx` in a block's item folder makes the generator create a dead symlink under `content/docs/blocks/` that no collection reads — the page silently doesn't appear.
 
