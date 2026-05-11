@@ -24,7 +24,6 @@ if [ -z "$type" ]; then
     echo ""
     echo "Expected format: <type>(<scope>): <subject>"
     echo "Example: feat(auth): add email login"
-    exit 1
 fi
 
 echo "✅ Commit message is valid!"

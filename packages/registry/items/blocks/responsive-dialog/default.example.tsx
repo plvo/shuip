@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import z from 'zod';
 import {
   ResponsiveDialog,
+  ResponsiveDialogBody,
   ResponsiveDialogClose,
   ResponsiveDialogContent,
   ResponsiveDialogDescription,
@@ -304,10 +305,10 @@ function ResponsiveDialogFormExample() {
                 This dialog adapts to your screen size. On desktop, it's a side dialog. On mobile, it's a drawer.
               </ResponsiveDialogDescription>
             </ResponsiveDialogHeader>
-            <div className='space-y-4 px-4'>
+            <ResponsiveDialogBody className='space-y-4'>
               <InputField register={form.register('name')} name='name' label='Name' />
               <InputField register={form.register('email')} name='email' label='Email' />
-            </div>
+            </ResponsiveDialogBody>
             <ResponsiveDialogFooter>
               <ResponsiveDialogClose asChild>
                 <Button variant='outline'>Close</Button>
