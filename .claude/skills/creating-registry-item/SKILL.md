@@ -9,13 +9,13 @@ description: Use when adding a new shuip item (component, block, react-hook-form
 
 shuip items live at `packages/registry/items/<category>/<name>/`. `packages/registry/scripts/generate.ts` scans them and emits every artifact (registry.json, __index__.ts, stubs, MDX symlinks, public/r/*.json). Get the folder right, run the generator, the rest cascades. CLAUDE.md has the layout & path-mapping reference — this skill is the procedure.
 
-**Categories & prefixes:** `components` · `blocks` (registry:block) · `react-hook-form` (prefix `rhf-`) · `tanstack-form` (prefix `tsf-`). The folder name is **unprefixed**; the script adds the prefix.
+**Categories & prefixes:** declared in the `CATEGORIES` map at the top of `packages/registry/scripts/generate.ts`. Currently: `components` · `blocks` (registry:block) · `react-hook-form` (prefix `rhf-`) · `tanstack-form` (prefix `tsf-`) · `tanstack-query` (prefix `tsq-`). The folder name is **unprefixed**; the script adds the prefix. Adding a new category = one entry in `CATEGORIES`.
 
 ## When to Use
 
 - "Add a component / block / form field to shuip"
 - "Publish X via the shadcn registry"
-- "Create a new rhf-* / tsf-* item"
+- "Create a new rhf-* / tsf-* / tsq-* item"
 - A newly added item doesn't appear in `registry.json` or in the docs site
 - Migrating an internal component from `packages/ui/` into a publishable item
 
@@ -28,7 +28,7 @@ Create `packages/registry/items/<category>/<name>/`. `<name>` has NO prefix — 
 ### 2. Write `component.tsx` (exact filename)
 
 - Import shadcn primitives via `@/components/ui/<name>`. These become `registryDependencies` (the consumer's shadcn CLI will install them).
-- Never import `@/components/ui/shuip/*` from a `component.tsx` — circular; stubs are for the docs app, not for items themselves.
+- Generally avoid importing `@/components/ui/shuip/*` from a `component.tsx`. The one legitimate case is a **block or composite item that consumes another shuip item** — `blocks/responsive-dialog/component.tsx` imports `@/components/ui/shuip/side-dialog` and ships a `meta.shuip.json` with `dependsOn: ["side-dialog"]`, which adds `side-dialog` to `registryDependencies` so the consumer's shadcn install resolves the import. Without that `dependsOn`, the dep is silently dropped (the regex in `parseRegistryDeps` excludes `shuip` paths). If you need a cross-item shuip dep: import via the stub alias AND declare it in `meta.shuip.json`.
 - For RHF / TSF items, use the `register: UseFormRegisterReturn<FieldPath<T>>` prop signature as in `input-field/component.tsx`. **The transferable pattern is the RHF integration (register prop + `FormField` + render-props plumbing), not the underlying primitive.** Which shadcn primitive you wrap is a separate decision driven by the task — `input-field`/`password-field` wrap `InputGroupInput` for addon slots; `address-field` wraps bare `Input`. If the task spec names a specific primitive, follow the spec.
 - Add `'use client'` at the top only when the component uses client-only React features (state, refs, effects, browser APIs). Half the existing RHF components have it for that reason; the other half (purely presentational wrappers over `FormField`) correctly do not. Don't cargo-cult it.
 - **Schemas / types may be exported** when the item describes a domain shape — see `address-field/component.tsx` which exports `addressSchema` and `AddressData`. For format-only validation (E.164, URL, etc.), exporting a regex or zod schema next to the component is fine; consumers can opt in.
@@ -45,6 +45,7 @@ Create `packages/registry/items/<category>/<name>/`. `<name>` has NO prefix — 
 | `components` | `@/components/ui/shuip/<name>` |
 | `react-hook-form` | `@/components/ui/shuip/react-hook-form/<name>` |
 | `tanstack-form` | `@/components/ui/shuip/tanstack-form/<name>` |
+| `tanstack-query` | `@/components/ui/shuip/tanstack-query/<name>` |
 | `blocks` | `@/components/block/shuip/<name>` *(different prefix: `block`, not `ui`)* |
 
 ### 4. Add at least one variant example
@@ -131,7 +132,7 @@ This chains `registry:generate` → `registry:build` (apps/docs/public/r/*.json)
 | Folder prefixed (`rhf-foo`) | Item published as `rhf-rhf-foo` | Drop the prefix; generator adds it |
 | `component.tsx` missing or misnamed | `[generate] skipping ...` warning; item invisible | Filename must be exactly `component.tsx` |
 | Example imports `./component` | Preview works locally; the actual install path is unverified | Use `@/components/ui/shuip/<cat-subdir>/<name>` |
-| `component.tsx` imports `@/components/ui/shuip/*` | Circular reference | Import shadcn primitives via `@/components/ui/<name>` |
+| `component.tsx` imports `@/components/ui/shuip/*` without a matching `meta.shuip.json` `dependsOn` | Dep silently dropped from `registryDependencies`; consumer install missing the referenced item | Either declare the dep in `meta.shuip.json` (legitimate composite-item case, see `responsive-dialog`), or import shadcn primitives via `@/components/ui/<name>` instead |
 | Block has `index.mdx` in its item folder | Symlink lands in `content/docs/blocks/`, fumadocs doesn't read it, page absent | Move the MDX to `apps/docs/content/blocks/<name>.mdx`; remove the symlink |
 | Edits write to the MDX symlink in `content/docs/` | Edit succeeds (writes through the symlink) but the source-of-truth confusion is real | Edit `items/<cat>/<name>/index.mdx` |
 | Skipping `registry:generate` after adding files | New item never appears | Always run it; `bun build:docs` chains it for you |
@@ -142,9 +143,9 @@ This chains `registry:generate` → `registry:build` (apps/docs/public/r/*.json)
 ## Red Flags — STOP
 
 - About to write to `stubs/`, `__index__.ts`, `registry.json`, `apps/docs/public/r/`, or a `content/docs/<cat>/<name>.mdx` symlink
-- Folder name starts with `rhf-` or `tsf-`
+- Folder name starts with `rhf-`, `tsf-`, or `tsq-`
 - An `.example.tsx` has `from './component'` (relative)
-- A `component.tsx` has `from '@/components/ui/shuip/`
+- A `component.tsx` has `from '@/components/ui/shuip/` without a matching `meta.shuip.json` `dependsOn`
 - Putting an `index.mdx` in `items/blocks/<name>/`
 - `[generate] N items processed` with N unchanged after you added the item
 - Adding a path mapping in only one tsconfig
