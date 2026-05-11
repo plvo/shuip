@@ -1,7 +1,7 @@
 ---
 title: Query Boundary
 description: Error boundary and suspense wrapper for TanStack Query with automatic error recovery and loading states.
-registryName: rhf-query-boundary
+registryName: tsq-query-boundary
 ---
 
 `QueryBoundary` is a wrapper component that combines TanStack Query's error handling with React Suspense for comprehensive query state management. It automatically catches query errors, displays loading states, and provides retry functionality.
@@ -21,7 +21,7 @@ The component eliminates the need to manually wrap components with multiple boun
 Wrap components that use TanStack Query hooks:
 
 ```tsx
-import { QueryBoundary } from '@/components/ui/shuip/query-boundary';
+import { QueryBoundary } from '@/components/ui/shuip/tanstack-query/query-boundary';
 
 export default function App() {
   return (

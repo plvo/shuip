@@ -3,9 +3,9 @@
 import { AlertTriangle, LoaderCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { QueryBoundary } from '@/components/ui/shuip/react-hook-form/query-boundary';
+import { QueryBoundary } from '@/components/ui/shuip/tanstack-query/query-boundary';
 
-export default function RhfQueryBoundaryErrorHandlingExample() {
+export default function QueryBoundaryErrorHandlingExample() {
   const [shouldError, setShouldError] = useState(false);
   const queryKeys = ['error-demo', 'user-profile'];
 
