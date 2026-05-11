@@ -53,3 +53,5 @@ next-env.d.ts
 __index__.ts
 registry.json
 stubs/
+
+*.tsbuildinfo
