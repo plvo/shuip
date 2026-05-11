@@ -1,3 +1,5 @@
+'use client';
+
 import type { VariantProps } from 'class-variance-authority';
 import { Laptop, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
