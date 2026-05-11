@@ -8,8 +8,6 @@ const ITEMS_DIR = path.join(ROOT, 'items');
 const STUBS_DIR = path.join(ROOT, 'stubs');
 const DOCS_CONTENT_DIR = path.resolve(ROOT, '../../apps/docs/content/docs');
 
-type Category = 'components' | 'react-hook-form' | 'tanstack-form' | 'blocks';
-
 interface RegistryFile {
   path: string;
   type: 'registry:ui' | 'registry:block' | 'registry:file';
@@ -28,32 +26,50 @@ interface ItemMeta {
   dependsOn?: string[];
 }
 
-const categoryToType = (cat: Category): 'registry:ui' | 'registry:block' =>
-  cat === 'blocks' ? 'registry:block' : 'registry:ui';
+interface CategoryConfig {
+  itemType: 'registry:ui' | 'registry:block';
+  targetPath: string;
+  prefix?: string;
+}
+
+const CATEGORIES = {
+  components: { itemType: 'registry:ui', targetPath: './components/ui/shuip' },
+  'react-hook-form': {
+    itemType: 'registry:ui',
+    targetPath: './components/ui/shuip/react-hook-form',
+    prefix: 'rhf',
+  },
+  'tanstack-form': {
+    itemType: 'registry:ui',
+    targetPath: './components/ui/shuip/tanstack-form',
+    prefix: 'tsf',
+  },
+  'tanstack-query': {
+    itemType: 'registry:ui',
+    targetPath: './components/ui/shuip/tanstack-query',
+    prefix: 'tsq',
+  },
+  blocks: { itemType: 'registry:block', targetPath: './components/block/shuip' },
+} as const satisfies Record<string, CategoryConfig>;
+
+type Category = keyof typeof CATEGORIES;
+
+const isCategory = (cat: string): cat is Category => cat in CATEGORIES;
+
+const categoryToType = (cat: Category): 'registry:ui' | 'registry:block' => CATEGORIES[cat].itemType;
 
 const namePrefix = (cat: Category, name: string): string => {
-  if (cat === 'react-hook-form') return `rhf-${name}`;
-  if (cat === 'tanstack-form') return `tsf-${name}`;
-  return name;
+  const { prefix } = CATEGORIES[cat];
+  return prefix ? `${prefix}-${name}` : name;
 };
 
-const computeTarget = (cat: Category, name: string): string => {
-  if (cat === 'react-hook-form') return `./components/ui/shuip/react-hook-form/${name}.tsx`;
-  if (cat === 'tanstack-form') return `./components/ui/shuip/tanstack-form/${name}.tsx`;
-  if (cat === 'blocks') return `./components/block/shuip/${name}.tsx`;
-  return `./components/ui/shuip/${name}.tsx`;
-};
+const computeTarget = (cat: Category, name: string): string => `${CATEGORIES[cat].targetPath}/${name}.tsx`;
 
-const computeStubPath = (cat: Category, name: string): string => {
-  if (cat === 'react-hook-form') return path.join(STUBS_DIR, 'react-hook-form', `${name}.tsx`);
-  if (cat === 'tanstack-form') return path.join(STUBS_DIR, 'tanstack-form', `${name}.tsx`);
-  if (cat === 'blocks') return path.join(STUBS_DIR, 'blocks', `${name}.tsx`);
-  return path.join(STUBS_DIR, `${name}.tsx`);
-};
+const computeStubPath = (cat: Category, name: string): string =>
+  cat === 'components' ? path.join(STUBS_DIR, `${name}.tsx`) : path.join(STUBS_DIR, cat, `${name}.tsx`);
 
 const stubExportPath = (cat: Category, name: string): string => {
-  const inSubdir = cat !== 'components';
-  const prefix = inSubdir ? '../../' : '../';
+  const prefix = cat === 'components' ? '../' : '../../';
   return `${prefix}items/${cat}/${name}/component`;
 };
 
@@ -109,12 +125,13 @@ interface ScannedItem {
 const scanItems = (): ScannedItem[] => {
   const out: ScannedItem[] = [];
   if (!fs.existsSync(ITEMS_DIR)) return out;
-  const categories = fs.readdirSync(ITEMS_DIR).filter((d) => {
-    const p = path.join(ITEMS_DIR, d);
-    return fs.statSync(p).isDirectory();
-  }) as Category[];
+  const dirs = fs.readdirSync(ITEMS_DIR).filter((d) => fs.statSync(path.join(ITEMS_DIR, d)).isDirectory());
 
-  for (const category of categories) {
+  for (const category of dirs) {
+    if (!isCategory(category)) {
+      console.warn(`[generate] skipping unknown category "${category}" — add it to CATEGORIES in generate.ts`);
+      continue;
+    }
     const catDir = path.join(ITEMS_DIR, category);
     const entries = fs.readdirSync(catDir).filter((d) => {
       const p = path.join(catDir, d);
