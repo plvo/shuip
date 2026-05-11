@@ -1,144 +1,144 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code working in this repository.
 
 ## Project Overview
 
-**shuip** is a React component library built on top of shadcn/ui for Next.js applications. It provides business-focused components that simplify common patterns (especially form fields). Components are distributed via a custom registry system that users install via the shadcn CLI.
+**shuip** is a React component library built on top of shadcn/ui for Next.js applications. Items are distributed through a custom registry consumed by the shadcn CLI (`npx shadcn@latest add "https://shuip.plvo.dev/r/<name>"`).
 
-## Development Commands
+The codebase is a Bun-workspaces + turborepo monorepo (Next.js 16, React 19, Tailwind v4 CSS-only, fumadocs v16, Biome, TypeScript 6).
+
+## Repo Layout
+
+```
+apps/docs/                     Next.js site (registry endpoints, MDX content, styles entry)
+  scripts/shadcn-build.ts        Reads registry.json, writes public/r/*.json for shadcn CLI
+  src/styles/globals.css         PostCSS entry; chains fumadocs + @repo/ui/styles/base.css
+  content/docs/                  fumadocs `docs` collection (symlinks from registry items)
+  content/blocks/                fumadocs `blocks` collection (real MDX files, hand-written)
+
+packages/ui/                   Shadcn primitives + base.css (cross-package @source rules)
+packages/registry/             SOURCE OF TRUTH for published items
+  items/<cat>/<name>/            See "Registry items" below
+  scripts/generate.ts            Scans items/, produces all downstream artifacts
+packages/config/ts/            Shared tsconfig presets (@repo/config/ts/*)
+```
+
+## Commands
 
 ```bash
-# Development
-bun dev                    # Start Next.js dev server
-bun build                  # Build with Turbopack
-bun build:full             # Build + generate registry + build shadcn
-bun build:analyze          # Build with bundle analysis
-
-# Code quality
-bun check                  # Biome check and auto-fix (runs on pre-commit)
-bun format                 # Format code with Biome
-bun lint                   # Lint code with Biome
-bun check:unused           # Check for unused dependencies with knip
-
-# Registry
-bun run registry:generate  # Generate registry/__index__.ts from registry/ and examples/
-bun run registry:build     # Build shadcn registry
-
-# Clean
-bun clean                  # Remove .next, node_modules, lock files
+bun dev                # All dev tasks (docs + registry:generate via turbo)
+bun dev:docs           # Only the docs app
+bun build              # Full build (depends on registry:generate + registry:build)
+bun build:docs         # Build only the docs app (chains generate → registry:build → next build)
+bun registry:generate  # Regenerate registry.json, __index__.ts, stubs/, MDX symlinks
+bun registry:build     # Produce apps/docs/public/r/*.json from registry.json
+bun check              # Biome check + write (also runs on lint-staged pre-commit)
+bun format             # Biome format
+bun lint               # Biome lint
+bun check:unused       # knip
+bun clean              # Wipe node_modules, .next, .turbo, .source, bun.lock
 ```
 
-## Architecture
+## Registry Items
 
-### Registry System (Core Concept)
+Each item lives at `packages/registry/items/<category>/<name>/`. The folder structure is the contract — `packages/registry/scripts/generate.ts` scans it and emits every downstream artifact.
 
-This project uses a **custom component registry** that allows users to install components via `npx shadcn@latest add "https://shuip.plvo.dev/r/component-name"`.
-
-**How it works:**
-1. Components live in `registry/{ui,block,lib,actions}/` and `examples/`
-2. `scripts/generate-registry.ts` scans these directories and generates `registry/__index__.ts`
-3. The generated file creates a registry object with lazy-loaded components and their code
-4. Next.js App Router serves these at `/r/[name]` routes for shadcn CLI consumption
-
-**Key files:**
-- `registry/ui/` - UI components (e.g., submit-button.tsx)
-- `registry/block/` - Larger composition components
-- `registry/lib/` - Utility functions
-- `registry/actions/` - Server actions
-- `examples/` - Usage examples
-- `registry/__index__.ts` - Auto-generated, do not edit manually
-- `registry.json` - Registry metadata
-
-### Directory Structure
+**Categories:** `components` (no prefix) · `blocks` (no prefix, type `registry:block`) · `react-hook-form` (prefix `rhf-`) · `tanstack-form` (prefix `tsf-`). The folder name is **unprefixed**; the script applies the prefix.
 
 ```
-src/
-├── app/              # Next.js App Router
-│   ├── (docs)/       # Documentation pages (route group)
-│   └── r/[name]/     # Registry API endpoints for shadcn CLI
-├── components/
-│   ├── ui/           # shadcn base components
-│   │   └── shuip/    # shuip-specific components
-│   ├── block/shuip/  # Block-level compositions
-│   └── mdx/          # MDX documentation components
-├── lib/
-│   ├── utils.ts      # General utilities (cn helper, etc.)
-│   └── shuip/        # shuip-specific utilities
-├── providers/        # React context providers
-└── styles/           # Global styles
-
-content/              # MDX content for documentation
-├── components/       # Component documentation
-├── blocks/           # Block documentation
-├── docs/             # General docs
-└── react-hook-form/  # RHF-specific docs
-
-registry/             # Source of truth for installable components
-examples/             # Usage examples
+items/<category>/<name>/
+  component.tsx           REQUIRED. Exact filename. The published source.
+  default.example.tsx     Primary preview (registry key: <prefixed-name>.example).
+  <variant>.example.tsx   Extra previews (key: <prefixed-name>.<variant>.example).
+  index.mdx               Doc page. Symlinked into apps/docs/content/docs/<cat>/.
+                          BLOCKS DO NOT USE THIS — see "Blocks doc flow" below.
+  extras/                 Optional. Files copied alongside on install:
+    <file>.action.ts        → installs as ./actions/shuip/<file>.ts
+    <file>.<ext>            → installs as ./components/ui/shuip/<file>.<ext>
+  meta.shuip.json         Optional. { "dependsOn": ["<other-shuip-item>"] }
 ```
 
-### Path Aliases
+**Auto-detected from `component.tsx` imports:**
+- `import ... from '@/components/ui/<name>'` → `registryDependencies` (consumer installs that shadcn primitive)
+- External npm imports → `dependencies`
+- Anything else (relative, `@repo/*`, `#/*`) → ignored
 
-- `@/*` → `src/*`
-- `#/*` → `./*` (root)
-- `@r/*` → `registry/*`
+**Blocks doc flow:** Block items must not contain `index.mdx`. Their docs live as real MDX files at `apps/docs/content/blocks/<name>.mdx` (a separate fumadocs collection defined in `apps/docs/source.config.ts`). If you put `index.mdx` in `items/blocks/<name>/`, the generator will create a symlink in `apps/docs/content/docs/blocks/`, which no collection reads — the doc will silently not appear.
 
-### MDX Configuration
+## Path Mappings
 
-The project uses `@next/mdx` with custom components defined in `src/mdx-components.tsx`. MDX files have `.md` and `.mdx` extensions enabled via `next.config.ts`.
+Configured identically in `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json`:
 
-Content is stored in `content/` and uses gray-matter frontmatter for metadata.
+| Alias | Resolves to |
+|-------|-------------|
+| `@/components/ui/shuip/*` | `packages/registry/stubs/*` (auto-generated re-exports of `items/<cat>/<name>/component.tsx`) |
+| `@/components/block/shuip/*` | `packages/registry/stubs/blocks/*` |
+| `@/components/ui/*` | `packages/ui/src/components/ui/*` (shadcn primitives) |
+| `@/lib/utils` | `packages/ui/src/lib/utils` |
+| `@/actions/shuip/places` | `packages/registry/items/react-hook-form/address-field/extras/places.action` |
 
-### Code Style (Biome)
+`@/*` in `apps/docs` also resolves to `./src/*` for app-internal code.
 
-- Biome is used for formatting and linting (not ESLint/Prettier)
-- Single quotes, 2-space indent, 120 line width, trailing commas
-- Auto-organizes imports
-- `src/components/ui/` and `src/styles/` are excluded from linting
-- Pre-commit hook runs `bun run format` automatically
-- `noExplicitAny` is disabled (project allows `any`)
+Examples import the item itself through the stub alias (`@/components/ui/shuip/<cat-subdir>/<name>`), not via relative path. That mirrors what consumers will write after `shadcn add`.
 
-### Component Patterns
+## CSS Pipeline
 
-**shuip components** simplify shadcn patterns:
-- React Hook Form fields: `InputField`, `SelectField`, `CheckboxField`, `RadioField` in `registry/ui/react-hook-form/`
-- These wrap shadcn Form components to reduce boilerplate
-- Use `register` prop pattern instead of verbose `FormField` render props
-- See README.md for before/after examples
+Entry: `apps/docs/src/styles/globals.css`. Chain:
 
-### Testing
+```
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/shadcn.css';   bridge --color-fd-* ↔ --*
+@import 'fumadocs-ui/css/preset.css';   fumadocs styling
+@import '@repo/ui/styles/base.css';     shuip @theme + @source + :root/.dark
+```
 
-No test runner is configured. If tests are needed, propose a setup first.
+`@source` lines in `packages/ui/src/styles/base.css` are **relative to that file**:
+- `../components/**` → `packages/ui/src/components`
+- `../../../registry/items/**` → `packages/registry/items`
+- `../../../../apps/docs/src/**` → `apps/docs/src`
 
-## Common Workflows
+A wrong `@source` path silently strips Tailwind classes from the affected files — no build error, just unstyled UI.
 
-### Adding a New Component
+Tailwind v4 is config-CSS-only — there is no `tailwind.config.js`. Theme tokens are declared in `:root` / `.dark` inside `@layer base`, and exposed as Tailwind utilities via `@theme inline { ... }` at the top level.
 
-1. Create component file in `registry/ui/` (or `registry/block/`)
-2. Create corresponding documentation in `content/components/`
-3. Run `bun run registry:generate` to update `registry/__index__.ts`
-4. Run `bun run registry:build` to build shadcn registry
-5. Test installation: `npx shadcn@latest add "https://shuip.plvo.dev/r/your-component"`
+## Bun Catalogs
 
-### Modifying Existing Components
+Shared dependency versions live in `package.json` → `workspaces.catalog` (default) and `workspaces.catalogs.{fumadocs,radix,forms}`. Workspaces reference them as `"<pkg>": "catalog:"` or `"catalog:<name>"`. To add a new shared dep, edit the root catalog first, then reference it from each consuming workspace's `package.json`. Pinning a version directly defeats the catalog.
 
-1. Edit component in `registry/ui/` or `src/components/ui/shuip/`
-2. Update documentation in `content/` if needed
-3. Regenerate registry if in `registry/`: `bun run registry:generate`
-4. Run `bun build:full` before deployment
+## Conventions
 
-### Working with Documentation
+- **Biome** is the only linter/formatter (no ESLint/Prettier). Config: single quotes, 2-space indent, 120-col, trailing commas. Lint-staged runs `biome check --write --unsafe` on commit via husky.
+- **TypeScript 6**. Project references are declared at root but workspaces are not marked `composite: true` — IDE works, `tsc --build` from root does not. Per-workspace `tsc --noEmit` is fine.
+- **No test runner is configured.** Propose a setup before adding tests.
+- **shadcn config** is at `packages/ui/components.json` (New York style, RSC enabled).
 
-- Documentation is MDX in `content/`
-- Custom MDX components in `src/components/mdx/` (e.g., `CodePreview`, `ItemInstallation`)
-- Frontmatter is parsed with gray-matter
-- TOC generation uses `mdast-util-toc`
+## Generated Artifacts — Never Edit by Hand
+
+`registry:generate` regenerates these. Any manual edit is lost:
+
+- `packages/registry/registry.json`
+- `packages/registry/__index__.ts`
+- `packages/registry/stubs/**`
+- `apps/docs/public/r/**` (regenerated by `registry:build`)
+- `apps/docs/content/docs/<cat>/<name>.mdx` (symlinks)
+- `apps/docs/content/docs/<cat>/.gitignore` (lists the symlinks)
+
+To change anything in those, edit the source under `packages/registry/items/<cat>/<name>/` and run `bun registry:generate`.
+
+## Workflows
+
+**Adding a registry item:**
+1. Create `packages/registry/items/<cat>/<name>/{component.tsx, default.example.tsx, index.mdx}` (skip `index.mdx` for blocks; use `content/blocks/` instead).
+2. `bun registry:generate` — confirm `[generate] N items processed` increased.
+3. `bun build:docs` end-to-end check.
+
+**Adding a new alias used by extras/:** mirror the path mapping in **both** `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json`.
+
+**Adding a new shared external dep:** add the version to the root `workspaces.catalog` (or appropriate sub-catalog), then reference `"catalog:"`/`"catalog:<name>"` from the consuming workspace.
 
 ## Important Notes
 
-- **Never manually edit** `registry/__index__.ts` - it's auto-generated
-- shadcn config is in `components.json` (New York style, RSC enabled)
-- Production builds remove console logs (except `console.log`)
-- The project uses React 19 and Next.js 15 App Router (RSC by default)
-- Biome ignores `src/components/ui/**` (shadcn base components)
+- Examples import the item itself via the stub alias (`@/components/ui/shuip/<cat-subdir>/<name>`), never via `./component`. Consumers will use the stub path after `shadcn add`.
+- `component.tsx` must not import `@/components/ui/shuip/*` — circular. Import shadcn primitives via `@/components/ui/<name>`.
+- The generator skips silently (warning only) any item folder missing `component.tsx`. Watch the console output.
