@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "portless run next dev",
+    "predev": "bun run scripts/shadcn-build.ts",
     "prebuild": "bun run scripts/shadcn-build.ts",
     "build": "next build",
     "start": "next start",

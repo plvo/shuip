@@ -9,7 +9,6 @@
     "contribution",
     "changelog",
     "---COMPONENTS---",
-    "...components/index",
     "...components",
     "---REACT HOOK FORM---",
     "...react-hook-form",

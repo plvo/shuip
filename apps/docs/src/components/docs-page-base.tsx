@@ -56,7 +56,7 @@ export async function generateDocsPageMetadata<T extends DocsPageType>(
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://shuip.plvo.dev';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://shuip.plvo.dev';
   const pageUrl = `${baseUrl}/${docsType}/${page.slugs.join('/')}`;
   const ogImage = getPageImage(page, docsType).url;
 

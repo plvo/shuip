@@ -5,17 +5,16 @@ description: Contribute to shuip to make it better.
 
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 
-## Configuration
+## Setup
 
 <Steps>
 <Step>
 Clone the repository
 ```bash
-git clone https://github.com/plvo/shuip.git 
+git clone https://github.com/plvo/shuip.git
 cd shuip
 ```
 </Step>
-
 
 <Step>
 Install dependencies
@@ -34,71 +33,105 @@ git checkout -b feat/my-component
 <Step>
 Start the development server
 ```bash
-bun run dev
+bun dev
 ```
 </Step>
 </Steps>
 
-## Add a component
+## Repository layout
+
+shuip is a Bun + turborepo monorepo. Items are published from `packages/registry/items/` through a generator script.
+
+```bash
+apps/docs/                        # Next.js docs site (registry endpoints, MDX content)
+packages/ui/                      # shadcn primitives + base.css
+packages/registry/                # SOURCE OF TRUTH for published items
+  items/<category>/<name>/        # One folder per item — see "Add an item" below
+  scripts/generate.ts             # Scans items/, emits all downstream artifacts
+packages/config/                  # Shared tsconfig presets
+```
+
+The generator emits `registry.json`, `__index__.ts`, stubs, MDX symlinks, and `public/r/*.json` — **never edit those by hand**; they're regenerated from `items/`.
+
+## Add an item
+
+### Categories
+
+Each item lives at `packages/registry/items/<category>/<name>/`. Pick the category that matches what you're building:
+
+| Category | Prefix | Used for |
+|----------|--------|----------|
+| `components` | _(none)_ | Standalone UI components |
+| `blocks` | _(none, `registry:block`)_ | Larger composition components |
+| `react-hook-form` | `rhf-` | Fields integrated with react-hook-form |
+| `tanstack-form` | `tsf-` | Fields integrated with @tanstack/react-form |
+| `tanstack-query` | `tsq-` | Components integrated with @tanstack/react-query |
+
+The folder name is **unprefixed** — the generator adds the prefix from the `CATEGORIES` map in `packages/registry/scripts/generate.ts`. Naming a folder `rhf-my-field` publishes as `rhf-rhf-my-field`.
 
 ### File structure
 
-Each shuip component follows this structure:
-
 ```bash
-├── registry/
-│   ├── ui/
-│   │   └── my-component.tsx          	# Implementation of the component
-│   └── examples/
-│       └── my-component.tsx          	# Base example
-│       └── my-component.with-state.tsx # Example with the title "With state"
-│       └── my-component.disabled.tsx 	# Example with the title "Disabled"
-├── docs/components/
-│       └── my-component.mdx          	# Documentation of the component
-└── registry.json                  		# Registry configuration
+packages/registry/items/<category>/<name>/
+├── component.tsx                # REQUIRED, exact filename. The published source.
+├── default.example.tsx          # Primary preview (recommended)
+├── <variant>.example.tsx        # Additional previews (recommended: at least one)
+├── index.mdx                    # Doc page (skip for blocks — see below)
+├── extras/                      # Optional. Files copied alongside on install:
+│   ├── <file>.action.ts         # → installs at ./actions/shuip/<file>.ts
+│   └── <file>.<ext>             # → installs at ./components/ui/shuip/<file>.<ext>
+└── meta.shuip.json              # Optional. { "dependsOn": ["<other-shuip-item>"] }
 ```
 
 ### Detailed steps
 
 <Steps>
 <Step>
-Create your component in `registry/ui/`
+Create the folder `packages/registry/items/<category>/<name>/` (unprefixed name).
 </Step>
+
 <Step>
-Create at least one example in `registry/examples/` _(with the same name as the component file)_
+Write `component.tsx`. Import shadcn primitives via `@/components/ui/<name>` (these become `registryDependencies` automatically). Don't import `@/components/ui/shuip/*` unless your item composes another shuip item — in that case, also declare it in `meta.shuip.json` with `dependsOn`.
+
+Add `'use client'` at the top only when the component uses client-only React features (state, refs, effects, browser APIs).
 </Step>
+
 <Step>
-**Generate and build the registry files**
-```bash
-bun run registry:generate # Generates the registry/__index__.tsx file
-bun run registry:build # Generates the JSONs in public/r/*
+Add `default.example.tsx`. Import your component via the **stub alias**, not via relative `./component`:
+
+```tsx
+import { MyComponent } from '@/components/ui/shuip/<category-subdir>/<name>';
 ```
+
+The `<category-subdir>` segment is:
+- `components/` items → no subdir: `@/components/ui/shuip/<name>`
+- `react-hook-form/` items → `@/components/ui/shuip/react-hook-form/<name>`
+- `tanstack-form/` items → `@/components/ui/shuip/tanstack-form/<name>`
+- `tanstack-query/` items → `@/components/ui/shuip/tanstack-query/<name>`
+- `blocks/` items → `@/components/block/shuip/<name>` (note: `block`, not `ui`)
 </Step>
-<Step>
-Create the component documentation in `content/components/`
 
-```bash
-bun run registry:generate # Generates the registry/__index__.tsx file
-bun run registry:build # Generates the JSONs in public/r/*`}
-```
+<Step>
+Add at least one variant example (`<variant>.example.tsx`) showing an alternate use-case. Doc pages with a single preview look thin.
 </Step>
 
 <Step>
-Create the component documentation in `content/components/`
+Write `index.mdx` — for components, react-hook-form, tanstack-form, tanstack-query items.
 
-```yaml
+```mdx
 ---
 title: My Component
-description: Description of the component
+description: One-line description for SEO and the sidebar.
+registryName: <prefixed-name>
 ---
 
-# Title
+Prose explaining what this item does and when to use it.
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 ## Examples
 
-<ItemExamples registryName={'my-component'} /> 
+<ItemExamples registryName={'<prefixed-name>'} />
 
 ## Props
 
@@ -106,22 +139,55 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
   type={{
     label: {
       description: 'The label of the component',
-      type: 'string',
+      type: 'string?',
     },
   }}
 />
 ```
+
+`<ItemExamples>` and `<ItemHeader>` are registered globally (no import needed). `<TypeTable>` is from fumadocs-ui and must be imported inline as shown.
+</Step>
+
+<Step>
+**Blocks are different** — do **not** put `index.mdx` in `items/blocks/<name>/`. Write the doc as a real MDX file at `apps/docs/content/blocks/<name>.mdx` instead. Blocks live in a separate fumadocs collection (`apps/docs/source.config.ts`).
+</Step>
+
+<Step>
+Regenerate the registry:
+
+```bash
+bun registry:generate
+```
+
+Confirm the output shows `[generate] N items processed` with N incremented by one. If you see `[generate] skipping <cat>/<name>: no component.tsx`, the filename is wrong (must be exactly `component.tsx`).
+</Step>
+
+<Step>
+End-to-end check:
+
+```bash
+bun build:docs
+```
+
+This chains `registry:generate` → `registry:build` → `next build`. If it passes, the item is installable via `npx shadcn@latest add "https://shuip.plvo.dev/r/<prefixed-name>"`.
 </Step>
 </Steps>
 
-## Submit your contribution
+## Coding conventions
 
-### Create a Pull Request
+- **Biome** is the only linter/formatter. Single quotes, 2-space indent, 120-col, trailing commas. `bun check` runs Biome with auto-fix. Pre-commit hook runs `biome check --write --unsafe` via lint-staged.
+- **TypeScript 6.** Use `import type` for type-only imports.
+- **Shared external deps** are versioned via Bun catalogs (`workspaces.catalog` and `workspaces.catalogs.{fumadocs,radix,forms}` in root `package.json`). Reference as `"<pkg>": "catalog:"` or `"catalog:<name>"` — never pin a literal version in a workspace's `package.json`.
+- **Conventional commits.** Format: `<type>(<scope>): <subject>`. Examples: `feat(registry): add rhf-phone-field`, `fix(theme-button): add 'use client'`, `chore(dx): bump deps`.
+
+## Submit your contribution
 
 ```bash
 git add .
-git commit -m "feat: new component my-component"
+git commit -m "feat(registry): add my-component"
 git push origin feat/my-component
 ```
+
+Then open a Pull Request on [github.com/plvo/shuip](https://github.com/plvo/shuip).
 
 _Thank you for your contribution to shuip!_ 🚀
