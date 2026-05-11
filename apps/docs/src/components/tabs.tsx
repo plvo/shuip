@@ -12,8 +12,8 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { cn } from '@/lib/utils';
 import * as Unstyled from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 type CollectionKey = string | symbol;
 

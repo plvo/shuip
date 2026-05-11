@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+/** biome-ignore-all lint/suspicious/noAssignInExpressions: script */
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -78,7 +79,7 @@ const parseImports = (source: string): string[] => {
 
 // Parse @/components/ui/<name> imports → registryDependencies (shadcn primitives).
 const parseRegistryDeps = (source: string): string[] => {
-  const regex = /from\s+['"]@\/components\/ui\/([^'"\/]+)['"]/g;
+  const regex = /from\s+['"]@\/components\/ui\/([^'"/]+)['"]/g;
   const out = new Set<string>();
   let m: RegExpExecArray | null;
   while ((m = regex.exec(source)) !== null) {

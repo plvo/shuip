@@ -4,8 +4,8 @@ import { cva } from 'class-variance-authority';
 import Link from 'fumadocs-core/link';
 import { ChevronDown } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
-import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 
 export interface ParameterNode {
   name: string;
