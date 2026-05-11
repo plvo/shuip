@@ -1,0 +1,60 @@
+---
+title: Phone Field
+description: Controlled phone-number input integrated with React Hook Form. Validates against the E.164 international format.
+registryName: rhf-phone-field
+---
+
+`PhoneField` is a controlled phone-number input that connects React Hook Form to the shadcn `Input` primitive. It uses the `tel` input type and `inputMode` so mobile devices surface the numeric keypad, and it ships with a reusable `phoneSchema`/`E164_REGEX` you can drop straight into a Zod schema.
+
+The field validates against the [E.164](https://en.wikipedia.org/wiki/E.164) format: a leading `+`, a country code starting with a non-zero digit, and up to 14 additional digits (e.g. `+33612345678`).
+
+#### Built-in features
+
+- **Type-safe registration**: Uses `register` from React Hook Form
+- **E.164 validation**: Exports `phoneSchema` and `E164_REGEX` for opt-in Zod schemas
+- **Mobile-friendly**: `type='tel'`, `inputMode='tel'`, `autoComplete='tel'`
+- **Zero boilerplate**: `label`, `description`, and `placeholder` as direct props
+
+## Using the exported schema
+
+```tsx
+import { phoneSchema } from '@/components/ui/shuip/react-hook-form/phone-field';
+
+const schema = z.object({
+  phone: phoneSchema,
+});
+```
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'rhf-phone-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    register: {
+      description: 'React Hook Form register function result',
+      type: 'UseFormRegisterReturn',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the input',
+      type: 'string?',
+    },
+    placeholder: {
+      description: 'Placeholder shown when the input is empty',
+      type: 'string?',
+      default: '+33612345678',
+    },
+    props: {
+      description: 'Native HTML input props (disabled, readOnly, etc.)',
+      type: 'React.ComponentProps<typeof Input>?',
+    },
+  }}
+/>
