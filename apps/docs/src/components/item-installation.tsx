@@ -13,7 +13,7 @@ export interface InstallationCmdProps extends React.RefAttributes<HTMLDivElement
 export function InstallationCmd({ registryPath, manualCode, ...props }: InstallationCmdProps) {
   const choices = ['npm', 'pnpm', 'bun', manualCode && 'manual'].filter(Boolean) as string[];
 
-  const origin = process.env.NEXT_PUBLIC_BASE_URL || 'https://shuip.plvo.dev';
+  const origin = process.env.NEXT_PUBLIC_APP_URL || 'https://shuip.plvo.dev';
   const filename = registryPath.split('/').pop() || '';
   const registryUrl = `${origin}/r/${filename}.json`;
 
