@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.3.0](https://github.com/plvo/shuip/compare/v1.2.0...v1.3.0) (2026-05-11)
+
+
+### Features
+
+* improve rhf fields ([#29](https://github.com/plvo/shuip/issues/29)) ([d11fb61](https://github.com/plvo/shuip/commit/d11fb614b4efadc6725a460fbe296c7e301cd9e7))
+* tanstack-form integration ([#28](https://github.com/plvo/shuip/issues/28)) ([e0bd226](https://github.com/plvo/shuip/commit/e0bd226a30c595bf9ed70f3cf1e2febcc86ce1da))
+* toc ([#26](https://github.com/plvo/shuip/issues/26)) ([65bff9e](https://github.com/plvo/shuip/commit/65bff9e56fec574d970741ddd888fc8239029415))
+
+
+### Bug Fixes
+
+* homepage ([1dd0005](https://github.com/plvo/shuip/commit/1dd0005d605e668b05ac0be02e4aa9e61fd74d62))
+* React Flight RCE advisory ([#30](https://github.com/plvo/shuip/issues/30)) ([5bdb30a](https://github.com/plvo/shuip/commit/5bdb30ae89c32c8ebf7438e3ab3e498bde08112a))
+* **registry:** move query-boundary to tanstack-query category ([#39](https://github.com/plvo/shuip/issues/39)) ([cb897b5](https://github.com/plvo/shuip/commit/cb897b59911e40cffaffd3a65489882846084d06))
+* **responsive-dialog:** fix height/overflow, add `ResponsiveDialogBody` ([#33](https://github.com/plvo/shuip/issues/33)) ([4fdadc9](https://github.com/plvo/shuip/commit/4fdadc996189e96ab4f6abacb41a55704e73989e))
+
 ## [1.2.0](https://github.com/plvo/shuip/compare/v1.1.0...v1.2.0) (2025-10-08)
 
 
