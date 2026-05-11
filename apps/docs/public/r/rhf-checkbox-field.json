@@ -1,0 +1,20 @@
+{
+  "name": "rhf-checkbox-field",
+  "type": "registry:ui",
+  "dependencies": [
+    "react-hook-form"
+  ],
+  "registryDependencies": [
+    "checkbox",
+    "form"
+  ],
+  "files": [
+    {
+      "path": "./items/react-hook-form/checkbox-field/component.tsx",
+      "type": "registry:ui",
+      "target": "./components/ui/shuip/react-hook-form/checkbox-field.tsx",
+      "content": "import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';\nimport { Checkbox } from '@/components/ui/checkbox';\nimport { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';\n\nexport interface CheckboxFieldProps<T extends FieldValues> extends React.ComponentProps<typeof Checkbox> {\n  register: UseFormRegisterReturn<FieldPath<T>>;\n  label: string;\n  boxLabel?: string;\n  description?: string;\n}\n\nexport function CheckboxField<T extends FieldValues>({\n  register,\n  label,\n  description,\n  ...props\n}: CheckboxFieldProps<T>) {\n  return (\n    <FormField\n      {...register}\n      render={({ field, fieldState }) => {\n        return (\n          <FormItem data-invalid={fieldState.invalid}>\n            <FormControl>\n              <div className='flex items-center gap-2'>\n                <Checkbox\n                  id={field.name}\n                  checked={field.value}\n                  onCheckedChange={field.onChange}\n                  aria-invalid={fieldState.invalid}\n                  {...props}\n                />\n                <FormLabel htmlFor={field.name}>{label}</FormLabel>\n              </div>\n            </FormControl>\n            <FormMessage className='text-xs text-left' />\n            {description && <FormDescription className='text-xs'>{description}</FormDescription>}\n          </FormItem>\n        );\n      }}\n    />\n  );\n}\n\nexport default CheckboxField;\n"
+    }
+  ],
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json"
+}
