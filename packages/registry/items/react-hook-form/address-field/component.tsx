@@ -64,6 +64,7 @@ export function AddressField({
   const [selectedIndex, setSelectedIndex] = React.useState(-1);
   const [isPending, startTransition] = React.useTransition();
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const requestIdRef = React.useRef(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const popoverRef = React.useRef<HTMLDivElement>(null);
 
@@ -79,6 +80,7 @@ export function AddressField({
     }
 
     debounceTimerRef.current = setTimeout(() => {
+      const requestId = ++requestIdRef.current;
       startTransition(async () => {
         try {
           const result = await getPlacesAutocomplete({
@@ -88,6 +90,8 @@ export function AddressField({
             language: LANGUAGE_RESULT,
           });
 
+          if (requestId !== requestIdRef.current) return;
+
           if (result.error) {
             throw new Error(result.error);
           }
@@ -96,6 +100,7 @@ export function AddressField({
           setShowSuggestions(result.predictions?.length > 0);
           setSelectedIndex(-1);
         } catch (error) {
+          if (requestId !== requestIdRef.current) return;
           console.error('Error searching addresses:', error);
           setSuggestions([]);
           setShowSuggestions(false);
@@ -107,6 +112,7 @@ export function AddressField({
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
+      requestIdRef.current++;
     };
   }, [searchQuery, country]);
 
@@ -253,7 +259,7 @@ export function AddressField({
                 className='p-0'
                 align='start'
                 onOpenAutoFocus={(e) => e.preventDefault()}
-                style={{ width: inputRef.current?.offsetWidth }}
+                style={{ width: 'var(--radix-popover-trigger-width)' }}
               >
                 <Command className='w-full'>
                   <CommandList className='max-h-60'>

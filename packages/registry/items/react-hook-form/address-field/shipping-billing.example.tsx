@@ -6,7 +6,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
-import { AddressField, addressSchema } from '@/components/ui/shuip/react-hook-form/address-field';
+import { type AddressData, AddressField, addressSchema } from '@/components/ui/shuip/react-hook-form/address-field';
 import { CheckboxField } from '@/components/ui/shuip/react-hook-form/checkbox-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
@@ -39,13 +39,19 @@ export default function RhfAddressFieldShippingBillingExample() {
   const lens = useLens({ control: form.control });
 
   const sameAsShipping = form.watch('sameAsShipping');
-  const billing = form.watch('billing');
 
   React.useEffect(() => {
-    if (sameAsShipping) {
-      form.setValue('shipping', billing, { shouldValidate: true });
-    }
-  }, [sameAsShipping, billing, form]);
+    if (!sameAsShipping) return;
+
+    form.setValue('shipping', form.getValues('billing'), { shouldValidate: true });
+
+    const sub = form.watch((values, { name }) => {
+      if (name?.startsWith('billing') && values.billing) {
+        form.setValue('shipping', values.billing as AddressData, { shouldValidate: true });
+      }
+    });
+    return () => sub.unsubscribe();
+  }, [sameAsShipping, form]);
 
   async function onSubmit(values: Values) {
     try {
