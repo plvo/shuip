@@ -1,33 +1,63 @@
 ---
 title: Checkbox Field
-description: Checkbox component integrated with TanStack Form for type-safe boolean field management.
+description: Checkbox component integrated with TanStack Form via React context for boolean field management.
 registryName: tsf-checkbox-field
 ---
 
-Checkboxes are binary inputs for opting in or accepting terms. `CheckboxField` combines Radix UI's Checkbox with an inline clickable label, making the entire label area interactive—not just the checkbox itself.
+Checkboxes are binary inputs for opting in or accepting terms. `CheckboxField` combines Radix UI's Checkbox with an inline clickable label, making the entire label area interactive — not just the checkbox itself.
 
-Common patterns include required checkboxes for terms acceptance (validated with `!value` check) or grouped checkboxes for multi-select options (using nested field paths like `features.notifications`).
+The component reads the surrounding field via `useFieldContext`, so you compose it inside a `<form.AppField>`. Common patterns include required checkboxes for terms acceptance (validated with `!value` check) or grouped checkboxes for multi-select options (using nested field paths like `features.notifications`).
 
 ### Built-in features
 
+- **Context-bound field state** via `useFieldContext` — no prop drilling
 - **Clickable inline label** positioned next to checkbox
 - **Boolean field type** for true/false state
 - **Required validation** for terms acceptance
 - **Nested paths** for grouped checkboxes
 
+## Setup
+
+Field components are bound via React context. In your project, create `lib/form.ts` once:
+
+```tsx
+// lib/form.ts
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { CheckboxField } from '@/components/ui/shuip/tanstack-form/checkbox-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
+
+export const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { CheckboxField },
+  formComponents: { SubmitButton },
+});
+```
+
+See the [`form-context`](/docs/tanstack-form/form-context) item for details.
+
 ## Required checkbox
 
 ```tsx
-<CheckboxField
-    form={form}
-    name='terms'
-    label='I accept the terms and conditions'
-    formProps={{
-      validators: {
-        onChange: ({ value }) =>
-          !value ? 'You must accept the terms' : undefined
-      }
-    }}
+import { useAppForm } from '@/lib/form';
+
+const form = useAppForm({
+  defaultValues: { terms: false },
+  onSubmit: async ({ value }) => {
+    await saveData(value);
+  },
+});
+
+<form.AppField
+  name='terms'
+  validators={{
+    onChange: ({ value }) =>
+      !value ? 'You must accept the terms' : undefined,
+  }}
+  children={(field) => (
+    <field.CheckboxField label='I accept the terms and conditions' />
+  )}
 />
 ```
 
@@ -42,14 +72,6 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 <TypeTable
   type={{
-    form: {
-      description: 'Form instance from useForm hook',
-      type: 'ReactFormApi<TFormData>',
-    },
-    name: {
-      description: 'Type-safe field name (supports nested paths like "preferences.notifications")',
-      type: 'DeepKeys<TFormData>',
-    },
     label: {
       description: 'Clickable label displayed next to the checkbox (required)',
       type: 'string',
@@ -57,10 +79,6 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
     description: {
       description: 'Helper text displayed below the checkbox',
       type: 'string?',
-    },
-    formProps: {
-      description: 'TanStack Form field options (validators, etc.)',
-      type: 'Partial<FieldOptions>?',
     },
     fieldProps: {
       description: 'Props passed to the Field wrapper component',

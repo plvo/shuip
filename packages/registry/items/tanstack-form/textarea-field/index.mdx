@@ -4,35 +4,67 @@ description: Multi-line text input component with optional tooltip. Built on sha
 registryName: tsf-textarea-field
 ---
 
-Multi-line text inputs are essential for longer content like descriptions, comments, or messages. `TextareaField` wraps a textarea element with InputGroup to enable an optional tooltip button positioned at the bottom-right corner—useful for character limits or formatting guidelines without cluttering the label area.
+Multi-line text inputs are essential for longer content like descriptions, comments, or messages. `TextareaField` wraps a textarea element with InputGroup to enable an optional tooltip button positioned at the bottom-right corner — useful for character limits or formatting guidelines without cluttering the label area.
 
-The component accepts native textarea props like `rows` and `maxLength` through the `props` parameter. Common patterns include pairing `maxLength` with a character counter (accessible via `form.useStore`) or implementing minimum length validation for meaningful input.
+The component reads the surrounding field via `useFieldContext`, so you compose it inside a `<form.AppField>`. It accepts native textarea props like `rows` and `maxLength` through the `props` parameter. Common patterns include pairing `maxLength` with a character counter (accessible via `form.useStore`) or implementing minimum length validation for meaningful input.
 
 #### Built-in features
 
+- **Context-bound field state** via `useFieldContext` — no prop drilling
 - **Bottom-right tooltip** positioned via InputGroup `align='block-end'`
 - **Native textarea props** support (rows, maxLength, placeholder)
 - **Character limit validation** with min/max length validators
 - **Multi-line error display** for longer validation messages
 
+## Setup
+
+Field components are bound via React context. In your project, create `lib/form.ts` once:
+
+```tsx
+// lib/form.ts
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { TextareaField } from '@/components/ui/shuip/tanstack-form/textarea-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
+
+export const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { TextareaField },
+  formComponents: { SubmitButton },
+});
+```
+
+See the [`form-context`](/docs/tanstack-form/form-context) item for details.
+
 ## Length validation
 
 ```tsx
-<TextareaField
-    form={form}
-    name='feedback'
-    label='Feedback'
-    description='Share your thoughts (10-500 characters)'
-    props={{ rows: 6, maxLength: 500, placeholder: 'Your feedback...' }}
-    formProps={{
-      validators: {
-        onChange: ({ value }) => {
-          if (value.length < 10) return 'Please provide at least 10 characters'
-          if (value.length > 500) return 'Maximum 500 characters allowed'
-          return undefined
-        }
-      }
-    }}
+import { useAppForm } from '@/lib/form';
+
+const form = useAppForm({
+  defaultValues: { feedback: '' },
+  onSubmit: async ({ value }) => {
+    await saveData(value);
+  },
+});
+
+<form.AppField
+  name='feedback'
+  validators={{
+    onChange: ({ value }) => {
+      if (value.length < 10) return 'Please provide at least 10 characters';
+      if (value.length > 500) return 'Maximum 500 characters allowed';
+      return undefined;
+    },
+  }}
+  children={(field) => (
+    <field.TextareaField
+      label='Feedback'
+      description='Share your thoughts (10-500 characters)'
+      props={{ rows: 6, maxLength: 500, placeholder: 'Your feedback...' }}
+    />
+  )}
 />
 ```
 
@@ -47,14 +79,6 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 <TypeTable
   type={{
-    form: {
-      description: 'Form instance from useForm hook',
-      type: 'ReactFormApi<TFormData>',
-    },
-    name: {
-      description: 'Type-safe field name (supports nested paths)',
-      type: 'DeepKeys<TFormData>',
-    },
     label: {
       description: 'Field label text',
       type: 'string?',
@@ -67,17 +91,13 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       description: 'Tooltip content displayed in an info icon button at bottom-right',
       type: 'React.ReactNode?',
     },
-    formProps: {
-      description: 'TanStack Form field options (validators, etc.)',
-      type: 'Partial<FieldOptions>?',
-    },
     fieldProps: {
       description: 'Props passed to the Field wrapper component',
       type: 'React.ComponentProps<typeof Field>?',
     },
     props: {
-      description: 'Native HTML textarea props (rows, maxLength, placeholder, etc.)',
-      type: "React.ComponentProps<'textarea'>?",
+      description: 'Props passed to the InputGroupTextarea component (rows, maxLength, placeholder, etc.)',
+      type: 'React.ComponentProps<typeof InputGroupTextarea>?',
     },
   }}
 />

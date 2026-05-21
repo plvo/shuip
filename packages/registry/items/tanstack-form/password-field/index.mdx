@@ -6,36 +6,68 @@ registryName: tsf-password-field
 
 Password inputs require special UX considerations: users need to verify their input while maintaining security. `PasswordField` solves this with a built-in visibility toggle (Eye/EyeOff icons) that switches between masked and plain text.
 
-The component uses shadcn's `InputGroup` to position the toggle button inline with the input, avoiding layout shifts. An optional tooltip can be added via the `tooltip` prop to display password requirements—this appears as an InfoIcon button next to the visibility toggle.
+The component reads the surrounding field via `useFieldContext`, so you compose it inside a `<form.AppField>`. It uses shadcn's `InputGroup` to position the toggle button inline with the input, avoiding layout shifts. An optional tooltip can be added via the `tooltip` prop to display password requirements — this appears as an InfoIcon button next to the visibility toggle.
 
 #### Built-in features
 
+- **Context-bound field state** via `useFieldContext` — no prop drilling
 - **One-click visibility toggle** with Eye/EyeOff icons
 - **InputGroup positioning** for seamless button integration
 - **Optional tooltip** for password requirements or help text
 - **Linked field validation** via `onChangeListenTo` for confirmation fields
+
+## Setup
+
+Field components are bound via React context. In your project, create `lib/form.ts` once:
+
+```tsx
+// lib/form.ts
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { PasswordField } from '@/components/ui/shuip/tanstack-form/password-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
+
+export const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { PasswordField },
+  formComponents: { SubmitButton },
+});
+```
+
+See the [`form-context`](/docs/tanstack-form/form-context) item for details.
 
 ## Password security patterns
 
 Common validation pattern for strong passwords:
 
 ```tsx
-<PasswordField
-    form={form}
-    name='password'
-    label='Password'
-    tooltip='Must contain: 8+ characters, uppercase, number, special char'
-    formProps={{
-      validators: {
-        onChange: ({ value }) => {
-          if (value.length < 8) return 'At least 8 characters required'
-          if (!/[A-Z]/.test(value)) return 'Must include uppercase letter'
-          if (!/[0-9]/.test(value)) return 'Must include number'
-          if (!/[!@#$%^&*]/.test(value)) return 'Must include special character'
-          return undefined
-        }
-      }
-    }}
+import { useAppForm } from '@/lib/form';
+
+const form = useAppForm({
+  defaultValues: { password: '', confirmPassword: '' },
+  onSubmit: async ({ value }) => {
+    await saveData(value);
+  },
+});
+
+<form.AppField
+  name='password'
+  validators={{
+    onChange: ({ value }) => {
+      if (value.length < 8) return 'At least 8 characters required';
+      if (!/[A-Z]/.test(value)) return 'Must include uppercase letter';
+      if (!/[0-9]/.test(value)) return 'Must include number';
+      if (!/[!@#$%^&*]/.test(value)) return 'Must include special character';
+      return undefined;
+    },
+  }}
+  children={(field) => (
+    <field.PasswordField
+      label='Password'
+      tooltip='Must contain: 8+ characters, uppercase, number, special char'
+    />
+  )}
 />
 ```
 
@@ -43,19 +75,18 @@ Common validation pattern for strong passwords:
 Confirm password with linked validation:
 
 ```tsx
-<PasswordField
-    form={form}
-    name='confirmPassword'
-    label='Confirm Password'
-    formProps={{
-      validators: {
-        onChangeListenTo: ['password'],
-        onChange: ({ value, fieldApi }) => {
-          const password = fieldApi.form.getFieldValue('password')
-          return value !== password ? 'Passwords do not match' : undefined
-        }
-      }
-    }}
+<form.AppField
+  name='confirmPassword'
+  validators={{
+    onChangeListenTo: ['password'],
+    onChange: ({ value, fieldApi }) => {
+      const password = fieldApi.form.getFieldValue('password');
+      return value !== password ? 'Passwords do not match' : undefined;
+    },
+  }}
+  children={(field) => (
+    <field.PasswordField label='Confirm Password' />
+  )}
 />
 ```
 
@@ -70,14 +101,6 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 <TypeTable
   type={{
-    form: {
-      description: 'Form instance from useForm hook',
-      type: 'ReactFormApi<TFormData>',
-    },
-    name: {
-      description: 'Type-safe field name (supports nested paths)',
-      type: 'DeepKeys<TFormData>',
-    },
     label: {
       description: 'Field label text',
       type: 'string?',
@@ -89,10 +112,6 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
     tooltip: {
       description: 'Tooltip content displayed in an info icon button',
       type: 'React.ReactNode?',
-    },
-    formProps: {
-      description: 'TanStack Form field options (validators, etc.)',
-      type: 'Partial<FieldOptions>?',
     },
     fieldProps: {
       description: 'Props passed to the Field wrapper component',

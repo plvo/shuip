@@ -1,21 +1,41 @@
 ---
 title: Input Field
-description: Text input component integrated with TanStack Form for type-safe form management. Supports tooltips and InputGroup integration for addons and buttons.
+description: Text input component integrated with TanStack Form via React context. Supports tooltips and InputGroup integration for addons and buttons.
 registryName: tsf-input-field
 ---
 
 `InputField` is a text input component that encapsulates TanStack Form's field management with shadcn/ui's design system. It handles all the boilerplate of connecting form state to an input element: wiring event handlers, displaying errors, managing touched states, and rendering consistent UI.
 
-This component is useful when you want to quickly add form inputs without manually setting up `form.Field` render props, input bindings, and error display logic for every field.
+It reads the surrounding field via `useFieldContext`, so you compose it inside a `<form.AppField>` rather than passing a `form` instance down by prop.
 
 #### Built-in features
 
-- **Type-safe field names**: Uses `DeepKeys<TFormData>` for autocomplete and compile-time validation
-- **Nested path support**: Access deeply nested values like `user.profile.email`
-- **Tooltip integration**: Optional InfoIcon button with tooltip content via `tooltip` prop
-- **InputGroup ready**: Supports shadcn InputGroup for seamless addon integration
-- **Async validation**: Built-in debouncing and loading states for API validation
-- **Full type inference**: Field value types automatically inferred from form schema
+- **Context-bound field state**: reads the field via `useFieldContext` — no prop drilling
+- **Type-safe field names**: `name` autocompletes from your `defaultValues` on `<form.AppField>`
+- **Tooltip integration**: optional InfoIcon button with tooltip content via `tooltip` prop
+- **InputGroup ready**: supports shadcn InputGroup for seamless addon integration
+- **Async validation**: built-in debouncing and loading states for API validation
+
+## Setup
+
+Field components are bound via React context. In your project, create `lib/form.ts` once:
+
+```tsx
+// lib/form.ts
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { InputField } from '@/components/ui/shuip/tanstack-form/input-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
+
+export const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { InputField },
+  formComponents: { SubmitButton },
+});
+```
+
+See the [`form-context`](/docs/tanstack-form/form-context) item for details.
 
 ## Less boilerplate
 
@@ -23,9 +43,9 @@ TanStack Form's standard approach uses render props to access field state:
 
 ```tsx
 <form.Field
-  name="email"
+  name='email'
   validators={{
-    onChange: ({ value }) => !value.includes('@') ? 'Invalid email' : undefined
+    onChange: ({ value }) => !value.includes('@') ? 'Invalid email' : undefined,
   }}
 >
   {(field) => (
@@ -34,7 +54,7 @@ TanStack Form's standard approach uses render props to access field state:
       <input
         id={field.name}
         name={field.name}
-        type="email"
+        type='email'
         value={field.state.value}
         onChange={(e) => field.handleChange(e.target.value)}
         onBlur={field.handleBlur}
@@ -47,82 +67,83 @@ TanStack Form's standard approach uses render props to access field state:
 </form.Field>
 ```
 
-
-With `InputField`, this reduces to a single declarative component:
+With `InputField` mounted inside `<form.AppField>`, the same field reduces to:
 
 ```tsx
-<InputField
-    form={form}
-    name='email'
-    label='Email'
-    props={{ type: 'email' }}
-    formProps={{
-      validators: {
-        onChange: ({ value }) => !value.includes('@') ? 'Invalid email' : undefined
-      }
-    }}
+<form.AppField
+  name='email'
+  validators={{
+    onChange: ({ value }) => !value.includes('@') ? 'Invalid email' : undefined,
+  }}
+  children={(field) => (
+    <field.InputField label='Email' props={{ type: 'email' }} />
+  )}
 />
 ```
 
-
-
+The `name` and validators live on `<form.AppField>`; the wrapper just removes the inline JSX boilerplate for label, error display, and event wiring.
 
 ## Common use cases
 
 ```tsx
-const form = useForm({
-    defaultValues: {
-      name: '',
-      email: '',
-      age: 0,
-    },
-    onSubmit: async ({ value }) => {
-      await saveData(value)
-    },
-})
+import { useAppForm } from '@/lib/form';
+
+const form = useAppForm({
+  defaultValues: {
+    name: '',
+    email: '',
+    username: '',
+    age: 0,
+  },
+  onSubmit: async ({ value }) => {
+    await saveData(value);
+  },
+});
 
 // Basic text input
-<InputField
-    form={form}
-    name='name'
-    label='Name'
-    description='Your full name'
+<form.AppField
+  name='name'
+  children={(field) => (
+    <field.InputField label='Name' description='Your full name' />
+  )}
 />
 
 // Email with validation
-<InputField
-    form={form}
-    name='email'
-    label='Email'
-    props={{ type: 'email' }}
-    formProps={{
-      validators: {
-        onChange: ({ value }) =>
-          !value.includes('@') ? 'Invalid email' : undefined
-      }
-    }}
+<form.AppField
+  name='email'
+  validators={{
+    onChange: ({ value }) =>
+      !value.includes('@') ? 'Invalid email' : undefined,
+  }}
+  children={(field) => (
+    <field.InputField label='Email' props={{ type: 'email' }} />
+  )}
 />
 
 // With tooltip
-<InputField
-    form={form}
-    name='username'
-    label='Username'
-    tooltip='Username must be unique and 3-20 characters'
-    formProps={{
-      validators: {
-        onChange: ({ value }) =>
-          value.length < 3 ? 'Too short' : undefined
-      }
-    }}
+<form.AppField
+  name='username'
+  validators={{
+    onChange: ({ value }) =>
+      value.length < 3 ? 'Too short' : undefined,
+  }}
+  children={(field) => (
+    <field.InputField
+      label='Username'
+      tooltip='Username must be unique and 3-20 characters'
+    />
+  )}
 />
 
 // Number input
-<InputField
-    form={form}
-    name='age'
-    label='Age'
-    props={{ type: 'number', min: 0, max: 120 }}
+<form.AppField
+  name='age'
+  children={(field) => (
+    <field.InputField
+      label='Age'
+      props={{ type: 'number', min: 0, max: 120 }}
+    />
+  )}
 />
 ```
 
@@ -137,14 +158,6 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 <TypeTable
   type={{
-    form: {
-      description: 'Form instance from useForm hook',
-      type: 'ReactFormApi<TFormData>',
-    },
-    name: {
-      description: 'Type-safe field name (supports nested paths like "user.email")',
-      type: 'DeepKeys<TFormData>',
-    },
     label: {
       description: 'Field label text',
       type: 'string?',
@@ -156,10 +169,6 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
     tooltip: {
       description: 'Tooltip content displayed in an info icon button',
       type: 'React.ReactNode?',
-    },
-    formProps: {
-      description: 'TanStack Form field options (validators, etc.)',
-      type: 'Partial<FieldOptions>?',
     },
     fieldProps: {
       description: 'Props passed to the Field wrapper component',
