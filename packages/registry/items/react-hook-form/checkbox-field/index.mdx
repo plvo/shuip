@@ -1,36 +1,69 @@
 ---
 title: Checkbox Field
-description: Checkbox component integrated with React Hook Form for type-safe boolean field management.
+description: Checkbox component integrated with React Hook Form via typed lens binding from @hookform/lenses. Supports inline clickable labels and Zod refinements for terms acceptance.
 registryName: rhf-checkbox-field
 ---
 
-Checkboxes are binary inputs for opting in or accepting terms. `CheckboxField` combines Radix UI's Checkbox with an inline clickable label, making the entire label area interactive—not just the checkbox itself.
+`CheckboxField` is a boolean input component that encapsulates React Hook Form's field management with shadcn/ui's design system. It combines Radix UI's Checkbox with an inline clickable label, making the entire label area interactive — not just the checkbox itself.
 
-Common patterns include required checkboxes for terms acceptance (validated with Zod's `.refine()` method) or grouped checkboxes for multi-select options using separate field registrations.
+The field binds to the form via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses) — no call-site generic, just `lens.focus('fieldName')` with full autocomplete from your form's value type.
 
 #### Built-in features
 
-- **Clickable inline label** positioned next to checkbox
-- **Boolean field type** for true/false state
-- **Required validation** for terms acceptance
-- **Zod validation**: Native integration with react-hook-form
+- **Typed lens binding**: `lens.focus('agree')` autocompletes from your form's value type — no `<MyForm>` generic at the call site
+- **Clickable inline label**: positioned next to the checkbox for a larger hit target
+- **Boolean field type**: bound via `checked` / `onCheckedChange` — no manual event wiring
+- **Required validation**: pair with Zod's `.refine()` for terms acceptance flows
+- **Zod validation**: native integration with react-hook-form and Zod via resolver
 
-## Required checkbox
+## Setup
+
+Field components bind via `@hookform/lenses`. Create a lens once per form:
 
 ```tsx
-const schema = z.object({
-  terms: z.boolean().refine(val => val === true, {
-    message: 'You must accept the terms and conditions',
-  }),
-})
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { CheckboxField } from '@/components/ui/shuip/react-hook-form/checkbox-field';
 
-const form = useForm({
-  defaultValues: { terms: false },
-  resolver: zodResolver(schema),
-})
+const form = useForm<MyForm>({ defaultValues: { agree: false } });
+const lens = useLens({ control: form.control });
 
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <CheckboxField lens={lens.focus('agree')} label='I agree' />
+  </form>
+</Form>
+```
+
+The `<Form>` wrapper is required — it provides shadcn's `FormProvider` which `FormLabel` and `FormMessage` use internally.
+
+## Less boilerplate
+
+React Hook Form's standard approach uses render props to access field state:
+
+```tsx
+<FormField
+  control={form.control}
+  name="agree"
+  render={({ field }) => (
+    <FormItem>
+      <FormControl>
+        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+      </FormControl>
+      <FormLabel>I accept the terms and conditions</FormLabel>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+```
+
+
+With `CheckboxField`, this reduces to a single declarative component:
+
+```tsx
 <CheckboxField
-  register={form.register('terms')}
+  lens={lens.focus('agree')}
   label='I accept the terms and conditions'
   description='Read our terms before proceeding'
 />
@@ -43,16 +76,40 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 <ItemExamples registryName={'rhf-checkbox-field'} />
 
+## Required checkbox
+
+For terms acceptance, validate that the value is `true` with Zod's `.refine()`:
+
+```tsx
+const schema = z.object({
+  terms: z.boolean().refine((val) => val === true, {
+    message: 'You must accept the terms and conditions',
+  }),
+});
+
+const form = useForm<z.infer<typeof schema>>({
+  defaultValues: { terms: false },
+  resolver: zodResolver(schema),
+});
+const lens = useLens({ control: form.control });
+
+<CheckboxField
+  lens={lens.focus('terms')}
+  label='I accept the terms and conditions'
+  description='Read our terms before proceeding'
+/>
+```
+
 ## Props
 
 <TypeTable
   type={{
-    register: {
-      description: 'React Hook Form register function result',
-      type: 'UseFormRegisterReturn',
+    lens: {
+      description: 'Typed lens from useLens (see Setup section).',
+      type: 'Lens<boolean>',
     },
     label: {
-      description: 'Clickable label displayed next to the checkbox (required)',
+      description: 'Clickable label displayed next to the checkbox',
       type: 'string',
     },
     description: {
@@ -64,8 +121,8 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       type: 'string?',
     },
     props: {
-      description: 'Props passed to the Checkbox component',
-      type: 'React.ComponentProps<typeof Checkbox>?',
+      description: 'Native Checkbox props — spread on Checkbox, except checked/onCheckedChange which are managed.',
+      type: "Omit<React.ComponentProps<typeof Checkbox>, 'checked' | 'onCheckedChange'>",
     },
   }}
 />

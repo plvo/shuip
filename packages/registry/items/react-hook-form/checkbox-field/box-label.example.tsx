@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -11,15 +12,18 @@ const zodSchema = z.object({
   checkbox: z.boolean(),
 });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function CheckboxFieldExample() {
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: { checkbox: false },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
-      alert(`Checkbox: ${values}`);
+      alert(`Checkbox: ${values.checkbox}`);
     } catch (error) {
       console.error(error);
     }
@@ -29,7 +33,7 @@ export default function CheckboxFieldExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <CheckboxField
-          register={form.register('checkbox')}
+          lens={lens.focus('checkbox')}
           label='Checkbox'
           description='Your checkbox'
           boxLabel='Box description'

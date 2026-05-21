@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -16,13 +17,17 @@ const zodSchema = z.object({
   }),
 });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function CheckboxFieldGroupExample() {
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: { features: { notifications: false, analytics: false, darkMode: false, apiAccess: false } },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
+  const featuresLens = lens.focus('features');
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
       alert(`Features: ${JSON.stringify(values.features, null, 2)}`);
     } catch (error) {
@@ -39,25 +44,25 @@ export default function CheckboxFieldGroupExample() {
 
           <div className='space-y-3'>
             <CheckboxField
-              register={form.register('features.notifications')}
+              lens={featuresLens.focus('notifications')}
               label='Enable push notifications'
               description='Receive real-time updates about your activity'
             />
 
             <CheckboxField
-              register={form.register('features.analytics')}
+              lens={featuresLens.focus('analytics')}
               label='Enable analytics tracking'
               description='Help us improve by sharing usage data'
             />
 
             <CheckboxField
-              register={form.register('features.darkMode')}
+              lens={featuresLens.focus('darkMode')}
               label='Enable dark mode'
               description='Switch to a darker color scheme'
             />
 
             <CheckboxField
-              register={form.register('features.apiAccess')}
+              lens={featuresLens.focus('apiAccess')}
               label='Enable API access'
               description='Get programmatic access to your data'
             />
