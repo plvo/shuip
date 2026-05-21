@@ -1,34 +1,68 @@
 ---
 title: Select Field
-description: Dropdown select component integrated with TanStack Form. Options are defined as Record<string, string> where keys are labels.
+description: Dropdown select component integrated with TanStack Form via React context. Options are defined as Record<string, string> where keys are labels.
 registryName: tsf-select-field
 ---
 
 Dropdowns present a list of options in a compact UI. `SelectField` uses Radix UI's Select primitive wrapped with TanStack Form state management. The `options` prop accepts a `Record<string, string>` where keys are the display labels and values are what gets stored in the form state.
 
-This format makes it simple to define options inline or map from API responses. For dependent selects (e.g., country → states), use [`useStore`](https://tanstack.com/form/latest/docs/framework/react/reference/functions/usestore) to watch one field and update another field's options dynamically with `setFieldValue`.
+The component reads the surrounding field via `useFieldContext`, so you compose it inside a `<form.AppField>`. This format makes it simple to define options inline or map from API responses. For dependent selects (e.g., country → states), use [`useStore`](https://tanstack.com/form/latest/docs/framework/react/reference/functions/usestore) to watch one field and update another field's options dynamically with `setFieldValue`.
 
 ### Built-in features
 
+- **Context-bound field state** via `useFieldContext` — no prop drilling
 - **Record-based options** for clean label/value mapping
 - **Dynamic options** via state or API data
 - **Dependent selects** with `form.useStore` and `setFieldValue`
 - **Empty state placeholder** via `placeholder` prop
 
+## Setup
+
+Field components are bound via React context. In your project, create `lib/form.ts` once:
+
+```tsx
+// lib/form.ts
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { SelectField } from '@/components/ui/shuip/tanstack-form/select-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
+
+export const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { SelectField },
+  formComponents: { SubmitButton },
+});
+```
+
+See the [`form-context`](/docs/tanstack-form/form-context) item for details.
+
 ## Options format
 
 ```tsx
-const options = {
-    'Display Label 1': 'value1',
-    'Display Label 2': 'value2',
-}
+import { useAppForm } from '@/lib/form';
 
-<SelectField
-    form={form}
-    name='choice'
-    options={options}
-    label='Select an option'
-    placeholder='Choose...'
+const options = {
+  'Display Label 1': 'value1',
+  'Display Label 2': 'value2',
+};
+
+const form = useAppForm({
+  defaultValues: { choice: '' },
+  onSubmit: async ({ value }) => {
+    await saveData(value);
+  },
+});
+
+<form.AppField
+  name='choice'
+  children={(field) => (
+    <field.SelectField
+      options={options}
+      label='Select an option'
+      placeholder='Choose...'
+    />
+  )}
 />
 ```
 
@@ -36,18 +70,33 @@ const options = {
 ## Dependent selects
 
 ```tsx
-const [states, setStates] = React.useState<Record<string, string>>({})
+const [states, setStates] = React.useState<Record<string, string>>({});
 
 // Watch country changes
 form.useStore((state) => state.values.country, {
-    onChange: (country) => {
-      setStates(country === 'us' ? { 'California': 'ca', 'Texas': 'tx' } : {})
-      form.setFieldValue('state', '') // Reset state field
-    }
-})
+  onChange: (country) => {
+    setStates(country === 'us' ? { 'California': 'ca', 'Texas': 'tx' } : {});
+    form.setFieldValue('state', ''); // Reset state field
+  },
+});
 
-<SelectField form={form} name='country' options={{ 'United States': 'us' }} label='Country' />
-<SelectField form={form} name='state' options={states} label='State' placeholder='Select country first' />
+<form.AppField
+  name='country'
+  children={(field) => (
+    <field.SelectField options={{ 'United States': 'us' }} label='Country' />
+  )}
+/>
+
+<form.AppField
+  name='state'
+  children={(field) => (
+    <field.SelectField
+      options={states}
+      label='State'
+      placeholder='Select country first'
+    />
+  )}
+/>
 ```
 
 
@@ -61,16 +110,8 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 <TypeTable
   type={{
-    form: {
-      description: 'Form instance from useForm hook',
-      type: 'ReactFormApi<TFormData>',
-    },
-    name: {
-      description: 'Type-safe field name (supports nested paths like "user.country")',
-      type: 'DeepKeys<TFormData>',
-    },
     options: {
-      description: 'Options as key-value pairs where key is the label and value is the field value',
+      description: 'Options as key-value pairs where key is the label and value is the field value (required)',
       type: 'Record<string, string>',
     },
     label: {
@@ -84,10 +125,6 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
     description: {
       description: 'Helper text displayed below the select',
       type: 'string?',
-    },
-    formProps: {
-      description: 'TanStack Form field options (validators, etc.)',
-      type: 'Partial<FieldOptions>?',
     },
     fieldProps: {
       description: 'Props passed to the Field wrapper component',
