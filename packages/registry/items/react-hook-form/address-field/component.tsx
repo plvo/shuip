@@ -1,8 +1,9 @@
 'use client';
 
+import type { Lens } from '@hookform/lenses';
 import { Loader2, MapPin } from 'lucide-react';
 import * as React from 'react';
-import { type FieldPath, type FieldValues, type UseFormRegisterReturn, useFormContext } from 'react-hook-form';
+import { useController } from 'react-hook-form';
 import { z } from 'zod';
 import { getPlaceDetails, getPlacesAutocomplete } from '@/actions/shuip/places';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
@@ -34,8 +35,8 @@ interface AddressSuggestion {
   types: string[];
 }
 
-interface AddressFieldProps extends React.ComponentProps<typeof Input> {
-  register: UseFormRegisterReturn<FieldPath<FieldValues>>;
+export interface AddressFieldProps extends Omit<React.ComponentProps<typeof Input>, 'value' | 'onChange'> {
+  lens: Lens<AddressData>;
   label?: string;
   placeholder?: string;
   description?: string;
@@ -43,14 +44,21 @@ interface AddressFieldProps extends React.ComponentProps<typeof Input> {
 }
 
 export function AddressField({
-  register,
+  lens,
   label = 'Address',
   placeholder = 'Enter your address',
   description,
   country = DEFAULT_COUNTRY,
   ...props
 }: AddressFieldProps) {
-  const [inputValue, setInputValue] = React.useState('');
+  const fullAddress = useController(lens.focus('fullAddress').interop());
+  const street = useController(lens.focus('street').interop());
+  const city = useController(lens.focus('city').interop());
+  const postalCode = useController(lens.focus('postalCode').interop());
+  const countryField = useController(lens.focus('country').interop());
+  const placeId = useController(lens.focus('placeId').interop());
+
+  const [inputValue, setInputValue] = React.useState(fullAddress.field.value ?? '');
   const [suggestions, setSuggestions] = React.useState<AddressSuggestion[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [showSuggestions, setShowSuggestions] = React.useState(false);
@@ -58,7 +66,6 @@ export function AddressField({
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const popoverRef = React.useRef<HTMLDivElement>(null);
-  const form = useFormContext();
 
   const searchAddresses = async (query: string) => {
     if (!query || query.length < 3) {
@@ -127,40 +134,40 @@ export function AddressField({
     if (details?.result) {
       const addressComponents = details.result.address_components || [];
 
-      let street = '';
-      let city = '';
-      let postalCode = '';
-      let country = '';
+      let streetValue = '';
+      let cityValue = '';
+      let postalCodeValue = '';
+      let countryValue = '';
 
       addressComponents.forEach((component: any) => {
         const types = component.types;
 
         if (types.includes('street_number')) {
-          street = `${component.long_name} ${street}`;
+          streetValue = `${component.long_name} ${streetValue}`;
         }
         if (types.includes('route')) {
-          street = `${street} ${component.long_name}`;
+          streetValue = `${streetValue} ${component.long_name}`;
         }
         if (types.includes('locality') || types.includes('administrative_area_level_2')) {
-          city = component.long_name;
+          cityValue = component.long_name;
         }
         if (types.includes('postal_code')) {
-          postalCode = component.long_name;
+          postalCodeValue = component.long_name;
         }
         if (types.includes('country')) {
-          country = component.long_name;
+          countryValue = component.long_name;
         }
       });
 
-      form.setValue(`${register.name}.street`, street.trim());
-      form.setValue(`${register.name}.city`, city.trim());
-      form.setValue(`${register.name}.postalCode`, postalCode.trim());
-      form.setValue(`${register.name}.country`, country.trim());
-      form.setValue(`${register.name}.fullAddress`, details.result.formatted_address.trim());
-      form.setValue(`${register.name}.placeId`, suggestion.placeId.trim());
+      street.field.onChange(streetValue.trim());
+      city.field.onChange(cityValue.trim());
+      postalCode.field.onChange(postalCodeValue.trim());
+      countryField.field.onChange(countryValue.trim());
+      fullAddress.field.onChange(details.result.formatted_address.trim());
+      placeId.field.onChange(suggestion.placeId.trim());
     } else {
-      form.setValue(`${register.name}.fullAddress`, suggestion.description.trim());
-      form.setValue(`${register.name}.placeId`, suggestion.placeId.trim());
+      fullAddress.field.onChange(suggestion.description.trim());
+      placeId.field.onChange(suggestion.placeId.trim());
     }
   };
 
@@ -211,10 +218,9 @@ export function AddressField({
 
   return (
     <FormField
-      {...register}
-      name={`${register.name}.fullAddress`}
-      render={({ field }) => (
-        <FormItem>
+      {...lens.focus('fullAddress').interop()}
+      render={({ field, fieldState }) => (
+        <FormItem data-invalid={fieldState.invalid}>
           <FormLabel className='flex items-center justify-between'>
             {label}
             <FormMessage className='max-sm:hidden text-xs opacity-80' />
@@ -237,6 +243,7 @@ export function AddressField({
                       onBlur={handleBlur}
                       onKeyDown={handleKeyDown}
                       autoComplete='off'
+                      aria-invalid={fieldState.invalid}
                       {...props}
                     />
                     <div className='absolute inset-y-0 right-0 flex items-center pr-3'>

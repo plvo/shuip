@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -13,8 +14,10 @@ const zodSchema = z.object({
   address: addressSchema,
 });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function RhfAddressFieldExample() {
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: {
       name: '',
       address: {
@@ -28,8 +31,9 @@ export default function RhfAddressFieldExample() {
     },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
       alert(JSON.stringify(values, null, 2));
       form.reset();
@@ -41,10 +45,10 @@ export default function RhfAddressFieldExample() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 w-full'>
-        <InputField register={form.register('name')} label='Name' placeholder='Enter your name' />
+        <InputField lens={lens.focus('name')} label='Name' placeholder='Enter your name' />
 
         <AddressField
-          register={form.register('address')}
+          lens={lens.focus('address')}
           label='Address'
           placeholder='Enter your address'
           description='Start typing to see address suggestions'
