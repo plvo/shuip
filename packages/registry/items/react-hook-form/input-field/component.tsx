@@ -26,6 +26,7 @@ export function InputField<T extends string | number = string>({
       render={({ field, fieldState }) => {
         const isNumeric = props.type === 'number' || props.type === 'range' || typeof field.value === 'number';
         const value = typeof field.value === 'number' && Number.isNaN(field.value) ? '' : field.value;
+        const type = props.type ?? (isNumeric ? 'number' : 'text');
 
         return (
           <FormItem data-invalid={fieldState.invalid}>
@@ -34,11 +35,11 @@ export function InputField<T extends string | number = string>({
               <InputGroup>
                 <InputGroupInput
                   {...field}
-                  type={isNumeric ? 'number' : 'text'}
+                  {...props}
+                  type={type}
                   value={value}
                   onChange={(e) => field.onChange(isNumeric ? e.target.valueAsNumber : e.target.value)}
                   aria-invalid={fieldState.invalid}
-                  {...props}
                 />
                 {tooltip && (
                   <InputGroupAddon align='inline-end'>
