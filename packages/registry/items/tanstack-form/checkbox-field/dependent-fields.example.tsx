@@ -1,12 +1,20 @@
 'use client';
 
-import { useForm, useStore } from '@tanstack/react-form';
+import { createFormHook, useStore } from '@tanstack/react-form';
 import { CheckboxField } from '@/components/ui/shuip/tanstack-form/checkbox-field';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { InputField } from '@/components/ui/shuip/tanstack-form/input-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { CheckboxField, InputField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfCheckboxFieldDependentFieldsExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       customShipping: false,
       shippingAddress: '',
@@ -30,70 +38,59 @@ export default function TsfCheckboxFieldDependentFieldsExample() {
       }}
       className='space-y-4'
     >
-      <InputField
-        form={form}
+      <form.AppField
         name='billingAddress'
-        label='Billing Address'
-        formProps={{
-          validators: {
-            onChange: ({ value }) => (!value ? 'Billing address is required' : undefined),
-          },
+        validators={{
+          onChange: ({ value }) => (!value ? 'Billing address is required' : undefined),
         }}
+        children={(field) => <field.InputField label='Billing Address' />}
       />
 
-      <CheckboxField
-        form={form}
+      <form.AppField
         name='customShipping'
-        label='Use a different shipping address'
-        formProps={{
-          listeners: {
-            onChange: ({ value }) => {
-              if (!value) {
-                form.setFieldValue('shippingAddress', '');
-                form.setFieldValue('sameAsBilling', false);
-              }
-            },
+        listeners={{
+          onChange: ({ value }) => {
+            if (!value) {
+              form.setFieldValue('shippingAddress', '');
+              form.setFieldValue('sameAsBilling', false);
+            }
           },
         }}
+        children={(field) => <field.CheckboxField label='Use a different shipping address' />}
       />
 
       {customShipping && (
         <div className='space-y-4 pl-6 border-l-2'>
-          <CheckboxField
-            form={form}
+          <form.AppField
             name='sameAsBilling'
-            label='Same as billing address'
-            formProps={{
-              listeners: {
-                onChange: ({ value }) => {
-                  if (!value) {
-                    form.setFieldValue('shippingAddress', '');
-                  } else {
-                    form.setFieldValue('shippingAddress', form.getFieldValue('billingAddress'));
-                  }
-                },
+            listeners={{
+              onChange: ({ value }) => {
+                if (!value) {
+                  form.setFieldValue('shippingAddress', '');
+                } else {
+                  form.setFieldValue('shippingAddress', form.getFieldValue('billingAddress'));
+                }
               },
             }}
+            children={(field) => <field.CheckboxField label='Same as billing address' />}
           />
 
-          <InputField
-            form={form}
+          <form.AppField
             name='shippingAddress'
-            label='Shipping Address'
-            props={{ disabled: sameAsBilling }}
-            formProps={{
-              validators: {
-                onChange: ({ value }) => {
-                  if (!value && customShipping) return 'Shipping address is required';
-                  return undefined;
-                },
+            validators={{
+              onChange: ({ value }) => {
+                if (!value && customShipping) return 'Shipping address is required';
+                return undefined;
               },
             }}
+            children={(field) => <field.InputField label='Shipping Address' props={{ disabled: sameAsBilling }} />}
           />
         </div>
       )}
 
-      <SubmitButton form={form}>Submit Order</SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton>Submit Order</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

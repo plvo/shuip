@@ -1,11 +1,19 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { InputField } from '@/components/ui/shuip/tanstack-form/input-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { InputField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfSubmitButtonExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       email: '',
     },
@@ -24,21 +32,23 @@ export default function TsfSubmitButtonExample() {
       }}
       className='space-y-4 max-w-md'
     >
-      <InputField
-        form={form}
+      <form.AppField
         name='email'
-        label='Email'
-        description='Subscribe to our newsletter'
-        formProps={{
-          validators: {
-            onChange: ({ value }) =>
-              !value ? 'Email is required' : !value.includes('@') ? 'Invalid email' : undefined,
-          },
+        validators={{
+          onChange: ({ value }) => (!value ? 'Email is required' : !value.includes('@') ? 'Invalid email' : undefined),
         }}
-        props={{ type: 'email', placeholder: 'Email' }}
+        children={(field) => (
+          <field.InputField
+            label='Email'
+            description='Subscribe to our newsletter'
+            props={{ type: 'email', placeholder: 'Email' }}
+          />
+        )}
       />
 
-      <SubmitButton form={form}>Subscribe</SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton>Subscribe</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

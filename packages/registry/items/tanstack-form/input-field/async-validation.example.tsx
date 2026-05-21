@@ -1,6 +1,7 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { InputField } from '@/components/ui/shuip/tanstack-form/input-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
@@ -11,8 +12,15 @@ async function checkUsernameAvailability(username: string): Promise<boolean> {
   return !takenUsernames.includes(username.toLowerCase());
 }
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { InputField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfInputFieldAsyncValidationExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       username: '',
       email: '',
@@ -31,52 +39,56 @@ export default function TsfInputFieldAsyncValidationExample() {
       }}
       className='space-y-4'
     >
-      <InputField
-        form={form}
+      <form.AppField
         name='username'
-        label='Username'
-        description='Username will be checked for availability'
-        props={{ placeholder: 'Enter username' }}
-        formProps={{
-          validators: {
-            // Sync validation: runs immediately
-            onChange: ({ value }) => {
-              if (!value) return 'Username is required';
-              if (value.length < 3) return 'Username must be at least 3 characters';
-              if (!/^[a-zA-Z0-9_]+$/.test(value)) return 'Only letters, numbers, and underscores allowed';
-              return undefined;
-            },
-            // Async validation: checks availability via API
-            onChangeAsync: async ({ value }) => {
-              if (!value || value.length < 3) return undefined;
-
-              const available = await checkUsernameAvailability(value);
-              return available ? undefined : 'Username is already taken';
-            },
-            // Debounce async validation to avoid excessive API calls
-            onChangeAsyncDebounceMs: 500,
+        validators={{
+          // Sync validation: runs immediately
+          onChange: ({ value }) => {
+            if (!value) return 'Username is required';
+            if (value.length < 3) return 'Username must be at least 3 characters';
+            if (!/^[a-zA-Z0-9_]+$/.test(value)) return 'Only letters, numbers, and underscores allowed';
+            return undefined;
           },
+          // Async validation: checks availability via API
+          onChangeAsync: async ({ value }) => {
+            if (!value || value.length < 3) return undefined;
+
+            const available = await checkUsernameAvailability(value);
+            return available ? undefined : 'Username is already taken';
+          },
+          // Debounce async validation to avoid excessive API calls
+          onChangeAsyncDebounceMs: 500,
         }}
+        children={(field) => (
+          <field.InputField
+            label='Username'
+            description='Username will be checked for availability'
+            props={{ placeholder: 'Enter username' }}
+          />
+        )}
       />
 
-      <InputField
-        form={form}
+      <form.AppField
         name='email'
-        label='Email'
-        description='Email will be validated on blur'
-        props={{ type: 'email', placeholder: 'your@email.com' }}
-        formProps={{
-          validators: {
-            onBlur: ({ value }) => {
-              if (!value) return 'Email is required';
-              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email format';
-              return undefined;
-            },
+        validators={{
+          onBlur: ({ value }) => {
+            if (!value) return 'Email is required';
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email format';
+            return undefined;
           },
         }}
+        children={(field) => (
+          <field.InputField
+            label='Email'
+            description='Email will be validated on blur'
+            props={{ type: 'email', placeholder: 'your@email.com' }}
+          />
+        )}
       />
 
-      <SubmitButton form={form}>Create Account</SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton>Create Account</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

@@ -1,11 +1,19 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { InputField } from '@/components/ui/shuip/tanstack-form/input-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { InputField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfInputFieldNestedPathExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       user: {
         email: '',
@@ -37,89 +45,77 @@ export default function TsfInputFieldNestedPathExample() {
     >
       <div className='space-y-4'>
         <h3 className='text-lg font-semibold'>Account</h3>
-        <InputField
-          form={form}
+        <form.AppField
           name='user.email'
-          label='Email Address'
-          props={{ type: 'email' }}
-          formProps={{
-            validators: {
-              onChange: ({ value }) => {
-                if (!value) return 'Email is required';
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email format';
-                return undefined;
-              },
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) return 'Email is required';
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email format';
+              return undefined;
             },
           }}
+          children={(field) => <field.InputField label='Email Address' props={{ type: 'email' }} />}
         />
       </div>
 
       <div className='space-y-4'>
         <h3 className='text-lg font-semibold'>Profile</h3>
         <div className='grid grid-cols-2 gap-4'>
-          <InputField
-            form={form}
+          <form.AppField
             name='user.profile.firstName'
-            label='First Name'
-            formProps={{
-              validators: {
-                onChange: ({ value }) => (!value ? 'First name is required' : undefined),
-              },
+            validators={{
+              onChange: ({ value }) => (!value ? 'First name is required' : undefined),
             }}
+            children={(field) => <field.InputField label='First Name' />}
           />
-          <InputField
-            form={form}
+          <form.AppField
             name='user.profile.lastName'
-            label='Last Name'
-            formProps={{
-              validators: {
-                onChange: ({ value }) => (!value ? 'Last name is required' : undefined),
-              },
+            validators={{
+              onChange: ({ value }) => (!value ? 'Last name is required' : undefined),
             }}
+            children={(field) => <field.InputField label='Last Name' />}
           />
         </div>
-        <InputField
-          form={form}
+        <form.AppField
           name='user.profile.bio'
-          label='Bio'
-          description='Tell us about yourself'
-          props={{ placeholder: 'Software developer from...' }}
+          children={(field) => (
+            <field.InputField
+              label='Bio'
+              description='Tell us about yourself'
+              props={{ placeholder: 'Software developer from...' }}
+            />
+          )}
         />
       </div>
 
       <div className='space-y-4'>
         <h3 className='text-lg font-semibold'>Address</h3>
-        <InputField
-          form={form}
+        <form.AppField
           name='user.address.street'
-          label='Street Address'
-          formProps={{
-            validators: {
-              onChange: ({ value }) => (!value ? 'Street address is required' : undefined),
-            },
+          validators={{
+            onChange: ({ value }) => (!value ? 'Street address is required' : undefined),
           }}
+          children={(field) => <field.InputField label='Street Address' />}
         />
         <div className='grid grid-cols-2 gap-4'>
-          <InputField form={form} name='user.address.city' label='City' />
-          <InputField
-            form={form}
+          <form.AppField name='user.address.city' children={(field) => <field.InputField label='City' />} />
+          <form.AppField
             name='user.address.zipCode'
-            label='ZIP Code'
-            props={{ placeholder: '12345' }}
-            formProps={{
-              validators: {
-                onChange: ({ value }) => {
-                  if (!value) return undefined;
-                  if (!/^\d{5}(-\d{4})?$/.test(value)) return 'Invalid ZIP code format';
-                  return undefined;
-                },
+            validators={{
+              onChange: ({ value }) => {
+                if (!value) return undefined;
+                if (!/^\d{5}(-\d{4})?$/.test(value)) return 'Invalid ZIP code format';
+                return undefined;
               },
             }}
+            children={(field) => <field.InputField label='ZIP Code' props={{ placeholder: '12345' }} />}
           />
         </div>
       </div>
 
-      <SubmitButton form={form}>Save Profile</SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton>Save Profile</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

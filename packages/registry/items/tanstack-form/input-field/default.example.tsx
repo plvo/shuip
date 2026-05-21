@@ -1,11 +1,19 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { InputField } from '@/components/ui/shuip/tanstack-form/input-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { InputField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfInputFieldExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       name: '',
       email: '',
@@ -25,33 +33,25 @@ export default function TsfInputFieldExample() {
       }}
       className='space-y-4'
     >
-      <InputField
-        form={form}
+      <form.AppField
         name='name'
-        label='Name'
-        description='Your full name'
-        formProps={{
-          validators: {
-            onChange: ({ value }) => (value.length < 3 ? 'Name must be at least 3 characters' : undefined),
-          },
+        validators={{
+          onChange: ({ value }) => (value.length < 3 ? 'Name must be at least 3 characters' : undefined),
         }}
+        children={(field) => <field.InputField label='Name' description='Your full name' />}
       />
 
-      <InputField
-        form={form}
+      <form.AppField
         name='email'
-        label='Email'
-        props={{ type: 'email' }}
-        formProps={{
-          validators: {
-            onChange: ({ value }) => (!value.includes('@') ? 'Invalid email address' : undefined),
-          },
+        validators={{
+          onChange: ({ value }) => (!value.includes('@') ? 'Invalid email address' : undefined),
         }}
+        children={(field) => <field.InputField label='Email' props={{ type: 'email' }} />}
       />
 
-      <SubmitButton form={form} props={{ variant: 'outline' }}>
-        Register
-      </SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton props={{ variant: 'outline' }}>Register</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

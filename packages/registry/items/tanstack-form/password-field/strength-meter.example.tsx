@@ -1,6 +1,7 @@
 'use client';
 
-import { useForm, useStore } from '@tanstack/react-form';
+import { createFormHook, useStore } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { PasswordField } from '@/components/ui/shuip/tanstack-form/password-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 import { cn } from '@/lib/utils';
@@ -29,8 +30,15 @@ function getStrengthLabel(strength: number): { label: string; color: string } {
   return labels[strength] || labels[0];
 }
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { PasswordField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfPasswordFieldStrengthMeterExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       password: '',
       confirmPassword: '',
@@ -55,35 +63,36 @@ export default function TsfPasswordFieldStrengthMeterExample() {
       className='space-y-4'
     >
       <div className='space-y-2'>
-        <PasswordField
-          form={form}
+        <form.AppField
           name='password'
-          label='Password'
-          tooltip={
-            <div className='space-y-1'>
-              <p className='font-semibold'>Password must contain:</p>
-              <ul className='list-disc list-inside text-sm space-y-0.5'>
-                <li>At least 8 characters (12+ recommended)</li>
-                <li>Uppercase and lowercase letters</li>
-                <li>At least one number</li>
-                <li>At least one special character</li>
-              </ul>
-            </div>
-          }
-          props={{ placeholder: 'Enter password' }}
-          formProps={{
-            validators: {
-              onChange: ({ value }) => {
-                if (!value) return 'Password is required';
-                if (value.length < 8) return 'Password must be at least 8 characters';
-                if (!/[A-Z]/.test(value)) return 'Must include uppercase letter';
-                if (!/[a-z]/.test(value)) return 'Must include lowercase letter';
-                if (!/[0-9]/.test(value)) return 'Must include number';
-                if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) return 'Must include special character';
-                return undefined;
-              },
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) return 'Password is required';
+              if (value.length < 8) return 'Password must be at least 8 characters';
+              if (!/[A-Z]/.test(value)) return 'Must include uppercase letter';
+              if (!/[a-z]/.test(value)) return 'Must include lowercase letter';
+              if (!/[0-9]/.test(value)) return 'Must include number';
+              if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) return 'Must include special character';
+              return undefined;
             },
           }}
+          children={(field) => (
+            <field.PasswordField
+              label='Password'
+              tooltip={
+                <div className='space-y-1'>
+                  <p className='font-semibold'>Password must contain:</p>
+                  <ul className='list-disc list-inside text-sm space-y-0.5'>
+                    <li>At least 8 characters (12+ recommended)</li>
+                    <li>Uppercase and lowercase letters</li>
+                    <li>At least one number</li>
+                    <li>At least one special character</li>
+                  </ul>
+                </div>
+              }
+              props={{ placeholder: 'Enter password' }}
+            />
+          )}
         />
 
         {/* Strength meter */}
@@ -104,25 +113,25 @@ export default function TsfPasswordFieldStrengthMeterExample() {
         )}
       </div>
 
-      <PasswordField
-        form={form}
+      <form.AppField
         name='confirmPassword'
-        label='Confirm Password'
-        props={{ placeholder: 'Re-enter password' }}
-        formProps={{
-          validators: {
-            onChangeListenTo: ['password'],
-            onChange: ({ value, fieldApi }) => {
-              const pwd = fieldApi.form.getFieldValue('password');
-              if (!value) return 'Please confirm your password';
-              if (value !== pwd) return 'Passwords do not match';
-              return undefined;
-            },
+        validators={{
+          onChangeListenTo: ['password'],
+          onChange: ({ value, fieldApi }) => {
+            const pwd = fieldApi.form.getFieldValue('password');
+            if (!value) return 'Please confirm your password';
+            if (value !== pwd) return 'Passwords do not match';
+            return undefined;
           },
         }}
+        children={(field) => (
+          <field.PasswordField label='Confirm Password' props={{ placeholder: 'Re-enter password' }} />
+        )}
       />
 
-      <SubmitButton form={form}>Create Account</SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton>Create Account</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

@@ -1,11 +1,19 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
+import { createFormHook } from '@tanstack/react-form';
 import { CheckboxField } from '@/components/ui/shuip/tanstack-form/checkbox-field';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { CheckboxField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfCheckboxFieldExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       termsExample: false,
       marketingExample: false,
@@ -24,25 +32,27 @@ export default function TsfCheckboxFieldExample() {
       }}
       className='space-y-4'
     >
-      <CheckboxField
-        form={form}
+      <form.AppField
         name='termsExample'
-        label='I accept the terms and conditions'
-        formProps={{
-          validators: {
-            onChange: ({ value }) => (!value ? 'You must accept the terms and conditions' : undefined),
-          },
+        validators={{
+          onChange: ({ value }) => (!value ? 'You must accept the terms and conditions' : undefined),
         }}
+        children={(field) => <field.CheckboxField label='I accept the terms and conditions' />}
       />
 
-      <CheckboxField
-        form={form}
+      <form.AppField
         name='marketingExample'
-        label='Send me promotional emails'
-        description='Optional: Receive updates about new features'
+        children={(field) => (
+          <field.CheckboxField
+            label='Send me promotional emails'
+            description='Optional: Receive updates about new features'
+          />
+        )}
       />
 
-      <SubmitButton form={form} />
+      <form.AppForm>
+        <form.SubmitButton />
+      </form.AppForm>
     </form>
   );
 }

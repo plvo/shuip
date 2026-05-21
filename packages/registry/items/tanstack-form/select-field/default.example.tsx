@@ -1,11 +1,19 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { SelectField } from '@/components/ui/shuip/tanstack-form/select-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { SelectField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfSelectFieldExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       country: '',
     },
@@ -24,26 +32,29 @@ export default function TsfSelectFieldExample() {
       }}
       className='space-y-4'
     >
-      <SelectField
-        form={form}
+      <form.AppField
         name='country'
-        options={{
-          'United States': 'us',
-          'United Kingdom': 'uk',
-          France: 'fr',
-          Germany: 'de',
+        validators={{
+          onChange: ({ value }) => (!value ? 'Please select a country' : undefined),
         }}
-        label='Country'
-        placeholder='Select a country'
-        description='Choose your country'
-        formProps={{
-          validators: {
-            onChange: ({ value }) => (!value ? 'Please select a country' : undefined),
-          },
-        }}
+        children={(field) => (
+          <field.SelectField
+            options={{
+              'United States': 'us',
+              'United Kingdom': 'uk',
+              France: 'fr',
+              Germany: 'de',
+            }}
+            label='Country'
+            placeholder='Select a country'
+            description='Choose your country'
+          />
+        )}
       />
 
-      <SubmitButton form={form} />
+      <form.AppForm>
+        <form.SubmitButton />
+      </form.AppForm>
     </form>
   );
 }
