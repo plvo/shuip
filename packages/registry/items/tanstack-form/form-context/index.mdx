@@ -1,0 +1,127 @@
+---
+title: Form Context
+description: Foundation contexts and consumer hooks for building type-safe TanStack Form components via createFormHook.
+registryName: tsf-form-context
+---
+
+`form-context` exports the React contexts and consumer hooks produced by TanStack Form's `createFormHookContexts()`. It is the foundation for the context-bound composition pattern: reusable field and form components read their state from React context instead of receiving the `form` instance as a prop.
+
+This sidesteps the variance problem that arises when `ReactFormApi`'s eleven validator generics need to cross a component boundary — the same problem that forces `form={form as any}` casts in the prop-drilling pattern.
+
+## What you install
+
+```tsx
+// components/ui/shuip/tanstack-form/form-context.tsx
+'use client';
+
+import { createFormHookContexts } from '@tanstack/react-form';
+
+export const { fieldContext, formContext, useFieldContext, useFormContext } = createFormHookContexts();
+```
+
+Four exports:
+
+- **`fieldContext`**, **`formContext`** — pass these to `createFormHook` in your project setup.
+- **`useFieldContext<T>()`** — call inside a field component to read `field` (state, errors, handlers). The generic asserts the field value type.
+- **`useFormContext()`** — call inside a form-level component (submit buttons, layout chrome) to read the form instance.
+
+## Project setup
+
+Create a `lib/form.ts` in your project that calls `createFormHook` once, binding every field and form component you want available globally.
+
+```tsx
+// lib/form.ts
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+
+import { TextField } from '@/components/ui/my-text-field';
+import { SubmitButton } from '@/components/ui/my-submit-button';
+
+export const { useAppForm, withForm, withFieldGroup } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { TextField },
+  formComponents: { SubmitButton },
+});
+```
+
+Consumer usage:
+
+```tsx
+import { useAppForm } from '@/lib/form';
+import { z } from 'zod';
+
+const schema = z.object({ username: z.string().min(3) });
+
+function MyForm() {
+  const form = useAppForm({
+    defaultValues: { username: '' },
+    validators: { onChange: schema },
+    onSubmit: ({ value }) => console.log(value),
+  });
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); form.handleSubmit(); }}>
+      <form.AppField name='username' children={(field) => <field.TextField label='Username' />} />
+      <form.AppForm><form.SubmitButton>Submit</form.SubmitButton></form.AppForm>
+    </form>
+  );
+}
+```
+
+The `name` is autocompleted from `defaultValues`. Validators accept any standard schema (Zod, Valibot, ArkType) or a plain function.
+
+## Building a field component
+
+A field component consumes the field via `useFieldContext`. It never receives `form` or `name` as a prop — both come from the surrounding `<form.AppField>`.
+
+```tsx
+'use client';
+
+import { useFieldContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { Input } from '@/components/ui/input';
+
+export function TextField({ label }: { label: string }) {
+  const field = useFieldContext<string>();
+  return (
+    <label>
+      {label}
+      <Input
+        value={field.state.value}
+        onChange={(e) => field.handleChange(e.target.value)}
+        onBlur={field.handleBlur}
+        aria-invalid={!field.state.meta.isValid}
+      />
+    </label>
+  );
+}
+```
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Example
+
+<ItemExamples registryName='tsf-form-context' />
+
+## Exports
+
+<TypeTable
+  type={{
+    fieldContext: {
+      description: 'React context used by TanStack to thread the field API to children of form.AppField.',
+      type: 'Context<unknown>',
+    },
+    formContext: {
+      description: 'React context used by TanStack to thread the form API to children of form.AppForm.',
+      type: 'Context<unknown>',
+    },
+    useFieldContext: {
+      description: 'Read the current field inside a custom field component. The generic asserts the field value type.',
+      type: '<T>() => FieldApi<T, ...>',
+    },
+    useFormContext: {
+      description: 'Read the current form inside a custom form-level component (submit buttons, layout chrome).',
+      type: '() => FormApi<...>',
+    },
+  }}
+/>
