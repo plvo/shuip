@@ -58,126 +58,109 @@ export function AddressField({
   const countryField = useController(lens.focus('country').interop());
   const placeId = useController(lens.focus('placeId').interop());
 
-  const [inputValue, setInputValue] = React.useState(fullAddress.field.value ?? '');
+  const [searchQuery, setSearchQuery] = React.useState('');
   const [suggestions, setSuggestions] = React.useState<AddressSuggestion[]>([]);
-  const [loading, setLoading] = React.useState(false);
   const [showSuggestions, setShowSuggestions] = React.useState(false);
   const [selectedIndex, setSelectedIndex] = React.useState(-1);
-  const [, startTransition] = React.useTransition();
+  const [isPending, startTransition] = React.useTransition();
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const popoverRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    setInputValue(fullAddress.field.value ?? '');
-  }, [fullAddress.field.value]);
-
-  const searchAddresses = async (query: string) => {
-    if (!query || query.length < 3) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const result = await getPlacesAutocomplete({
-        input: query,
-        components: country ? `country:${country}` : undefined,
-        types: 'address',
-        language: LANGUAGE_RESULT,
-      });
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      setSuggestions(result.predictions || []);
-      setShowSuggestions(result.predictions?.length > 0);
-      setSelectedIndex(-1);
-    } catch (error) {
-      console.error('Error searching addresses:', error);
-      setSuggestions([]);
-      setShowSuggestions(false);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   React.useEffect(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
-    if (inputValue.length >= 3) {
-      debounceTimerRef.current = setTimeout(() => {
-        searchAddresses(inputValue);
-      }, DEBOUNCE_TIME);
-    } else {
+    if (searchQuery.length < 3) {
       setSuggestions([]);
       setShowSuggestions(false);
+      return;
     }
+
+    debounceTimerRef.current = setTimeout(() => {
+      startTransition(async () => {
+        try {
+          const result = await getPlacesAutocomplete({
+            input: searchQuery,
+            components: country ? `country:${country}` : undefined,
+            types: 'address',
+            language: LANGUAGE_RESULT,
+          });
+
+          if (result.error) {
+            throw new Error(result.error);
+          }
+
+          setSuggestions(result.predictions || []);
+          setShowSuggestions(result.predictions?.length > 0);
+          setSelectedIndex(-1);
+        } catch (error) {
+          console.error('Error searching addresses:', error);
+          setSuggestions([]);
+          setShowSuggestions(false);
+        }
+      });
+    }, DEBOUNCE_TIME);
 
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [inputValue]);
+  }, [searchQuery, country]);
 
-  const handleSelectAddress = async (suggestion: AddressSuggestion) => {
-    setInputValue(suggestion.description);
+  const handleSelectAddress = (suggestion: AddressSuggestion) => {
     setShowSuggestions(false);
     setSelectedIndex(-1);
+    setSearchQuery('');
 
-    const details = await getPlaceDetails({
-      placeId: suggestion.placeId,
-      fields: ['address_components', 'formatted_address', 'geometry'],
-      language: LANGUAGE_RESULT,
-    });
-
-    if (details?.result) {
-      const addressComponents = details.result.address_components || [];
-
-      let streetValue = '';
-      let cityValue = '';
-      let postalCodeValue = '';
-      let countryValue = '';
-
-      addressComponents.forEach((component: any) => {
-        const types = component.types;
-
-        if (types.includes('street_number')) {
-          streetValue = `${component.long_name} ${streetValue}`;
-        }
-        if (types.includes('route')) {
-          streetValue = `${streetValue} ${component.long_name}`;
-        }
-        if (types.includes('locality') || types.includes('administrative_area_level_2')) {
-          cityValue = component.long_name;
-        }
-        if (types.includes('postal_code')) {
-          postalCodeValue = component.long_name;
-        }
-        if (types.includes('country')) {
-          countryValue = component.long_name;
-        }
+    startTransition(async () => {
+      const details = await getPlaceDetails({
+        placeId: suggestion.placeId,
+        fields: ['address_components', 'formatted_address', 'geometry'],
+        language: LANGUAGE_RESULT,
       });
 
-      startTransition(() => {
+      if (details?.result) {
+        const addressComponents = details.result.address_components || [];
+
+        let streetValue = '';
+        let cityValue = '';
+        let postalCodeValue = '';
+        let countryValue = '';
+
+        addressComponents.forEach((component: any) => {
+          const types = component.types;
+
+          if (types.includes('street_number')) {
+            streetValue = `${component.long_name} ${streetValue}`;
+          }
+          if (types.includes('route')) {
+            streetValue = `${streetValue} ${component.long_name}`;
+          }
+          if (types.includes('locality') || types.includes('administrative_area_level_2')) {
+            cityValue = component.long_name;
+          }
+          if (types.includes('postal_code')) {
+            postalCodeValue = component.long_name;
+          }
+          if (types.includes('country')) {
+            countryValue = component.long_name;
+          }
+        });
+
         street.field.onChange(streetValue.trim());
         city.field.onChange(cityValue.trim());
         postalCode.field.onChange(postalCodeValue.trim());
         countryField.field.onChange(countryValue.trim());
         fullAddress.field.onChange(details.result.formatted_address.trim());
         placeId.field.onChange(suggestion.placeId.trim());
-      });
-    } else {
-      startTransition(() => {
+      } else {
         fullAddress.field.onChange(suggestion.description.trim());
         placeId.field.onChange(suggestion.placeId.trim());
-      });
-    }
+      }
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -208,7 +191,7 @@ export function AddressField({
   };
 
   const handleFocus = () => {
-    if (suggestions.length > 0 && inputValue.length >= 3) {
+    if (suggestions.length > 0 && searchQuery.length >= 3) {
       setShowSuggestions(true);
     }
   };
@@ -241,12 +224,12 @@ export function AddressField({
                   <div className='relative'>
                     <Input
                       ref={inputRef}
-                      value={inputValue}
+                      value={field.value ?? ''}
                       placeholder={placeholder}
                       onChange={(e) => {
                         const value = e.target.value;
-                        setInputValue(value);
                         field.onChange(value);
+                        setSearchQuery(value);
                       }}
                       onFocus={handleFocus}
                       onBlur={handleBlur}
@@ -256,7 +239,7 @@ export function AddressField({
                       {...props}
                     />
                     <div className='absolute inset-y-0 right-0 flex items-center pr-3'>
-                      {loading ? (
+                      {isPending ? (
                         <Loader2 className='size-4 animate-spin text-muted-foreground' />
                       ) : (
                         <MapPin className='size-4 text-muted-foreground' />
@@ -274,7 +257,7 @@ export function AddressField({
               >
                 <Command className='w-full'>
                   <CommandList className='max-h-60'>
-                    <CommandEmpty>{loading ? 'Searching...' : 'No addresses found'}</CommandEmpty>
+                    <CommandEmpty>{isPending ? 'Searching...' : 'No addresses found'}</CommandEmpty>
                     <CommandGroup>
                       {suggestions.map((suggestion, index) => (
                         <CommandItem
