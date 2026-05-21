@@ -29,7 +29,7 @@
     "tailwind-merge": "catalog:",
     "clsx": "catalog:",
     "zod": "catalog:",
-    "shadcn": "^4.7.0",
+    "shadcn": "^4.8.0",
     "@vercel/analytics": "^2.0.1"
   },
   "devDependencies": {
@@ -42,7 +42,7 @@
     "@tailwindcss/postcss": "catalog:",
     "tailwindcss": "catalog:",
     "tw-animate-css": "catalog:",
-    "postcss": "^8.5.14",
+    "postcss": "^8.5.15",
     "typescript": "catalog:"
   }
 }
