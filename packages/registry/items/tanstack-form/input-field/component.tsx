@@ -15,8 +15,9 @@ export interface InputFieldProps {
 }
 
 export function InputField({ label, description, fieldProps, props, tooltip }: InputFieldProps) {
-  const field = useFieldContext<string>();
+  const field = useFieldContext<string | number>();
   const { isValid, errors } = field.state.meta;
+  const isNumeric = props?.type === 'number' || props?.type === 'range' || typeof field.state.value === 'number';
 
   return (
     <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
@@ -24,10 +25,10 @@ export function InputField({ label, description, fieldProps, props, tooltip }: I
       <InputGroup>
         <InputGroupInput
           id={field.name}
-          type='text'
+          type={isNumeric ? 'number' : 'text'}
           name={field.name}
           value={field.state.value}
-          onChange={(e) => field.handleChange(e.target.value)}
+          onChange={(e) => field.handleChange(isNumeric ? e.target.valueAsNumber : e.target.value)}
           onBlur={field.handleBlur}
           aria-invalid={!isValid}
           {...props}
