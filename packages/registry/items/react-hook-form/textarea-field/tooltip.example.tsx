@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -11,13 +12,16 @@ const zodSchema = z.object({
   notes: z.string().min(10, 'Notes must be at least 10 characters'),
 });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function RhfTextareaFieldTooltipExample() {
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: { notes: '' },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
       alert(`Notes: ${values.notes}`);
     } catch (error) {
@@ -29,7 +33,7 @@ export default function RhfTextareaFieldTooltipExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <TextareaField
-          register={form.register('notes')}
+          lens={lens.focus('notes')}
           label='Notes'
           description='Add any additional notes or comments'
           tooltip={
