@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
  */
 export type SelectFieldOption = Record<string, string>;
 
-export interface SelectFieldProps extends SelectProps {
+export interface SelectFieldProps extends Omit<SelectProps, 'value' | 'defaultValue' | 'onValueChange'> {
   lens: Lens<string>;
   options: SelectFieldOption;
   label?: string;
@@ -29,7 +29,7 @@ export function SelectField({ lens, options, label, description, placeholder, ..
       render={({ field, fieldState }) => (
         <FormItem data-invalid={fieldState.invalid}>
           {label && <FormLabel>{label}</FormLabel>}
-          <Select value={field.value} onValueChange={field.onChange} {...props}>
+          <Select {...props} value={field.value ?? ''} onValueChange={field.onChange}>
             <FormControl>
               <SelectTrigger aria-invalid={fieldState.invalid} className='w-full'>
                 <SelectValue placeholder={placeholder} />
