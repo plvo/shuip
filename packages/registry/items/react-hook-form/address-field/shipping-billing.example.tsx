@@ -2,6 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
@@ -38,6 +39,13 @@ export default function RhfAddressFieldShippingBillingExample() {
   const lens = useLens({ control: form.control });
 
   const sameAsShipping = form.watch('sameAsShipping');
+  const billing = form.watch('billing');
+
+  React.useEffect(() => {
+    if (sameAsShipping) {
+      form.setValue('shipping', billing, { shouldValidate: true });
+    }
+  }, [sameAsShipping, billing, form]);
 
   async function onSubmit(values: Values) {
     try {

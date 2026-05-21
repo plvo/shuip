@@ -63,9 +63,14 @@ export function AddressField({
   const [loading, setLoading] = React.useState(false);
   const [showSuggestions, setShowSuggestions] = React.useState(false);
   const [selectedIndex, setSelectedIndex] = React.useState(-1);
+  const [, startTransition] = React.useTransition();
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const popoverRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    setInputValue(fullAddress.field.value ?? '');
+  }, [fullAddress.field.value]);
 
   const searchAddresses = async (query: string) => {
     if (!query || query.length < 3) {
@@ -159,15 +164,19 @@ export function AddressField({
         }
       });
 
-      street.field.onChange(streetValue.trim());
-      city.field.onChange(cityValue.trim());
-      postalCode.field.onChange(postalCodeValue.trim());
-      countryField.field.onChange(countryValue.trim());
-      fullAddress.field.onChange(details.result.formatted_address.trim());
-      placeId.field.onChange(suggestion.placeId.trim());
+      startTransition(() => {
+        street.field.onChange(streetValue.trim());
+        city.field.onChange(cityValue.trim());
+        postalCode.field.onChange(postalCodeValue.trim());
+        countryField.field.onChange(countryValue.trim());
+        fullAddress.field.onChange(details.result.formatted_address.trim());
+        placeId.field.onChange(suggestion.placeId.trim());
+      });
     } else {
-      fullAddress.field.onChange(suggestion.description.trim());
-      placeId.field.onChange(suggestion.placeId.trim());
+      startTransition(() => {
+        fullAddress.field.onChange(suggestion.description.trim());
+        placeId.field.onChange(suggestion.placeId.trim());
+      });
     }
   };
 
