@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -17,8 +18,10 @@ const zodSchema = z.object({
   accountNumber: z.string().optional(),
 });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function RhfRadioFieldPaymentMethodExample() {
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: {
       paymentMethod: undefined,
       cardNumber: '',
@@ -27,10 +30,11 @@ export default function RhfRadioFieldPaymentMethodExample() {
     },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
   const paymentMethod = form.watch('paymentMethod');
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
       alert(JSON.stringify(values, null, 2));
     } catch (error) {
@@ -42,7 +46,7 @@ export default function RhfRadioFieldPaymentMethodExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <RadioField
-          register={form.register('paymentMethod')}
+          lens={lens.focus('paymentMethod')}
           options={['card', 'paypal', 'bank']}
           label='Payment Method'
           description='Select how you want to pay'
@@ -50,7 +54,7 @@ export default function RhfRadioFieldPaymentMethodExample() {
 
         {paymentMethod === 'card' && (
           <InputField
-            register={form.register('cardNumber')}
+            lens={lens.focus('cardNumber')}
             label='Card Number'
             placeholder='1234 5678 9012 3456'
             description='Enter your credit card number'
@@ -59,7 +63,7 @@ export default function RhfRadioFieldPaymentMethodExample() {
 
         {paymentMethod === 'paypal' && (
           <InputField
-            register={form.register('paypalEmail')}
+            lens={lens.focus('paypalEmail')}
             type='email'
             label='PayPal Email'
             placeholder='your@email.com'
@@ -69,7 +73,7 @@ export default function RhfRadioFieldPaymentMethodExample() {
 
         {paymentMethod === 'bank' && (
           <InputField
-            register={form.register('accountNumber')}
+            lens={lens.focus('accountNumber')}
             label='Account Number'
             placeholder='Enter your account number'
             description='Your bank account number for direct transfer'

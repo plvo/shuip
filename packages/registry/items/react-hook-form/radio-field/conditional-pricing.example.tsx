@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -18,14 +19,17 @@ const zodSchema = z.object({
   billingCycle: z.enum(['monthly', 'annual']).default('monthly'),
 });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function RhfRadioFieldConditionalPricingExample() {
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: {
       plan: '',
       billingCycle: 'monthly',
     },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
   const plan = form.watch('plan') as keyof typeof PLAN_PRICES;
   const billingCycle = form.watch('billingCycle');
@@ -34,7 +38,7 @@ export default function RhfRadioFieldConditionalPricingExample() {
   const annualPrice = monthlyPrice * 12 * 0.8; // 20% discount
   const displayPrice = billingCycle === 'annual' ? annualPrice / 12 : monthlyPrice;
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
       alert(JSON.stringify(values, null, 2));
     } catch (error) {
@@ -46,7 +50,7 @@ export default function RhfRadioFieldConditionalPricingExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <RadioField
-          register={form.register('plan')}
+          lens={lens.focus('plan')}
           options={PLANS}
           label='Select Plan'
           description='Choose the plan that fits your needs'
@@ -54,7 +58,7 @@ export default function RhfRadioFieldConditionalPricingExample() {
 
         {plan && plan !== 'free' && (
           <RadioField
-            register={form.register('billingCycle')}
+            lens={lens.focus('billingCycle')}
             options={['monthly', 'annual']}
             label='Billing Cycle'
             description='Annual billing includes a 20% discount'
