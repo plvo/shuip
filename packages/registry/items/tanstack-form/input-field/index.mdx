@@ -93,7 +93,6 @@ const form = useAppForm({
     name: '',
     email: '',
     username: '',
-    age: 0,
   },
   onSubmit: async ({ value }) => {
     await saveData(value);
@@ -134,18 +133,37 @@ const form = useAppForm({
     />
   )}
 />
-
-// Number input
-<form.AppField
-  name='age'
-  children={(field) => (
-    <field.InputField
-      label='Age'
-      props={{ type: 'number', min: 0, max: 120 }}
-    />
-  )}
-/>
 ```
+
+## String fields only
+
+`InputField` is bound to **string-typed fields** — internally it reads via `useFieldContext<string>()` and writes `e.target.value` (always a string) back to form state. Setting `props={{ type: 'number' }}` does not parse the value as a number; the form state will still hold a string.
+
+For numeric, date, or other non-string fields, build a dedicated component that uses `useFieldContext<number>()` (or whichever type) and parses the input value appropriately:
+
+```tsx
+'use client';
+
+import { useFieldContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { Input } from '@/components/ui/input';
+
+export function NumberField({ label }: { label: string }) {
+  const field = useFieldContext<number>();
+  return (
+    <label>
+      {label}
+      <Input
+        type='number'
+        value={field.state.value}
+        onChange={(e) => field.handleChange(e.target.valueAsNumber)}
+        onBlur={field.handleBlur}
+      />
+    </label>
+  );
+}
+```
+
+Then register it in your `lib/form.ts` alongside `InputField`.
 
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
