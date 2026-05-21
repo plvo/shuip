@@ -6,7 +6,6 @@ import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessa
 export interface CheckboxFieldProps extends Omit<React.ComponentProps<typeof Checkbox>, 'checked' | 'onCheckedChange'> {
   lens: Lens<boolean>;
   label: string;
-  boxLabel?: string;
   description?: string;
 }
 

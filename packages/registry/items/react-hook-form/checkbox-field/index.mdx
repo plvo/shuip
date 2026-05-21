@@ -116,10 +116,6 @@ const lens = useLens({ control: form.control });
       description: 'Helper text displayed below the checkbox',
       type: 'string?',
     },
-    boxLabel: {
-      description: 'Alternative label format (deprecated, use label instead)',
-      type: 'string?',
-    },
     props: {
       description: 'Native Checkbox props — spread on Checkbox, except checked/onCheckedChange which are managed.',
       type: "Omit<React.ComponentProps<typeof Checkbox>, 'checked' | 'onCheckedChange'>",
