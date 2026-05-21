@@ -1,12 +1,20 @@
 'use client';
 
-import { useForm, useStore } from '@tanstack/react-form';
+import { createFormHook, useStore } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { InputField } from '@/components/ui/shuip/tanstack-form/input-field';
 import { RadioField } from '@/components/ui/shuip/tanstack-form/radio-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { InputField, RadioField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfRadioFieldPaymentMethodExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       paymentMethod: '',
       cardNumber: '',
@@ -29,78 +37,73 @@ export default function TsfRadioFieldPaymentMethodExample() {
       }}
       className='space-y-4'
     >
-      <RadioField
-        form={form}
+      <form.AppField
         name='paymentMethod'
-        options={[
-          { label: 'Credit Card', value: 'card' },
-          { label: 'PayPal', value: 'paypal' },
-          { label: 'Bank Transfer', value: 'bank' },
-        ]}
-        label='Payment Method'
-        description='Select how you want to pay'
-        formProps={{
-          validators: {
-            onChange: ({ value }) => (!value ? 'Please select a payment method' : undefined),
-          },
+        validators={{
+          onChange: ({ value }) => (!value ? 'Please select a payment method' : undefined),
         }}
+        children={(field) => (
+          <field.RadioField
+            options={[
+              { label: 'Credit Card', value: 'card' },
+              { label: 'PayPal', value: 'paypal' },
+              { label: 'Bank Transfer', value: 'bank' },
+            ]}
+            label='Payment Method'
+            description='Select how you want to pay'
+          />
+        )}
       />
 
       {paymentMethod === 'card' && (
-        <InputField
-          form={form}
+        <form.AppField
           name='cardNumber'
-          label='Card Number'
-          props={{ placeholder: '1234 5678 9012 3456' }}
-          formProps={{
-            validators: {
-              onChange: ({ value }) => {
-                if (!value) return 'Card number is required';
-                if (!/^\d{4}\s?\d{4}\s?\d{4}\s?\d{4}$/.test(value)) return 'Invalid card number format';
-                return undefined;
-              },
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) return 'Card number is required';
+              if (!/^\d{4}\s?\d{4}\s?\d{4}\s?\d{4}$/.test(value)) return 'Invalid card number format';
+              return undefined;
             },
           }}
+          children={(field) => <field.InputField label='Card Number' props={{ placeholder: '1234 5678 9012 3456' }} />}
         />
       )}
 
       {paymentMethod === 'paypal' && (
-        <InputField
-          form={form}
+        <form.AppField
           name='paypalEmail'
-          label='PayPal Email'
-          props={{ type: 'email', placeholder: 'your@email.com' }}
-          formProps={{
-            validators: {
-              onChange: ({ value }) => {
-                if (!value) return 'Email is required';
-                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email format';
-                return undefined;
-              },
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) return 'Email is required';
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email format';
+              return undefined;
             },
           }}
+          children={(field) => (
+            <field.InputField label='PayPal Email' props={{ type: 'email', placeholder: 'your@email.com' }} />
+          )}
         />
       )}
 
       {paymentMethod === 'bank' && (
-        <InputField
-          form={form}
+        <form.AppField
           name='accountNumber'
-          label='Account Number'
-          props={{ placeholder: 'Enter your account number' }}
-          formProps={{
-            validators: {
-              onChange: ({ value }) => {
-                if (!value) return 'Account number is required';
-                if (value.length < 8) return 'Account number must be at least 8 digits';
-                return undefined;
-              },
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) return 'Account number is required';
+              if (value.length < 8) return 'Account number must be at least 8 digits';
+              return undefined;
             },
           }}
+          children={(field) => (
+            <field.InputField label='Account Number' props={{ placeholder: 'Enter your account number' }} />
+          )}
         />
       )}
 
-      <SubmitButton form={form}>Process Payment</SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton>Process Payment</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

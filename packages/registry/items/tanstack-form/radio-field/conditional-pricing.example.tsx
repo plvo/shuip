@@ -1,7 +1,8 @@
 'use client';
 
-import { useForm, useStore } from '@tanstack/react-form';
+import { createFormHook, useStore } from '@tanstack/react-form';
 import { Card } from '@/components/ui/card';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { RadioField } from '@/components/ui/shuip/tanstack-form/radio-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
@@ -11,8 +12,15 @@ const PLANS = [
   { label: 'Enterprise - $99/month', value: 'enterprise', price: 99 },
 ];
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { RadioField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfRadioFieldConditionalPricingExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       plan: '',
       billingCycle: 'monthly',
@@ -39,27 +47,28 @@ export default function TsfRadioFieldConditionalPricingExample() {
       }}
       className='space-y-4'
     >
-      <RadioField
-        form={form}
+      <form.AppField
         name='plan'
-        options={PLANS.map((p) => ({ label: p.label, value: p.value }))}
-        label='Select Plan'
-        formProps={{
-          validators: {
-            onChange: ({ value }) => (!value ? 'Please select a plan' : undefined),
-          },
+        validators={{
+          onChange: ({ value }) => (!value ? 'Please select a plan' : undefined),
         }}
+        children={(field) => (
+          <field.RadioField options={PLANS.map((p) => ({ label: p.label, value: p.value }))} label='Select Plan' />
+        )}
       />
 
       {plan && plan !== 'free' && (
-        <RadioField
-          form={form}
+        <form.AppField
           name='billingCycle'
-          options={[
-            { label: 'Monthly', value: 'monthly' },
-            { label: 'Annual (Save 20%)', value: 'annual' },
-          ]}
-          label='Billing Cycle'
+          children={(field) => (
+            <field.RadioField
+              options={[
+                { label: 'Monthly', value: 'monthly' },
+                { label: 'Annual (Save 20%)', value: 'annual' },
+              ]}
+              label='Billing Cycle'
+            />
+          )}
         />
       )}
 
@@ -89,7 +98,9 @@ export default function TsfRadioFieldConditionalPricingExample() {
         </Card>
       )}
 
-      <SubmitButton form={form}>Continue</SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton>Continue</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

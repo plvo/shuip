@@ -104,6 +104,25 @@ const parseRegistryDeps = (source: string): string[] => {
   return Array.from(out).sort();
 };
 
+// Parse @/components/ui/shuip/<...> imports → registryDependencies (shuip-internal items).
+// One segment (e.g. `side-dialog`) resolves to a `components`-category item.
+// Two segments (e.g. `tanstack-form/form-context`) resolve to a prefixed item (`tsf-form-context`).
+const parseShuipDeps = (source: string): string[] => {
+  const regex = /from\s+['"]@\/components\/ui\/shuip\/([^'"]+)['"]/g;
+  const out = new Set<string>();
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(source)) !== null) {
+    const parts = m[1]?.split('/') ?? [];
+    if (parts.length === 1 && parts[0]) {
+      out.add(parts[0]);
+    } else if (parts.length === 2) {
+      const [cat, name] = parts;
+      if (cat && name && isCategory(cat)) out.add(namePrefix(cat, name));
+    }
+  }
+  return Array.from(out).sort();
+};
+
 const readMeta = (itemDir: string): ItemMeta => {
   const metaPath = path.join(itemDir, 'meta.shuip.json');
   if (fs.existsSync(metaPath)) {
@@ -167,8 +186,9 @@ const buildRegistryJson = (items: ScannedItem[]): { name: string; homepage: stri
     const source = fs.readFileSync(componentPath, 'utf-8');
     const dependencies = parseImports(source);
     const registryDependencies = parseRegistryDeps(source);
+    const shuipDeps = parseShuipDeps(source);
     const meta = readMeta(item.itemDir);
-    const fullDeps = [...registryDependencies, ...(meta.dependsOn ?? [])].sort();
+    const fullDeps = Array.from(new Set([...registryDependencies, ...shuipDeps, ...(meta.dependsOn ?? [])])).sort();
     const itemName = namePrefix(category, folderName);
     const target = computeTarget(category, folderName);
     const componentRelPath = path.relative(ROOT, componentPath).replace(/\\/g, '/');

@@ -1,118 +1,51 @@
-import type {
-  DeepKeys,
-  DeepValue,
-  FieldAsyncValidateOrFn,
-  FieldOptions,
-  FieldValidateOrFn,
-  FormAsyncValidateOrFn,
-  FormValidateOrFn,
-  ReactFormApi,
-} from '@tanstack/react-form';
+'use client';
+
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useFieldContext } from '@/components/ui/shuip/tanstack-form/form-context';
 
-/**
- * Key is the label, value is the value
- * @example
- * const options: SelectFieldOption = {
- *   'First': '1',
- *   'Second': '2',
- *   'Third': '3',
- * };
- */
 export type SelectFieldOption = Record<string, string>;
 
-export interface SelectFieldProps<
-  TFormData,
-  TName extends DeepKeys<TFormData>,
-  TData extends DeepValue<TFormData, TName> = DeepValue<TFormData, TName>,
-> {
-  form: ReactFormApi<
-    TFormData,
-    undefined | FormValidateOrFn<TFormData>,
-    undefined | FormValidateOrFn<TFormData>,
-    undefined | FormAsyncValidateOrFn<TFormData>,
-    undefined | FormValidateOrFn<TFormData>,
-    undefined | FormAsyncValidateOrFn<TFormData>,
-    undefined | FormValidateOrFn<TFormData>,
-    undefined | FormAsyncValidateOrFn<TFormData>,
-    undefined | FormValidateOrFn<TFormData>,
-    undefined | FormAsyncValidateOrFn<TFormData>,
-    undefined | FormAsyncValidateOrFn<TFormData>,
-    any
-  >;
-  name: TName;
+export interface SelectFieldProps {
   options: SelectFieldOption;
   label?: string;
   placeholder?: string;
   description?: string;
-  formProps?: Partial<
-    FieldOptions<
-      TFormData,
-      TName,
-      TData,
-      undefined | FieldValidateOrFn<TFormData, TName, TData>,
-      undefined | FieldValidateOrFn<TFormData, TName, TData>,
-      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>,
-      undefined | FieldValidateOrFn<TFormData, TName, TData>,
-      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>,
-      undefined | FieldValidateOrFn<TFormData, TName, TData>,
-      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>,
-      undefined | FieldValidateOrFn<TFormData, TName, TData>,
-      undefined | FieldAsyncValidateOrFn<TFormData, TName, TData>
-    >
-  >;
   fieldProps?: React.ComponentProps<typeof Field>;
   props?: React.ComponentProps<typeof Select>;
 }
 
-export function SelectField<
-  TFormData,
-  TName extends DeepKeys<TFormData>,
-  TData extends DeepValue<TFormData, TName> = DeepValue<TFormData, TName>,
->({
-  form,
-  name,
-  options,
-  label,
-  description,
-  placeholder,
-  formProps,
-  fieldProps,
-  props,
-}: SelectFieldProps<TFormData, TName, TData>) {
-  return (
-    <form.Field name={name} {...formProps}>
-      {(field) => {
-        const { isValid, errors } = field.state.meta;
+export function SelectField({ options, label, description, placeholder, fieldProps, props }: SelectFieldProps) {
+  const field = useFieldContext<string>();
+  const { isValid, errors } = field.state.meta;
 
-        return (
-          <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
-            {label && <FieldLabel>{label}</FieldLabel>}
-            <Select
-              name={field.name}
-              value={field.state.value as string}
-              onValueChange={(value) => field.handleChange(value as TData)}
-              {...props}
-            >
-              <SelectTrigger aria-invalid={!isValid}>
-                <SelectValue placeholder={placeholder} />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(options).map(([label, value]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {!isValid && (
-              <FieldError className='text-xs text-left' errors={errors.map((error) => ({ message: error }))} />
-            )}
-            {description && <FieldDescription className='text-xs'>{description}</FieldDescription>}
-          </Field>
-        );
-      }}
-    </form.Field>
+  return (
+    <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
+      {label && <FieldLabel>{label}</FieldLabel>}
+      <Select
+        name={field.name}
+        value={field.state.value}
+        onValueChange={(value) => field.handleChange(value)}
+        {...props}
+      >
+        <SelectTrigger aria-invalid={!isValid}>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {Object.entries(options).map(([optionLabel, value]) => (
+            <SelectItem key={value} value={value}>
+              {optionLabel}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {!isValid && (
+        <FieldError
+          className='text-xs text-left'
+          errors={errors.map((error) => ({ message: typeof error === 'string' ? error : error?.message }))}
+        />
+      )}
+      {description && <FieldDescription className='text-xs'>{description}</FieldDescription>}
+    </Field>
   );
 }

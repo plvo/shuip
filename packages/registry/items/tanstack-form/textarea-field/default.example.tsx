@@ -1,11 +1,19 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 import { TextareaField } from '@/components/ui/shuip/tanstack-form/textarea-field';
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { TextareaField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfTextareaFieldExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       bio: '',
       feedback: '',
@@ -24,32 +32,38 @@ export default function TsfTextareaFieldExample() {
       }}
       className='space-y-4'
     >
-      <TextareaField
-        form={form}
+      <form.AppField
         name='bio'
-        label='Biography'
-        description='Tell us about yourself'
-        props={{ rows: 4, placeholder: 'Software engineer passionate about...' }}
-        formProps={{
-          validators: {
-            onChange: ({ value }) => {
-              if (!value) return 'Bio is required';
-              if (value.length < 20) return 'Bio must be at least 20 characters';
-              return undefined;
-            },
+        validators={{
+          onChange: ({ value }) => {
+            if (!value) return 'Bio is required';
+            if (value.length < 20) return 'Bio must be at least 20 characters';
+            return undefined;
           },
         }}
+        children={(field) => (
+          <field.TextareaField
+            label='Biography'
+            description='Tell us about yourself'
+            props={{ rows: 4, placeholder: 'Software engineer passionate about...' }}
+          />
+        )}
       />
 
-      <TextareaField
-        form={form}
+      <form.AppField
         name='feedback'
-        label='Feedback'
-        description='Share your thoughts or suggestions'
-        props={{ rows: 6, placeholder: 'Your feedback helps us improve...' }}
+        children={(field) => (
+          <field.TextareaField
+            label='Feedback'
+            description='Share your thoughts or suggestions'
+            props={{ rows: 6, placeholder: 'Your feedback helps us improve...' }}
+          />
+        )}
       />
 
-      <SubmitButton form={form}>Submit</SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton>Submit</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

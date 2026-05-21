@@ -1,7 +1,8 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
+import { createFormHook } from '@tanstack/react-form';
 import React from 'react';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { SelectField } from '@/components/ui/shuip/tanstack-form/select-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
@@ -17,11 +18,18 @@ async function fetchCategories(): Promise<Record<string, string>> {
   };
 }
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { SelectField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfSelectFieldDynamicExample() {
   const [categories, setCategories] = React.useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = React.useState(true);
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       category: '',
     },
@@ -54,21 +62,24 @@ export default function TsfSelectFieldDynamicExample() {
       }}
       className='space-y-4'
     >
-      <SelectField
-        form={form}
+      <form.AppField
         name='category'
-        options={categories}
-        label='Category'
-        placeholder='Select a category'
-        description='Categories loaded from API'
-        formProps={{
-          validators: {
-            onChange: ({ value }) => (!value ? 'Please select a category' : undefined),
-          },
+        validators={{
+          onChange: ({ value }) => (!value ? 'Please select a category' : undefined),
         }}
+        children={(field) => (
+          <field.SelectField
+            options={categories}
+            label='Category'
+            placeholder='Select a category'
+            description='Categories loaded from API'
+          />
+        )}
       />
 
-      <SubmitButton form={form}>Submit</SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton>Submit</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

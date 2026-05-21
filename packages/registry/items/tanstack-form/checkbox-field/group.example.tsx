@@ -1,11 +1,19 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
+import { createFormHook } from '@tanstack/react-form';
 import { CheckboxField } from '@/components/ui/shuip/tanstack-form/checkbox-field';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { CheckboxField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfCheckboxFieldGroupExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       features: {
         notifications: false,
@@ -33,37 +41,45 @@ export default function TsfCheckboxFieldGroupExample() {
         <p className='text-sm text-muted-foreground'>Select the features you want to enable</p>
 
         <div className='space-y-3'>
-          <CheckboxField
-            form={form}
+          <form.AppField
             name='features.notifications'
-            label='Enable push notifications'
-            description='Receive real-time updates about your activity'
+            children={(field) => (
+              <field.CheckboxField
+                label='Enable push notifications'
+                description='Receive real-time updates about your activity'
+              />
+            )}
           />
 
-          <CheckboxField
-            form={form}
+          <form.AppField
             name='features.analytics'
-            label='Enable analytics tracking'
-            description='Help us improve by sharing usage data'
+            children={(field) => (
+              <field.CheckboxField
+                label='Enable analytics tracking'
+                description='Help us improve by sharing usage data'
+              />
+            )}
           />
 
-          <CheckboxField
-            form={form}
+          <form.AppField
             name='features.darkMode'
-            label='Enable dark mode'
-            description='Switch to a darker color scheme'
+            children={(field) => (
+              <field.CheckboxField label='Enable dark mode' description='Switch to a darker color scheme' />
+            )}
           />
 
-          <CheckboxField
-            form={form}
+          <form.AppField
             name='features.apiAccess'
-            label='Enable API access'
-            description='Get programmatic access to your data'
+            children={(field) => (
+              <field.CheckboxField label='Enable API access' description='Get programmatic access to your data' />
+            )}
           />
         </div>
       </div>
 
-      <SubmitButton form={form}>Save Preferences</SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton>Save Preferences</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

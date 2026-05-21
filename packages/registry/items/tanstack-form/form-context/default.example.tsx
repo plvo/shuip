@@ -26,7 +26,9 @@ function TextField({ label }: { label: string }) {
         onBlur={field.handleBlur}
         aria-invalid={!isValid}
       />
-      {!isValid && <FieldError errors={errors.map((message) => ({ message }))} />}
+      {!isValid && (
+        <FieldError errors={errors.map((error) => ({ message: typeof error === 'string' ? error : error?.message }))} />
+      )}
     </Field>
   );
 }

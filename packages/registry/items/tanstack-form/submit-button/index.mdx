@@ -4,53 +4,83 @@ description: Form submission button that automatically manages loading and disab
 registryName: tsf-submit-button
 ---
 
-Submit buttons need to prevent double submissions and show loading feedback. `SubmitButton` subscribes to the form's state via `form.Subscribe` to track `isSubmitting` and `canSubmit`, automatically disabling the button when the form is invalid or already submitting.
+Submit buttons need to prevent double submissions and show loading feedback. `SubmitButton` reads the surrounding form via `useFormContext` and subscribes to its state via `form.Subscribe` to track `isSubmitting` and `canSubmit`, automatically disabling the button when the form is invalid or already submitting.
 
 The component displays a `Loader2Icon` spinner when `isSubmitting` is true, providing visual feedback without manual state management. It accepts a `props` parameter for Button variants (outline, destructive, etc.) and all native button attributes.
 
+Because it consumes the form via context, render it inside `<form.AppForm>` instead of passing the form down as a prop.
+
 ### Built-in features
 
+- **Context-bound form state** via `useFormContext` — no prop drilling
 - **Auto-disabled** when `!canSubmit` or `isSubmitting`
 - **Loading spinner** via `Loader2Icon` during submission
-- **Form subscription** tracks state with zero boilerplate
 - **Button variants** via `props.variant` and `props.size`
+
+## Setup
+
+Field and form components are bound via React context. In your project, create `lib/form.ts` once:
+
+```tsx
+// lib/form.ts
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { InputField } from '@/components/ui/shuip/tanstack-form/input-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
+
+export const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { InputField },
+  formComponents: { SubmitButton },
+});
+```
+
+See the [`form-context`](/docs/tanstack-form/form-context) item for details.
 
 ## Usage with validation
 
 ```tsx
-const form = useForm({
-    defaultValues: { email: '' },
-    onSubmit: async ({ value }) => {
-      await saveData(value)
-    }
-})
+import { useAppForm } from '@/lib/form';
 
-<InputField
-    form={form}
-    name='email'
-    label='Email'
-    formProps={{
-      validators: {
-        onChange: ({ value }) => !value.includes('@') ? 'Invalid' : undefined
-      }
-    }}
+const form = useAppForm({
+  defaultValues: { email: '' },
+  onSubmit: async ({ value }) => {
+    await saveData(value);
+  },
+});
+
+<form.AppField
+  name='email'
+  validators={{
+    onChange: ({ value }) => !value.includes('@') ? 'Invalid' : undefined,
+  }}
+  children={(field) => (
+    <field.InputField label='Email' />
+  )}
 />
 
 {/* Button disabled until email is valid */}
-<SubmitButton form={form}>Submit</SubmitButton>
+<form.AppForm>
+  <form.SubmitButton>Submit</form.SubmitButton>
+</form.AppForm>
 ```
 
 
 ## Custom variants
 
 ```tsx
-<SubmitButton form={form} props={{ variant: 'outline' }}>
+<form.AppForm>
+  <form.SubmitButton props={{ variant: 'outline' }}>
     Save Draft
-</SubmitButton>
+  </form.SubmitButton>
+</form.AppForm>
 
-<SubmitButton form={form} props={{ variant: 'destructive', size: 'lg' }}>
+<form.AppForm>
+  <form.SubmitButton props={{ variant: 'destructive', size: 'lg' }}>
     Delete Account
-</SubmitButton>
+  </form.SubmitButton>
+</form.AppForm>
 ```
 
 
@@ -64,10 +94,6 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 <TypeTable
   type={{
-    form: {
-      description: 'Form instance from useForm hook (required)',
-      type: 'ReactFormApi<TFormData>',
-    },
     children: {
       description: 'Button label or content (default: "Submit")',
       type: 'React.ReactNode?',
