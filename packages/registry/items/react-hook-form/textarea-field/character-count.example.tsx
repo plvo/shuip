@@ -23,7 +23,7 @@ export default function RhfTextareaFieldCharacterCountExample() {
   });
   const lens = useLens({ control: form.control });
 
-  const tweet = form.watch('tweet');
+  const tweet = form.watch('tweet') ?? '';
   const remaining = MAX_LENGTH - tweet.length;
   const isNearLimit = remaining < 50;
   const isOverLimit = remaining < 0;
