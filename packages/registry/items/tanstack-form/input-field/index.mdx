@@ -93,6 +93,7 @@ const form = useAppForm({
     name: '',
     email: '',
     username: '',
+    age: 0,
   },
   onSubmit: async ({ value }) => {
     await saveData(value);
@@ -133,37 +134,39 @@ const form = useAppForm({
     />
   )}
 />
+
+// Numeric input — auto-detected because age is a number in defaultValues
+<form.AppField
+  name='age'
+  children={(field) => (
+    <field.InputField label='Age' props={{ min: 0, max: 120 }} />
+  )}
+/>
 ```
 
-## String fields only
+## Numeric fields
 
-`InputField` is bound to **string-typed fields** — internally it reads via `useFieldContext<string>()` and writes `e.target.value` (always a string) back to form state. Setting `props={{ type: 'number' }}` does not parse the value as a number; the form state will still hold a string.
+`InputField` handles both string and numeric fields. It detects numeric mode when either:
 
-For numeric, date, or other non-string fields, build a dedicated component that uses `useFieldContext<number>()` (or whichever type) and parses the input value appropriately:
+- `props.type` is `'number'` or `'range'`, or
+- the field's current value is a `number` (typically because `defaultValues` declares it as one)
+
+In numeric mode the input renders as `type='number'` and writes back `e.target.valueAsNumber` — empty input becomes `NaN`, which validators can check with `Number.isNaN(value)`. In string mode it passes `e.target.value` through unchanged.
 
 ```tsx
-'use client';
+const form = useAppForm({
+  defaultValues: { quantity: 1, ratio: 0.5 },
+  validators: {
+    onChange: ({ value }) =>
+      Number.isNaN(value.quantity) ? { fields: { quantity: 'Required' } } : undefined,
+  },
+});
 
-import { useFieldContext } from '@/components/ui/shuip/tanstack-form/form-context';
-import { Input } from '@/components/ui/input';
-
-export function NumberField({ label }: { label: string }) {
-  const field = useFieldContext<number>();
-  return (
-    <label>
-      {label}
-      <Input
-        type='number'
-        value={field.state.value}
-        onChange={(e) => field.handleChange(e.target.valueAsNumber)}
-        onBlur={field.handleBlur}
-      />
-    </label>
-  );
-}
+<form.AppField name='quantity' children={(f) => <f.InputField label='Quantity' />} />
+<form.AppField name='ratio'    children={(f) => <f.InputField label='Ratio' props={{ type: 'range', min: 0, max: 1, step: 0.1 }} />} />
 ```
 
-Then register it in your `lib/form.ts` alongside `InputField`.
+If the field type is `number | undefined` / `number | null` and `defaultValues` starts as `undefined`/`null`, the runtime type check can't infer numeric mode — set `props={{ type: 'number' }}` explicitly in that case.
 
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
