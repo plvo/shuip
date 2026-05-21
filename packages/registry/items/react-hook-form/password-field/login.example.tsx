@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -14,13 +15,16 @@ const zodSchema = z.object({
   password: z.string().nonempty({ message: 'Password is required' }),
 });
 
-export default function InputFieldExample() {
-  const form = useForm({
+type Values = z.infer<typeof zodSchema>;
+
+export default function PasswordFieldLoginExample() {
+  const form = useForm<Values>({
     defaultValues: { email: '', password: '' },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
       alert(`Hello ${values.email} ${values.password}`);
     } catch (error) {
@@ -36,10 +40,10 @@ export default function InputFieldExample() {
             <CardTitle>Login</CardTitle>
           </CardHeader>
           <CardContent className='space-y-4'>
-            <InputField register={form.register('email')} label='Email' placeholder='john@example.com' />
+            <InputField lens={lens.focus('email')} label='Email' placeholder='john@example.com' />
 
             <PasswordField
-              register={form.register('password')}
+              lens={lens.focus('password')}
               label='Password'
               placeholder='Password'
               tooltip='Must contain: 8+ characters, uppercase, number, special char'
