@@ -27,7 +27,7 @@ export function InputField({ label, description, fieldProps, props, tooltip }: I
           id={field.name}
           type={isNumeric ? 'number' : 'text'}
           name={field.name}
-          value={field.state.value}
+          value={typeof field.state.value === 'number' && Number.isNaN(field.state.value) ? '' : field.state.value}
           onChange={(e) => field.handleChange(isNumeric ? e.target.valueAsNumber : e.target.value)}
           onBlur={field.handleBlur}
           aria-invalid={!isValid}
@@ -46,7 +46,12 @@ export function InputField({ label, description, fieldProps, props, tooltip }: I
           </InputGroupAddon>
         )}
       </InputGroup>
-      {!isValid && <FieldError className='text-xs text-left' errors={errors.map((error) => ({ message: error }))} />}
+      {!isValid && (
+        <FieldError
+          className='text-xs text-left'
+          errors={errors.map((error) => ({ message: typeof error === 'string' ? error : error?.message }))}
+        />
+      )}
       {description && <FieldDescription className='text-xs'>{description}</FieldDescription>}
     </Field>
   );

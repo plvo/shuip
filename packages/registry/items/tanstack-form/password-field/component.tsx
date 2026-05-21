@@ -55,7 +55,12 @@ export function PasswordField({ label, description, fieldProps, props, tooltip }
           )}
         </InputGroupAddon>
       </InputGroup>
-      {!isValid && <FieldError className='text-xs text-left' errors={errors.map((error) => ({ message: error }))} />}
+      {!isValid && (
+        <FieldError
+          className='text-xs text-left'
+          errors={errors.map((error) => ({ message: typeof error === 'string' ? error : error?.message }))}
+        />
+      )}
       {description && <FieldDescription className='text-xs'>{description}</FieldDescription>}
     </Field>
   );
