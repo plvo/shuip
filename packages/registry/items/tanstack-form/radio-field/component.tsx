@@ -39,7 +39,12 @@ export function RadioField({ options, label, description, fieldProps, props }: R
           </div>
         ))}
       </RadioGroup>
-      {!isValid && <FieldError className='text-xs text-left' errors={errors.map((error) => ({ message: error }))} />}
+      {!isValid && (
+        <FieldError
+          className='text-xs text-left'
+          errors={errors.map((error) => ({ message: typeof error === 'string' ? error : error?.message }))}
+        />
+      )}
       {description && <FieldDescription className='text-xs'>{description}</FieldDescription>}
     </Field>
   );

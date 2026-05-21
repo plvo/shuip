@@ -39,7 +39,12 @@ export function SelectField({ options, label, description, placeholder, fieldPro
           ))}
         </SelectContent>
       </Select>
-      {!isValid && <FieldError className='text-xs text-left' errors={errors.map((error) => ({ message: error }))} />}
+      {!isValid && (
+        <FieldError
+          className='text-xs text-left'
+          errors={errors.map((error) => ({ message: typeof error === 'string' ? error : error?.message }))}
+        />
+      )}
       {description && <FieldDescription className='text-xs'>{description}</FieldDescription>}
     </Field>
   );
