@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -14,8 +15,10 @@ const zodSchema = z.object({
   companySize: z.string().optional(),
 });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function RhfSelectFieldConditionalExample() {
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: {
       accountType: undefined,
       businessName: '',
@@ -23,10 +26,11 @@ export default function RhfSelectFieldConditionalExample() {
     },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
   const accountType = form.watch('accountType');
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
       alert(JSON.stringify(values, null, 2));
     } catch (error) {
@@ -38,7 +42,7 @@ export default function RhfSelectFieldConditionalExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <SelectField
-          register={form.register('accountType')}
+          lens={lens.focus('accountType')}
           options={{
             Personal: 'personal',
             Business: 'business',
@@ -52,14 +56,14 @@ export default function RhfSelectFieldConditionalExample() {
         {accountType === 'business' && (
           <>
             <InputField
-              register={form.register('businessName')}
+              lens={lens.focus('businessName')}
               label='Business Name'
               placeholder='Enter your business name'
               description='Legal name of your business'
             />
 
             <SelectField
-              register={form.register('companySize')}
+              lens={lens.focus('companySize')}
               options={{
                 '1-10 employees': '1-10',
                 '11-50 employees': '11-50',

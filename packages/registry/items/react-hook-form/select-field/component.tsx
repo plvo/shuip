@@ -1,5 +1,5 @@
+import type { Lens } from '@hookform/lenses';
 import type { SelectProps } from '@radix-ui/react-select';
-import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -14,32 +14,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
  */
 export type SelectFieldOption = Record<string, string>;
 
-export interface SelectFieldProps<TFieldValues extends FieldValues> extends SelectProps {
-  register: UseFormRegisterReturn<FieldPath<TFieldValues>>;
+export interface SelectFieldProps extends SelectProps {
+  lens: Lens<string>;
   options: SelectFieldOption;
   label?: string;
   placeholder?: string;
   description?: string;
-  defaultValue?: TFieldValues[FieldPath<TFieldValues>];
 }
 
-export function SelectField<TFieldValues extends FieldValues>({
-  register,
-  options,
-  label,
-  description,
-  placeholder,
-  defaultValue,
-  ...props
-}: SelectFieldProps<TFieldValues>) {
+export function SelectField({ lens, options, label, description, placeholder, ...props }: SelectFieldProps) {
   return (
     <FormField
-      {...register}
-      defaultValue={defaultValue}
+      {...lens.interop()}
       render={({ field, fieldState }) => (
         <FormItem data-invalid={fieldState.invalid}>
           {label && <FormLabel>{label}</FormLabel>}
-          <Select defaultValue={field.value} onValueChange={field.onChange} {...props}>
+          <Select value={field.value} onValueChange={field.onChange} {...props}>
             <FormControl>
               <SelectTrigger aria-invalid={fieldState.invalid} className='w-full'>
                 <SelectValue placeholder={placeholder} />

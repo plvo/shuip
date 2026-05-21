@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -18,15 +19,16 @@ const zodSchema = z.object({
   selection: z.enum(Object.values(options) as [string]),
 });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function SelectFieldExample() {
-  const form = useForm({
-    defaultValues: {
-      selection: '1',
-    },
+  const form = useForm<Values>({
+    defaultValues: { selection: '3' },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
       alert(`Selection: ${values.selection}`);
     } catch (error) {
@@ -38,11 +40,10 @@ export default function SelectFieldExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <SelectField
-          register={form.register('selection')}
+          lens={lens.focus('selection')}
           placeholder='Select an option'
           label='selection'
           options={options}
-          defaultValue={'3'}
         />
         <SubmitButton>Check</SubmitButton>
       </form>
