@@ -1,12 +1,20 @@
 'use client';
 
-import { useForm, useStore } from '@tanstack/react-form';
+import { createFormHook, useStore } from '@tanstack/react-form';
 import { Card } from '@/components/ui/card';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 import { TextareaField } from '@/components/ui/shuip/tanstack-form/textarea-field';
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { TextareaField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfTextareaFieldMarkdownPreviewExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       content: '',
     },
@@ -29,35 +37,36 @@ export default function TsfTextareaFieldMarkdownPreviewExample() {
     >
       <div className='flex max-md:flex-col items-center gap-4 w-full'>
         <div className='mt-4'>
-          <TextareaField
-            form={form}
+          <form.AppField
             name='content'
-            label='Content'
-            description='Supports basic Markdown formatting'
-            tooltip={
-              <div className='space-y-1 text-sm'>
-                <p className='font-semibold'>Markdown syntax:</p>
-                <p># Heading 1</p>
-                <p>## Heading 2</p>
-                <p>**bold** *italic*</p>
-                <p>`code`</p>
-                <p>- List item</p>
-              </div>
-            }
-            props={{
-              rows: 12,
-              placeholder: '# My Article\n\nWrite your content here...',
-              className: 'min-h-[300px]',
-            }}
-            formProps={{
-              validators: {
-                onChange: ({ value }) => {
-                  if (!value) return 'Content is required';
-                  if (value.length < 10) return 'Content must be at least 10 characters';
-                  return undefined;
-                },
+            validators={{
+              onChange: ({ value }) => {
+                if (!value) return 'Content is required';
+                if (value.length < 10) return 'Content must be at least 10 characters';
+                return undefined;
               },
             }}
+            children={(field) => (
+              <field.TextareaField
+                label='Content'
+                description='Supports basic Markdown formatting'
+                tooltip={
+                  <div className='space-y-1 text-sm'>
+                    <p className='font-semibold'>Markdown syntax:</p>
+                    <p># Heading 1</p>
+                    <p>## Heading 2</p>
+                    <p>**bold** *italic*</p>
+                    <p>`code`</p>
+                    <p>- List item</p>
+                  </div>
+                }
+                props={{
+                  rows: 12,
+                  placeholder: '# My Article\n\nWrite your content here...',
+                  className: 'min-h-[300px]',
+                }}
+              />
+            )}
           />
         </div>
 
@@ -70,7 +79,9 @@ export default function TsfTextareaFieldMarkdownPreviewExample() {
         </Card>
       </div>
 
-      <SubmitButton form={form}>Publish Article</SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton>Publish Article</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

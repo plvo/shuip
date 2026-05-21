@@ -1,13 +1,21 @@
 'use client';
 
-import { useForm, useStore } from '@tanstack/react-form';
+import { createFormHook, useStore } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 import { TextareaField } from '@/components/ui/shuip/tanstack-form/textarea-field';
 
 const MAX_LENGTH = 280;
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { TextareaField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfTextareaFieldCharacterCountExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       tweet: '',
     },
@@ -31,24 +39,25 @@ export default function TsfTextareaFieldCharacterCountExample() {
       className='space-y-4 w-full max-w-lg'
     >
       <div className='space-y-2'>
-        <TextareaField
-          form={form}
+        <form.AppField
           name='tweet'
-          label='Tweet'
-          props={{
-            rows: 4,
-            maxLength: MAX_LENGTH,
-            placeholder: "What's happening?",
-          }}
-          formProps={{
-            validators: {
-              onChange: ({ value }) => {
-                if (!value) return 'Tweet cannot be empty';
-                if (value.length > MAX_LENGTH) return `Tweet is too long (max ${MAX_LENGTH} characters)`;
-                return undefined;
-              },
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) return 'Tweet cannot be empty';
+              if (value.length > MAX_LENGTH) return `Tweet is too long (max ${MAX_LENGTH} characters)`;
+              return undefined;
             },
           }}
+          children={(field) => (
+            <field.TextareaField
+              label='Tweet'
+              props={{
+                rows: 4,
+                maxLength: MAX_LENGTH,
+                placeholder: "What's happening?",
+              }}
+            />
+          )}
         />
 
         <div className='flex justify-between text-sm'>
@@ -65,7 +74,9 @@ export default function TsfTextareaFieldCharacterCountExample() {
         </div>
       </div>
 
-      <SubmitButton form={form}>Post Tweet</SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton>Post Tweet</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

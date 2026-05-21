@@ -1,12 +1,20 @@
 'use client';
 
-import { useForm, useStore } from '@tanstack/react-form';
+import { createFormHook, useStore } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { InputField } from '@/components/ui/shuip/tanstack-form/input-field';
 import { SelectField } from '@/components/ui/shuip/tanstack-form/select-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { InputField, SelectField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfSelectFieldConditionalExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       accountType: '',
       businessName: '',
@@ -28,58 +36,59 @@ export default function TsfSelectFieldConditionalExample() {
       }}
       className='space-y-4'
     >
-      <SelectField
-        form={form}
+      <form.AppField
         name='accountType'
-        options={{
-          Personal: 'personal',
-          Business: 'business',
+        validators={{
+          onChange: ({ value }) => (!value ? 'Please select an account type' : undefined),
         }}
-        label='Account Type'
-        placeholder='Select account type'
-        formProps={{
-          validators: {
-            onChange: ({ value }) => (!value ? 'Please select an account type' : undefined),
-          },
-        }}
+        children={(field) => (
+          <field.SelectField
+            options={{
+              Personal: 'personal',
+              Business: 'business',
+            }}
+            label='Account Type'
+            placeholder='Select account type'
+          />
+        )}
       />
 
       {/* Show business fields only when Business is selected */}
       {accountType === 'business' && (
         <>
-          <InputField
-            form={form}
+          <form.AppField
             name='businessName'
-            label='Business Name'
-            formProps={{
-              validators: {
-                onChange: ({ value }) => (!value ? 'Business name is required' : undefined),
-              },
+            validators={{
+              onChange: ({ value }) => (!value ? 'Business name is required' : undefined),
             }}
+            children={(field) => <field.InputField label='Business Name' />}
           />
 
-          <SelectField
-            form={form}
+          <form.AppField
             name='companySize'
-            options={{
-              '1-10 employees': '1-10',
-              '11-50 employees': '11-50',
-              '51-200 employees': '51-200',
-              '201-1000 employees': '201-1000',
-              '1000+ employees': '1000+',
+            validators={{
+              onChange: ({ value }) => (!value ? 'Please select company size' : undefined),
             }}
-            label='Company Size'
-            placeholder='Select company size'
-            formProps={{
-              validators: {
-                onChange: ({ value }) => (!value ? 'Please select company size' : undefined),
-              },
-            }}
+            children={(field) => (
+              <field.SelectField
+                options={{
+                  '1-10 employees': '1-10',
+                  '11-50 employees': '11-50',
+                  '51-200 employees': '51-200',
+                  '201-1000 employees': '201-1000',
+                  '1000+ employees': '1000+',
+                }}
+                label='Company Size'
+                placeholder='Select company size'
+              />
+            )}
           />
         </>
       )}
 
-      <SubmitButton form={form}>Create Account</SubmitButton>
+      <form.AppForm>
+        <form.SubmitButton>Create Account</form.SubmitButton>
+      </form.AppForm>
     </form>
   );
 }

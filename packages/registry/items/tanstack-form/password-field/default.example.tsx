@@ -1,11 +1,19 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { PasswordField } from '@/components/ui/shuip/tanstack-form/password-field';
 import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { PasswordField },
+  formComponents: { SubmitButton },
+});
+
 export default function TsfPasswordFieldExample() {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       password: '',
     },
@@ -24,18 +32,17 @@ export default function TsfPasswordFieldExample() {
       }}
       className='space-y-4'
     >
-      <PasswordField
-        form={form}
+      <form.AppField
         name='password'
-        label='Password'
-        formProps={{
-          validators: {
-            onChange: ({ value }) => (value.length < 8 ? 'Password must be at least 8 characters' : undefined),
-          },
+        validators={{
+          onChange: ({ value }) => (value.length < 8 ? 'Password must be at least 8 characters' : undefined),
         }}
+        children={(field) => <field.PasswordField label='Password' />}
       />
 
-      <SubmitButton form={form} />
+      <form.AppForm>
+        <form.SubmitButton />
+      </form.AppForm>
     </form>
   );
 }
