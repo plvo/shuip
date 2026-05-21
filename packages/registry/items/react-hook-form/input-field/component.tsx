@@ -1,19 +1,20 @@
+import type { Lens } from '@hookform/lenses';
 import { InfoIcon } from 'lucide-react';
 import type * as React from 'react';
-import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export interface InputFieldProps<T extends FieldValues> extends React.ComponentProps<typeof InputGroupInput> {
-  register: UseFormRegisterReturn<FieldPath<T>>;
+export interface InputFieldProps<T extends string | number = string>
+  extends Omit<React.ComponentProps<typeof InputGroupInput>, 'value' | 'onChange'> {
+  lens: Lens<T>;
   label?: string;
   description?: string;
   tooltip?: React.ReactNode;
 }
 
-export function InputField<T extends FieldValues>({
-  register,
+export function InputField<T extends string | number = string>({
+  lens,
   label,
   description,
   tooltip,
@@ -21,14 +22,24 @@ export function InputField<T extends FieldValues>({
 }: InputFieldProps<T>) {
   return (
     <FormField
-      {...register}
+      {...lens.interop()}
       render={({ field, fieldState }) => {
+        const isNumeric = props.type === 'number' || props.type === 'range' || typeof field.value === 'number';
+        const value = typeof field.value === 'number' && Number.isNaN(field.value) ? '' : field.value;
+
         return (
           <FormItem data-invalid={fieldState.invalid}>
             {label && <FormLabel>{label}</FormLabel>}
             <FormControl>
               <InputGroup>
-                <InputGroupInput {...field} type='text' aria-invalid={fieldState.invalid} {...props} />
+                <InputGroupInput
+                  {...field}
+                  type={isNumeric ? 'number' : 'text'}
+                  value={value}
+                  onChange={(e) => field.onChange(isNumeric ? e.target.valueAsNumber : e.target.value)}
+                  aria-invalid={fieldState.invalid}
+                  {...props}
+                />
                 {tooltip && (
                   <InputGroupAddon align='inline-end'>
                     <Tooltip>
