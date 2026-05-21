@@ -61,6 +61,7 @@
       "name": "@repo/registry",
       "version": "0.0.0",
       "dependencies": {
+        "@hookform/lenses": "catalog:forms",
         "@hookform/resolvers": "catalog:forms",
         "@radix-ui/react-icons": "catalog:radix",
         "@repo/ui": "workspace:*",
@@ -144,6 +145,7 @@
   },
   "catalogs": {
     "forms": {
+      "@hookform/lenses": "^0.9.0",
       "@hookform/resolvers": "^5.2.2",
       "@tanstack/react-form": "^1.29.1",
       "@tanstack/react-query": "^5.100.9",
@@ -325,6 +327,8 @@
     "@fumadocs/tailwind": ["@fumadocs/tailwind@0.0.5", "", { "peerDependencies": { "@tailwindcss/oxide": "^4.0.0", "tailwindcss": "^4.0.0" }, "optionalPeers": ["@tailwindcss/oxide", "tailwindcss"] }, "sha512-ENKPWUDRmriccsrUDE4bDBq3FNr/ms3BP2rWlsAEMV1yP23pcCaan+ceGfeBUsAQjw7sj9Q3R4Kl3g/TCStPzQ=="],
 
     "@hono/node-server": ["@hono/node-server@1.19.14", "", { "peerDependencies": { "hono": "^4" } }, "sha512-GwtvgtXxnWsucXvbQXkRgqksiH2Qed37H9xHZocE5sA3N8O8O8/8FA3uclQXxXVzc9XBZuEOMK7+r02FmSpHtw=="],
+
+    "@hookform/lenses": ["@hookform/lenses@0.9.0", "", { "peerDependencies": { "react": "^16.8.0 || ^17 || ^18 || ^19", "react-hook-form": "^7.55.0" } }, "sha512-lg/0FeKekRmBCPwPjI5+N63u1vNXrbEMfKen+KSoBo7QpKQEm8gYPvandXAMNxCExco9xXlIP52r+o7BS7cWQQ=="],
 
     "@hookform/resolvers": ["@hookform/resolvers@5.2.2", "", { "dependencies": { "@standard-schema/utils": "^0.3.0" }, "peerDependencies": { "react-hook-form": "^7.55.0" } }, "sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA=="],
 

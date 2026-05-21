@@ -16,6 +16,7 @@
     "react-dom": "catalog:",
     "react-hook-form": "catalog:forms",
     "@hookform/resolvers": "catalog:forms",
+    "@hookform/lenses": "catalog:forms",
     "@tanstack/react-form": "catalog:forms",
     "@tanstack/react-query": "catalog:forms",
     "react-error-boundary": "catalog:forms",
