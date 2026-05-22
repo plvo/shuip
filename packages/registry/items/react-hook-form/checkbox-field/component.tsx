@@ -1,3 +1,5 @@
+'use client';
+
 import type { Lens } from '@hookform/lenses';
 import type * as React from 'react';
 import { useController } from 'react-hook-form';

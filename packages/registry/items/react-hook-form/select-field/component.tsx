@@ -1,3 +1,5 @@
+'use client';
+
 import type { Lens } from '@hookform/lenses';
 import type { SelectProps } from '@radix-ui/react-select';
 import { useController } from 'react-hook-form';

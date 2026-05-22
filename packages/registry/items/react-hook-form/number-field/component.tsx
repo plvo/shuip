@@ -1,3 +1,5 @@
+'use client';
+
 import type { Lens } from '@hookform/lenses';
 import { InfoIcon } from 'lucide-react';
 import type * as React from 'react';
