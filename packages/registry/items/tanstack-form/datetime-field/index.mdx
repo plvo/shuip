@@ -1,0 +1,108 @@
+---
+title: Datetime Field
+description: Single date and time picker integrated with TanStack Form via React context. Stores a single Date carrying day, hours and minutes.
+registryName: tsf-datetime-field
+---
+
+`DatetimeField` is a single-value date + time picker that stores its selection as one `Date` carrying both the day and the hours/minutes. It wraps shadcn's `Calendar` and a native `<input type="time">` inside a `Popover`, and reads the surrounding field via `useFieldContext` from your `useAppForm` setup.
+
+For date-only fields, use `Calendar` directly. This component is for cases where the time of day matters as much as the date — meeting start, deadline, deliverable, etc.
+
+#### Built-in features
+
+- **Single `Date` value**: day + hours + minutes live in one field — no separate date/time pieces to reconcile
+- **Context-bound field state**: reads the field via `useFieldContext` — no prop drilling
+- **Locale-aware label**: trigger renders via `date-fns` `format(value, 'PPp', { locale })`
+- **Bounds**: `minDate` / `maxDate` disable out-of-range days on the calendar
+- **Time step**: native `<input type="time" step="...">` for minute or second granularity
+
+## Setup
+
+Register the field component on your `useAppForm` once, alongside the rest of your shuip TSF components:
+
+```tsx
+// lib/form.ts
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { DatetimeField } from '@/components/ui/shuip/tanstack-form/datetime-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
+
+export const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { DatetimeField },
+  formComponents: { SubmitButton },
+});
+```
+
+See the [`form-context`](/docs/tanstack-form/form-context) item for details.
+
+Then compose it inside `<form.AppField>`:
+
+```tsx
+const form = useAppForm({
+  defaultValues: { scheduledAt: undefined as Date | undefined },
+  onSubmit: async ({ value }) => save(value),
+});
+
+<form.AppField
+  name='scheduledAt'
+  children={(field) => <field.DatetimeField label='Scheduled at' />}
+/>
+```
+
+When the field's value can be `undefined`, type the default value with an assertion as shown — TanStack Form infers `Date | undefined` from it.
+
+## Behavior
+
+- **First date pick:** when the field is empty and the user picks a day, hours and minutes default to `00:00`. When the field already has a value, the existing hours/minutes are preserved.
+- **Time change:** only the hours/minutes are updated; the date portion is preserved.
+- **Trigger label:** `format(value, 'PPp', { locale })` — e.g. `May 22, 2026, 2:30 PM`. When empty, falls back to `placeholder`.
+
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'tsf-datetime-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the trigger',
+      type: 'string?',
+    },
+    placeholder: {
+      description: 'Trigger label shown when no date is selected',
+      type: 'string?',
+      default: "'Pick a date & time'",
+    },
+    minDate: {
+      description: 'Earliest selectable date (inclusive). Disables earlier days on the calendar.',
+      type: 'Date?',
+    },
+    maxDate: {
+      description: 'Latest selectable date (inclusive). Disables later days on the calendar.',
+      type: 'Date?',
+    },
+    locale: {
+      description: 'date-fns locale used for the trigger label and the calendar.',
+      type: 'Locale?',
+    },
+    disabled: {
+      description: 'Disables the trigger button.',
+      type: 'boolean?',
+    },
+    step: {
+      description: 'Time input step in seconds. 60 = 1 minute, 1 = 1 second.',
+      type: 'number?',
+      default: '60',
+    },
+  }}
+/>
