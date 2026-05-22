@@ -1,5 +1,6 @@
 # Auto-generated symlinks — do not commit (created by packages/registry/scripts/generate.ts)
 checkbox-field.mdx
+date-range-field.mdx
 form-context.mdx
 input-field.mdx
 password-field.mdx
