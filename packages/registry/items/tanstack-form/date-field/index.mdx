@@ -1,0 +1,128 @@
+---
+title: Date Field
+description: Single-date picker integrated with TanStack Form via React context. Wraps the shadcn Calendar inside a Popover triggered by an outline Button.
+registryName: tsf-date-field
+---
+
+`DateField` is a single-date picker that encapsulates TanStack Form's field management with the shadcn `Calendar` primitive. The trigger is an outline `Button` (full-width) that shows the selected date formatted via [`date-fns`](https://date-fns.org); clicking it opens a `Popover` containing the calendar.
+
+It reads the surrounding field via `useFieldContext<Date | undefined>()`, so you compose it inside a `<form.AppField>` rather than passing a `form` instance down. `undefined` represents an empty selection (matching `react-day-picker`'s convention).
+
+#### Built-in features
+
+- **Context-bound field state**: reads the field via `useFieldContext` — no prop drilling
+- **Locale-aware formatting**: defaults to `en-US`; pass any `date-fns/locale` via the `locale` prop
+- **Bounded selection**: `minDate` / `maxDate` disable days outside the range in the calendar UI
+- **Accessible trigger**: a real `<Button>` with `aria-invalid` reflecting `!isValid`
+- **Validator-friendly**: works with TanStack Form's native validators or any standard schema
+
+## Setup
+
+Field components are bound via React context. In your project, create `lib/form.ts` once:
+
+```tsx
+// lib/form.ts
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { DateField } from '@/components/ui/shuip/tanstack-form/date-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
+
+export const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { DateField },
+  formComponents: { SubmitButton },
+});
+```
+
+See the [`form-context`](/docs/tanstack-form/form-context) item for details.
+
+Then compose the field inside `<form.AppField>`:
+
+```tsx
+import { useAppForm } from '@/lib/form';
+
+const form = useAppForm({
+  defaultValues: { dueDate: undefined as Date | undefined },
+  onSubmit: async ({ value }) => saveData(value),
+});
+
+<form.AppField
+  name='dueDate'
+  validators={{
+    onChange: ({ value }) => (value ? undefined : 'Pick a due date'),
+  }}
+  children={(field) => <field.DateField label='Due date' />}
+/>
+```
+
+## Bounded selection
+
+Use `minDate` and `maxDate` to disable out-of-range days directly in the calendar:
+
+```tsx
+<form.AppField
+  name='appointment'
+  children={(field) => (
+    <field.DateField label='Appointment' minDate={new Date()} maxDate={oneYearFromNow} />
+  )}
+/>
+```
+
+Disabled days remain visible but cannot be selected. Mirror the bounds in your validator so submission also rejects out-of-range values.
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'tsf-date-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the trigger',
+      type: 'string?',
+    },
+    placeholder: {
+      description: 'Text shown on the trigger when no date is selected',
+      type: 'string?',
+      default: "'Pick a date'",
+    },
+    minDate: {
+      description: 'Earliest selectable date (inclusive). Days before are disabled.',
+      type: 'Date?',
+    },
+    maxDate: {
+      description: 'Latest selectable date (inclusive). Days after are disabled.',
+      type: 'Date?',
+    },
+    locale: {
+      description: 'date-fns locale used for formatting and weekday labels',
+      type: 'Locale?',
+      default: 'enUS',
+    },
+    dateFormat: {
+      description: 'date-fns format string for the trigger label',
+      type: 'string?',
+      default: "'PPP'",
+    },
+    disabled: {
+      description: 'Disables the trigger button',
+      type: 'boolean?',
+    },
+    fieldProps: {
+      description: 'Props passed to the Field wrapper component',
+      type: 'React.ComponentProps<typeof Field>?',
+    },
+    triggerProps: {
+      description: 'Additional props forwarded to the trigger Button',
+      type: 'React.ComponentProps<typeof Button>?',
+    },
+  }}
+/>
