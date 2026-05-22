@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
-import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
+import { NumberField } from '@/components/ui/shuip/react-hook-form/number-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
 const zodSchema = z.object({
@@ -15,7 +15,7 @@ const zodSchema = z.object({
 
 type Values = z.infer<typeof zodSchema>;
 
-export default function RhfInputFieldNumericExample() {
+export default function RhfNumberFieldExample() {
   const form = useForm<Values>({
     defaultValues: { quantity: 1, ratio: 0.5 },
     resolver: zodResolver(zodSchema),
@@ -33,14 +33,9 @@ export default function RhfInputFieldNumericExample() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <InputField
-          lens={lens.focus('quantity')}
-          label='Quantity'
-          description='Auto-detected numeric because defaultValues is a number'
-          placeholder='1'
-        />
+        <NumberField lens={lens.focus('quantity')} label='Quantity' description='Integer quantity' placeholder='1' />
 
-        <InputField
+        <NumberField
           lens={lens.focus('ratio')}
           type='range'
           label='Ratio'

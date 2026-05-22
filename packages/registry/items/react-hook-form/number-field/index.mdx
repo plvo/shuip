@@ -1,0 +1,72 @@
+---
+title: Number Field
+description: Numeric input component integrated with React Hook Form via typed lens binding from @hookform/lenses. Writes back valueAsNumber, supports range sliders and tooltips.
+registryName: rhf-number-field
+---
+
+`NumberField` binds a numeric form field (`Lens<number>`) to a `type='number'` or `type='range'` input. The input writes back `e.target.valueAsNumber` so the form state stays correctly typed as `number`. Empty input becomes `NaN`, which validators can check with `Number.isNaN(value)`.
+
+For text fields, use [`InputField`](/docs/react-hook-form/input-field) instead.
+
+#### Built-in features
+
+- **Typed lens binding**: `lens.focus('quantity')` requires a numeric form field — typing is enforced
+- **`valueAsNumber` write-back**: form state stays `number`, not `string`
+- **Range slider support**: pass `type='range'` to render a slider
+- **Tooltip integration**: optional InfoIcon button with tooltip content via `tooltip` prop
+- **InputGroup ready**: built on shadcn InputGroup for seamless addon integration
+- **Zod validation**: native integration with react-hook-form and Zod via resolver
+
+## Setup
+
+```tsx
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { NumberField } from '@/components/ui/shuip/react-hook-form/number-field';
+
+const form = useForm<{ quantity: number; ratio: number }>({
+  defaultValues: { quantity: 1, ratio: 0.5 },
+});
+const lens = useLens({ control: form.control });
+
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <NumberField lens={lens.focus('quantity')} label='Quantity' />
+    <NumberField lens={lens.focus('ratio')} type='range' label='Ratio' min={0} max={1} step={0.1} />
+  </form>
+</Form>
+```
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'rhf-number-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    lens: {
+      description: 'Typed lens from useLens, focused on a numeric form field.',
+      type: 'Lens<number>',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the input',
+      type: 'string?',
+    },
+    tooltip: {
+      description: 'Tooltip content displayed in an info icon button',
+      type: 'React.ReactNode?',
+    },
+    props: {
+      description: "Native HTML input props (type, min, max, step, etc.) — spread on InputGroupInput, except value/onChange which are managed. Defaults type to 'number'.",
+      type: "Omit<React.ComponentProps<typeof InputGroupInput>, 'value' | 'onChange'>",
+    },
+  }}
+/>

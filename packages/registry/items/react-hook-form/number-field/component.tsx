@@ -6,15 +6,17 @@ import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export interface InputFieldProps extends Omit<React.ComponentProps<typeof InputGroupInput>, 'value' | 'onChange'> {
-  lens: Lens<string>;
+export interface NumberFieldProps extends Omit<React.ComponentProps<typeof InputGroupInput>, 'value' | 'onChange'> {
+  lens: Lens<number>;
   label?: string;
   description?: string;
   tooltip?: React.ReactNode;
 }
 
-export function InputField({ lens, label, description, tooltip, ...props }: InputFieldProps) {
+export function NumberField({ lens, label, description, tooltip, type = 'number', ...props }: NumberFieldProps) {
   const { field, fieldState } = useController(lens.interop());
+
+  const value = Number.isNaN(field.value) ? '' : field.value;
 
   return (
     <Field className='gap-2' data-invalid={fieldState.invalid}>
@@ -24,7 +26,9 @@ export function InputField({ lens, label, description, tooltip, ...props }: Inpu
           {...field}
           {...props}
           id={field.name}
-          value={field.value ?? ''}
+          type={type}
+          value={value}
+          onChange={(e) => field.onChange(e.target.valueAsNumber)}
           aria-invalid={fieldState.invalid}
         />
         {tooltip && (

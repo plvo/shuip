@@ -7,7 +7,7 @@ import { useController } from 'react-hook-form';
 import { z } from 'zod';
 import { getPlaceDetails, getPlacesAutocomplete } from '@/actions/shuip/places';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -214,84 +214,85 @@ export function AddressField({
     }, 150);
   };
 
+  const fullAddressInvalid = fullAddress.fieldState.invalid;
+
   return (
-    <FormField
-      {...lens.focus('fullAddress').interop()}
-      render={({ field, fieldState }) => (
-        <FormItem data-invalid={fieldState.invalid}>
-          <FormLabel className='flex items-center justify-between'>
-            {label}
-            <FormMessage className='max-sm:hidden text-xs opacity-80' />
-          </FormLabel>
-          <div className='relative'>
-            <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <div className='relative'>
-                    <Input
-                      ref={inputRef}
-                      value={field.value ?? ''}
-                      placeholder={placeholder}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        field.onChange(value);
-                        setSearchQuery(value);
-                      }}
-                      onFocus={handleFocus}
-                      onBlur={handleBlur}
-                      onKeyDown={handleKeyDown}
-                      autoComplete='off'
-                      aria-invalid={fieldState.invalid}
-                      {...props}
-                    />
-                    <div className='absolute inset-y-0 right-0 flex items-center pr-3'>
-                      {isPending ? (
-                        <Loader2 className='size-4 animate-spin text-muted-foreground' />
-                      ) : (
-                        <MapPin className='size-4 text-muted-foreground' />
+    <Field className='gap-2' data-invalid={fullAddressInvalid}>
+      <FieldLabel htmlFor={fullAddress.field.name} className='flex items-center justify-between'>
+        {label}
+        {fullAddressInvalid && (
+          <FieldError className='max-sm:hidden text-xs opacity-80' errors={[fullAddress.fieldState.error]} />
+        )}
+      </FieldLabel>
+      <div className='relative'>
+        <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
+          <PopoverTrigger asChild>
+            <div className='relative'>
+              <Input
+                ref={inputRef}
+                id={fullAddress.field.name}
+                name={fullAddress.field.name}
+                value={fullAddress.field.value ?? ''}
+                placeholder={placeholder}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  fullAddress.field.onChange(value);
+                  setSearchQuery(value);
+                }}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onKeyDown={handleKeyDown}
+                autoComplete='off'
+                aria-invalid={fullAddressInvalid}
+                {...props}
+              />
+              <div className='absolute inset-y-0 right-0 flex items-center pr-3'>
+                {isPending ? (
+                  <Loader2 className='size-4 animate-spin text-muted-foreground' />
+                ) : (
+                  <MapPin className='size-4 text-muted-foreground' />
+                )}
+              </div>
+            </div>
+          </PopoverTrigger>
+          <PopoverContent
+            ref={popoverRef}
+            className='p-0'
+            align='start'
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            style={{ width: 'var(--radix-popover-trigger-width)' }}
+          >
+            <Command className='w-full'>
+              <CommandList className='max-h-60'>
+                <CommandEmpty>{isPending ? 'Searching...' : 'No addresses found'}</CommandEmpty>
+                <CommandGroup>
+                  {suggestions.map((suggestion, index) => (
+                    <CommandItem
+                      key={suggestion.placeId}
+                      value={suggestion.description}
+                      onSelect={() => handleSelectAddress(suggestion)}
+                      className={cn(
+                        'flex items-start space-x-2 p-3 cursor-pointer',
+                        selectedIndex === index && 'bg-accent',
                       )}
-                    </div>
-                  </div>
-                </FormControl>
-              </PopoverTrigger>
-              <PopoverContent
-                ref={popoverRef}
-                className='p-0'
-                align='start'
-                onOpenAutoFocus={(e) => e.preventDefault()}
-                style={{ width: 'var(--radix-popover-trigger-width)' }}
-              >
-                <Command className='w-full'>
-                  <CommandList className='max-h-60'>
-                    <CommandEmpty>{isPending ? 'Searching...' : 'No addresses found'}</CommandEmpty>
-                    <CommandGroup>
-                      {suggestions.map((suggestion, index) => (
-                        <CommandItem
-                          key={suggestion.placeId}
-                          value={suggestion.description}
-                          onSelect={() => handleSelectAddress(suggestion)}
-                          className={cn(
-                            'flex items-start space-x-2 p-3 cursor-pointer',
-                            selectedIndex === index && 'bg-accent',
-                          )}
-                        >
-                          <MapPin className='size-4 mt-0.5 text-muted-foreground flex-shrink-0' />
-                          <div className='flex-1 min-w-0'>
-                            <div className='font-medium text-sm'>{suggestion.mainText}</div>
-                            <div className='text-xs text-muted-foreground truncate'>{suggestion.secondaryText}</div>
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-          {description && <p className='text-sm text-muted-foreground'>{description}</p>}
-          <FormMessage className='sm:hidden text-xs text-left opacity-80' />
-        </FormItem>
+                    >
+                      <MapPin className='size-4 mt-0.5 text-muted-foreground flex-shrink-0' />
+                      <div className='flex-1 min-w-0'>
+                        <div className='font-medium text-sm'>{suggestion.mainText}</div>
+                        <div className='text-xs text-muted-foreground truncate'>{suggestion.secondaryText}</div>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+      {description && <p className='text-sm text-muted-foreground'>{description}</p>}
+      {fullAddressInvalid && (
+        <FieldError className='sm:hidden text-xs text-left opacity-80' errors={[fullAddress.fieldState.error]} />
       )}
-    />
+    </Field>
   );
 }
