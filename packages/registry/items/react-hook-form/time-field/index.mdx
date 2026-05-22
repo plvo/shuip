@@ -1,0 +1,98 @@
+---
+title: Time Field
+description: Time picker (HH:mm) integrated with React Hook Form via typed lens binding from @hookform/lenses. Built on the native browser time input.
+registryName: rhf-time-field
+---
+
+`TimeField` is a time-only picker that encapsulates React Hook Form's field management with shadcn/ui's design system. It binds to a `string` in the native `HH:mm` 24-hour format that the browser's `<input type="time">` produces — no `Date` object ceremony, no popover, no third-party time wheel.
+
+The field binds to the form via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses) — no call-site generic, just `lens.focus('fieldName')` with full autocomplete from your form's value type.
+
+For date-only or date-and-time inputs, use the dedicated date items instead.
+
+#### Built-in features
+
+- **Native browser picker**: leverages `<input type="time">` — zero JS overhead, full accessibility, locale-aware formatting
+- **Typed lens binding**: `lens.focus('meetingTime')` autocompletes from your form's value type
+- **Range constraints**: pass `min` / `max` (as `HH:mm` strings) to restrict the selectable range
+- **Step control**: `step={60}` (default) is minute granularity; `step={1}` enables seconds
+- **Zod validation**: native integration with react-hook-form and Zod via resolver
+
+## Setup
+
+Field components bind via `@hookform/lenses`. Create a lens once per form:
+
+```tsx
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { TimeField } from '@/components/ui/shuip/react-hook-form/time-field';
+
+const form = useForm<MyForm>({ defaultValues: { meetingTime: '' } });
+const lens = useLens({ control: form.control });
+
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <TimeField lens={lens.focus('meetingTime')} label='Meeting time' />
+  </form>
+</Form>
+```
+
+The value is a `string` in `HH:mm` format (or empty string when unset), matching the native input semantics. You do not need to parse or format anything — store it as-is, validate it as a string, render it as a string.
+
+## Constraining the range
+
+`min` and `max` accept the same `HH:mm` string format and are forwarded to the underlying input. The browser will visually disable out-of-range values and refuse to submit them via the native form, but you should still validate server-side and via Zod for safety:
+
+```tsx
+const schema = z.object({
+  appointment: z
+    .string()
+    .min(1, 'Required')
+    .refine((v) => v >= '09:00' && v <= '18:00', 'Outside office hours'),
+});
+
+<TimeField lens={lens.focus('appointment')} label='Appointment' min='09:00' max='18:00' />
+```
+
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'rhf-time-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    lens: {
+      description: 'Typed lens from useLens (see Setup section). Bound to a HH:mm string.',
+      type: 'Lens<string>',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the input',
+      type: 'string?',
+    },
+    min: {
+      description: 'Earliest selectable time as a HH:mm string',
+      type: 'string?',
+    },
+    max: {
+      description: 'Latest selectable time as a HH:mm string',
+      type: 'string?',
+    },
+    step: {
+      description: 'Granularity in seconds. Default 60 (minute). Use 1 to enable seconds.',
+      type: 'number?',
+    },
+    props: {
+      description: 'Native HTML input props (disabled, etc.) — spread on InputGroupInput, except value/onChange/type which are managed.',
+      type: "Omit<React.ComponentProps<typeof InputGroupInput>, 'value' | 'onChange' | 'type'>",
+    },
+  }}
+/>
