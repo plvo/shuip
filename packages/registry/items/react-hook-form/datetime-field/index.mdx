@@ -1,0 +1,99 @@
+---
+title: Datetime Field
+description: Single date and time picker integrated with React Hook Form via typed lens binding. Stores a single Date carrying day, hours and minutes.
+registryName: rhf-datetime-field
+---
+
+`DatetimeField` is a single-value date + time picker that stores its selection as one `Date` carrying both the day and the hours/minutes. It wraps shadcn's `Calendar` and a native `<input type="time">` inside a `Popover`, and binds to the form via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses).
+
+For date-only fields, use `Calendar` directly. This component is for cases where the time of day matters as much as the date — meeting start, deadline, deliverable, etc.
+
+#### Built-in features
+
+- **Single `Date` value**: day + hours + minutes live in one field — no separate date/time pieces to reconcile
+- **Typed lens binding**: `lens.focus('scheduledAt')` autocompletes from your form's value type
+- **Locale-aware label**: trigger renders via `date-fns` `format(value, 'PPp', { locale })`
+- **Bounds**: `minDate` / `maxDate` disable out-of-range days on the calendar
+- **Time step**: native `<input type="time" step="...">` for minute or second granularity
+
+## Setup
+
+```tsx
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { Form } from '@/components/ui/form';
+import { DatetimeField } from '@/components/ui/shuip/react-hook-form/datetime-field';
+
+const schema = z.object({ scheduledAt: z.date() });
+type Values = z.infer<typeof schema>;
+
+const form = useForm<Values>({ defaultValues: { scheduledAt: undefined } });
+const lens = useLens({ control: form.control });
+
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <DatetimeField lens={lens.focus('scheduledAt')} label='Scheduled at' />
+  </form>
+</Form>
+```
+
+The `<Form>` wrapper is required — it provides React Hook Form's `FormProvider` context.
+
+## Behavior
+
+- **First date pick:** when the field is empty and the user picks a day, hours and minutes default to `00:00`. When the field already has a value, the existing hours/minutes are preserved.
+- **Time change:** only the hours/minutes are updated; the date portion is preserved.
+- **Trigger label:** `format(value, 'PPp', { locale })` — e.g. `May 22, 2026, 2:30 PM`. When empty, falls back to `placeholder`.
+
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'rhf-datetime-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    lens: {
+      description: 'Typed lens from useLens (see Setup section).',
+      type: 'Lens<Date | undefined>',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the trigger',
+      type: 'string?',
+    },
+    placeholder: {
+      description: 'Trigger label shown when no date is selected',
+      type: 'string?',
+      default: "'Pick a date & time'",
+    },
+    minDate: {
+      description: 'Earliest selectable date (inclusive). Disables earlier days on the calendar.',
+      type: 'Date?',
+    },
+    maxDate: {
+      description: 'Latest selectable date (inclusive). Disables later days on the calendar.',
+      type: 'Date?',
+    },
+    locale: {
+      description: 'date-fns locale used for the trigger label and the calendar.',
+      type: 'Locale?',
+    },
+    disabled: {
+      description: 'Disables the trigger button.',
+      type: 'boolean?',
+    },
+    step: {
+      description: 'Time input step in seconds. 60 = 1 minute, 1 = 1 second.',
+      type: 'number?',
+      default: '60',
+    },
+  }}
+/>

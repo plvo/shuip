@@ -68,6 +68,7 @@
         "@tanstack/react-form": "catalog:forms",
         "@tanstack/react-query": "catalog:forms",
         "class-variance-authority": "catalog:",
+        "date-fns": "catalog:",
         "lucide-react": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",
