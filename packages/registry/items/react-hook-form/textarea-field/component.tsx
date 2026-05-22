@@ -18,18 +18,13 @@ export interface TextareaFieldProps
 
 export function TextareaField({ lens, label, description, tooltip, ...props }: TextareaFieldProps) {
   const { field, fieldState } = useController(lens.interop());
+  const id = props.id ?? field.name;
 
   return (
     <Field className='gap-2' data-invalid={fieldState.invalid}>
-      {label && <FieldLabel htmlFor={field.name}>{label}</FieldLabel>}
+      {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
       <InputGroup>
-        <InputGroupTextarea
-          {...field}
-          id={field.name}
-          value={field.value ?? ''}
-          aria-invalid={fieldState.invalid}
-          {...props}
-        />
+        <InputGroupTextarea {...field} {...props} id={id} value={field.value ?? ''} aria-invalid={fieldState.invalid} />
         {tooltip && (
           <InputGroupAddon align='block-end' className='justify-end'>
             <Tooltip>

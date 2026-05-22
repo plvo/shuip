@@ -14,20 +14,21 @@ export interface CheckboxFieldProps extends Omit<React.ComponentProps<typeof Che
 
 export function CheckboxField({ lens, label, description, ...props }: CheckboxFieldProps) {
   const { field, fieldState } = useController(lens.interop());
+  const id = props.id ?? field.name;
 
   return (
     <Field className='gap-2' data-invalid={fieldState.invalid}>
       <div className='flex items-center gap-2'>
         <Checkbox
-          id={field.name}
+          {...props}
+          id={id}
           name={field.name}
-          checked={field.value}
+          checked={field.value ?? false}
           onCheckedChange={(checked) => field.onChange(checked === true)}
           onBlur={field.onBlur}
           aria-invalid={fieldState.invalid}
-          {...props}
         />
-        <FieldLabel htmlFor={field.name} className='text-sm cursor-pointer'>
+        <FieldLabel htmlFor={id} className='text-sm cursor-pointer'>
           {label}
         </FieldLabel>
       </div>

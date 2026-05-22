@@ -28,7 +28,7 @@ export function SelectField({ lens, options, label, description, placeholder, ..
         </SelectTrigger>
         <SelectContent>
           {Object.entries(options).map(([optionLabel, value]) => (
-            <SelectItem key={value} value={value}>
+            <SelectItem key={optionLabel} value={value}>
               {optionLabel}
             </SelectItem>
           ))}

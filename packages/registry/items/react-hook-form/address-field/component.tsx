@@ -208,6 +208,8 @@ export function AddressField({
       return;
     }
 
+    fullAddress.field.onBlur();
+
     setTimeout(() => {
       setShowSuggestions(false);
       setSelectedIndex(-1);
@@ -215,10 +217,11 @@ export function AddressField({
   };
 
   const fullAddressInvalid = fullAddress.fieldState.invalid;
+  const id = props.id ?? fullAddress.field.name;
 
   return (
     <Field className='gap-2' data-invalid={fullAddressInvalid}>
-      <FieldLabel htmlFor={fullAddress.field.name} className='flex items-center justify-between'>
+      <FieldLabel htmlFor={id} className='flex items-center justify-between'>
         {label}
         {fullAddressInvalid && (
           <FieldError className='max-sm:hidden text-xs opacity-80' errors={[fullAddress.fieldState.error]} />
@@ -230,10 +233,12 @@ export function AddressField({
             <div className='relative'>
               <Input
                 ref={inputRef}
-                id={fullAddress.field.name}
                 name={fullAddress.field.name}
                 value={fullAddress.field.value ?? ''}
                 placeholder={placeholder}
+                autoComplete='off'
+                {...props}
+                id={id}
                 onChange={(e) => {
                   const value = e.target.value;
                   fullAddress.field.onChange(value);
@@ -242,9 +247,7 @@ export function AddressField({
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
-                autoComplete='off'
                 aria-invalid={fullAddressInvalid}
-                {...props}
               />
               <div className='absolute inset-y-0 right-0 flex items-center pr-3'>
                 {isPending ? (

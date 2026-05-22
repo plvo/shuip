@@ -18,6 +18,7 @@ export interface PasswordFieldProps extends Omit<React.ComponentProps<typeof Inp
 export function PasswordField({ lens, label, description, tooltip, ...props }: PasswordFieldProps) {
   const { field, fieldState } = useController(lens.interop());
   const [showPassword, setShowPassword] = React.useState(false);
+  const id = props.id ?? field.name;
 
   const handleTogglePassword = React.useCallback(() => {
     setShowPassword((prev) => !prev);
@@ -25,16 +26,16 @@ export function PasswordField({ lens, label, description, tooltip, ...props }: P
 
   return (
     <Field className='gap-2' data-invalid={fieldState.invalid}>
-      {label && <FieldLabel htmlFor={field.name}>{label}</FieldLabel>}
+      {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
       <InputGroup>
         <InputGroupInput
           {...field}
-          id={field.name}
-          type={showPassword ? 'text' : 'password'}
           placeholder='Enter password'
+          {...props}
+          id={id}
+          type={showPassword ? 'text' : 'password'}
           value={field.value ?? ''}
           aria-invalid={fieldState.invalid}
-          {...props}
         />
         <InputGroupAddon align='inline-end'>
           <InputGroupButton aria-label='Toggle password' onClick={handleTogglePassword}>
