@@ -1,53 +1,77 @@
 ---
 title: Radio Field
-description: Radio button group component integrated with React Hook Form for single-choice selections with automatic option rendering.
+description: Radio button group component integrated with React Hook Form via typed lens binding from @hookform/lenses. Renders options automatically with consistent layout and accessibility.
 registryName: rhf-radio-field
 ---
 
-Radio buttons are used for single-choice selections from a predefined set of options. `RadioField` automatically renders radio button options from an array, handling all the form integration and layout concerns.
+`RadioField` is a radio button group component that encapsulates React Hook Form's field management with shadcn/ui's design system. It handles all the boilerplate of connecting form state to a radio group: rendering each option, wiring event handlers, displaying errors, and providing accessible labels.
 
-The component eliminates the need to manually create individual radio items and their labels. It provides consistent spacing, proper accessibility attributes, and automatic form state management for radio groups.
+The field binds to the form via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses) — no call-site generic, just `lens.focus('fieldName')` with full autocomplete from your form's value type.
 
 #### Built-in features
 
-- **Automatic option rendering**: Pass an array of strings and get fully functional radio buttons
-- **Consistent layout**: Pre-configured spacing and alignment for radio groups  
-- **Accessibility support**: Proper ARIA attributes and keyboard navigation
-- **Zod validation**: Native integration with react-hook-form and Zod schemas
-- **Error display**: Automatic validation error messages
+- **Typed lens binding**: `lens.focus('plan')` autocompletes from your form's value type — no `<MyForm>` generic at the call site
+- **Automatic option rendering**: pass an array of strings and get fully functional radio buttons
+- **Consistent layout**: pre-configured spacing and alignment for radio groups
+- **Accessibility support**: proper ARIA attributes, label associations, and keyboard navigation
+- **Zod validation**: native integration with react-hook-form and Zod via resolver
+
+## Setup
+
+Field components bind via `@hookform/lenses`. Create a lens once per form:
+
+```tsx
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { RadioField } from '@/components/ui/shuip/react-hook-form/radio-field';
+
+const form = useForm<MyForm>({ defaultValues: { plan: 'free' } });
+const lens = useLens({ control: form.control });
+
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <RadioField lens={lens.focus('plan')} options={['free', 'pro', 'enterprise']} label='Plan' />
+  </form>
+</Form>
+```
+
+The `<Form>` wrapper is required — it provides shadcn's `FormProvider` which `FormLabel` and `FormMessage` use internally.
 
 ## Less boilerplate
+
+React Hook Form's standard approach uses render props to access field state:
 
 ```tsx
 <FormField
   control={form.control}
-  name="theme"
+  name='plan'
   render={({ field }) => (
-    <FormItem className="space-y-3">
-      <FormLabel>Select a theme</FormLabel>
+    <FormItem className='space-y-3'>
+      <FormLabel>Select a plan</FormLabel>
       <FormControl>
         <RadioGroup
+          value={field.value ?? ''}
           onValueChange={field.onChange}
-          defaultValue={field.value}
-          className="flex flex-col space-y-1"
+          className='flex flex-col space-y-1'
         >
-          <FormItem className="flex items-center space-x-3 space-y-0">
+          <FormItem className='flex items-center space-x-3 space-y-0'>
             <FormControl>
-              <RadioGroupItem value="light" />
+              <RadioGroupItem value='free' />
             </FormControl>
-            <FormLabel className="font-normal">Light</FormLabel>
+            <FormLabel className='font-normal'>free</FormLabel>
           </FormItem>
-          <FormItem className="flex items-center space-x-3 space-y-0">
+          <FormItem className='flex items-center space-x-3 space-y-0'>
             <FormControl>
-              <RadioGroupItem value="dark" />
+              <RadioGroupItem value='pro' />
             </FormControl>
-            <FormLabel className="font-normal">Dark</FormLabel>
+            <FormLabel className='font-normal'>pro</FormLabel>
           </FormItem>
-          <FormItem className="flex items-center space-x-3 space-y-0">
+          <FormItem className='flex items-center space-x-3 space-y-0'>
             <FormControl>
-              <RadioGroupItem value="system" />
+              <RadioGroupItem value='enterprise' />
             </FormControl>
-            <FormLabel className="font-normal">System</FormLabel>
+            <FormLabel className='font-normal'>enterprise</FormLabel>
           </FormItem>
         </RadioGroup>
       </FormControl>
@@ -61,10 +85,10 @@ The component eliminates the need to manually create individual radio items and 
 With `RadioField`, this reduces to a single declarative component:
 
 ```tsx
-<RadioField 
-  register={form.register('theme')} 
-  label="Select a theme" 
-  options={['light', 'dark', 'system']}
+<RadioField
+  lens={lens.focus('plan')}
+  options={['free', 'pro', 'enterprise']}
+  label='Select a plan'
 />
 ```
 
@@ -73,15 +97,15 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 ## Examples
 
-<ItemExamples registryName={'rhf-radio-field'} /> 
+<ItemExamples registryName={'rhf-radio-field'} />
 
 ## Props
 
 <TypeTable
   type={{
-    register: {
-      description: 'react-hook-form register function result',
-      type: 'UseFormRegisterReturn',
+    lens: {
+      description: 'Typed lens from useLens (see Setup section).',
+      type: 'Lens<string>',
     },
     options: {
       description: 'Array of options to render as radio buttons',

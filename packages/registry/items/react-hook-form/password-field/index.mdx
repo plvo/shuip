@@ -1,64 +1,80 @@
 ---
 title: Password Field
-description: Password input component with visibility toggle and optional tooltip. Built on shadcn InputGroup for enhanced UI.
+description: Password input component integrated with React Hook Form via typed lens binding from @hookform/lenses. Includes visibility toggle, optional tooltip, and InputGroup integration.
 registryName: rhf-password-field
 ---
 
-Password inputs require special UX considerations: users need to verify their input while maintaining security. `PasswordField` solves this with a built-in visibility toggle (Eye/EyeOff icons) that switches between masked and plain text.
+`PasswordField` is a password input component that encapsulates React Hook Form's field management with shadcn/ui's design system. It handles all the boilerplate of connecting form state to an input element: wiring event handlers, displaying errors, managing touched states, and rendering consistent UI — with a built-in visibility toggle on top.
 
-The component uses shadcn's `InputGroup` to position the toggle button inline with the input, avoiding layout shifts. An optional tooltip can be added via the `tooltip` prop to display password requirements—this appears as an InfoIcon button next to the visibility toggle.
+The field binds to the form via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses) — no call-site generic, just `lens.focus('fieldName')` with full autocomplete from your form's value type.
 
 #### Built-in features
 
-- **One-click visibility toggle** with Eye/EyeOff icons
-- **InputGroup positioning** for seamless button integration
-- **Optional tooltip** for password requirements or help text
-- **Zod validation**: Native integration for password strength rules
+- **Typed lens binding**: `lens.focus('password')` autocompletes from your form's value type — no `<MyForm>` generic at the call site
+- **One-click visibility toggle**: Eye/EyeOff icons switch between masked and plain text
+- **Tooltip integration**: optional InfoIcon button with tooltip content via `tooltip` prop
+- **InputGroup ready**: built on shadcn InputGroup for seamless addon integration
+- **Zod validation**: native integration with react-hook-form and Zod via resolver
 
-## Usage patterns
+## Setup
 
-Common validation pattern for strong passwords:
+Field components bind via `@hookform/lenses`. Create a lens once per form:
 
 ```tsx
-const schema = z.object({
-  password: z.string()
-    .min(8, 'At least 8 characters required')
-    .regex(/[A-Z]/, 'Must include uppercase letter')
-    .regex(/[0-9]/, 'Must include number')
-    .regex(/[!@#$%^&*]/, 'Must include special character'),
-})
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { PasswordField } from '@/components/ui/shuip/react-hook-form/password-field';
 
-const form = useForm({
-  defaultValues: { password: '' },
-  resolver: zodResolver(schema),
-})
+const form = useForm<MyForm>({ defaultValues: { password: '' } });
+const lens = useLens({ control: form.control });
 
-<PasswordField
-  register={form.register('password')}
-  label='Password'
-  tooltip='Must contain: 8+ characters, uppercase, number, special char'
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <PasswordField lens={lens.focus('password')} label='Password' />
+  </form>
+</Form>
+```
+
+The `<Form>` wrapper is required — it provides shadcn's `FormProvider` which `FormLabel` and `FormMessage` use internally.
+
+## Less boilerplate
+
+React Hook Form's standard approach uses render props to access field state, plus extra state to wire the visibility toggle:
+
+```tsx
+const [showPassword, setShowPassword] = useState(false);
+
+<FormField
+  control={form.control}
+  name="password"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Password</FormLabel>
+      <FormControl>
+        <InputGroup>
+          <InputGroupInput type={showPassword ? 'text' : 'password'} {...field} />
+          <InputGroupAddon align='inline-end'>
+            <InputGroupButton onClick={() => setShowPassword((v) => !v)}>
+              {showPassword ? <EyeOff /> : <Eye />}
+            </InputGroupButton>
+          </InputGroupAddon>
+        </InputGroup>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
 />
 ```
 
 
-Confirm password with linked validation:
+With `PasswordField`, this reduces to a single declarative component:
 
 ```tsx
-const schema = z.object({
-  password: z.string().min(8),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-})
-
 <PasswordField
-  register={form.register('password')}
-  label='Password'
-/>
-<PasswordField
-  register={form.register('confirmPassword')}
-  label='Confirm Password'
+  lens={lens.focus('password')}
+  label="Password"
+  tooltip='Must contain: 8+ characters, uppercase, number, special char'
 />
 ```
 
@@ -73,9 +89,9 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 <TypeTable
   type={{
-    register: {
-      description: 'React Hook Form register function result',
-      type: 'UseFormRegisterReturn',
+    lens: {
+      description: 'Typed lens from useLens (see Setup section).',
+      type: 'Lens<string>',
     },
     label: {
       description: 'Field label text',
@@ -90,8 +106,8 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       type: 'React.ReactNode?',
     },
     props: {
-      description: 'Native HTML input props (placeholder, disabled, etc.)',
-      type: "React.ComponentProps<typeof InputGroupInput>?",
+      description: 'Native HTML input props (placeholder, disabled, etc.) — spread on InputGroupInput, except value/onChange which are managed.',
+      type: "Omit<React.ComponentProps<typeof InputGroupInput>, 'value' | 'onChange'>",
     },
   }}
 />

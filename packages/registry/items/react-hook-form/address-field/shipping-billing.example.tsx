@@ -1,46 +1,59 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
-import { AddressField, addressSchema } from '@/components/ui/shuip/react-hook-form/address-field';
+import { type AddressData, AddressField, addressSchema } from '@/components/ui/shuip/react-hook-form/address-field';
 import { CheckboxField } from '@/components/ui/shuip/react-hook-form/checkbox-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
 const zodSchema = z.object({
-  billingAddress: addressSchema,
+  billing: addressSchema,
   sameAsShipping: z.boolean(),
-  shippingAddress: addressSchema.optional(),
+  shipping: addressSchema,
 });
 
+type Values = z.infer<typeof zodSchema>;
+
+const emptyAddress = {
+  street: '',
+  city: '',
+  postalCode: '',
+  country: '',
+  fullAddress: '',
+  placeId: '',
+};
+
 export default function RhfAddressFieldShippingBillingExample() {
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: {
-      billingAddress: {
-        street: '',
-        city: '',
-        postalCode: '',
-        country: '',
-        fullAddress: '',
-        placeId: '',
-      },
+      billing: emptyAddress,
       sameAsShipping: false,
-      shippingAddress: {
-        street: '',
-        city: '',
-        postalCode: '',
-        country: '',
-        fullAddress: '',
-        placeId: '',
-      },
+      shipping: emptyAddress,
     },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
   const sameAsShipping = form.watch('sameAsShipping');
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  React.useEffect(() => {
+    if (!sameAsShipping) return;
+
+    form.setValue('shipping', form.getValues('billing'), { shouldValidate: true });
+
+    const sub = form.watch((values, { name }) => {
+      if (name?.startsWith('billing') && values.billing) {
+        form.setValue('shipping', values.billing as AddressData, { shouldValidate: true });
+      }
+    });
+    return () => sub.unsubscribe();
+  }, [sameAsShipping, form]);
+
+  async function onSubmit(values: Values) {
     try {
       alert(JSON.stringify(values, null, 2));
     } catch (error) {
@@ -54,23 +67,20 @@ export default function RhfAddressFieldShippingBillingExample() {
         <div className='space-y-4'>
           <h3 className='text-lg font-semibold'>Billing Address</h3>
           <AddressField
-            register={form.register('billingAddress')}
+            lens={lens.focus('billing')}
             label='Billing Address'
             placeholder='Enter billing address'
             description='Address for payment processing'
           />
         </div>
 
-        <CheckboxField
-          register={form.register('sameAsShipping')}
-          label='Shipping address is the same as billing address'
-        />
+        <CheckboxField lens={lens.focus('sameAsShipping')} label='Shipping address is the same as billing address' />
 
         {!sameAsShipping && (
           <div className='space-y-4'>
             <h3 className='text-lg font-semibold'>Shipping Address</h3>
             <AddressField
-              register={form.register('shippingAddress')}
+              lens={lens.focus('shipping')}
               label='Shipping Address'
               placeholder='Enter shipping address'
               description='Address where items will be delivered'

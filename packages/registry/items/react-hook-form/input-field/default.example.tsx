@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -11,13 +12,16 @@ const zodSchema = z.object({
   name: z.string().nonempty({ message: 'Name is required' }),
 });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function InputFieldExample() {
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: { name: '' },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
       alert(`Hello ${values.name}`);
     } catch (error) {
@@ -28,7 +32,7 @@ export default function InputFieldExample() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <InputField register={form.register('name')} label='Name' description='Your name' placeholder='John' />
+        <InputField lens={lens.focus('name')} label='Name' description='Your name' placeholder='John' />
         <SubmitButton>Check</SubmitButton>
       </form>
     </Form>

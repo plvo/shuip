@@ -1,34 +1,30 @@
-import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
+import type { Lens } from '@hookform/lenses';
+import type * as React from 'react';
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
-export interface RadioFieldProps<T extends FieldValues> extends React.ComponentProps<typeof RadioGroup> {
-  register: UseFormRegisterReturn<FieldPath<T>>;
+export interface RadioFieldProps
+  extends Omit<React.ComponentProps<typeof RadioGroup>, 'value' | 'defaultValue' | 'onValueChange'> {
+  lens: Lens<string>;
   options: string[];
   label?: string;
   description?: string;
 }
 
-export function RadioField<T extends FieldValues>({
-  register,
-  options,
-  label,
-  description,
-  ...props
-}: RadioFieldProps<T>) {
+export function RadioField({ lens, options, label, description, ...props }: RadioFieldProps) {
   return (
     <FormField
-      {...register}
+      {...lens.interop()}
       render={({ field, fieldState }) => (
         <FormItem className='space-y-1.5' data-invalid={fieldState.invalid}>
           {label && <FormLabel>{label}</FormLabel>}
           <FormControl>
             <RadioGroup
+              {...props}
+              value={field.value ?? ''}
               onValueChange={field.onChange}
-              defaultValue={field.value}
               className='flex flex-col space-y-1'
               aria-invalid={fieldState.invalid}
-              {...props}
             >
               {options.map((value) => (
                 <FormItem key={value} className='flex items-center space-x-3 space-y-0'>

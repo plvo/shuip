@@ -1,27 +1,22 @@
+import type { Lens } from '@hookform/lenses';
 import { InfoIcon } from 'lucide-react';
 import type * as React from 'react';
-import type { FieldPath, FieldValues, UseFormRegisterReturn } from 'react-hook-form';
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from '@/components/ui/input-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export interface TextareaFieldProps<T extends FieldValues> extends React.ComponentProps<typeof InputGroupTextarea> {
-  register: UseFormRegisterReturn<FieldPath<T>>;
+export interface TextareaFieldProps
+  extends Omit<React.ComponentProps<typeof InputGroupTextarea>, 'value' | 'onChange'> {
+  lens: Lens<string>;
   label?: string;
   description?: string;
   tooltip?: React.ReactNode;
 }
 
-export function TextareaField<T extends FieldValues>({
-  register,
-  label,
-  description,
-  tooltip,
-  ...props
-}: TextareaFieldProps<T>) {
+export function TextareaField({ lens, label, description, tooltip, ...props }: TextareaFieldProps) {
   return (
     <FormField
-      {...register}
+      {...lens.interop()}
       render={({ field, fieldState }) => {
         return (
           <FormItem data-invalid={fieldState.invalid}>

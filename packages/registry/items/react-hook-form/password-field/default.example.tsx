@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -17,13 +18,16 @@ const zodSchema = z.object({
     .regex(/[!@#$%^&*]/, { message: 'Password must contain at least one special character' }),
 });
 
-export default function InputFieldExample() {
-  const form = useForm({
+type Values = z.infer<typeof zodSchema>;
+
+export default function PasswordFieldExample() {
+  const form = useForm<Values>({
     defaultValues: { password: '' },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
       alert(`Hello ${values.password}`);
     } catch (error) {
@@ -35,7 +39,7 @@ export default function InputFieldExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <PasswordField
-          register={form.register('password')}
+          lens={lens.focus('password')}
           label='Password'
           description='Your password'
           placeholder='Password'

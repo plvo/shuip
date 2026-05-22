@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -39,16 +40,19 @@ const zodSchema = z.object({
   state: z.string().min(1, 'Please select a state'),
 });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function RhfSelectFieldDependentExample() {
   const [stateOptions, setStateOptions] = useState<Record<string, string>>({});
 
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: {
       country: '',
       state: '',
     },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
   const country = form.watch('country');
 
@@ -62,7 +66,7 @@ export default function RhfSelectFieldDependentExample() {
     form.setValue('state', '');
   }, [country, form]);
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
       alert(JSON.stringify(values, null, 2));
     } catch (error) {
@@ -74,7 +78,7 @@ export default function RhfSelectFieldDependentExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <SelectField
-          register={form.register('country')}
+          lens={lens.focus('country')}
           options={COUNTRIES}
           label='Country'
           placeholder='Select a country'
@@ -82,7 +86,7 @@ export default function RhfSelectFieldDependentExample() {
         />
 
         <SelectField
-          register={form.register('state')}
+          lens={lens.focus('state')}
           options={stateOptions}
           label='State / Province'
           placeholder={Object.keys(stateOptions).length === 0 ? 'Select a country first' : 'Select a state'}

@@ -1,22 +1,50 @@
 ---
 title: Select Field
-description: Select dropdown component integrated with React Hook Form for single-choice selections from key-value option pairs.
+description: Select dropdown component integrated with React Hook Form via typed lens binding from @hookform/lenses. Renders options from a key-value map with controlled value handling.
 registryName: rhf-select-field
 ---
 
-Select dropdowns provide single-choice selection from a list of options with labels and values. `SelectField` automatically renders select options from a key-value object, where keys become display labels and values become form data.
+`SelectField` is a single-choice dropdown component that encapsulates React Hook Form's field management with shadcn/ui's design system. It handles wiring the controlled value, change handler, validation state, and option rendering from a key-value map.
 
-The component handles the complexity of connecting Radix UI's Select with React Hook Form, including proper value binding, change handlers, and validation state management.
+The field binds to the form via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses) — no call-site generic, just `lens.focus('fieldName')` with full autocomplete from your form's value type.
 
 #### Built-in features
 
-- **Automatic option rendering**: Pass a key-value object and get a fully functional select dropdown
-- **Label-value mapping**: Keys display to users, values are stored in form data
-- **Placeholder support**: Optional placeholder text for unselected state
-- **Zod validation**: Native integration with react-hook-form and Zod schemas
-- **Accessibility support**: Full keyboard navigation and screen reader compatibility
+- **Typed lens binding**: `lens.focus('country')` autocompletes from your form's value type — no `<MyForm>` generic at the call site
+- **Automatic option rendering**: pass a `Record<string, string>` — keys become labels, values become form data
+- **Controlled value**: bound through `value`/`onValueChange`, kept in sync with form state
+- **Zod validation**: native integration with react-hook-form and Zod via resolver
+- **Accessibility**: full keyboard navigation and screen reader support via Radix Select
+
+## Setup
+
+Field components bind via `@hookform/lenses`. Create a lens once per form:
+
+```tsx
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { SelectField } from '@/components/ui/shuip/react-hook-form/select-field';
+
+const form = useForm<MyForm>({ defaultValues: { country: 'us' } });
+const lens = useLens({ control: form.control });
+
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <SelectField
+      lens={lens.focus('country')}
+      label='Country'
+      options={{ 'United States': 'us', Canada: 'ca', France: 'fr' }}
+    />
+  </form>
+</Form>
+```
+
+The `<Form>` wrapper is required — it provides shadcn's `FormProvider` which `FormLabel` and `FormMessage` use internally. Default selections belong on `useForm({ defaultValues })`, not on the field component.
 
 ## Less boilerplate
+
+React Hook Form's standard approach uses render props to access field state:
 
 ```tsx
 <FormField
@@ -25,7 +53,7 @@ The component handles the complexity of connecting Radix UI's Select with React 
   render={({ field }) => (
     <FormItem>
       <FormLabel>Country</FormLabel>
-      <Select onValueChange={field.onChange} defaultValue={field.value}>
+      <Select onValueChange={field.onChange} value={field.value}>
         <FormControl>
           <SelectTrigger>
             <SelectValue placeholder="Select a country" />
@@ -50,12 +78,12 @@ The component handles the complexity of connecting Radix UI's Select with React 
 With `SelectField`, this reduces to a single declarative component:
 
 ```tsx
-<SelectField 
-  register={form.register('country')} 
-  label="Country" 
-  placeholder="Select a country"
-  description="Choose your country"
-  options={{ 'United States': 'us', 'Canada': 'ca', 'France': 'fr' }}
+<SelectField
+  lens={lens.focus('country')}
+  label='Country'
+  placeholder='Select a country'
+  description='Choose your country'
+  options={{ 'United States': 'us', Canada: 'ca', France: 'fr' }}
 />
 ```
 
@@ -64,38 +92,34 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 ## Examples
 
-<ItemExamples registryName="rhf-select-field" />
+<ItemExamples registryName={'rhf-select-field'} />
 
 ## Props
 
 <TypeTable
   type={{
-    register: {
-      description: 'react-hook-form register function result',
-      type: 'UseFormRegisterReturn',
+    lens: {
+      description: 'Typed lens from useLens (see Setup section). Field value must be a string.',
+      type: 'Lens<string>',
     },
     options: {
-      description: 'Object where keys are labels and values are form values',
+      description: 'Object where keys are labels (displayed to users) and values are form values (stored in form data).',
       type: 'Record<string, string>',
     },
     label: {
-      description: 'Label displayed above the field',
+      description: 'Field label text',
       type: 'string?',
     },
     placeholder: {
-      description: 'Placeholder text in the select',
+      description: 'Placeholder text shown when no option is selected',
       type: 'string?',
     },
     description: {
-      description: 'Optional description below the field',
+      description: 'Helper text displayed below the select',
       type: 'string?',
     },
-    defaultValue: {
-      description: 'Default selected value',
-      type: 'TFieldValues[FieldPath<TFieldValues>]?',
-    },
-    "...props": {
-      description: 'All Radix Select props',
+    props: {
+      description: 'Radix Select props — spread on the underlying Select, except value/onValueChange which are managed.',
       type: 'SelectProps',
     },
   }}

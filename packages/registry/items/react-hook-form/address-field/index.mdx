@@ -1,21 +1,19 @@
 ---
 title: Address Field
-description: Address input component with Google Places autocomplete integration. Automatically parses and validates complete address data.
+description: Compound address input with Google Places autocomplete, integrated with React Hook Form via typed lens binding from @hookform/lenses.
 registryName: rhf-address-field
 ---
 
-`AddressField` is an address input component that integrates Google Places API autocomplete with React Hook Form. It provides a single input that automatically parses complete address information including street, city, postal code, and country data.
+`AddressField` is a compound field component that manages a full `AddressData` sub-tree (street, city, postal code, country, full address, place ID) under a single name prefix. It wires Google Places autocomplete to the form so that selecting a suggestion writes every sub-field at once.
 
-The component reduces form complexity by replacing multiple address fields with a single autocomplete input. Users can quickly find and select their address from Google's database, reducing errors and improving form completion rates.
+The field binds to the form via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses). The parent passes `lens={lens.focus('address')}` — a `Lens<AddressData>` — and the component focuses internally on each sub-field. No string paths, no `useFormContext`, no name-prefix hacks.
 
 #### Built-in features
 
-- **Google Places autocomplete**: Fast, accurate address suggestions powered by Google's API
-- **Automatic address parsing**: Extracts street, city, postal code, country, and place ID
-- **Debounced search**: Optimized API calls with configurable delay
-- **Popover suggestions**: Clean dropdown interface for address selection
-- **Form integration**: Native React Hook Form and Zod validation support
-- **Customizable regions**: Configurable country and language settings
+- **Compound field**: manages `street`, `city`, `postalCode`, `country`, `fullAddress`, and `placeId` under a single sub-tree
+- **Typed lens binding**: `lens.focus('address')` autocompletes from your form's value type — no `<MyForm>` generic at the call site
+- **Google Places autocomplete**: server action, popover dropdown, keyboard navigation, debounced search
+- **Zod schema export**: `addressSchema` is published alongside the component for easy composition (`z.object({ address: addressSchema })`)
 
 ## Configuration
 
@@ -25,95 +23,103 @@ This component requires a Google Places API key. Add `GOOGLE_PLACES_API_KEY` to 
 GOOGLE_PLACES_API_KEY=your_api_key_here
 ```
 
-To customize the default country or language, edit the constants in the component:
+To customize the default country, language, or debounce, edit the constants in the component:
 
 ```tsx
 const DEFAULT_COUNTRY = 'US'; // Country code for suggestions
-const LANGUAGE_RESULT = 'en';  // Language code for results  
+const LANGUAGE_RESULT = 'en';  // Language code for results
 const DEBOUNCE_TIME = 300;     // API call delay in milliseconds
 ```
+
+## Setup
+
+Field components bind via `@hookform/lenses`. Create a lens once per form, then focus on the address sub-tree:
+
+```tsx
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Form } from '@/components/ui/form';
+import { AddressField, addressSchema } from '@/components/ui/shuip/react-hook-form/address-field';
+
+const schema = z.object({ address: addressSchema });
+
+const form = useForm<z.infer<typeof schema>>({
+  resolver: zodResolver(schema),
+  defaultValues: {
+    address: { street: '', city: '', postalCode: '', country: '', fullAddress: '' },
+  },
+});
+const lens = useLens({ control: form.control });
+
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <AddressField lens={lens.focus('address')} country='FR' />
+  </form>
+</Form>
+```
+
+The `<Form>` wrapper is required — it provides shadcn's `FormProvider` which `FormLabel` and `FormMessage` use internally.
+
+## Compound field
+
+Unlike a single-input field, `AddressField` writes to every sub-field of the `AddressData` sub-tree when the user picks a place suggestion. Internally, it derives one controller per sub-field from the lens:
+
+```tsx
+const fullAddress = useController(lens.focus('fullAddress').interop());
+const street      = useController(lens.focus('street').interop());
+const city        = useController(lens.focus('city').interop());
+const postalCode  = useController(lens.focus('postalCode').interop());
+const country     = useController(lens.focus('country').interop());
+const placeId     = useController(lens.focus('placeId').interop());
+```
+
+When Google Places returns details for a selected suggestion, each `field.onChange(...)` populates its sub-field — no global `setValue` call against string paths.
 
 ## Less boilerplate
 
 Traditional address forms require multiple fields and manual validation:
 
 ```tsx
-<Input name="street" placeholder="Street" />
-<Input name="city" placeholder="City" />
-<Input name="postalCode" placeholder="Postal Code" />
-<Input name="country" placeholder="Country" />
+<Input name='address.street' placeholder='Street' />
+<Input name='address.city' placeholder='City' />
+<Input name='address.postalCode' placeholder='Postal Code' />
+<Input name='address.country' placeholder='Country' />
 // ...manual validation and state management
 ```
 
-
-With `AddressField`, this reduces to a single component with automatic validation:
+With `AddressField`, this reduces to a single component with automatic validation and place lookup:
 
 ```tsx
-<AddressField 
-  register={form.register('address')} 
-  placeholder="Enter your address" 
-/>
+<AddressField lens={lens.focus('address')} placeholder='Enter your address' />
 ```
 
+## Schema composition
 
-## Usage patterns
-
-Basic address field with schema validation:
+`addressSchema` is exported alongside the component so consumers can compose it into a larger form schema:
 
 ```tsx
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { AddressField, addressSchema } from '@/components/ui/shuip/react-hook-form/address-field';
+import { addressSchema } from '@/components/ui/shuip/react-hook-form/address-field';
 
 const schema = z.object({
-  address: addressSchema,
+  customer: z.string().min(1),
+  shipping: addressSchema,
+  billing: addressSchema,
 });
-
-const form = useForm({
-  defaultValues: {
-    address: {
-      street: '',
-      city: '',
-      postalCode: '',
-      country: '',
-      fullAddress: '',
-      placeId: '',
-    },
-  },
-  resolver: zodResolver(schema),
-});
-
-<AddressField 
-  register={form.register('address')} 
-  placeholder="Enter your address" 
-/>
 ```
 
-
-Custom configuration for different regions:
-
-```tsx
-<AddressField
-  register={form.register('address')}
-  label="Shipping Address"
-  description="We only ship to valid addresses"
-  country="FR"
-  placeholder="Entrez votre adresse"
-/>
-```
-
-
-The component returns structured address data:
+The component returns structured address data on submit:
 
 ```tsx
 {
   address: {
     street: '123 Main St',
-    city: 'Paris', 
+    city: 'Paris',
     postalCode: '75001',
     country: 'France',
     fullAddress: '123 Main St, 75001 Paris, France',
-    placeId: 'abcdef123456'
+    placeId: 'abcdef123456',
   }
 }
 ```
@@ -128,16 +134,16 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 <TypeTable
   type={{
-    register: {
-      description: 'React Hook Form register function result',
-      type: 'UseFormRegisterReturn',
+    lens: {
+      description: 'Typed lens from useLens — points at an AddressData sub-tree.',
+      type: 'Lens<AddressData>',
     },
     label: {
-      description: 'Field label text',
+      description: 'Field label text (default: "Address")',
       type: 'string?',
     },
     placeholder: {
-      description: 'Placeholder text for the input',
+      description: 'Placeholder text for the input (default: "Enter your address")',
       type: 'string?',
     },
     description: {
@@ -145,15 +151,12 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       type: 'string?',
     },
     country: {
-      description: 'Country code for address suggestions (default: US)',
+      description: 'Country code for address suggestions (default: "US")',
       type: 'string?',
     },
     props: {
-      description: 'Native HTML input props (disabled, className, etc.)',
-      type: 'React.ComponentProps<typeof Input>?',
+      description: "Native HTML input props (disabled, className, etc.) — spread on Input, except value/onChange which are managed.",
+      type: "Omit<React.ComponentProps<typeof Input>, 'value' | 'onChange'>",
     },
   }}
 />
-
-
-

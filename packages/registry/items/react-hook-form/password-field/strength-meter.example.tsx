@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -8,7 +9,6 @@ import { PasswordField } from '@/components/ui/shuip/react-hook-form/password-fi
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 import { cn } from '@/lib/utils';
 
-// Calculate password strength score (0-4)
 function calculatePasswordStrength(password: string): number {
   let strength = 0;
 
@@ -48,20 +48,23 @@ const zodSchema = z
     path: ['confirmPassword'],
   });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function RhfPasswordFieldStrengthMeterExample() {
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: {
       password: '',
       confirmPassword: '',
     },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
   const password = form.watch('password');
   const strength = password ? calculatePasswordStrength(password) : 0;
   const { label, color } = getStrengthLabel(strength);
 
-  async function onSubmit(_values: z.infer<typeof zodSchema>) {
+  async function onSubmit(_values: Values) {
     try {
       alert(`Account created with password strength: ${label}`);
     } catch (error) {
@@ -74,7 +77,7 @@ export default function RhfPasswordFieldStrengthMeterExample() {
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <div className='space-y-2'>
           <PasswordField
-            register={form.register('password')}
+            lens={lens.focus('password')}
             label='Password'
             tooltip={
               <div className='space-y-1'>
@@ -90,7 +93,6 @@ export default function RhfPasswordFieldStrengthMeterExample() {
             placeholder='Enter password'
           />
 
-          {/* Strength meter */}
           {password && (
             <div className='space-y-1.5'>
               <div className='flex gap-1'>
@@ -108,11 +110,7 @@ export default function RhfPasswordFieldStrengthMeterExample() {
           )}
         </div>
 
-        <PasswordField
-          register={form.register('confirmPassword')}
-          label='Confirm Password'
-          placeholder='Re-enter password'
-        />
+        <PasswordField lens={lens.focus('confirmPassword')} label='Confirm Password' placeholder='Re-enter password' />
 
         <SubmitButton>Create Account</SubmitButton>
       </form>

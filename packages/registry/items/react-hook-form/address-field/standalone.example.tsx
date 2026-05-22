@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -13,8 +14,10 @@ const zodSchema = z.object({
   address: addressSchema,
 });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function AddressFieldExample() {
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: {
       name: 'John Doe',
       address: {
@@ -28,8 +31,9 @@ export default function AddressFieldExample() {
     },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
       alert(`Values: ${JSON.stringify(values, null, 2)}`);
       form.reset();
@@ -41,8 +45,8 @@ export default function AddressFieldExample() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 w-full'>
-        <InputField register={form.register('name')} label='Name' placeholder='Enter your name' />
-        <AddressField register={form.register('address')} placeholder='Enter your address' className='w-full' />
+        <InputField lens={lens.focus('name')} label='Name' placeholder='Enter your name' />
+        <AddressField lens={lens.focus('address')} placeholder='Enter your address' className='w-full' />
         <SubmitButton>Check</SubmitButton>
 
         <pre className='border border-primary rounded-md p-4 overflow-x-auto'>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -12,13 +13,16 @@ const zodSchema = z.object({
   feedback: z.string().max(500, 'Maximum 500 characters'),
 });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function RhfTextareaFieldExample() {
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: { bio: '', feedback: '' },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: z.infer<typeof zodSchema>) {
+  async function onSubmit(values: Values) {
     try {
       alert(`Bio: ${values.bio}\nFeedback: ${values.feedback}`);
     } catch (error) {
@@ -30,7 +34,7 @@ export default function RhfTextareaFieldExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <TextareaField
-          register={form.register('bio')}
+          lens={lens.focus('bio')}
           label='Biography'
           description='Tell us about yourself'
           rows={4}
@@ -38,7 +42,7 @@ export default function RhfTextareaFieldExample() {
         />
 
         <TextareaField
-          register={form.register('feedback')}
+          lens={lens.focus('feedback')}
           label='Feedback'
           description='Share your thoughts (max 500 characters)'
           rows={6}

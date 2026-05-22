@@ -1,8 +1,9 @@
 'use client';
 
+import type { Lens } from '@hookform/lenses';
 import { Loader2, MapPin } from 'lucide-react';
 import * as React from 'react';
-import { type FieldPath, type FieldValues, type UseFormRegisterReturn, useFormContext } from 'react-hook-form';
+import { useController } from 'react-hook-form';
 import { z } from 'zod';
 import { getPlaceDetails, getPlacesAutocomplete } from '@/actions/shuip/places';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
@@ -34,8 +35,8 @@ interface AddressSuggestion {
   types: string[];
 }
 
-interface AddressFieldProps extends React.ComponentProps<typeof Input> {
-  register: UseFormRegisterReturn<FieldPath<FieldValues>>;
+export interface AddressFieldProps extends Omit<React.ComponentProps<typeof Input>, 'value' | 'onChange'> {
+  lens: Lens<AddressData>;
   label?: string;
   placeholder?: string;
   description?: string;
@@ -43,125 +44,129 @@ interface AddressFieldProps extends React.ComponentProps<typeof Input> {
 }
 
 export function AddressField({
-  register,
+  lens,
   label = 'Address',
   placeholder = 'Enter your address',
   description,
   country = DEFAULT_COUNTRY,
   ...props
 }: AddressFieldProps) {
-  const [inputValue, setInputValue] = React.useState('');
+  const fullAddress = useController(lens.focus('fullAddress').interop());
+  const street = useController(lens.focus('street').interop());
+  const city = useController(lens.focus('city').interop());
+  const postalCode = useController(lens.focus('postalCode').interop());
+  const countryField = useController(lens.focus('country').interop());
+  const placeId = useController(lens.focus('placeId').interop());
+
+  const [searchQuery, setSearchQuery] = React.useState('');
   const [suggestions, setSuggestions] = React.useState<AddressSuggestion[]>([]);
-  const [loading, setLoading] = React.useState(false);
   const [showSuggestions, setShowSuggestions] = React.useState(false);
   const [selectedIndex, setSelectedIndex] = React.useState(-1);
+  const [isPending, startTransition] = React.useTransition();
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const requestIdRef = React.useRef(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const popoverRef = React.useRef<HTMLDivElement>(null);
-  const form = useFormContext();
-
-  const searchAddresses = async (query: string) => {
-    if (!query || query.length < 3) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const result = await getPlacesAutocomplete({
-        input: query,
-        components: country ? `country:${country}` : undefined,
-        types: 'address',
-        language: LANGUAGE_RESULT,
-      });
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      setSuggestions(result.predictions || []);
-      setShowSuggestions(result.predictions?.length > 0);
-      setSelectedIndex(-1);
-    } catch (error) {
-      console.error('Error searching addresses:', error);
-      setSuggestions([]);
-      setShowSuggestions(false);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   React.useEffect(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
-    if (inputValue.length >= 3) {
-      debounceTimerRef.current = setTimeout(() => {
-        searchAddresses(inputValue);
-      }, DEBOUNCE_TIME);
-    } else {
+    if (searchQuery.length < 3) {
       setSuggestions([]);
       setShowSuggestions(false);
+      return;
     }
+
+    debounceTimerRef.current = setTimeout(() => {
+      const requestId = ++requestIdRef.current;
+      startTransition(async () => {
+        try {
+          const result = await getPlacesAutocomplete({
+            input: searchQuery,
+            components: country ? `country:${country}` : undefined,
+            types: 'address',
+            language: LANGUAGE_RESULT,
+          });
+
+          if (requestId !== requestIdRef.current) return;
+
+          if (result.error) {
+            throw new Error(result.error);
+          }
+
+          setSuggestions(result.predictions || []);
+          setShowSuggestions(result.predictions?.length > 0);
+          setSelectedIndex(-1);
+        } catch (error) {
+          if (requestId !== requestIdRef.current) return;
+          console.error('Error searching addresses:', error);
+          setSuggestions([]);
+          setShowSuggestions(false);
+        }
+      });
+    }, DEBOUNCE_TIME);
 
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
+      requestIdRef.current++;
     };
-  }, [inputValue]);
+  }, [searchQuery, country]);
 
-  const handleSelectAddress = async (suggestion: AddressSuggestion) => {
-    setInputValue(suggestion.description);
+  const handleSelectAddress = (suggestion: AddressSuggestion) => {
     setShowSuggestions(false);
     setSelectedIndex(-1);
+    setSearchQuery('');
 
-    const details = await getPlaceDetails({
-      placeId: suggestion.placeId,
-      fields: ['address_components', 'formatted_address', 'geometry'],
-      language: LANGUAGE_RESULT,
-    });
-
-    if (details?.result) {
-      const addressComponents = details.result.address_components || [];
-
-      let street = '';
-      let city = '';
-      let postalCode = '';
-      let country = '';
-
-      addressComponents.forEach((component: any) => {
-        const types = component.types;
-
-        if (types.includes('street_number')) {
-          street = `${component.long_name} ${street}`;
-        }
-        if (types.includes('route')) {
-          street = `${street} ${component.long_name}`;
-        }
-        if (types.includes('locality') || types.includes('administrative_area_level_2')) {
-          city = component.long_name;
-        }
-        if (types.includes('postal_code')) {
-          postalCode = component.long_name;
-        }
-        if (types.includes('country')) {
-          country = component.long_name;
-        }
+    startTransition(async () => {
+      const details = await getPlaceDetails({
+        placeId: suggestion.placeId,
+        fields: ['address_components', 'formatted_address', 'geometry'],
+        language: LANGUAGE_RESULT,
       });
 
-      form.setValue(`${register.name}.street`, street.trim());
-      form.setValue(`${register.name}.city`, city.trim());
-      form.setValue(`${register.name}.postalCode`, postalCode.trim());
-      form.setValue(`${register.name}.country`, country.trim());
-      form.setValue(`${register.name}.fullAddress`, details.result.formatted_address.trim());
-      form.setValue(`${register.name}.placeId`, suggestion.placeId.trim());
-    } else {
-      form.setValue(`${register.name}.fullAddress`, suggestion.description.trim());
-      form.setValue(`${register.name}.placeId`, suggestion.placeId.trim());
-    }
+      if (details?.result) {
+        const addressComponents = details.result.address_components || [];
+
+        let streetValue = '';
+        let cityValue = '';
+        let postalCodeValue = '';
+        let countryValue = '';
+
+        addressComponents.forEach((component: any) => {
+          const types = component.types;
+
+          if (types.includes('street_number')) {
+            streetValue = `${component.long_name} ${streetValue}`;
+          }
+          if (types.includes('route')) {
+            streetValue = `${streetValue} ${component.long_name}`;
+          }
+          if (types.includes('locality') || types.includes('administrative_area_level_2')) {
+            cityValue = component.long_name;
+          }
+          if (types.includes('postal_code')) {
+            postalCodeValue = component.long_name;
+          }
+          if (types.includes('country')) {
+            countryValue = component.long_name;
+          }
+        });
+
+        street.field.onChange(streetValue.trim());
+        city.field.onChange(cityValue.trim());
+        postalCode.field.onChange(postalCodeValue.trim());
+        countryField.field.onChange(countryValue.trim());
+        fullAddress.field.onChange(details.result.formatted_address.trim());
+        placeId.field.onChange(suggestion.placeId.trim());
+      } else {
+        fullAddress.field.onChange(suggestion.description.trim());
+        placeId.field.onChange(suggestion.placeId.trim());
+      }
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -192,7 +197,7 @@ export function AddressField({
   };
 
   const handleFocus = () => {
-    if (suggestions.length > 0 && inputValue.length >= 3) {
+    if (suggestions.length > 0 && searchQuery.length >= 3) {
       setShowSuggestions(true);
     }
   };
@@ -211,10 +216,9 @@ export function AddressField({
 
   return (
     <FormField
-      {...register}
-      name={`${register.name}.fullAddress`}
-      render={({ field }) => (
-        <FormItem>
+      {...lens.focus('fullAddress').interop()}
+      render={({ field, fieldState }) => (
+        <FormItem data-invalid={fieldState.invalid}>
           <FormLabel className='flex items-center justify-between'>
             {label}
             <FormMessage className='max-sm:hidden text-xs opacity-80' />
@@ -226,21 +230,22 @@ export function AddressField({
                   <div className='relative'>
                     <Input
                       ref={inputRef}
-                      value={inputValue}
+                      value={field.value ?? ''}
                       placeholder={placeholder}
                       onChange={(e) => {
                         const value = e.target.value;
-                        setInputValue(value);
                         field.onChange(value);
+                        setSearchQuery(value);
                       }}
                       onFocus={handleFocus}
                       onBlur={handleBlur}
                       onKeyDown={handleKeyDown}
                       autoComplete='off'
+                      aria-invalid={fieldState.invalid}
                       {...props}
                     />
                     <div className='absolute inset-y-0 right-0 flex items-center pr-3'>
-                      {loading ? (
+                      {isPending ? (
                         <Loader2 className='size-4 animate-spin text-muted-foreground' />
                       ) : (
                         <MapPin className='size-4 text-muted-foreground' />
@@ -254,11 +259,11 @@ export function AddressField({
                 className='p-0'
                 align='start'
                 onOpenAutoFocus={(e) => e.preventDefault()}
-                style={{ width: inputRef.current?.offsetWidth }}
+                style={{ width: 'var(--radix-popover-trigger-width)' }}
               >
                 <Command className='w-full'>
                   <CommandList className='max-h-60'>
-                    <CommandEmpty>{loading ? 'Searching...' : 'No addresses found'}</CommandEmpty>
+                    <CommandEmpty>{isPending ? 'Searching...' : 'No addresses found'}</CommandEmpty>
                     <CommandGroup>
                       {suggestions.map((suggestion, index) => (
                         <CommandItem

@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -17,16 +18,19 @@ const zodSchema = z
     path: ['confirmPassword'],
   });
 
+type Values = z.infer<typeof zodSchema>;
+
 export default function RhfPasswordFieldConfirmPasswordExample() {
-  const form = useForm({
+  const form = useForm<Values>({
     defaultValues: {
       password: '',
       confirmPassword: '',
     },
     resolver: zodResolver(zodSchema),
   });
+  const lens = useLens({ control: form.control });
 
-  async function onSubmit(_values: z.infer<typeof zodSchema>) {
+  async function onSubmit(_values: Values) {
     try {
       alert(`Password set successfully!`);
     } catch (error) {
@@ -38,14 +42,14 @@ export default function RhfPasswordFieldConfirmPasswordExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <PasswordField
-          register={form.register('password')}
+          lens={lens.focus('password')}
           label='Password'
           description='Choose a strong password'
           placeholder='Enter password'
         />
 
         <PasswordField
-          register={form.register('confirmPassword')}
+          lens={lens.focus('confirmPassword')}
           label='Confirm Password'
           description='Re-enter your password to confirm'
           placeholder='Confirm password'

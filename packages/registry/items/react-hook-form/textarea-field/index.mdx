@@ -1,66 +1,76 @@
 ---
 title: Textarea Field
-description: Multi-line text input component with optional tooltip. Built on shadcn InputGroup for enhanced UI.
+description: Multi-line text input component integrated with React Hook Form via typed lens binding from @hookform/lenses. Supports tooltips and InputGroup integration for character limits or formatting guidelines.
 registryName: rhf-textarea-field
 ---
 
-Multi-line text inputs are essential for longer content like descriptions, comments, or messages. `TextareaField` wraps a textarea element with InputGroup to enable an optional tooltip button positioned at the bottom-right corner—useful for character limits or formatting guidelines without cluttering the label area.
+`TextareaField` is a multi-line text input component that encapsulates React Hook Form's field management with shadcn/ui's design system. It handles all the boilerplate of connecting form state to a textarea element: wiring event handlers, displaying errors, managing touched states, and rendering consistent UI.
 
-The component accepts native textarea props like `rows` and `maxLength` directly. Common patterns include pairing `maxLength` with Zod validation for minimum length requirements or using the `description` prop to display character count guidance.
+The field binds to the form via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses) — no call-site generic, just `lens.focus('fieldName')` with full autocomplete from your form's value type.
 
 #### Built-in features
 
-- **Bottom-right tooltip** positioned via InputGroup `align='block-end'`
-- **Native textarea props** support (rows, maxLength, placeholder)
-- **Zod validation**: Native integration with react-hook-form and Zod schemas
-- **Multi-line error display** for longer validation messages
+- **Typed lens binding**: `lens.focus('bio')` autocompletes from your form's value type — no `<MyForm>` generic at the call site
+- **Bottom-right tooltip**: optional InfoIcon button with tooltip content via `tooltip` prop, positioned via InputGroup `align='block-end'`
+- **Native textarea props**: full support for `rows`, `maxLength`, `placeholder`, and other native attributes
+- **InputGroup ready**: built on shadcn InputGroup for seamless addon integration
+- **Zod validation**: native integration with react-hook-form and Zod via resolver
 
-## Usage patterns
+## Setup
+
+Field components bind via `@hookform/lenses`. Create a lens once per form:
 
 ```tsx
-const schema = z.object({
-  feedback: z.string().max(500, 'Maximum 500 characters'),
-})
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { TextareaField } from '@/components/ui/shuip/react-hook-form/textarea-field';
 
-const form = useForm({
-  defaultValues: { feedback: '' },
-  resolver: zodResolver(schema),
-})
+const form = useForm<MyForm>({ defaultValues: { bio: '' } });
+const lens = useLens({ control: form.control });
 
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <TextareaField lens={lens.focus('bio')} label='Bio' />
+  </form>
+</Form>
 ```
 
-### Basic textarea
+The `<Form>` wrapper is required — it provides shadcn's `FormProvider` which `FormLabel` and `FormMessage` use internally.
+
+## Less boilerplate
+
+React Hook Form's standard approach uses render props to access field state:
+
+```tsx
+<FormField
+  control={form.control}
+  name="bio"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Bio</FormLabel>
+      <FormControl>
+        <Textarea placeholder="Tell us about yourself..." rows={4} {...field} />
+      </FormControl>
+      <FormDescription>
+        Tell us about yourself
+      </FormDescription>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+```
+
+
+With `TextareaField`, this reduces to a single declarative component:
 
 ```tsx
 <TextareaField
-  register={form.register('bio')}
-  label='Bio'
-  description='Tell us about yourself'
+  lens={lens.focus('bio')}
+  label="Bio"
+  description="Tell us about yourself"
+  placeholder="Tell us about yourself..."
   rows={4}
-/>
-```
-
-### With character limit
-
-```tsx
-<TextareaField
-  register={form.register('feedback')}
-  label='Feedback'
-  description='Share your thoughts (max 500 characters)'
-  rows={6}
-  maxLength={500}
-  placeholder='Your feedback...'
-/>
-```
-
-### With tooltip
-
-```tsx
-<TextareaField
-  register={form.register('notes')}
-  label='Notes'
-  tooltip='Supports plain text only. Markdown coming soon.'
-  rows={8}
 />
 ```
 
@@ -75,9 +85,9 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 <TypeTable
   type={{
-    register: {
-      description: 'React Hook Form register function result',
-      type: 'UseFormRegisterReturn',
+    lens: {
+      description: 'Typed lens from useLens (see Setup section).',
+      type: 'Lens<string>',
     },
     label: {
       description: 'Field label text',
@@ -92,8 +102,8 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       type: 'React.ReactNode?',
     },
     props: {
-      description: 'Native HTML textarea props (rows, maxLength, placeholder, etc.)',
-      type: "React.ComponentProps<typeof InputGroupTextarea>?",
+      description: 'Native HTML textarea props (rows, maxLength, placeholder, etc.) — spread on InputGroupTextarea, except value/onChange which are managed.',
+      type: "Omit<React.ComponentProps<typeof Textarea>, 'value' | 'onChange'>",
     },
   }}
 />

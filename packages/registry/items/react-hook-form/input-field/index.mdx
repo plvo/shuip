@@ -1,20 +1,42 @@
 ---
 title: Input Field
-description: Text input component integrated with React Hook Form. Supports tooltips and InputGroup integration for addons and buttons.
+description: Text input component integrated with React Hook Form via typed lens binding from @hookform/lenses. Supports tooltips, InputGroup integration, and numeric polymorphic detection.
 registryName: rhf-input-field
 ---
 
 `InputField` is a text input component that encapsulates React Hook Form's field management with shadcn/ui's design system. It handles all the boilerplate of connecting form state to an input element: wiring event handlers, displaying errors, managing touched states, and rendering consistent UI.
 
-This component is useful when you want to quickly add form inputs without manually setting up `FormField` render props, input bindings, and error display logic for every field.
+The field binds to the form via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses) — no call-site generic, just `lens.focus('fieldName')` with full autocomplete from your form's value type.
 
 #### Built-in features
 
-- **Type-safe registration**: Uses `register` from React Hook Form for validation
-- **Tooltip integration**: Optional InfoIcon button with tooltip content via `tooltip` prop
-- **InputGroup ready**: Built on shadcn InputGroup for seamless addon integration
-- **Zod validation**: Native integration with react-hook-form and Zod schemas
-- **Full type inference**: Field value types automatically inferred from form schema
+- **Typed lens binding**: `lens.focus('name')` autocompletes from your form's value type — no `<MyForm>` generic at the call site
+- **Numeric polymorphic**: auto-detects numeric fields from `type='number'`/`'range'` or a numeric value
+- **Tooltip integration**: optional InfoIcon button with tooltip content via `tooltip` prop
+- **InputGroup ready**: built on shadcn InputGroup for seamless addon integration
+- **Zod validation**: native integration with react-hook-form and Zod via resolver
+
+## Setup
+
+Field components bind via `@hookform/lenses`. Create a lens once per form:
+
+```tsx
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
+
+const form = useForm<MyForm>({ defaultValues: { email: '' } });
+const lens = useLens({ control: form.control });
+
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <InputField lens={lens.focus('email')} label='Email' />
+  </form>
+</Form>
+```
+
+The `<Form>` wrapper is required — it provides shadcn's `FormProvider` which `FormLabel` and `FormMessage` use internally.
 
 ## Less boilerplate
 
@@ -44,7 +66,7 @@ With `InputField`, this reduces to a single declarative component:
 
 ```tsx
 <InputField
-  register={form.register('email')}
+  lens={lens.focus('email')}
   label="Email"
   description="Your email address"
   placeholder="your@email.com"
@@ -58,13 +80,40 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 <ItemExamples registryName={'rhf-input-field'} />
 
+## Numeric fields
+
+`InputField` handles both string and numeric fields. It detects numeric mode when either:
+
+- `props.type` is `'number'` or `'range'`, or
+- the field's current value is a `number` (typically because `defaultValues` declares it as one)
+
+In numeric mode the input renders as `type='number'` and writes back `e.target.valueAsNumber` — empty input becomes `NaN`, which validators can check with `Number.isNaN(value)`. In string mode it passes `e.target.value` through unchanged.
+
+```tsx
+const form = useForm<{ quantity: number; ratio: number }>({
+  defaultValues: { quantity: 1, ratio: 0.5 },
+  resolver: zodResolver(
+    z.object({
+      quantity: z.number().min(1, 'Required'),
+      ratio: z.number().min(0).max(1),
+    }),
+  ),
+});
+const lens = useLens({ control: form.control });
+
+<InputField lens={lens.focus('quantity')} label='Quantity' />
+<InputField lens={lens.focus('ratio')} type='range' label='Ratio' min={0} max={1} step={0.1} />
+```
+
+If the field type is `number | undefined` / `number | null` and the current value starts as `undefined`/`null`, the runtime `typeof` check can't infer numeric mode — set `type='number'` explicitly in that case.
+
 ## Props
 
 <TypeTable
   type={{
-    register: {
-      description: 'React Hook Form register function result',
-      type: 'UseFormRegisterReturn',
+    lens: {
+      description: 'Typed lens from useLens (see Setup section). Generic on T extends string | number.',
+      type: 'Lens<T>',
     },
     label: {
       description: 'Field label text',
@@ -79,8 +128,8 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       type: 'React.ReactNode?',
     },
     props: {
-      description: 'Native HTML input props (type, placeholder, disabled, etc.)',
-      type: "React.ComponentProps<typeof InputGroupInput>?",
+      description: 'Native HTML input props (type, placeholder, disabled, etc.) — spread on InputGroupInput, except value/onChange which are managed.',
+      type: "Omit<React.ComponentProps<typeof InputGroupInput>, 'value' | 'onChange'>",
     },
   }}
 />

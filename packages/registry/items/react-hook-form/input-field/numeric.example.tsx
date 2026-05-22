@@ -9,21 +9,22 @@ import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
 const zodSchema = z.object({
-  email: z.email({ message: 'Invalid email' }),
+  quantity: z.number().min(1, 'Must be at least 1'),
+  ratio: z.number().min(0).max(1),
 });
 
 type Values = z.infer<typeof zodSchema>;
 
-export default function InputFieldExample() {
+export default function RhfInputFieldNumericExample() {
   const form = useForm<Values>({
-    defaultValues: { email: '' },
+    defaultValues: { quantity: 1, ratio: 0.5 },
     resolver: zodResolver(zodSchema),
   });
   const lens = useLens({ control: form.control });
 
   async function onSubmit(values: Values) {
     try {
-      alert(`Hello ${values.email}`);
+      alert(`Quantity: ${values.quantity}\nRatio: ${values.ratio}`);
     } catch (error) {
       console.error(error);
     }
@@ -33,13 +34,23 @@ export default function InputFieldExample() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <InputField
-          lens={lens.focus('email')}
-          type='email'
-          label='Email'
-          description='Your email'
-          placeholder='john@example.com'
+          lens={lens.focus('quantity')}
+          label='Quantity'
+          description='Auto-detected numeric because defaultValues is a number'
+          placeholder='1'
         />
-        <SubmitButton>Check</SubmitButton>
+
+        <InputField
+          lens={lens.focus('ratio')}
+          type='range'
+          label='Ratio'
+          description='Rendered as a range slider'
+          min={0}
+          max={1}
+          step={0.1}
+        />
+
+        <SubmitButton>Submit</SubmitButton>
       </form>
     </Form>
   );
