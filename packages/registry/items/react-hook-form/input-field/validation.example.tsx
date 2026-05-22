@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
+import { NumberField } from '@/components/ui/shuip/react-hook-form/number-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
 const zodSchema = z.object({
@@ -52,7 +53,7 @@ export default function RhfInputFieldValidationExample() {
           placeholder='your@email.com'
         />
 
-        <InputField
+        <NumberField
           lens={lens.focus('age')}
           label='Age'
           description='You must be 18 or older to register'

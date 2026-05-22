@@ -1,6 +1,6 @@
 ---
 title: Input Field
-description: Text input component integrated with React Hook Form via typed lens binding from @hookform/lenses. Supports tooltips, InputGroup integration, and numeric polymorphic detection.
+description: Text input component integrated with React Hook Form via typed lens binding from @hookform/lenses. Supports tooltips and InputGroup integration.
 registryName: rhf-input-field
 ---
 
@@ -8,10 +8,11 @@ registryName: rhf-input-field
 
 The field binds to the form via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses) — no call-site generic, just `lens.focus('fieldName')` with full autocomplete from your form's value type.
 
+For numeric inputs, use [`NumberField`](/docs/react-hook-form/number-field) instead.
+
 #### Built-in features
 
 - **Typed lens binding**: `lens.focus('name')` autocompletes from your form's value type — no `<MyForm>` generic at the call site
-- **Numeric polymorphic**: auto-detects numeric fields from `type='number'`/`'range'` or a numeric value
 - **Tooltip integration**: optional InfoIcon button with tooltip content via `tooltip` prop
 - **InputGroup ready**: built on shadcn InputGroup for seamless addon integration
 - **Zod validation**: native integration with react-hook-form and Zod via resolver
@@ -36,27 +37,23 @@ const lens = useLens({ control: form.control });
 </Form>
 ```
 
-The `<Form>` wrapper is required — it provides shadcn's `FormProvider` which `FormLabel` and `FormMessage` use internally.
+The `<Form>` wrapper is required — it provides React Hook Form's `FormProvider` context.
 
 ## Less boilerplate
 
 React Hook Form's standard approach uses render props to access field state:
 
 ```tsx
-<FormField
+<Controller
   control={form.control}
   name="email"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Email</FormLabel>
-      <FormControl>
-        <Input placeholder="your@email.com" {...field} />
-      </FormControl>
-      <FormDescription>
-        Your email address
-      </FormDescription>
-      <FormMessage />
-    </FormItem>
+  render={({ field, fieldState }) => (
+    <Field data-invalid={fieldState.invalid}>
+      <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+      <Input {...field} id={field.name} aria-invalid={fieldState.invalid} placeholder="your@email.com" />
+      <FieldDescription>Your email address</FieldDescription>
+      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+    </Field>
   )}
 />
 ```
@@ -80,40 +77,13 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 <ItemExamples registryName={'rhf-input-field'} />
 
-## Numeric fields
-
-`InputField` handles both string and numeric fields. It detects numeric mode when either:
-
-- `props.type` is `'number'` or `'range'`, or
-- the field's current value is a `number` (typically because `defaultValues` declares it as one)
-
-In numeric mode the input renders as `type='number'` and writes back `e.target.valueAsNumber` — empty input becomes `NaN`, which validators can check with `Number.isNaN(value)`. In string mode it passes `e.target.value` through unchanged.
-
-```tsx
-const form = useForm<{ quantity: number; ratio: number }>({
-  defaultValues: { quantity: 1, ratio: 0.5 },
-  resolver: zodResolver(
-    z.object({
-      quantity: z.number().min(1, 'Required'),
-      ratio: z.number().min(0).max(1),
-    }),
-  ),
-});
-const lens = useLens({ control: form.control });
-
-<InputField lens={lens.focus('quantity')} label='Quantity' />
-<InputField lens={lens.focus('ratio')} type='range' label='Ratio' min={0} max={1} step={0.1} />
-```
-
-If the field type is `number | undefined` / `number | null` and the current value starts as `undefined`/`null`, the runtime `typeof` check can't infer numeric mode — set `type='number'` explicitly in that case.
-
 ## Props
 
 <TypeTable
   type={{
     lens: {
-      description: 'Typed lens from useLens (see Setup section). Generic on T extends string | number.',
-      type: 'Lens<T>',
+      description: 'Typed lens from useLens (see Setup section).',
+      type: 'Lens<string>',
     },
     label: {
       description: 'Field label text',
@@ -128,7 +98,7 @@ If the field type is `number | undefined` / `number | null` and the current valu
       type: 'React.ReactNode?',
     },
     props: {
-      description: 'Native HTML input props (type, placeholder, disabled, etc.) — spread on InputGroupInput, except value/onChange which are managed.',
+      description: 'Native HTML input props (placeholder, disabled, etc.) — spread on InputGroupInput, except value/onChange which are managed.',
       type: "Omit<React.ComponentProps<typeof InputGroupInput>, 'value' | 'onChange'>",
     },
   }}
