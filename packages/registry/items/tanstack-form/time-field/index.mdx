@@ -1,0 +1,83 @@
+---
+title: Time Field
+description: Time picker (HH:mm) integrated with TanStack Form via field context. Two shadcn Select inputs for hours and minutes.
+registryName: tsf-time-field
+---
+
+`TimeField` is a time-only picker built from two shadcn/ui `Select` inputs — hours `00`–`23` and minutes in 5-minute steps. It binds to a `string` in the `HH:mm` 24-hour format and reads its state from TanStack Form's field context.
+
+#### Built-in features
+
+- **Two-select picker**: hours and minutes as shadcn `Select` inputs — consistent styling, full keyboard support
+- **Field-context binding**: reads value and validation state via `useFieldContext`
+- **Range constraints**: pass `min` / `max` (as `HH:mm` strings) to disable out-of-range options
+- **Validation**: surfaces TanStack Form validator errors below the picker
+
+## Setup
+
+Register the field component on your form hook, then render it inside `form.AppField`:
+
+```tsx
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { TimeField } from '@/components/ui/shuip/tanstack-form/time-field';
+
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { TimeField },
+  formComponents: {},
+});
+
+<form.AppField
+  name='meetingTime'
+  children={(field) => <field.TimeField label='Meeting time' />}
+/>
+```
+
+The value is a `string` in `HH:mm` format (or empty string when unset). Picking only the hour or only the minute defaults the other part to `00`.
+
+## Constraining the range
+
+`min` and `max` accept `HH:mm` strings; out-of-range hour and minute options are disabled:
+
+```tsx
+<field.TimeField label='Appointment' min='09:00' max='18:00' />
+```
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'tsf-time-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the picker',
+      type: 'string?',
+    },
+    min: {
+      description: 'Earliest selectable time as a HH:mm string. Out-of-range options are disabled.',
+      type: 'string?',
+    },
+    max: {
+      description: 'Latest selectable time as a HH:mm string. Out-of-range options are disabled.',
+      type: 'string?',
+    },
+    disabled: {
+      description: 'Disables both selects',
+      type: 'boolean?',
+    },
+    fieldProps: {
+      description: 'Props forwarded to the wrapping Field element',
+      type: 'React.ComponentProps<typeof Field>?',
+    },
+  }}
+/>

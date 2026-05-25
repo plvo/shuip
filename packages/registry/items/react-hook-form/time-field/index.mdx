@@ -1,0 +1,90 @@
+---
+title: Time Field
+description: Time picker (HH:mm) integrated with React Hook Form via typed lens binding from @hookform/lenses. Two shadcn Select inputs for hours and minutes.
+registryName: rhf-time-field
+---
+
+`TimeField` is a time-only picker built from two shadcn/ui `Select` inputs — hours `00`–`23` and minutes in 5-minute steps. It binds to a `string` in the `HH:mm` 24-hour format, encapsulating React Hook Form's field management.
+
+The field binds to the form via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses) — no call-site generic, just `lens.focus('fieldName')` with full autocomplete from your form's value type.
+
+#### Built-in features
+
+- **Two-select picker**: hours and minutes as shadcn `Select` inputs — consistent styling, full keyboard support, no native-input inconsistencies across browsers
+- **Typed lens binding**: `lens.focus('meetingTime')` autocompletes from your form's value type
+- **Range constraints**: pass `min` / `max` (as `HH:mm` strings) to disable out-of-range hour and minute options
+- **Zod validation**: native integration with react-hook-form and Zod via resolver
+
+## Setup
+
+Field components bind via `@hookform/lenses`. Create a lens once per form:
+
+```tsx
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { TimeField } from '@/components/ui/shuip/react-hook-form/time-field';
+
+const form = useForm<MyForm>({ defaultValues: { meetingTime: '' } });
+const lens = useLens({ control: form.control });
+
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <TimeField lens={lens.focus('meetingTime')} label='Meeting time' />
+  </form>
+</Form>
+```
+
+The value is a `string` in `HH:mm` format (or empty string when unset). Picking only the hour or only the minute defaults the other part to `00`.
+
+## Constraining the range
+
+`min` and `max` accept `HH:mm` strings. Out-of-range hour and minute options are disabled in the dropdowns. Always validate via Zod (and server-side) for safety:
+
+```tsx
+const schema = z.object({
+  appointment: z
+    .string()
+    .min(1, 'Required')
+    .refine((v) => v >= '09:00' && v <= '18:00', 'Outside office hours'),
+});
+
+<TimeField lens={lens.focus('appointment')} label='Appointment' min='09:00' max='18:00' />
+```
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'rhf-time-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    lens: {
+      description: 'Typed lens from useLens (see Setup section). Bound to a HH:mm string.',
+      type: 'Lens<string>',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the picker',
+      type: 'string?',
+    },
+    min: {
+      description: 'Earliest selectable time as a HH:mm string. Out-of-range options are disabled.',
+      type: 'string?',
+    },
+    max: {
+      description: 'Latest selectable time as a HH:mm string. Out-of-range options are disabled.',
+      type: 'string?',
+    },
+    disabled: {
+      description: 'Disables both selects',
+      type: 'boolean?',
+    },
+  }}
+/>

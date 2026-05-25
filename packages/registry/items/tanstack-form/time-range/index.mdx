@@ -1,0 +1,74 @@
+---
+title: Time Range
+description: Start/end time range (HH:mm) integrated with TanStack Form via field context. Selecting the start sets the end one hour later and enforces start < end.
+registryName: tsf-time-range
+---
+
+`TimeRangeField` is two coupled time pickers — a start and an end — reading a single `{ start, end }` object from TanStack Form's field context. Both values are `HH:mm` strings.
+
+#### Built-in features
+
+- **Coupled pickers**: choosing a start time sets the end to one hour later automatically
+- **`start < end` enforced**: end options at or before the start are disabled in the dropdowns
+- **Single object binding**: bind the field to a `{ start, end }` value
+- **Validation**: surfaces TanStack Form validator errors below the pickers
+
+## Setup
+
+```tsx
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { TimeRangeField } from '@/components/ui/shuip/tanstack-form/time-range';
+
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { TimeRangeField },
+  formComponents: {},
+});
+
+// defaultValues: { slot: { start: '', end: '' } }
+<form.AppField
+  name='slot'
+  children={(field) => <field.TimeRangeField label='Meeting slot' />}
+/>
+```
+
+The value is `{ start: string; end: string }`, each a `HH:mm` string (empty when unset). Changing the start always resets the end to one hour after the new start.
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'tsf-time-range'} />
+
+## Props
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the pickers',
+      type: 'string?',
+    },
+    startLabel: {
+      description: 'Label above the start picker',
+      type: "string? (default 'Start')",
+    },
+    endLabel: {
+      description: 'Label above the end picker',
+      type: "string? (default 'End')",
+    },
+    disabled: {
+      description: 'Disables all selects',
+      type: 'boolean?',
+    },
+    fieldProps: {
+      description: 'Props forwarded to the wrapping Field element',
+      type: 'React.ComponentProps<typeof Field>?',
+    },
+  }}
+/>
