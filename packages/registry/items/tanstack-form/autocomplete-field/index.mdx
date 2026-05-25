@@ -1,0 +1,90 @@
+---
+title: Autocomplete Field
+description: Free-text input that suggests matching values from a static list or an async search, integrated with TanStack Form via React context. The committed value is a plain string.
+registryName: tsf-autocomplete-field
+---
+
+`AutocompleteField` is a text input that proposes matching strings as the user types, while still allowing any free-text value. It reads the surrounding field via `useFieldContext`, so you compose it inside a `<form.AppField>` rather than passing a `form` instance by prop. It stores a plain `string`.
+
+#### Built-in features
+
+- **Two suggestion modes**: a static `suggestions` array (filtered client-side) or an async `onSearch` function (debounced fetch).
+- **Free text**: the typed value is always kept — closing the dropdown without selecting commits what was typed.
+- **Keyboard navigation**: ArrowUp/ArrowDown to move, Enter to select, Escape to close.
+- **Custom matching**: override the default case-insensitive substring match via `filter` (static mode).
+
+## Setup
+
+Field components are bound via React context. In your project, create `lib/form.ts` once:
+
+```tsx
+// lib/form.ts
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { AutocompleteField } from '@/components/ui/shuip/tanstack-form/autocomplete-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
+
+export const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { AutocompleteField },
+  formComponents: { SubmitButton },
+});
+```
+
+See the [`form-context`](/docs/tanstack-form/form-context) item for details.
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'tsf-autocomplete-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the input',
+      type: 'string?',
+    },
+    placeholder: {
+      description: 'Input placeholder',
+      type: 'string?',
+    },
+    suggestions: {
+      description: 'Static list of suggestions, filtered client-side. Ignored when onSearch is provided.',
+      type: 'string[]?',
+    },
+    onSearch: {
+      description: 'Async resolver called with the current query; its result is shown as-is. Takes precedence over suggestions.',
+      type: '((query: string) => Promise<string[]>)?',
+    },
+    emptyText: {
+      description: 'Message shown when there are no matches',
+      type: 'string?',
+      default: "'No results'",
+    },
+    debounceMs: {
+      description: 'Debounce delay before calling onSearch (async mode only)',
+      type: 'number?',
+      default: '300',
+    },
+    filter: {
+      description: 'Custom matcher for static mode; defaults to case-insensitive substring',
+      type: '((suggestion: string, query: string) => boolean)?',
+    },
+    fieldProps: {
+      description: 'Props passed to the Field wrapper component',
+      type: 'React.ComponentProps<typeof Field>?',
+    },
+    props: {
+      description: 'Native HTML input props (placeholder, disabled, etc.)',
+      type: "Omit<React.ComponentProps<'input'>, 'value' | 'onChange'>?",
+    },
+  }}
+/>
