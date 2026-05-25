@@ -28,7 +28,7 @@ export function toMinutes(time: string): number | null {
 }
 
 export function fromMinutes(total: number): string {
-  const clamped = Math.max(0, Math.min(total, 24 * 60 - 1));
+  const clamped = Math.max(0, Math.min(total, 24 * 60 - MINUTE_STEP));
   const h = Math.floor(clamped / 60);
   const m = clamped % 60;
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
