@@ -46,7 +46,7 @@ export function AutocompleteField({
   const [open, setOpen] = React.useState(false);
   const [selectedIndex, setSelectedIndex] = React.useState(-1);
   const [results, setResults] = React.useState<string[]>([]);
-  const [isPending, setIsPending] = React.useState(false);
+  const [isPending, startTransition] = React.useTransition();
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const requestIdRef = React.useRef(0);
   const popoverRef = React.useRef<HTMLDivElement>(null);
@@ -68,32 +68,30 @@ export function AutocompleteField({
     }
 
     if (!query) {
+      requestIdRef.current++;
       setResults([]);
       return;
     }
 
     debounceTimerRef.current = setTimeout(() => {
       const requestId = ++requestIdRef.current;
-      setIsPending(true);
-      onSearch(query)
-        .then((res) => {
+      startTransition(async () => {
+        try {
+          const res = await onSearch(query);
           if (requestId !== requestIdRef.current) return;
           setResults(res);
-        })
-        .catch(() => {
+        } catch {
           if (requestId !== requestIdRef.current) return;
           setResults([]);
-        })
-        .finally(() => {
-          if (requestId !== requestIdRef.current) return;
-          setIsPending(false);
-        });
+        }
+      });
     }, debounceMs);
 
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
+      requestIdRef.current++;
     };
   }, [query, onSearch, open, debounceMs]);
 
@@ -104,7 +102,16 @@ export function AutocompleteField({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!open || items.length === 0) return;
+    if (!open) return;
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setOpen(false);
+      setSelectedIndex(-1);
+      return;
+    }
+
+    if (items.length === 0) return;
 
     switch (e.key) {
       case 'ArrowDown':
@@ -120,11 +127,6 @@ export function AutocompleteField({
           e.preventDefault();
           handleSelect(items[selectedIndex]);
         }
-        break;
-      case 'Escape':
-        e.preventDefault();
-        setOpen(false);
-        setSelectedIndex(-1);
         break;
     }
   };
@@ -186,7 +188,7 @@ export function AutocompleteField({
               <CommandGroup>
                 {items.map((item, index) => (
                   <CommandItem
-                    key={item}
+                    key={`${item}-${index}`}
                     value={item}
                     onSelect={() => handleSelect(item)}
                     className={cn('cursor-pointer', selectedIndex === index && 'bg-accent')}
