@@ -55,12 +55,12 @@ export function DatetimeField({
   };
 
   const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!value) return;
     const raw = event.target.value;
     if (!raw) return;
     const [h, m] = raw.split(':').map((part) => Number.parseInt(part, 10));
     if (Number.isNaN(h) || Number.isNaN(m)) return;
-    const base = value ?? new Date();
-    field.handleChange(setMinutes(setHours(base, h), m));
+    field.handleChange(setMinutes(setHours(value, h), m));
   };
 
   const triggerLabel = value ? format(value, 'PPp', locale ? { locale } : undefined) : placeholder;
@@ -98,6 +98,7 @@ export function DatetimeField({
               step={step}
               value={toTimeInputValue(value)}
               onChange={handleTimeChange}
+              disabled={disabled || !value}
               aria-label='Time'
             />
           </InputGroup>

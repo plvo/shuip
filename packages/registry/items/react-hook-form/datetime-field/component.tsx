@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 
 export interface DatetimeFieldProps {
-  lens: Lens<Date | undefined>;
+  lens: Lens<Date>;
   label?: string;
   description?: string;
   placeholder?: string;
@@ -57,12 +57,12 @@ export function DatetimeField({
   };
 
   const handleTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!value) return;
     const raw = event.target.value;
     if (!raw) return;
     const [h, m] = raw.split(':').map((part) => Number.parseInt(part, 10));
     if (Number.isNaN(h) || Number.isNaN(m)) return;
-    const base = value ?? new Date();
-    field.onChange(setMinutes(setHours(base, h), m));
+    field.onChange(setMinutes(setHours(value, h), m));
   };
 
   const triggerLabel = value ? format(value, 'PPp', locale ? { locale } : undefined) : placeholder;
@@ -100,6 +100,7 @@ export function DatetimeField({
               step={step}
               value={toTimeInputValue(value)}
               onChange={handleTimeChange}
+              disabled={disabled || !value}
               aria-label='Time'
             />
           </InputGroup>

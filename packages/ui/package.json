@@ -21,7 +21,6 @@
     "vaul": "catalog:",
     "next-themes": "catalog:",
     "react-day-picker": "catalog:",
-    "date-fns": "catalog:",
     "@radix-ui/react-dialog": "catalog:radix",
     "@radix-ui/react-popover": "catalog:radix",
     "@radix-ui/react-select": "catalog:radix",
