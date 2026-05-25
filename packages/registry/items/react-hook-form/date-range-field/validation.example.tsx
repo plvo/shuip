@@ -8,19 +8,31 @@ import { Form } from '@/components/ui/form';
 import { DateRangeField } from '@/components/ui/shuip/react-hook-form/date-range-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
-const zodSchema = z
-  .object({
-    range: z
-      .object({
-        from: z.date({ message: 'Start date is required' }),
-        to: z.date({ message: 'End date is required' }),
-      })
-      .refine((value) => value.to >= value.from, {
-        message: 'End date must be on or after the start date',
-        path: ['to'],
-      }),
-  })
-  .required();
+const zodSchema = z.object({
+  range: z
+    .object({
+      from: z.date().optional(),
+      to: z.date().optional(),
+    })
+    .optional()
+    .check((ctx) => {
+      const range = ctx.value;
+      if (!range?.from) {
+        ctx.issues.push({ code: 'custom', message: 'Start date is required', input: range, path: ['from'] });
+      }
+      if (!range?.to) {
+        ctx.issues.push({ code: 'custom', message: 'End date is required', input: range, path: ['to'] });
+      }
+      if (range?.from && range?.to && range.to < range.from) {
+        ctx.issues.push({
+          code: 'custom',
+          message: 'End date must be on or after the start date',
+          input: range,
+          path: ['to'],
+        });
+      }
+    }),
+});
 
 type Values = z.infer<typeof zodSchema>;
 
