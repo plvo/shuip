@@ -21,6 +21,8 @@
     "@tanstack/react-query": "catalog:forms",
     "react-error-boundary": "catalog:forms",
     "zod": "catalog:",
+    "date-fns": "catalog:",
+    "react-day-picker": "catalog:",
     "lucide-react": "catalog:",
     "class-variance-authority": "catalog:",
     "@radix-ui/react-icons": "catalog:radix",

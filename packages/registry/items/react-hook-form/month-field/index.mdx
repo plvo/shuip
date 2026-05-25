@@ -1,0 +1,104 @@
+---
+title: Month Field
+description: Month + year picker integrated with React Hook Form via typed lens binding from @hookform/lenses. Stores a Date normalized to the first day of the selected month.
+registryName: rhf-month-field
+---
+
+`MonthField` is a month picker that wraps the shadcn `Calendar` primitive inside a `Popover`. The user picks any day in a month and the field stores the **first day of that month** as a `Date` — perfect for "billing month", "report period", "subscription start" use cases where the day component is noise.
+
+The field binds to the form via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses): `lens.focus('billingMonth')` autocompletes from your form's value type — no `<MyForm>` generic at the call site.
+
+#### Built-in features
+
+- **First-day normalization**: any day the user clicks is internally rewritten to `new Date(year, month, 1)`, so the stored value behaves as a month bucket
+- **Dropdown caption**: month and year dropdowns in the calendar header (`captionLayout='dropdown'`)
+- **Bounded range**: `minDate` / `maxDate` drive both the calendar's disabled days and its dropdown bounds via `startMonth` / `endMonth`
+- **Locale aware**: `locale` is forwarded to `date-fns` `format` and to the calendar
+- **Typed lens binding**: `lens.focus('month')` autocompletes from your form's value type
+
+## Setup
+
+```tsx
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { MonthField } from '@/components/ui/shuip/react-hook-form/month-field';
+
+type Values = { billingMonth: Date | undefined };
+
+const form = useForm<Values>({ defaultValues: { billingMonth: undefined } });
+const lens = useLens({ control: form.control });
+
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <MonthField lens={lens.focus('billingMonth')} label='Billing month' />
+  </form>
+</Form>
+```
+
+## Value shape
+
+The stored value is always either `undefined` or a `Date` whose day component is `1`. Consumers can compare months by `value.getTime()` without worrying about time-of-day drift:
+
+```ts
+const a = new Date(2026, 4, 1);  // May 2026
+const b = new Date(2026, 4, 1);  // May 2026
+a.getTime() === b.getTime();     // true
+```
+
+To format the stored value elsewhere, use the same `'MMMM yyyy'` pattern from `date-fns`:
+
+```ts
+import { format } from 'date-fns';
+format(values.billingMonth, 'MMMM yyyy'); // 'May 2026'
+```
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'rhf-month-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    lens: {
+      description: 'Typed lens from useLens, focused on a Date | undefined field.',
+      type: 'Lens<Date | undefined>',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the trigger',
+      type: 'string?',
+    },
+    placeholder: {
+      description: 'Trigger text shown when no month is selected',
+      type: 'string?',
+      default: "'Pick a month'",
+    },
+    minDate: {
+      description: 'Earliest selectable month. Drives both disabled days and startMonth for the year dropdown.',
+      type: 'Date?',
+    },
+    maxDate: {
+      description: 'Latest selectable month. Drives both disabled days and endMonth for the year dropdown.',
+      type: 'Date?',
+    },
+    locale: {
+      description: 'date-fns Locale forwarded to format() and to Calendar.',
+      type: 'Locale?',
+    },
+    disabled: {
+      description: 'Disables the trigger button.',
+      type: 'boolean?',
+    },
+    className: {
+      description: 'Extra classes applied to the trigger button.',
+      type: 'string?',
+    },
+  }}
+/>
