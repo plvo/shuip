@@ -10,13 +10,13 @@ const DOCS_CONTENT_DIR = path.resolve(ROOT, '../../apps/docs/content/docs');
 
 interface RegistryFile {
   path: string;
-  type: 'registry:ui' | 'registry:block' | 'registry:file';
+  type: 'registry:ui' | 'registry:block' | 'registry:lib' | 'registry:file';
   target?: string;
 }
 
 interface RegistryItem {
   name: string;
-  type: 'registry:ui' | 'registry:block';
+  type: 'registry:ui' | 'registry:block' | 'registry:lib';
   dependencies?: string[];
   registryDependencies?: string[];
   files: RegistryFile[];
@@ -27,7 +27,7 @@ interface ItemMeta {
 }
 
 interface CategoryConfig {
-  itemType: 'registry:ui' | 'registry:block';
+  itemType: 'registry:ui' | 'registry:block' | 'registry:lib';
   targetPath: string;
   prefix?: string;
 }
@@ -50,20 +50,24 @@ const CATEGORIES = {
     prefix: 'tsq',
   },
   blocks: { itemType: 'registry:block', targetPath: './components/block/shuip' },
+  lib: { itemType: 'registry:lib', targetPath: './lib' },
 } as const satisfies Record<string, CategoryConfig>;
 
 type Category = keyof typeof CATEGORIES;
 
 const isCategory = (cat: string): cat is Category => cat in CATEGORIES;
 
-const categoryToType = (cat: Category): 'registry:ui' | 'registry:block' => CATEGORIES[cat].itemType;
+const categoryToType = (cat: Category): 'registry:ui' | 'registry:block' | 'registry:lib' => CATEGORIES[cat].itemType;
 
 const namePrefix = (cat: Category, name: string): string => {
   const { prefix } = CATEGORIES[cat];
   return prefix ? `${prefix}-${name}` : name;
 };
 
-const computeTarget = (cat: Category, name: string): string => `${CATEGORIES[cat].targetPath}/${name}.tsx`;
+const computeTarget = (cat: Category, name: string): string => {
+  const ext = cat === 'lib' ? 'ts' : 'tsx';
+  return `${CATEGORIES[cat].targetPath}/${name}.${ext}`;
+};
 
 const computeStubPath = (cat: Category, name: string): string =>
   cat === 'components' ? path.join(STUBS_DIR, `${name}.tsx`) : path.join(STUBS_DIR, cat, `${name}.tsx`);
@@ -123,6 +127,18 @@ const parseShuipDeps = (source: string): string[] => {
   return Array.from(out).sort();
 };
 
+// Parse @/lib/<name> imports → registryDependencies (shuip-internal lib items).
+// Excludes `utils`, which shadcn provides via `npx shadcn init`.
+const parseLibDeps = (source: string): string[] => {
+  const regex = /from\s+['"]@\/lib\/([^'"/]+)['"]/g;
+  const out = new Set<string>();
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(source)) !== null) {
+    if (m[1] && m[1] !== 'utils') out.add(m[1]);
+  }
+  return Array.from(out).sort();
+};
+
 const readMeta = (itemDir: string): ItemMeta => {
   const metaPath = path.join(itemDir, 'meta.shuip.json');
   if (fs.existsSync(metaPath)) {
@@ -159,9 +175,10 @@ const scanItems = (): ScannedItem[] => {
 
     for (const folderName of entries) {
       const itemDir = path.join(catDir, folderName);
-      const componentPath = path.join(itemDir, 'component.tsx');
+      const mainFile = category === 'lib' ? `${folderName}.ts` : 'component.tsx';
+      const componentPath = path.join(itemDir, mainFile);
       if (!fs.existsSync(componentPath)) {
-        console.warn(`[generate] skipping ${category}/${folderName}: no component.tsx`);
+        console.warn(`[generate] skipping ${category}/${folderName}: no ${mainFile}`);
         continue;
       }
       const examples = fs
@@ -187,8 +204,11 @@ const buildRegistryJson = (items: ScannedItem[]): { name: string; homepage: stri
     const dependencies = parseImports(source);
     const registryDependencies = parseRegistryDeps(source);
     const shuipDeps = parseShuipDeps(source);
+    const libDeps = parseLibDeps(source);
     const meta = readMeta(item.itemDir);
-    const fullDeps = Array.from(new Set([...registryDependencies, ...shuipDeps, ...(meta.dependsOn ?? [])])).sort();
+    const fullDeps = Array.from(
+      new Set([...registryDependencies, ...shuipDeps, ...libDeps, ...(meta.dependsOn ?? [])]),
+    ).sort();
     const itemName = namePrefix(category, folderName);
     const target = computeTarget(category, folderName);
     const componentRelPath = path.relative(ROOT, componentPath).replace(/\\/g, '/');
@@ -241,6 +261,7 @@ interface RegistryComponent {
 export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
 
   for (const item of items) {
+    if (item.category === 'lib') continue;
     const { category, folderName, componentPath, examples } = item;
     const itemName = namePrefix(category, folderName);
     const importPath = `@repo/registry/items/${category}/${folderName}/component`;
@@ -274,6 +295,7 @@ export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
 const writeStubs = (items: ScannedItem[]): void => {
   fs.rmSync(STUBS_DIR, { recursive: true, force: true });
   for (const item of items) {
+    if (item.category === 'lib') continue;
     const stubPath = computeStubPath(item.category, item.folderName);
     fs.mkdirSync(path.dirname(stubPath), { recursive: true });
     const exportPath = stubExportPath(item.category, item.folderName);

@@ -8,6 +8,7 @@
       "@/components/block/shuip/*": ["../../packages/registry/stubs/blocks/*"],
       "@/components/ui/*": ["../../packages/ui/src/components/ui/*"],
       "@/lib/utils": ["../../packages/ui/src/lib/utils"],
+      "@/lib/time": ["../../packages/registry/items/lib/time/time"],
       "@/actions/shuip/places": ["../../packages/registry/items/react-hook-form/address-field/extras/places.action"],
       "fumadocs-mdx:collections/*": [".source/*"]
     }

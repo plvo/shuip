@@ -8,6 +8,7 @@
       "@/components/block/shuip/*": ["./stubs/blocks/*"],
       "@/components/ui/*": ["../ui/src/components/ui/*"],
       "@/lib/utils": ["../ui/src/lib/utils"],
+      "@/lib/time": ["./items/lib/time/time"],
       "@/actions/shuip/places": ["./items/react-hook-form/address-field/extras/places.action"]
     }
   },
