@@ -7,7 +7,7 @@ import { useController } from 'react-hook-form';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
 const DEBOUNCE_TIME = 300;
@@ -146,7 +146,7 @@ export function AutocompleteField({
     <Field className='gap-2' data-invalid={fieldState.invalid}>
       {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+        <PopoverAnchor asChild>
           <div className='relative'>
             <Input
               name={field.name}
@@ -171,7 +171,7 @@ export function AutocompleteField({
               </div>
             )}
           </div>
-        </PopoverTrigger>
+        </PopoverAnchor>
         <PopoverContent
           ref={popoverRef}
           className='p-0'

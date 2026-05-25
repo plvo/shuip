@@ -5,7 +5,7 @@ import * as React from 'react';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import { useFieldContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { cn } from '@/lib/utils';
 
@@ -147,7 +147,7 @@ export function AutocompleteField({
     <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
       {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+        <PopoverAnchor asChild>
           <div className='relative'>
             <Input
               name={field.name}
@@ -172,7 +172,7 @@ export function AutocompleteField({
               </div>
             )}
           </div>
-        </PopoverTrigger>
+        </PopoverAnchor>
         <PopoverContent
           ref={popoverRef}
           className='p-0'
