@@ -43,17 +43,24 @@ Block items should not contain `index.mdx`. Their docs are hand-written in `apps
 ls packages/registry/items/blocks/*/index.mdx 2>/dev/null
 ```
 
-### 3. `component.tsx` importing shuip stubs without `dependsOn`
+### 3. `component.tsx` shuip-internal imports that silently drop
 
-`parseRegistryDeps` excludes `@/components/ui/shuip/*` from auto-detected `registryDependencies`. A `component.tsx` that imports another shuip item is fine **only if** `meta.shuip.json` declares `dependsOn: ["<other-item>"]`. Without it, the dep is silently missing and the consumer install breaks.
+`parseShuipDeps` (`packages/registry/scripts/generate.ts`) auto-detects `@/components/ui/shuip/<...>` imports into `registryDependencies`:
+
+- One segment (`side-dialog`) → the bare `components`-category item.
+- Two segments (`tanstack-form/form-context`) → the prefixed item (`tsf-form-context`), **only if the first segment is a real category** (`isCategory`).
+
+So a stub import does **not** need a `meta.shuip.json` — it resolves automatically. `meta.shuip.json` with `dependsOn` is only for a dependency that is **not** expressed as a stub import (a transitive/runtime dep). The actual silent-failure modes to look for:
+
+- a two-segment import whose category segment isn't one of `components` / `blocks` / `react-hook-form` / `tanstack-form` / `tanstack-query` → silently dropped, consumer install missing the dep;
+- a one-segment import to a `components` item that doesn't exist → dangling `registryDependency`.
 
 ```bash
-# List components.tsx files importing shuip stubs
-grep -rln "from '@/components/ui/shuip/" packages/registry/items/*/*/component.tsx
-
-# For each match, verify a meta.shuip.json with dependsOn exists in the SAME folder.
-# `responsive-dialog` is the canonical legitimate example.
+# List shuip-internal imports; eyeball each category segment + target item against items/
+grep -rn "from '@/components/ui/shuip/" packages/registry/items/*/*/component.tsx
 ```
+
+`responsive-dialog` (`dependsOn: ["side-dialog"]`) is the canonical `meta.shuip.json` example — note its `dependsOn` is now redundant with the single-segment auto-detection, but harmless (the generator dedups). Reach for `dependsOn` only when the dep isn't an import.
 
 ### 4. Examples with relative `./component` imports
 
@@ -83,10 +90,13 @@ diff <(jq -r '.compilerOptions.paths | keys[]' apps/docs/tsconfig.json | sort) \
      <(jq -r '.compilerOptions.paths | keys[]' packages/registry/tsconfig.json | sort)
 
 # (b) Targets that don't exist (run from packages/registry/)
+# Note: alias targets omit the file extension (e.g. @/lib/utils -> ../ui/src/lib/utils,
+# the real file is utils.ts), so match both the bare path and any extension variant.
 cd packages/registry && \
   jq -r '.compilerOptions.paths | to_entries[] | "\(.key)\t\(.value[0])"' tsconfig.json | \
   while IFS=$'\t' read -r alias target; do
-    [ -e "${target%/\*}" ] || echo "stale: $alias -> $target"
+    base="${target%/\*}"
+    [ -e "$base" ] || ls "$base".* >/dev/null 2>&1 || echo "stale: $alias -> $target"
   done
 ```
 
