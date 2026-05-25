@@ -1,0 +1,110 @@
+---
+title: Date Field
+description: Single-date picker integrated with React Hook Form via typed lens binding from @hookform/lenses. Wraps the shadcn Calendar inside a Popover triggered by an outline Button.
+registryName: rhf-date-field
+---
+
+`DateField` is a single-date picker that encapsulates React Hook Form's field management with the shadcn `Calendar` primitive. The trigger is an outline `Button` (full-width) that shows the selected date formatted via [`date-fns`](https://date-fns.org); clicking it opens a `Popover` containing the calendar.
+
+The field binds to the form via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses). The value type is `Date | undefined` — `undefined` represents an empty selection (matching `react-day-picker`'s convention).
+
+#### Built-in features
+
+- **Typed lens binding**: `lens.focus('dueDate')` — `Lens<Date | undefined>` is enforced at compile time
+- **Locale-aware formatting**: defaults to `en-US`; pass any `date-fns/locale` via the `locale` prop
+- **Bounded selection**: `minDate` / `maxDate` disable days outside the range in the calendar UI
+- **Accessible trigger**: a real `<Button>` with `aria-invalid` reflecting `fieldState.invalid`
+- **Zod validation**: integrates with `z.date().min(...).max(...)` via the standard resolver
+
+## Setup
+
+```tsx
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { DateField } from '@/components/ui/shuip/react-hook-form/date-field';
+
+const form = useForm<{ dueDate: Date | undefined }>({
+  defaultValues: { dueDate: undefined },
+});
+const lens = useLens({ control: form.control });
+
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <DateField lens={lens.focus('dueDate')} label='Due date' />
+  </form>
+</Form>
+```
+
+The `<Form>` wrapper is required — it provides React Hook Form's `FormProvider` context.
+
+## Bounded selection
+
+Use `minDate` and `maxDate` to disable out-of-range days directly in the calendar:
+
+```tsx
+<DateField
+  lens={lens.focus('appointment')}
+  label='Appointment'
+  minDate={new Date()}
+  maxDate={oneYearFromNow}
+/>
+```
+
+Disabled days remain visible but cannot be selected. Validate the same bounds in your schema so submission also rejects out-of-range values.
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'rhf-date-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    lens: {
+      description: 'Typed lens from useLens, focused on a Date | undefined field.',
+      type: 'Lens<Date | undefined>',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the trigger',
+      type: 'string?',
+    },
+    placeholder: {
+      description: 'Text shown on the trigger when no date is selected',
+      type: 'string?',
+      default: "'Pick a date'",
+    },
+    minDate: {
+      description: 'Earliest selectable date (inclusive). Days before are disabled.',
+      type: 'Date?',
+    },
+    maxDate: {
+      description: 'Latest selectable date (inclusive). Days after are disabled.',
+      type: 'Date?',
+    },
+    locale: {
+      description: 'date-fns locale used for formatting and weekday labels',
+      type: 'Locale?',
+      default: 'enUS',
+    },
+    dateFormat: {
+      description: 'date-fns format string for the trigger label',
+      type: 'string?',
+      default: "'PPP'",
+    },
+    disabled: {
+      description: 'Disables the trigger button',
+      type: 'boolean?',
+    },
+    triggerProps: {
+      description: 'Additional props forwarded to the trigger Button',
+      type: 'React.ComponentProps<typeof Button>?',
+    },
+  }}
+/>

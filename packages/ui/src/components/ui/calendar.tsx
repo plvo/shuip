@@ -7,9 +7,9 @@ import {
   ChevronRightIcon,
 } from "lucide-react"
 import {
-  DayButton,
   DayPicker,
   getDefaultClassNames,
+  type DayButton,
 } from "react-day-picker"
 
 import { cn } from "@/lib/utils"

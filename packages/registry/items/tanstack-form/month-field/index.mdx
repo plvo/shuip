@@ -1,0 +1,111 @@
+---
+title: Month Field
+description: Month + year picker integrated with TanStack Form via React context. Stores a Date normalized to the first day of the selected month.
+registryName: tsf-month-field
+---
+
+`MonthField` is a month picker that wraps the shadcn `Calendar` primitive inside a `Popover`. The user picks any day in a month and the field stores the **first day of that month** as a `Date` — perfect for "billing month", "report period", "subscription start" use cases where the day component is noise.
+
+It reads the surrounding field via `useFieldContext<Date | undefined>()`, so you compose it inside a `<form.AppField>` rather than passing a `form` instance down by prop.
+
+#### Built-in features
+
+- **First-day normalization**: any day the user clicks is internally rewritten to `new Date(year, month, 1)`, so the stored value behaves as a month bucket
+- **Dropdown caption**: month and year dropdowns in the calendar header (`captionLayout='dropdown'`)
+- **Bounded range**: `minDate` / `maxDate` drive both the calendar's disabled days and its dropdown bounds via `startMonth` / `endMonth`
+- **Locale aware**: `locale` is forwarded to `date-fns` `format` and to the calendar
+- **Context-bound field state**: reads the field via `useFieldContext` — no prop drilling
+
+## Setup
+
+Register `MonthField` alongside your other field components in your `useAppForm` factory:
+
+```tsx
+// lib/form.ts
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { MonthField } from '@/components/ui/shuip/tanstack-form/month-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
+
+export const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { MonthField },
+  formComponents: { SubmitButton },
+});
+```
+
+Then bind a `Date | undefined` field:
+
+```tsx
+const form = useAppForm({
+  defaultValues: { billingMonth: undefined as Date | undefined },
+  onSubmit: async ({ value }) => saveBilling(value.billingMonth),
+});
+
+<form.AppField
+  name='billingMonth'
+  validators={{ onChange: ({ value }) => (value ? undefined : 'Required') }}
+  children={(field) => <field.MonthField label='Billing month' />}
+/>
+```
+
+## Value shape
+
+The stored value is always either `undefined` or a `Date` whose day component is `1`. Consumers can compare months by `value.getTime()` without worrying about time-of-day drift:
+
+```ts
+const a = new Date(2026, 4, 1);  // May 2026
+const b = new Date(2026, 4, 1);  // May 2026
+a.getTime() === b.getTime();     // true
+```
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'tsf-month-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the trigger',
+      type: 'string?',
+    },
+    placeholder: {
+      description: 'Trigger text shown when no month is selected',
+      type: 'string?',
+      default: "'Pick a month'",
+    },
+    minDate: {
+      description: 'Earliest selectable month. Drives both disabled days and startMonth for the year dropdown.',
+      type: 'Date?',
+    },
+    maxDate: {
+      description: 'Latest selectable month. Drives both disabled days and endMonth for the year dropdown.',
+      type: 'Date?',
+    },
+    locale: {
+      description: 'date-fns Locale forwarded to format() and to Calendar.',
+      type: 'Locale?',
+    },
+    disabled: {
+      description: 'Disables the trigger button.',
+      type: 'boolean?',
+    },
+    fieldProps: {
+      description: 'Props passed to the Field wrapper component',
+      type: 'React.ComponentProps<typeof Field>?',
+    },
+    className: {
+      description: 'Extra classes applied to the trigger button.',
+      type: 'string?',
+    },
+  }}
+/>
