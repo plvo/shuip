@@ -1,87 +1,49 @@
 ---
 title: Time Field
-description: Time picker (HH:mm) integrated with TanStack Form via React context. Built on the native browser time input.
+description: Time picker (HH:mm) integrated with TanStack Form via field context. Two shadcn Select inputs for hours and minutes.
 registryName: tsf-time-field
 ---
 
-`TimeField` is a time-only picker that encapsulates TanStack Form's field management with shadcn/ui's design system. It binds to a `string` in the native `HH:mm` 24-hour format that the browser's `<input type="time">` produces — no `Date` object ceremony, no popover, no third-party time wheel.
-
-It reads the surrounding field via `useFieldContext`, so you compose it inside a `<form.AppField>` rather than passing a `form` instance down by prop.
-
-For date-only or date-and-time inputs, use the dedicated date items instead.
+`TimeField` is a time-only picker built from two shadcn/ui `Select` inputs — hours `00`–`23` and minutes in 5-minute steps. It binds to a `string` in the `HH:mm` 24-hour format and reads its state from TanStack Form's field context.
 
 #### Built-in features
 
-- **Native browser picker**: leverages `<input type="time">` — zero JS overhead, full accessibility, locale-aware formatting
-- **Context-bound field state**: reads the field via `useFieldContext` — no prop drilling
-- **Type-safe field names**: `name` autocompletes from your `defaultValues` on `<form.AppField>`
-- **Range constraints**: pass `min` / `max` (as `HH:mm` strings) through `props` to restrict the selectable range
-- **Step control**: pass `step={60}` (minute, default) or `step={1}` (seconds) through `props`
+- **Two-select picker**: hours and minutes as shadcn `Select` inputs — consistent styling, full keyboard support
+- **Field-context binding**: reads value and validation state via `useFieldContext`
+- **Range constraints**: pass `min` / `max` (as `HH:mm` strings) to disable out-of-range options
+- **Validation**: surfaces TanStack Form validator errors below the picker
 
 ## Setup
 
-Field components are bound via React context. In your project, create `lib/form.ts` once:
+Register the field component on your form hook, then render it inside `form.AppField`:
 
 ```tsx
-// lib/form.ts
 import { createFormHook } from '@tanstack/react-form';
 import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
-import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
 import { TimeField } from '@/components/ui/shuip/tanstack-form/time-field';
 
-export const { useAppForm } = createFormHook({
+const { useAppForm } = createFormHook({
   fieldContext,
   formContext,
   fieldComponents: { TimeField },
-  formComponents: { SubmitButton },
-});
-```
-
-See the [`form-context`](/docs/tanstack-form/form-context) item for details.
-
-## Usage
-
-The value is a `string` in `HH:mm` format (or empty string when unset), matching the native input semantics. You do not need to parse or format anything — store it as-is, validate it as a string, render it as a string.
-
-```tsx
-import { useAppForm } from '@/lib/form';
-
-const form = useAppForm({
-  defaultValues: { meetingTime: '' },
-  onSubmit: async ({ value }) => {
-    await save(value);
-  },
+  formComponents: {},
 });
 
 <form.AppField
   name='meetingTime'
-  validators={{
-    onChange: ({ value }) => (!value ? 'Required' : undefined),
-  }}
   children={(field) => <field.TimeField label='Meeting time' />}
 />
 ```
 
+The value is a `string` in `HH:mm` format (or empty string when unset). Picking only the hour or only the minute defaults the other part to `00`.
+
 ## Constraining the range
 
-`min`, `max`, and `step` are native input attributes — pass them through `props`:
+`min` and `max` accept `HH:mm` strings; out-of-range hour and minute options are disabled:
 
 ```tsx
-<form.AppField
-  name='appointment'
-  validators={{
-    onChange: ({ value }) =>
-      value < '09:00' || value > '18:00' ? 'Outside office hours' : undefined,
-  }}
-  children={(field) => (
-    <field.TimeField
-      label='Appointment'
-      props={{ min: '09:00', max: '18:00' }}
-    />
-  )}
-/>
+<field.TimeField label='Appointment' min='09:00' max='18:00' />
 ```
-
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 
@@ -98,16 +60,24 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       type: 'string?',
     },
     description: {
-      description: 'Helper text displayed below the input',
+      description: 'Helper text displayed below the picker',
       type: 'string?',
     },
-    fieldProps: {
-      description: 'Props passed to the Field wrapper component',
-      type: 'React.ComponentProps<typeof Field>?',
+    min: {
+      description: 'Earliest selectable time as a HH:mm string. Out-of-range options are disabled.',
+      type: 'string?',
     },
-    props: {
-      description: 'Native HTML input props (min, max, step, disabled, etc.). value/onChange/type are managed.',
-      type: "Omit<React.ComponentProps<'input'>, 'value' | 'onChange' | 'type'>?",
+    max: {
+      description: 'Latest selectable time as a HH:mm string. Out-of-range options are disabled.',
+      type: 'string?',
+    },
+    disabled: {
+      description: 'Disables both selects',
+      type: 'boolean?',
+    },
+    fieldProps: {
+      description: 'Props forwarded to the wrapping Field element',
+      type: 'React.ComponentProps<typeof Field>?',
     },
   }}
 />

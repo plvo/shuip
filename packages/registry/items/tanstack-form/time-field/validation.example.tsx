@@ -49,7 +49,8 @@ export default function TsfTimeFieldValidationExample() {
           <field.TimeField
             label='Appointment'
             description={`Office hours: ${BUSINESS_OPEN} – ${BUSINESS_CLOSE}`}
-            props={{ min: BUSINESS_OPEN, max: BUSINESS_CLOSE }}
+            min={BUSINESS_OPEN}
+            max={BUSINESS_CLOSE}
           />
         )}
       />
