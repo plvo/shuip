@@ -22,6 +22,7 @@
     "react-error-boundary": "catalog:forms",
     "zod": "catalog:",
     "lucide-react": "catalog:",
+    "react-day-picker": "catalog:",
     "date-fns": "catalog:",
     "class-variance-authority": "catalog:",
     "@radix-ui/react-icons": "catalog:radix",

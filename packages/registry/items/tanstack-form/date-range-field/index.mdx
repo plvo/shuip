@@ -1,0 +1,128 @@
+---
+title: Date Range Field
+description: Date range picker integrated with TanStack Form via React context. Built on the shadcn Calendar primitive in range mode.
+registryName: tsf-date-range-field
+---
+
+`DateRangeField` is a from–to date picker bound to TanStack Form. It wraps the shadcn `Calendar` primitive in `mode='range'` inside a `Popover`, and reads the surrounding field via `useFieldContext` — compose it inside a `<form.AppField>` rather than passing a `form` instance down by prop.
+
+The bound value is a `DateRange` from `react-day-picker`:
+
+```ts
+type DateRange = { from?: Date; to?: Date } | undefined;
+```
+
+#### Built-in features
+
+- **Context-bound field state**: reads the field via `useFieldContext` — no prop drilling
+- **Type-safe field names**: `name` autocompletes from your `defaultValues` on `<form.AppField>`
+- **Two-month side-by-side display**: canonical UX for picking a range that crosses months
+- **Bounded selection**: `minDate` / `maxDate` translate to the Calendar `disabled` matcher
+- **Locale aware**: optional `date-fns` `Locale` passed through to label formatting and Calendar
+
+## Setup
+
+Register the field component once on your `useAppForm` factory. See the [`form-context`](/docs/tanstack-form/form-context) item for details.
+
+```tsx
+// lib/form.ts
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { DateRangeField } from '@/components/ui/shuip/tanstack-form/date-range-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
+
+export const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { DateRangeField },
+  formComponents: { SubmitButton },
+});
+```
+
+Then declare the field value type as `DateRange | undefined`:
+
+```tsx
+import type { DateRange } from 'react-day-picker';
+
+const form = useAppForm({
+  defaultValues: { stay: undefined } as { stay: DateRange | undefined },
+  onSubmit: async ({ value }) => { /* ... */ },
+});
+
+<form.AppField
+  name='stay'
+  children={(field) => <field.DateRangeField label='Stay' />}
+/>
+```
+
+## Trigger label
+
+The trigger button renders a label derived from the current value:
+
+- both ends set → `"<from> – <to>"` using `date-fns` `format(date, 'PPP', { locale })`
+- only `from` set → just the `from` date
+- neither set → the `placeholder` prop
+
+## Validation
+
+Validation lives on `<form.AppField>` as with any TanStack field. To require both ends of the range and enforce ordering:
+
+```tsx
+<form.AppField
+  name='booking'
+  validators={{
+    onChange: ({ value }) => {
+      if (!value?.from) return 'Start date is required';
+      if (!value.to) return 'End date is required';
+      if (value.to < value.from) return 'End date must be on or after the start date';
+      return undefined;
+    },
+  }}
+  children={(field) => <field.DateRangeField label='Booking' />}
+/>
+```
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'tsf-date-range-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the trigger',
+      type: 'string?',
+    },
+    placeholder: {
+      description: 'Trigger label when no date is selected (default: "Pick a date range")',
+      type: 'string?',
+    },
+    minDate: {
+      description: 'Earliest selectable date — passed to Calendar as disabled.before',
+      type: 'Date?',
+    },
+    maxDate: {
+      description: 'Latest selectable date — passed to Calendar as disabled.after',
+      type: 'Date?',
+    },
+    locale: {
+      description: 'date-fns Locale used for label formatting and the Calendar',
+      type: 'Locale?',
+    },
+    fieldProps: {
+      description: 'Props passed to the Field wrapper component',
+      type: 'React.ComponentProps<typeof Field>?',
+    },
+    triggerProps: {
+      description: 'Props passed to the trigger Button (variant, size, className, etc.)',
+      type: 'React.ComponentProps<typeof Button>?',
+    },
+  }}
+/>
