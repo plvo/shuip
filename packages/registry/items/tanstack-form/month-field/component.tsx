@@ -25,6 +25,7 @@ export interface MonthFieldProps {
 }
 
 const toFirstOfMonth = (date: Date): Date => new Date(date.getFullYear(), date.getMonth(), 1);
+const toLastOfMonth = (date: Date): Date => new Date(date.getFullYear(), date.getMonth() + 1, 0);
 
 export function MonthField({
   label,
@@ -52,9 +53,12 @@ export function MonthField({
     setOpen(false);
   };
 
+  const minMonth = minDate ? toFirstOfMonth(minDate) : undefined;
+  const maxMonth = maxDate ? toLastOfMonth(maxDate) : undefined;
+
   const disabledMatchers: Matcher[] = [];
-  if (minDate) disabledMatchers.push({ before: minDate });
-  if (maxDate) disabledMatchers.push({ after: maxDate });
+  if (minMonth) disabledMatchers.push({ before: minMonth });
+  if (maxMonth) disabledMatchers.push({ after: maxMonth });
 
   return (
     <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
@@ -81,9 +85,9 @@ export function MonthField({
             selected={value}
             onSelect={handleSelect}
             disabled={disabledMatchers.length ? disabledMatchers : undefined}
-            startMonth={minDate}
-            endMonth={maxDate}
-            defaultMonth={value ?? minDate}
+            startMonth={minMonth}
+            endMonth={maxMonth}
+            defaultMonth={value ?? minMonth}
             locale={locale}
           />
         </PopoverContent>

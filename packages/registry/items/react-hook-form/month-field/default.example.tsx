@@ -12,16 +12,17 @@ const zodSchema = z.object({
   billingMonth: z.date({ message: 'Pick a billing month' }),
 });
 
-type Values = z.infer<typeof zodSchema>;
+type FormValues = { billingMonth: Date | undefined };
+type SubmitValues = z.infer<typeof zodSchema>;
 
 export default function RhfMonthFieldExample() {
-  const form = useForm<Values>({
-    defaultValues: { billingMonth: undefined as unknown as Date },
+  const form = useForm<FormValues, unknown, SubmitValues>({
+    defaultValues: { billingMonth: undefined },
     resolver: zodResolver(zodSchema),
   });
   const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: Values) {
+  async function onSubmit(values: SubmitValues) {
     alert(
       `Billing month: ${values.billingMonth.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}\nISO: ${values.billingMonth.toISOString()}`,
     );

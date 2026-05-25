@@ -21,16 +21,17 @@ const zodSchema = z.object({
     }),
 });
 
-type Values = z.infer<typeof zodSchema>;
+type FormValues = { startMonth: Date | undefined };
+type SubmitValues = z.infer<typeof zodSchema>;
 
 export default function RhfMonthFieldValidationExample() {
-  const form = useForm<Values>({
-    defaultValues: { startMonth: undefined as unknown as Date },
+  const form = useForm<FormValues, unknown, SubmitValues>({
+    defaultValues: { startMonth: undefined },
     resolver: zodResolver(zodSchema),
   });
   const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: Values) {
+  async function onSubmit(values: SubmitValues) {
     alert(`Start month: ${values.startMonth.toISOString()}`);
   }
 
