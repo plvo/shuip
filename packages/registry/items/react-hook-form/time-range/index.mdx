@@ -1,0 +1,73 @@
+---
+title: Time Range
+description: Start/end time range (HH:mm) integrated with React Hook Form via typed lens binding. Selecting the start sets the end one hour later and enforces start < end.
+registryName: rhf-time-range
+---
+
+`TimeRangeField` is two coupled time pickers — a start and an end — bound to a single `{ start, end }` object via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses). Both values are `HH:mm` strings.
+
+#### Built-in features
+
+- **Coupled pickers**: choosing a start time sets the end to one hour later automatically
+- **`start < end` enforced**: end options at or before the start are disabled in the dropdowns
+- **Single object binding**: `lens.focus('slot')` binds the whole `{ start, end }` value
+- **Zod validation**: refine the object to require a valid ordered range
+
+## Setup
+
+```tsx
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { TimeRangeField } from '@/components/ui/shuip/react-hook-form/time-range';
+
+type MyForm = { slot: { start: string; end: string } };
+
+const form = useForm<MyForm>({ defaultValues: { slot: { start: '', end: '' } } });
+const lens = useLens({ control: form.control });
+
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <TimeRangeField lens={lens.focus('slot')} label='Meeting slot' />
+  </form>
+</Form>
+```
+
+The value is `{ start: string; end: string }`, each a `HH:mm` string (empty when unset). Changing the start always resets the end to one hour after the new start.
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'rhf-time-range'} />
+
+## Props
+
+<TypeTable
+  type={{
+    lens: {
+      description: 'Typed lens from useLens, bound to a { start, end } object of HH:mm strings.',
+      type: 'Lens<{ start: string; end: string }>',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the pickers',
+      type: 'string?',
+    },
+    startLabel: {
+      description: 'Label above the start picker',
+      type: "string? (default 'Start')",
+    },
+    endLabel: {
+      description: 'Label above the end picker',
+      type: "string? (default 'End')",
+    },
+    disabled: {
+      description: 'Disables all selects',
+      type: 'boolean?',
+    },
+  }}
+/>
