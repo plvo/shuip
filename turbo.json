@@ -4,7 +4,7 @@
   "tasks": {
     "registry:generate": {
       "inputs": ["items/**", "scripts/generate.ts"],
-      "outputs": ["registry.json", "__index__.ts", "stubs/**"]
+      "cache": false
     },
     "registry:build": {
       "dependsOn": ["@repo/registry#registry:generate"],
