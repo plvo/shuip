@@ -106,6 +106,7 @@
         "class-variance-authority": "catalog:",
         "clsx": "catalog:",
         "cmdk": "catalog:",
+        "date-fns": "catalog:",
         "lucide-react": "catalog:",
         "next-themes": "catalog:",
         "react": "catalog:",

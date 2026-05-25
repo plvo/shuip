@@ -1,0 +1,116 @@
+---
+title: Date Range Field
+description: Date range picker integrated with React Hook Form via typed lens binding from @hookform/lenses. Built on the shadcn Calendar primitive in range mode.
+registryName: rhf-date-range-field
+---
+
+`DateRangeField` is a from–to date picker bound to React Hook Form. It wraps the shadcn `Calendar` primitive in `mode='range'` inside a `Popover`, and binds via a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses) — no string paths, no `<MyForm>` generic at the call site.
+
+The bound value is a `DateRange` from `react-day-picker`:
+
+```ts
+type DateRange = { from?: Date; to?: Date } | undefined;
+```
+
+#### Built-in features
+
+- **Typed lens binding**: `lens.focus('range')` autocompletes from your form's value type
+- **Two-month side-by-side display**: canonical UX for picking a range that crosses months
+- **Bounded selection**: `minDate` / `maxDate` translate to the Calendar `disabled` matcher
+- **Locale aware**: optional `date-fns` `Locale` passed through to both label formatting and the underlying Calendar
+
+## Setup
+
+The field binds via `@hookform/lenses`. Declare the value as an optional `DateRange` in your schema, then focus the lens on the range field:
+
+```tsx
+import type { DateRange } from 'react-day-picker';
+import { useLens } from '@hookform/lenses';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
+import { DateRangeField } from '@/components/ui/shuip/react-hook-form/date-range-field';
+
+type Values = { stay: DateRange | undefined };
+
+const form = useForm<Values>({ defaultValues: { stay: undefined } });
+const lens = useLens({ control: form.control });
+
+<Form {...form}>
+  <form onSubmit={form.handleSubmit(onSubmit)}>
+    <DateRangeField lens={lens.focus('stay')} label='Stay' />
+  </form>
+</Form>
+```
+
+The `<Form>` wrapper is required — it provides React Hook Form's `FormProvider` context.
+
+## Trigger label
+
+The trigger button renders a label derived from the current value:
+
+- both ends set → `"<from> – <to>"` using `date-fns` `format(date, 'PPP', { locale })`
+- only `from` set → just the `from` date
+- neither set → the `placeholder` prop
+
+## Validation
+
+For a required range, pair the field with a Zod schema that enforces both ends and the ordering. See the `validation` example below.
+
+```tsx
+const schema = z.object({
+  range: z
+    .object({
+      from: z.date({ message: 'Start date is required' }),
+      to: z.date({ message: 'End date is required' }),
+    })
+    .refine((value) => value.to >= value.from, {
+      message: 'End date must be on or after the start date',
+      path: ['to'],
+    }),
+});
+```
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'rhf-date-range-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    lens: {
+      description: 'Typed lens from useLens — points at a DateRange | undefined value.',
+      type: 'Lens<DateRange | undefined>',
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the trigger',
+      type: 'string?',
+    },
+    placeholder: {
+      description: 'Trigger label when no date is selected (default: "Pick a date range")',
+      type: 'string?',
+    },
+    minDate: {
+      description: 'Earliest selectable date — passed to Calendar as disabled.before',
+      type: 'Date?',
+    },
+    maxDate: {
+      description: 'Latest selectable date — passed to Calendar as disabled.after',
+      type: 'Date?',
+    },
+    locale: {
+      description: 'date-fns Locale used for label formatting and the Calendar',
+      type: 'Locale?',
+    },
+    disabled: {
+      description: 'Disable the trigger button',
+      type: 'boolean?',
+    },
+  }}
+/>
