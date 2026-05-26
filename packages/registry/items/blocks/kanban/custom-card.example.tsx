@@ -38,7 +38,11 @@ export default function KanbanCustomCardExample() {
       data={deals}
       onDataChange={setDeals}
       columnField='stage'
-      titleField='name'
+      title={(deal) => (
+        <a href={`#deal-${deal.id}`} className='hover:underline' onClick={(e) => e.stopPropagation()}>
+          {deal.name}
+        </a>
+      )}
       cardContent={(deal) => (
         <div className='space-y-1 text-xs'>
           <p className='truncate text-muted-foreground'>{deal.company}</p>

@@ -31,7 +31,7 @@ export default function KanbanDefaultExample() {
       columns={columns}
       defaultData={tasks}
       columnField='status'
-      titleField='title'
+      title={(task) => task.title}
       fields={[
         { key: 'assignee', label: 'Assignee' },
         { key: 'priority', label: 'Priority' },

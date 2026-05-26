@@ -47,7 +47,7 @@ export type KanbanProps<T extends Record<string, unknown>> = {
   onDataChange?: (next: T[]) => void;
   idField?: keyof T;
   columnField: keyof T;
-  titleField?: keyof T;
+  title?: (item: T) => React.ReactNode;
   fields?: KanbanField<T>[];
   cardContent?: (item: T) => React.ReactNode;
   searchableFields?: (keyof T)[];
@@ -66,7 +66,7 @@ export function Kanban<T extends Record<string, unknown>>({
   onDataChange,
   idField = 'id' as keyof T,
   columnField,
-  titleField,
+  title,
   fields,
   cardContent,
   searchableFields,
@@ -208,10 +208,7 @@ export function Kanban<T extends Record<string, unknown>>({
 
   const activeItem = activeId ? (items.find((it) => getId(it) === activeId) ?? null) : null;
 
-  const renderTitle = React.useCallback(
-    (item: T): React.ReactNode => (titleField == null ? null : String(item[titleField] ?? '')),
-    [titleField],
-  );
+  const renderTitle = React.useCallback((item: T): React.ReactNode => (title ? title(item) : null), [title]);
 
   const renderBody = React.useCallback(
     (item: T): React.ReactNode => {
