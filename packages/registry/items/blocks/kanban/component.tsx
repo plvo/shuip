@@ -1,9 +1,10 @@
 'use client';
 
-import { GripVertical, Plus } from 'lucide-react';
+import { GripVertical, Plus, Search } from 'lucide-react';
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 export type KanbanColumn = {
@@ -46,6 +47,8 @@ export function Kanban<T extends Record<string, unknown>>({
   titleField,
   fields,
   renderCard,
+  searchableFields,
+  searchPlaceholder = 'Search...',
   renderColumnSummary,
   onCardClick,
   onCardAdd,
@@ -59,13 +62,39 @@ export function Kanban<T extends Record<string, unknown>>({
     if (data) setItems(data);
   }, [data]);
 
+  const [query, setQuery] = React.useState('');
+
+  const visible = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q || !searchableFields?.length) return items;
+    return items.filter((it) =>
+      searchableFields.some((f) =>
+        String(it[f] ?? '')
+          .toLowerCase()
+          .includes(q),
+      ),
+    );
+  }, [items, query, searchableFields]);
+
   const itemsByColumn = React.useCallback(
-    (columnId: string) => items.filter((it) => getColumn(it) === columnId),
-    [items, getColumn],
+    (columnId: string) => visible.filter((it) => getColumn(it) === columnId),
+    [visible, getColumn],
   );
 
   return (
     <div className={cn('flex flex-col gap-4', className)}>
+      {searchableFields?.length ? (
+        <div className='relative w-full max-w-xs'>
+          <Search className='absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={searchPlaceholder}
+            className='pl-8'
+          />
+        </div>
+      ) : null}
+
       <div className='flex flex-row gap-4 overflow-x-auto pb-2'>
         {columns.map((column) => {
           const columnItems = itemsByColumn(column.id);
