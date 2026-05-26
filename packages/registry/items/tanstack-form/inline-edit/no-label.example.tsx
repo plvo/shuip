@@ -11,10 +11,10 @@ const { useAppForm } = createFormHook({
   formComponents: {},
 });
 
-export default function TsfInlineEditExample() {
-  const form = useAppForm({ defaultValues: { title: 'Project Apollo' } });
+export default function TsfInlineEditNoLabelExample() {
+  const form = useAppForm({ defaultValues: { bio: 'Family-owned manufacturer since 1998.' } });
 
-  async function saveTitle(next: string) {
+  async function saveBio(next: string) {
     await new Promise((resolve) => setTimeout(resolve, 500));
     console.log('saved', next);
   }
@@ -22,10 +22,10 @@ export default function TsfInlineEditExample() {
   return (
     <div className='w-full max-w-sm'>
       <form.AppField
-        name='title'
-        validators={{ onChange: ({ value }) => (value.length < 3 ? 'Title must be at least 3 characters' : undefined) }}
+        name='bio'
+        validators={{ onChange: ({ value }) => (value.length > 140 ? 'Keep it under 140 characters' : undefined) }}
         children={(field) => (
-          <field.InlineEditField label='Title' description='Shown at the top of the project page.' onSave={saveTitle} />
+          <field.InlineEditField input='textarea' variant='boxed' placeholder='Add a description' onSave={saveBio} />
         )}
       />
     </div>

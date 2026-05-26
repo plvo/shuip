@@ -6,10 +6,11 @@ registryName: tsf-inline-edit
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 
-Binds the [`inline-edit`](/docs/components/inline-edit) cell to TanStack Form. The value
-lives in the form (covered by the field validators and submit), and on each commit the
-field is validated; when valid, an optional `onSave` persists it immediately — schema
-validation and save-now together. The validation error is surfaced inside the cell.
+A click-to-edit field for TanStack Form. The value displays as text and turns into an
+editable input on click; read and edit share one typography scale, so editing is seamless.
+The value lives in the form (covered by the field validators), and on each commit the field
+is validated; when valid, an optional `onSave` persists it immediately — schema validation
+and save-now together. The validation error is surfaced inside the cell.
 
 ## Examples
 

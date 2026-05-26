@@ -8,33 +8,28 @@ import { Form } from '@/components/ui/form';
 import { InlineEditField } from '@/components/ui/shuip/react-hook-form/inline-edit';
 
 const zodSchema = z.object({
-  title: z.string().min(3, { message: 'Title must be at least 3 characters' }),
+  owner: z.string().min(2, { message: 'Owner is required' }),
 });
 
 type Values = z.infer<typeof zodSchema>;
 
-export default function RhfInlineEditExample() {
+export default function RhfInlineEditHorizontalExample() {
   const form = useForm<Values>({
-    defaultValues: { title: 'Project Apollo' },
+    defaultValues: { owner: 'Ada Lovelace' },
     resolver: zodResolver(zodSchema),
     mode: 'onChange',
   });
   const lens = useLens({ control: form.control });
 
-  async function saveTitle(next: string) {
+  async function saveOwner(next: string) {
     await new Promise((resolve) => setTimeout(resolve, 500));
     console.log('saved', next);
   }
 
   return (
     <Form {...form}>
-      <div className='w-full max-w-sm'>
-        <InlineEditField
-          lens={lens.focus('title')}
-          label='Title'
-          description='Shown at the top of the project page.'
-          onSave={saveTitle}
-        />
+      <div className='w-full max-w-md'>
+        <InlineEditField lens={lens.focus('owner')} label='Owner' orientation='horizontal' onSave={saveOwner} />
       </div>
     </Form>
   );

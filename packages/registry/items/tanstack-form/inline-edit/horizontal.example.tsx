@@ -11,22 +11,20 @@ const { useAppForm } = createFormHook({
   formComponents: {},
 });
 
-export default function TsfInlineEditExample() {
-  const form = useAppForm({ defaultValues: { title: 'Project Apollo' } });
+export default function TsfInlineEditHorizontalExample() {
+  const form = useAppForm({ defaultValues: { owner: 'Ada Lovelace' } });
 
-  async function saveTitle(next: string) {
+  async function saveOwner(next: string) {
     await new Promise((resolve) => setTimeout(resolve, 500));
     console.log('saved', next);
   }
 
   return (
-    <div className='w-full max-w-sm'>
+    <div className='w-full max-w-md'>
       <form.AppField
-        name='title'
-        validators={{ onChange: ({ value }) => (value.length < 3 ? 'Title must be at least 3 characters' : undefined) }}
-        children={(field) => (
-          <field.InlineEditField label='Title' description='Shown at the top of the project page.' onSave={saveTitle} />
-        )}
+        name='owner'
+        validators={{ onChange: ({ value }) => (value.length < 2 ? 'Owner is required' : undefined) }}
+        children={(field) => <field.InlineEditField label='Owner' orientation='horizontal' onSave={saveOwner} />}
       />
     </div>
   );

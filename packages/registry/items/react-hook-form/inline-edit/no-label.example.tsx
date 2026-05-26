@@ -8,20 +8,20 @@ import { Form } from '@/components/ui/form';
 import { InlineEditField } from '@/components/ui/shuip/react-hook-form/inline-edit';
 
 const zodSchema = z.object({
-  title: z.string().min(3, { message: 'Title must be at least 3 characters' }),
+  bio: z.string().max(140, { message: 'Keep it under 140 characters' }),
 });
 
 type Values = z.infer<typeof zodSchema>;
 
-export default function RhfInlineEditExample() {
+export default function RhfInlineEditNoLabelExample() {
   const form = useForm<Values>({
-    defaultValues: { title: 'Project Apollo' },
+    defaultValues: { bio: 'Family-owned manufacturer since 1998.' },
     resolver: zodResolver(zodSchema),
     mode: 'onChange',
   });
   const lens = useLens({ control: form.control });
 
-  async function saveTitle(next: string) {
+  async function saveBio(next: string) {
     await new Promise((resolve) => setTimeout(resolve, 500));
     console.log('saved', next);
   }
@@ -30,10 +30,11 @@ export default function RhfInlineEditExample() {
     <Form {...form}>
       <div className='w-full max-w-sm'>
         <InlineEditField
-          lens={lens.focus('title')}
-          label='Title'
-          description='Shown at the top of the project page.'
-          onSave={saveTitle}
+          lens={lens.focus('bio')}
+          input='textarea'
+          variant='boxed'
+          placeholder='Add a description'
+          onSave={saveBio}
         />
       </div>
     </Form>
