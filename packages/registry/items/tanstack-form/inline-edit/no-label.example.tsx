@@ -12,12 +12,7 @@ const { useAppForm } = createFormHook({
 });
 
 export default function TsfInlineEditNoLabelExample() {
-  const form = useAppForm({ defaultValues: { bio: 'Family-owned manufacturer since 1998.' } });
-
-  async function saveBio(next: string) {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    console.log('saved', next);
-  }
+  const form = useAppForm({ defaultValues: { bio: '' } });
 
   return (
     <div className='w-full max-w-sm'>
@@ -25,7 +20,7 @@ export default function TsfInlineEditNoLabelExample() {
         name='bio'
         validators={{ onChange: ({ value }) => (value.length > 140 ? 'Keep it under 140 characters' : undefined) }}
         children={(field) => (
-          <field.InlineEditField input='textarea' variant='boxed' placeholder='Add a description' onSave={saveBio} />
+          <field.InlineEditField input='textarea' variant='boxed' placeholder='Add a description…' />
         )}
       />
     </div>

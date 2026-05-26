@@ -8,9 +8,12 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 A click-to-edit field for React Hook Form. The value displays as text and turns into an
 editable input on click; read and edit share one typography scale, so editing is seamless.
-The value lives in the form (covered by the form schema), and on each commit the field is
-validated; when valid, an optional `onSave` persists it immediately — schema validation and
-save-now together. The validation error is surfaced inside the cell.
+On each commit the field writes its value to the form and validates it — an invalid value
+keeps the field in edit mode with the error shown inline.
+
+Persisting is the form's job, not the field's: subscribe to the form with `form.watch` (or
+submit it). The example below autosaves the whole form to `localStorage` from a single
+`watch` subscription, so one handler covers every field.
 
 ## Examples
 
@@ -23,11 +26,6 @@ save-now together. The validation error is surfaced inside the cell.
     lens: {
       description: 'The lens focused on this field (from @hookform/lenses).',
       type: 'Lens<string>',
-    },
-    onSave: {
-      description:
-        'Called with the new value after the field validates on commit. Omit for submit-only forms (the value still updates the form).',
-      type: '(next: string) => Promise<void> | void',
     },
     label: {
       description: 'Field label.',

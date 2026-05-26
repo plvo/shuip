@@ -12,19 +12,17 @@ const { useAppForm } = createFormHook({
 });
 
 export default function TsfInlineEditHorizontalExample() {
-  const form = useAppForm({ defaultValues: { owner: 'Ada Lovelace' } });
-
-  async function saveOwner(next: string) {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    console.log('saved', next);
-  }
+  const form = useAppForm({ defaultValues: { owner: 'Ada Lovelace', status: 'In progress' } });
 
   return (
-    <div className='w-full max-w-md'>
+    <div className='flex w-full max-w-md flex-col gap-3'>
       <form.AppField
         name='owner'
-        validators={{ onChange: ({ value }) => (value.length < 2 ? 'Owner is required' : undefined) }}
-        children={(field) => <field.InlineEditField label='Owner' orientation='horizontal' onSave={saveOwner} />}
+        children={(field) => <field.InlineEditField label='Owner' orientation='horizontal' />}
+      />
+      <form.AppField
+        name='status'
+        children={(field) => <field.InlineEditField label='Status' orientation='horizontal' />}
       />
     </div>
   );

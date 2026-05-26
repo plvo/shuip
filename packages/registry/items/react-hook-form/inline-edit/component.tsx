@@ -16,13 +16,11 @@ type InlineEditInput = 'text' | 'textarea';
 
 interface InlineEditProps {
   value: string;
-  onSave: (next: string) => Promise<void> | void;
+  onCommit: (next: string) => Promise<string | undefined> | string | undefined;
   input?: InlineEditInput;
   variant?: InlineEditVariant;
   size?: InlineEditSize;
   placeholder?: string;
-  validate?: (next: string) => string | undefined;
-  error?: string;
   canEdit?: boolean;
   children?: (api: {
     value: string;
@@ -53,13 +51,11 @@ const variantClasses: Record<InlineEditVariant, string> = {
 
 function InlineEdit({
   value,
-  onSave,
+  onCommit,
   input = 'text',
   variant = 'ghost',
   size = 'default',
   placeholder = '—',
-  validate,
-  error,
   canEdit = true,
   children,
 }: InlineEditProps) {
@@ -87,23 +83,12 @@ function InlineEdit({
       setState({ kind: 'reading' });
       return;
     }
-    const validationError = validate?.(draft);
-    if (validationError) {
-      setState({ kind: 'editing', draft, error: validationError });
-      return;
-    }
     setState({ kind: 'saving', draft });
-    try {
-      await onSave(draft);
-      setState({ kind: 'reading' });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to save';
-      setState({ kind: 'editing', draft, error: message });
-    }
+    const error = await onCommit(draft);
+    setState(error ? { kind: 'editing', draft, error } : { kind: 'reading' });
   };
 
-  const internalError = state.kind === 'editing' ? state.error : undefined;
-  const displayedError = internalError ?? error;
+  const displayedError = state.kind === 'editing' ? state.error : undefined;
   const isSaving = state.kind === 'saving';
 
   let content: React.ReactNode;
@@ -114,8 +99,6 @@ function InlineEdit({
         data-slot='inline-edit'
         role={canEdit ? 'button' : undefined}
         tabIndex={canEdit ? 0 : undefined}
-        aria-invalid={!!displayedError}
-        aria-describedby={displayedError ? errorId : undefined}
         onClick={canEdit ? startEdit : undefined}
         onKeyDown={
           canEdit
@@ -207,7 +190,6 @@ function InlineEdit({
 export interface InlineEditFieldProps
   extends Pick<InlineEditProps, 'input' | 'variant' | 'size' | 'placeholder' | 'canEdit' | 'children'> {
   lens: Lens<string>;
-  onSave?: (next: string) => Promise<void> | void;
   label?: string;
   description?: string;
   orientation?: 'vertical' | 'horizontal';
@@ -215,25 +197,29 @@ export interface InlineEditFieldProps
 
 export function InlineEditField({
   lens,
-  onSave,
   label,
   description,
   orientation = 'vertical',
   ...props
 }: InlineEditFieldProps) {
   const { field, fieldState } = useController(lens.interop());
-  const { trigger } = useFormContext();
+  const { trigger, getFieldState, formState } = useFormContext();
 
-  const handleSave = async (next: string) => {
+  const handleCommit = async (next: string) => {
     field.onChange(next);
-    if (await trigger(field.name)) await onSave?.(next);
+    if (await trigger(field.name)) return undefined;
+    return getFieldState(field.name, formState).error?.message ?? 'Invalid value';
   };
 
   return (
-    <Field orientation={orientation} className='gap-2' data-invalid={fieldState.invalid}>
+    <Field
+      orientation={orientation}
+      data-invalid={fieldState.invalid}
+      className={cn('gap-2', orientation === 'horizontal' && '[&>[data-slot=field-label]]:flex-none')}
+    >
       {label && <FieldLabel htmlFor={field.name}>{label}</FieldLabel>}
-      <div className='flex items-center gap-2'>
-        <InlineEdit {...props} value={field.value ?? ''} onSave={handleSave} error={fieldState.error?.message} />
+      <div className={cn('flex items-center gap-2', orientation === 'horizontal' && 'flex-1')}>
+        <InlineEdit {...props} value={field.value ?? ''} onCommit={handleCommit} />
         {description && (
           <Popover>
             <PopoverTrigger aria-label='Info' className='text-muted-foreground transition-colors hover:text-foreground'>
