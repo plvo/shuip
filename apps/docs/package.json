@@ -29,6 +29,9 @@
     "tailwind-merge": "catalog:",
     "clsx": "catalog:",
     "zod": "catalog:",
+    "@dnd-kit/core": "catalog:",
+    "@dnd-kit/sortable": "catalog:",
+    "@dnd-kit/utilities": "catalog:",
     "shadcn": "^4.8.0",
     "@vercel/analytics": "^2.0.1"
   },
