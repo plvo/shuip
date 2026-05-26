@@ -36,7 +36,9 @@ export default function RhfInlineEditExample() {
   React.useEffect(() => {
     form.reset({ ...defaultValues, ...loadStored() });
     const subscription = form.watch((values) => {
-      const json = JSON.stringify(values);
+      const parsed = schema.safeParse(values);
+      if (!parsed.success) return;
+      const json = JSON.stringify(parsed.data);
       window.localStorage.setItem(STORAGE_KEY, json);
       setStored(json);
     });
