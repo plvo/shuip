@@ -1,0 +1,95 @@
+---
+title: Kanban
+description: A generic, drag-and-drop kanban board whose columns, card fields, and search are driven by your typed data model.
+registryName: kanban
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+`Kanban` is a generic board (`Kanban<T>`) that renders any array of typed items into draggable columns. Columns, the property fields shown on each card, and the searchable fields are all configured against your own data shape — nothing is hardcoded to a domain.
+
+### Built-in features
+
+- **Generic data model**: works with any item type `T` via `idField` / `columnField`.
+- **Declarative cards**: drive the default card with a `fields` config, or take full control with `renderCard`.
+- **Inter and intra-column drag-and-drop**: move cards between columns and reorder within a column.
+- **Hybrid state**: works standalone from `defaultData`, or controlled via `data` + `onDataChange`.
+- **Global search**: filter cards across `searchableFields`.
+- **Per-column extras**: count, a `renderColumnSummary` slot, color accent, and an add button.
+
+> The card order is implicit in the `data` array order. On any move, the board emits the reordered array via `onDataChange` (and a semantic `onCardMove` event); map that to your own persistence.
+
+> Define your item type with a `type` alias, not an `interface` — `Kanban<T>` requires `T extends Record<string, unknown>`, which a TypeScript `interface` does not satisfy.
+
+## Examples
+
+<ItemExamples registryName={'kanban'} />
+
+## Props
+
+<TypeTable
+  type={{
+    columns: {
+      description: 'Column definitions: { id, label, color? }.',
+      type: 'KanbanColumn[]',
+    },
+    data: {
+      description: 'Controlled items. When provided, you own the state via onDataChange.',
+      type: 'T[]?',
+    },
+    defaultData: {
+      description: 'Initial items for uncontrolled mode.',
+      type: 'T[]?',
+    },
+    onDataChange: {
+      description: 'Fires with the full reordered array after a move.',
+      type: '(next: T[]) => void',
+    },
+    idField: {
+      description: 'Field holding the stable card id.',
+      type: 'keyof T',
+      default: "'id'",
+    },
+    columnField: {
+      description: 'Field holding the column id the card belongs to.',
+      type: 'keyof T',
+    },
+    titleField: {
+      description: 'Field rendered as the card title in the default card.',
+      type: 'keyof T?',
+    },
+    fields: {
+      description: 'Properties shown on the default card: { key, label?, render? }.',
+      type: 'KanbanField<T>[]?',
+    },
+    renderCard: {
+      description: 'Escape hatch to fully render a card; bypasses fields/titleField.',
+      type: '(item: T) => ReactNode',
+    },
+    searchableFields: {
+      description: 'Fields the internal search box matches against. Omit to hide search.',
+      type: '(keyof T)[]?',
+    },
+    searchPlaceholder: {
+      description: 'Placeholder for the search box.',
+      type: 'string?',
+      default: "'Search...'",
+    },
+    renderColumnSummary: {
+      description: 'Renders an aggregate in the column header (e.g. a sum).',
+      type: '(items: T[], column: KanbanColumn) => ReactNode',
+    },
+    onCardClick: {
+      description: 'Called when a card body is clicked.',
+      type: '(item: T) => void',
+    },
+    onCardAdd: {
+      description: 'When set, shows a + button in the column header.',
+      type: '(columnId: string) => void',
+    },
+    onCardMove: {
+      description: 'Semantic move event: { item, fromColumn, toColumn, toIndex }.',
+      type: '(e: KanbanMoveEvent<T>) => void',
+    },
+  }}
+/>
