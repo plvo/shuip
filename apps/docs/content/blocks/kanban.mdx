@@ -67,7 +67,7 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       type: '(item: T) => ReactNode',
     },
     searchableFields: {
-      description: 'Fields the internal search box matches against. Omit to hide search.',
+      description: 'Fields the internal search box matches against (matches the raw stored value, not a custom-rendered label). Omit to hide search.',
       type: '(keyof T)[]?',
     },
     searchPlaceholder: {

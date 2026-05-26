@@ -14,6 +14,7 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import {
+  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
@@ -82,6 +83,8 @@ export function Kanban<T extends Record<string, unknown>>({
   const [items, setItems] = React.useState<T[]>(() => data ?? defaultData ?? []);
   const draggingRef = React.useRef(false);
   const fromColumnRef = React.useRef<string | null>(null);
+  const fromIndexRef = React.useRef<number | null>(null);
+  const startItemsRef = React.useRef<T[] | null>(null);
   React.useEffect(() => {
     if (data && !draggingRef.current) setItems(data);
   }, [data]);
@@ -115,46 +118,26 @@ export function Kanban<T extends Record<string, unknown>>({
     return grouped;
   }, [columns, visible, getColumn]);
 
-  const reorder = React.useCallback(
-    (activeCardId: string, toColumn: string, overCardId: string | null): { next: T[]; toIndex: number } | null => {
-      const item = items.find((it) => getId(it) === activeCardId);
-      if (!item) return null;
-      const moved = { ...item, [columnField]: toColumn } as T;
-      const without = items.filter((it) => getId(it) !== activeCardId);
-      const colItems = without.filter((it) => getColumn(it) === toColumn);
-
-      let colIndex: number;
-      if (overCardId && overCardId !== activeCardId) {
-        const found = colItems.findIndex((it) => getId(it) === overCardId);
-        colIndex = found < 0 ? colItems.length : found;
-      } else {
-        colIndex = colItems.length;
-      }
-
-      let flatIndex: number;
-      if (colIndex < colItems.length) {
-        flatIndex = without.findIndex((it) => getId(it) === getId(colItems[colIndex]));
-      } else if (colItems.length > 0) {
-        flatIndex = without.findIndex((it) => getId(it) === getId(colItems[colItems.length - 1])) + 1;
-      } else {
-        flatIndex = without.length;
-      }
-
-      const next = [...without];
-      next.splice(flatIndex, 0, moved);
-      return { next, toIndex: colIndex };
-    },
-    [items, getId, getColumn, columnField],
+  const columnIndexOf = React.useCallback(
+    (list: T[], columnId: string, cardId: string) =>
+      list.filter((it) => getColumn(it) === columnId).findIndex((it) => getId(it) === cardId),
+    [getColumn, getId],
   );
 
   function handleDragStart(event: DragStartEvent) {
     draggingRef.current = true;
     const id = String(event.active.id);
     const startItem = items.find((it) => getId(it) === id);
-    fromColumnRef.current = startItem ? getColumn(startItem) : null;
+    const startColumn = startItem ? getColumn(startItem) : null;
+    fromColumnRef.current = startColumn;
+    fromIndexRef.current = startColumn == null ? null : columnIndexOf(items, startColumn, id);
+    startItemsRef.current = items;
     setActiveId(id);
   }
 
+  // Reorder live so the rendered list always matches the drag preview; the drop
+  // handler only reads the settled order and notifies. This keeps intra- and
+  // cross-column moves consistent (no off-by-one between preview and commit).
   function handleDragOver(event: DragOverEvent) {
     const { active, over } = event;
     if (!over) return;
@@ -162,63 +145,65 @@ export function Kanban<T extends Record<string, unknown>>({
     const overId = String(over.id);
     if (activeCardId === overId) return;
 
-    const activeItem = items.find((it) => getId(it) === activeCardId);
-    if (!activeItem) return;
-
-    const overIsColumn = columns.some((c) => c.id === overId);
-    const overItem = overIsColumn ? null : items.find((it) => getId(it) === overId);
-    const overColumn = overIsColumn ? overId : overItem ? getColumn(overItem) : null;
-    if (!overColumn || overColumn === getColumn(activeItem)) return;
-
     setItems((prev) => {
-      const current = prev.find((it) => getId(it) === activeCardId);
-      if (!current) return prev;
-      const moved = { ...current, [columnField]: overColumn } as T;
-      const without = prev.filter((it) => getId(it) !== activeCardId);
-      if (overItem) {
-        const idx = without.findIndex((it) => getId(it) === overId);
-        without.splice(idx < 0 ? without.length : idx, 0, moved);
-        return without;
+      const activeIndex = prev.findIndex((it) => getId(it) === activeCardId);
+      if (activeIndex < 0) return prev;
+
+      const overIsColumn = columns.some((c) => c.id === overId);
+      const overItem = overIsColumn ? undefined : prev.find((it) => getId(it) === overId);
+      const overColumn = overIsColumn ? overId : overItem ? getColumn(overItem) : null;
+      if (overColumn == null) return prev;
+
+      const columnChanged = getColumn(prev[activeIndex]) !== overColumn;
+      const updated = columnChanged
+        ? prev.map((it, i) => (i === activeIndex ? ({ ...it, [columnField]: overColumn } as T) : it))
+        : prev;
+      const activeIndexNow = columnChanged ? updated.findIndex((it) => getId(it) === activeCardId) : activeIndex;
+
+      let overIndex = activeIndexNow;
+      if (overIsColumn) {
+        for (let i = 0; i < updated.length; i++) {
+          if (getId(updated[i]) !== activeCardId && getColumn(updated[i]) === overColumn) overIndex = i;
+        }
+      } else {
+        overIndex = updated.findIndex((it) => getId(it) === overId);
       }
-      without.push(moved);
-      return without;
+
+      if (overIndex < 0 || (!columnChanged && overIndex === activeIndexNow)) return updated;
+      return arrayMove(updated, activeIndexNow, overIndex);
     });
   }
 
   function handleDragEnd(event: DragEndEvent) {
     draggingRef.current = false;
     setActiveId(null);
-    const { active, over } = event;
     const fromColumn = fromColumnRef.current;
+    const fromIndex = fromIndexRef.current;
     fromColumnRef.current = null;
-    if (!over || fromColumn == null) return;
+    fromIndexRef.current = null;
+    if (fromColumn == null) return;
 
-    const activeCardId = String(active.id);
-    if (!items.some((it) => getId(it) === activeCardId)) return;
+    const activeCardId = String(event.active.id);
+    const movedItem = items.find((it) => getId(it) === activeCardId);
+    if (!movedItem) return;
 
-    let toColumn: string;
-    let overCardId: string | null = null;
-    if (columns.some((c) => c.id === String(over.id))) {
-      toColumn = String(over.id);
-    } else {
-      const overItem = items.find((it) => getId(it) === String(over.id));
-      if (!overItem) return;
-      toColumn = getColumn(overItem);
-      overCardId = String(over.id);
-    }
+    const toColumn = getColumn(movedItem);
+    const toIndex = columnIndexOf(items, toColumn, activeCardId);
+    startItemsRef.current = null;
+    if (toColumn === fromColumn && toIndex === fromIndex) return;
 
-    const result = reorder(activeCardId, toColumn, overCardId);
-    if (!result) return;
-    setItems(result.next);
-    onDataChange?.(result.next);
-    const movedItem = result.next.find((it) => getId(it) === activeCardId);
-    if (movedItem) onCardMove?.({ item: movedItem, fromColumn, toColumn, toIndex: result.toIndex });
+    onDataChange?.(items);
+    onCardMove?.({ item: movedItem, fromColumn, toColumn, toIndex });
   }
 
   function handleDragCancel() {
     draggingRef.current = false;
+    const snapshot = startItemsRef.current;
+    startItemsRef.current = null;
     fromColumnRef.current = null;
+    fromIndexRef.current = null;
     setActiveId(null);
+    if (snapshot) setItems(snapshot);
   }
 
   const activeItem = activeId ? (items.find((it) => getId(it) === activeId) ?? null) : null;
