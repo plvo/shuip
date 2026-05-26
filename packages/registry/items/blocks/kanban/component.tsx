@@ -87,6 +87,7 @@ export function Kanban<T extends Record<string, unknown>>({
   }, [data]);
 
   const [query, setQuery] = React.useState('');
+  const deferredQuery = React.useDeferredValue(query);
   const [activeId, setActiveId] = React.useState<string | null>(null);
 
   const sensors = useSensors(
@@ -95,7 +96,7 @@ export function Kanban<T extends Record<string, unknown>>({
   );
 
   const visible = React.useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = deferredQuery.trim().toLowerCase();
     if (!q || !searchableFields?.length) return items;
     return items.filter((it) =>
       searchableFields.some((f) =>
@@ -104,12 +105,15 @@ export function Kanban<T extends Record<string, unknown>>({
           .includes(q),
       ),
     );
-  }, [items, query, searchableFields]);
+  }, [items, deferredQuery, searchableFields]);
 
-  const itemsByColumn = React.useCallback(
-    (columnId: string) => visible.filter((it) => getColumn(it) === columnId),
-    [visible, getColumn],
-  );
+  const itemsByColumn = React.useMemo(() => {
+    const grouped = new Map<string, T[]>(columns.map((column) => [column.id, []]));
+    for (const item of visible) {
+      grouped.get(getColumn(item))?.push(item);
+    }
+    return grouped;
+  }, [columns, visible, getColumn]);
 
   const reorder = React.useCallback(
     (activeCardId: string, toColumn: string, overCardId: string | null): { next: T[]; toIndex: number } | null => {
@@ -269,7 +273,7 @@ export function Kanban<T extends Record<string, unknown>>({
       >
         <div className='flex flex-row gap-4 overflow-x-auto pb-2'>
           {columns.map((column) => {
-            const columnItems = itemsByColumn(column.id);
+            const columnItems = itemsByColumn.get(column.id) ?? [];
             return (
               <KanbanColumnView
                 key={column.id}
