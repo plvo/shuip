@@ -1,0 +1,68 @@
+---
+title: Inline Edit Field
+description: A React Hook Form field with click-to-edit, schema validation, and save-on-commit.
+registryName: rhf-inline-edit
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+A click-to-edit field for React Hook Form. The value displays as text and turns into an
+editable input on click; read and edit share one typography scale, so editing is seamless.
+On each commit the field writes its value to the form and validates it — an invalid value
+keeps the field in edit mode with the error shown inline.
+
+Persisting is the form's job, not the field's: subscribe to the form with `form.watch` (or
+submit it). The example below autosaves the whole form to `localStorage` from a single
+`watch` subscription, so one handler covers every field.
+
+## Examples
+
+<ItemExamples registryName={'rhf-inline-edit'} />
+
+## Props
+
+<TypeTable
+  type={{
+    lens: {
+      description: 'The lens focused on this field (from @hookform/lenses).',
+      type: 'Lens<string>',
+    },
+    label: {
+      description: 'Field label.',
+      type: 'string',
+    },
+    description: {
+      description: 'Hint shown in a popover behind an info icon, next to the value.',
+      type: 'string',
+    },
+    orientation: {
+      description: 'Label layout, forwarded to the underlying Field.',
+      type: "'vertical' | 'horizontal'",
+      default: "'vertical'",
+    },
+    input: {
+      description: 'Built-in editor rendered in edit mode.',
+      type: "'text' | 'textarea'",
+      default: "'text'",
+    },
+    variant: {
+      description: 'Edit-mode chrome. ghost is seamless; boxed shows a thin bordered input.',
+      type: "'ghost' | 'boxed'",
+      default: "'ghost'",
+    },
+    size: {
+      description: 'Typography and spacing scale, shared by the read and edit states.',
+      type: "'sm' | 'default' | 'title'",
+      default: "'default'",
+    },
+    placeholder: {
+      description: 'Shown when the value is empty, in read mode.',
+      type: 'string',
+    },
+    canEdit: {
+      description: 'Whether clicking enters edit mode.',
+      type: 'boolean',
+      default: 'true',
+    },
+  }}
+/>
