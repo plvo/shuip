@@ -9,8 +9,10 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 A value cell that displays text and turns into an editable input on click, saving on
 commit (Enter, or blur) through an async `onSave`. Read and edit states share one
 typography scale, so the value never jumps size — editing is seamless by default
-(`variant='ghost'`). Use `variant='boxed'` for a thin bordered input, `size='title'`
-for headings, and `as` to set the read-mode element for semantics.
+(`variant='ghost'`). Use `variant='boxed'` for a thin bordered input and `size='title'`
+for headings. For form integration with schema validation, use
+[`rhf-inline-edit`](/docs/react-hook-form/inline-edit) or
+[`tsf-inline-edit`](/docs/tanstack-form/inline-edit), which bind this cell to a form.
 
 ## Examples
 
@@ -44,10 +46,9 @@ for headings, and `as` to set the read-mode element for semantics.
       type: "'sm' | 'default' | 'title'",
       default: "'default'",
     },
-    as: {
-      description: 'The element rendered in read mode, for semantics.',
-      type: "'span' | 'p' | 'h1' | 'h2' | 'h3'",
-      default: "'span'",
+    error: {
+      description: 'External error message to display (e.g. from a form validator). Shown in both read and edit modes.',
+      type: 'string',
     },
     placeholder: {
       description: 'Shown when the value is empty, in read mode.',
