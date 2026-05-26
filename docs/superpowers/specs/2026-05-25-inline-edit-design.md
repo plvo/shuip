@@ -2,57 +2,48 @@
 
 **Date:** 2026-05-25
 **Branch:** `feat/inline-edit`
-**Status:** Approved (revised — 3-item architecture, form-bound wrappers)
+**Status:** Approved (revised — two self-contained form-bound items)
 
 ## Goal
 
-Add click-to-edit value editing to the shuip registry: a value displays as text and
-turns into an editable input on click, saving on commit. Distilled from a bespoke
-650-line `InlineEditField` (12 field types + 3 layout variants + Tiptap + autocomplete
-in one file) down to a focused core plus two thin form-bound wrappers.
+Add click-to-edit value editing to the shuip registry as two form-bound fields. A value
+displays as text and turns into an editable input on click, saving on commit. Distilled
+from a bespoke 650-line `InlineEditField` (12 field types + 3 layout variants + Tiptap +
+autocomplete in one file).
 
 The defining UI requirement is a **coherent, proportional read↔edit transition**: clicking
 the value must not swap a light label for a heavy boxed input. Read and edit share one
 typography scale; editing is **seamless (ghost) by default**.
 
-## Three items (shared core + two form-bound wrappers)
+## Two items (self-contained, full duplication)
 
-| Item | Published name | Role |
+| Item | Published name | Form lib |
 |---|---|---|
-| `components/inline-edit` | `inline-edit` | The lean, standalone editable cell. `value` + `onSave` (immediate save). |
-| `react-hook-form/inline-edit` | `rhf-inline-edit` | Wraps the core; binds to React Hook Form; validates one field then saves now. |
-| `tanstack-form/inline-edit` | `tsf-inline-edit` | Wraps the core; binds to TanStack Form; validates one field then saves now. |
+| `react-hook-form/inline-edit` | `rhf-inline-edit` | React Hook Form |
+| `tanstack-form/inline-edit` | `tsf-inline-edit` | TanStack Form |
 
-**Division of responsibility (the key decision):** the core owns the *interaction*
-(read↔edit↔saving lifecycle + styling). The wrappers own the *field chrome* (label,
-description, error display) and the *form binding* — because the validation error comes
-from the form controller, the `Field`/`FieldLabel` chrome belongs where that error lives,
-not in the core. Putting `Field` in the core would duplicate what the wrappers do.
+Each item's `component.tsx` is **self-contained**: it inlines the full inline-edit cell
+(state machine + styling + editors) *and* the form binding. No shared `components/inline-edit`
+item — **full duplication is deliberate**, matching the `autocomplete-field` precedent:
+`shadcn add rhf-inline-edit` installs one complete, working file with no extra item to pull.
+DRY is explicitly traded away for self-containment (the user's call).
 
-**Why a shared core (not full duplication):** the standalone cell is a useful product on
-its own (immediate per-field save on a detail page), and the wrappers genuinely depend on
-it. The wrappers import it via the stub alias `@/components/ui/shuip/inline-edit`, which
-`generate.ts` auto-adds to their `registryDependencies` (`parseShuipDeps`), so
-`shadcn add rhf-inline-edit` pulls the core automatically. No `meta.shuip.json` needed.
+## The inlined cell (identical in both items)
 
-## Core — `components/inline-edit`
-
-### Responsibility
-A single editable value cell. Read↔edit↔saving lifecycle, seamless styling, minimal inline
-error. No label, no `Field`, no description — the consumer (or a wrapper) supplies those.
+A `InlineEdit` function defined inside each `component.tsx` (not exported). It owns the
+*interaction*; the exported `InlineEditField` wraps it with the form binding and chrome.
 
 ### State machine
 `reading → editing → saving → (error → editing)`
 - Enter edit on click / keyboard activation when `canEdit`.
-- Commit on **Enter** (`input: 'text'`) and **blur** (both). For `textarea`, Enter inserts
-  a newline; commit is blur-only. **Esc** cancels, reverting to the original value.
+- Commit on **Enter** (`input: 'text'`) and **blur** (both). For `textarea`, Enter inserts a
+  newline; commit is blur-only. **Esc** cancels, reverting to the original value.
 - **Dirty-check**: draft equal to original → no-op cancel, no `onSave`.
-- `validate?(next)` runs synchronously before saving (standalone use); a returned string
-  blocks the commit.
-- `onSave` may be sync or async. A pending promise → `saving` (subtle dot, input disabled).
-  A rejection → `error` with the message shown inline and the draft preserved.
+- `validate?(next)` runs synchronously before saving; a returned string blocks the commit.
+- `onSave` may be sync or async. Pending promise → `saving` (subtle dot, input disabled).
+  Rejection → `error` with the message shown inline, draft preserved.
 
-### API
+### Cell props (internal)
 ```ts
 interface InlineEditProps {
   value: string;
@@ -60,129 +51,101 @@ interface InlineEditProps {
   input?: 'text' | 'textarea';        // default 'text'
   variant?: 'ghost' | 'boxed';        // default 'ghost' (seamless)
   size?: 'sm' | 'default' | 'title';  // default 'default'
-  placeholder?: string;               // shown when empty, read mode
-  validate?: (next: string) => string | undefined; // internal validation (standalone)
-  error?: string;                     // external error (a wrapper passes the form's error)
+  placeholder?: string;
+  validate?: (next: string) => string | undefined;
+  error?: string;                     // external error (the wrapper passes the form's error)
   canEdit?: boolean;                  // default true
   children?: (api: {                  // escape hatch for a custom editor (e.g. Select)
-    value: string;
-    setValue: (v: string) => void;
-    commit: () => void;
-    cancel: () => void;
-    className: string;                // resolved size+variant class, for visual coherence
-    autoFocus: true;
+    value: string; setValue: (v: string) => void;
+    commit: (next?: string) => void;  // optional override → usable for Select onValueChange
+    cancel: () => void; className: string; autoFocus: true;
   }) => React.ReactNode;
 }
 ```
-- **Displayed error** = internal error (validate / onSave rejection) `??` `error` prop. One
-  inline `<p>` (`text-destructive text-xs`), `aria-invalid` + `aria-describedby` wired. No
-  `Field`/`FieldError` (keeps the core dep-light).
-- **`as` prop removed** (was unused).
+- Displayed error = internal (validate / onSave rejection) `??` `error` prop. One inline `<p>`,
+  `aria-invalid` + `aria-describedby` wired.
+- Styling: plain class maps (no cva). `size` → shared typography for read+edit (no jump);
+  `variant` → edit chrome (`ghost` seamless / `boxed` thin border). Resolved class passed to
+  the render-prop editor.
 
-### Styling (plain class maps, no cva → zero npm deps)
-- `size` → shared typography + box metrics applied to **both** read and edit (no jump).
-- `variant` → edit chrome: `ghost` (transparent, no border, subtle focus ring) /
-  `boxed` (thin border, height aligned to text, no `h-9`).
-- The resolved class is passed to the render-prop editor so custom editors stay coherent.
-
-### Dependencies
-- `registryDependencies`: `input`, `textarea`.
-- `dependencies`: none.
-
-## Wrappers — `rhf-inline-edit` / `tsf-inline-edit`
-
-Both render the same chrome around the core and differ only in form binding:
+## The exported field — `InlineEditField`
 
 ```tsx
 <Field orientation={orientation} className='gap-2' data-invalid={invalid}>
   {label && <FieldLabel htmlFor={name}>{label}</FieldLabel>}
-  <div className='flex items-center gap-2'>            {/* not a direct Field child → icon stays inline */}
-    <InlineEdit value={value} error={formError} onSave={handleSave} {...{ input, variant, size, placeholder, canEdit }} />
-    {description && <InfoPopover>{description}</InfoPopover>}  {/* Popover via lucide InfoIcon, right side */}
+  <div className='flex items-center gap-2'>           {/* not a direct Field child → icon stays inline */}
+    <InlineEdit {...display} value={value} error={formError} onSave={handleSave} />
+    {description && <InfoPopover>{description}</InfoPopover>}  {/* Popover behind a lucide InfoIcon */}
   </div>
 </Field>
 ```
-- `<Field>` gets `className='gap-2'` (overrides its default `gap-3`); the info icon is wrapped
-  in the inner `div`, not a direct child of `Field` (avoids `[&>*]:w-full` stretching it).
+- `<Field className='gap-2'>` overrides Field's default `gap-3`; the info icon is wrapped in the
+  inner `div`, not a direct `Field` child (avoids `[&>*]:w-full` stretching it).
+- **No submit button in the examples** — save-now persists each field on commit, so a form
+  submit button would be redundant and misleading.
 
-### Save-now mechanics (validate via the form, then persist)
-- **RHF** — `const { field, fieldState } = useController(lens.interop())`,
-  `const { trigger, getFieldState, formState } = useFormContext()`. On core commit:
-  ```ts
-  field.onChange(next);
-  if (!(await trigger(field.name))) throw new Error(getFieldState(field.name, formState).error?.message ?? 'Invalid');
-  await onSave?.(next);     // persistence (save-now); omit onSave for submit-only usage
-  ```
-  Throwing makes the core stay in `editing` and show the message. `error={fieldState.error?.message}`
-  also keeps the error visible in read mode.
-- **TSF** — `const field = useFieldContext<string>()`. On core commit:
-  ```ts
-  field.handleChange(next);
-  await field.validate('change');
-  if (!field.state.meta.isValid) throw new Error(firstErrorMessage(field.state.meta.errors));
-  await onSave?.(next);
-  ```
-  `error` is derived from `field.state.meta` (errors may be `string` or `{ message }` —
-  normalise like the existing tsf `input-field`).
+### Save-now (validate via the form, then persist)
+- **RHF** — `useController(lens.interop())` + `useFormContext().trigger`. On commit:
+  `field.onChange(next); if (await trigger(field.name)) await onSave?.(next)`. `error` from
+  `fieldState.error?.message`.
+- **TSF** — `useFieldContext<string>()`. On commit:
+  `field.handleChange(next); if (field.state.meta.isValid) await onSave?.(next)`. `error`
+  normalised from `field.state.meta.errors` (string or `{ message }`).
+- `onSave` is **optional**: present → save-now; omit → the value still updates the form
+  (submit-only usage).
 
-### Wrapper props
+### Field props
 ```ts
 // RHF
-interface InlineEditFieldProps extends Pick<InlineEditProps, 'input'|'variant'|'size'|'placeholder'|'canEdit'> {
+interface InlineEditFieldProps
+  extends Pick<InlineEditProps, 'input'|'variant'|'size'|'placeholder'|'canEdit'|'children'> {
   lens: Lens<string>;
-  onSave?: (next: string) => Promise<void> | void;   // optional: present = save-now; absent = submit-only
+  onSave?: (next: string) => Promise<void> | void;
   label?: string;
   description?: string;
-  orientation?: 'vertical' | 'horizontal';            // default 'vertical', forwarded to <Field>
+  orientation?: 'vertical' | 'horizontal';   // default 'vertical', forwarded to <Field>
 }
-// TSF — same, minus `lens` (uses useFieldContext); same prop names otherwise.
+// TSF — identical minus `lens` (binds via useFieldContext).
 ```
-
-### Dependencies
-- RHF — `registryDependencies`: `field`, `inline-edit`, `popover`. `dependencies`:
-  `@hookform/lenses`, `react-hook-form`, `lucide-react`.
-- TSF — `registryDependencies`: `field`, `inline-edit`, `popover`, `tsf-form-context`.
-  `dependencies`: `@tanstack/react-form`, `lucide-react`.
 
 ## Files
 
 ```
-items/components/inline-edit/
-  component.tsx            core InlineEdit (~140 lines)
-  default.example.tsx      ghost + text, standalone immediate onSave
-  boxed.example.tsx        boxed + textarea, standalone
-  children.example.tsx     escape hatch: a Select as the custom editor
-  index.mdx                registryName 'inline-edit'
-
 items/react-hook-form/inline-edit/
-  component.tsx            InlineEditField (RHF wrapper)
-  default.example.tsx      useForm + lens + zodResolver + SubmitButton + onSave (save-now)
-  index.mdx                registryName 'rhf-inline-edit'
+  component.tsx           inlined cell + InlineEditField (RHF)
+  default.example.tsx     vertical label + description, save-now (no submit button)
+  horizontal.example.tsx  orientation='horizontal'
+  no-label.example.tsx    no label, boxed + textarea
+  index.mdx               registryName 'rhf-inline-edit'
 
-items/tanstack-form/inline-edit/
-  component.tsx            InlineEditField (TSF wrapper)
-  default.example.tsx      createFormHook + validators + save-now
-  index.mdx                registryName 'tsf-inline-edit'
+items/tanstack-form/inline-edit/   (same example set)
+  component.tsx           inlined cell + InlineEditField (TSF)
+  default.example.tsx · horizontal.example.tsx · no-label.example.tsx
+  index.mdx               registryName 'tsf-inline-edit'
 ```
 
-Examples import via stub aliases (`@/components/ui/shuip/inline-edit`,
-`@/components/ui/shuip/react-hook-form/inline-edit`,
+Examples import via the stub aliases (`@/components/ui/shuip/react-hook-form/inline-edit`,
 `@/components/ui/shuip/tanstack-form/inline-edit`), never relative.
+
+## Dependencies (auto-detected)
+
+- `rhf-inline-edit` — `registryDependencies`: `field`, `input`, `popover`, `textarea`.
+  `dependencies`: `@hookform/lenses`, `lucide-react`, `react`, `react-hook-form`.
+- `tsf-inline-edit` — `registryDependencies`: `field`, `input`, `popover`, `textarea`,
+  `tsf-form-context`. `dependencies`: `lucide-react`, `react`.
 
 ## Verification (build-based, no test runner)
 
-1. `bun registry:generate` — item count +3, no `skipping … no component.tsx` warnings.
-2. `registry.json`: `inline-edit` → `["input","textarea"]`; `rhf-inline-edit` →
-   `["field","inline-edit","popover"]`; `tsf-inline-edit` →
-   `["field","inline-edit","popover","tsf-form-context"]` (sorted).
-3. Stubs at `stubs/inline-edit.tsx`, `stubs/react-hook-form/inline-edit.tsx`,
-   `stubs/tanstack-form/inline-edit.tsx`; MDX symlinks under the three `content/docs/<cat>/`.
-4. `bun build:docs` succeeds end-to-end.
+1. `bun registry:generate` — no `skipping … no component.tsx` warnings; the deleted
+   `components/inline-edit` no longer present; its stale symlink removed from `content/docs/components/`.
+2. `registry.json` deps as above (sorted).
+3. `bun build:docs` succeeds end-to-end.
+4. Preview: no-jump read↔edit, ghost/boxed, `size='title'`, description popover, vertical /
+   horizontal / no-label layouts, and the form validation + save-now behaviour.
 
 ## Out of scope (YAGNI)
 
+- A standalone non-form `inline-edit` item (removed; the form-bound items are the product).
 - Built-in `select`/`date`/`currency`/`richtext`/`autocomplete` editors (escape hatch covers custom).
-- A built-in label/description on the **core** (lives in the wrappers).
-- `sonner` toast on save error (core surfaces it inline; consumer may add toasts).
-- Generic non-string `value` (v1 is `string`).
-- Optimistic UI / retry beyond returning to `editing`.
+- `sonner` toast on save error (surfaced inline; consumer may add toasts).
+- Generic non-string `value`.
