@@ -122,7 +122,12 @@ function InlineEdit({
     );
   } else {
     const { draft } = state;
-    const editorClassName = cn(fieldClassName, 'h-auto min-w-0 shadow-none');
+    const editorClassName = cn(
+      fieldClassName,
+      'h-auto min-w-0',
+      variant === 'ghost' && 'shadow-none',
+      input === 'textarea' && 'field-sizing-content min-h-0',
+    );
     const handleKeyDown: React.KeyboardEventHandler = (e) => {
       if (e.key === 'Escape') {
         e.preventDefault();
