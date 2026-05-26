@@ -11,7 +11,7 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 ### Built-in features
 
 - **Generic data model**: works with any item type `T` via `idField` / `columnField`.
-- **Structured cards**: the title comes from `titleField` (rendered as a `CardTitle`); the content area is driven by a `fields` config or fully customized with `renderCard`.
+- **Structured cards**: the title comes from `titleField` (rendered as a `CardTitle`); the content area is driven by a `fields` config or fully customized with `cardContent`.
 - **Inter and intra-column drag-and-drop**: move cards between columns and reorder within a column.
 - **Hybrid state**: works standalone from `defaultData`, or controlled via `data` + `onDataChange`.
 - **Global search**: filter cards across `searchableFields`.
@@ -62,7 +62,7 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       description: 'Properties shown on the default card: { key, label?, render? }.',
       type: 'KanbanField<T>[]?',
     },
-    renderCard: {
+    cardContent: {
       description: 'Escape hatch for the card content area (replaces fields). The title still comes from titleField in the CardTitle.',
       type: '(item: T) => ReactNode',
     },

@@ -48,7 +48,7 @@ export type KanbanProps<T extends Record<string, unknown>> = {
   columnField: keyof T;
   titleField?: keyof T;
   fields?: KanbanField<T>[];
-  renderCard?: (item: T) => React.ReactNode;
+  cardContent?: (item: T) => React.ReactNode;
   searchableFields?: (keyof T)[];
   searchPlaceholder?: string;
   renderColumnSummary?: (items: T[], column: KanbanColumn) => React.ReactNode;
@@ -67,7 +67,7 @@ export function Kanban<T extends Record<string, unknown>>({
   columnField,
   titleField,
   fields,
-  renderCard,
+  cardContent,
   searchableFields,
   searchPlaceholder = 'Search...',
   renderColumnSummary,
@@ -226,7 +226,7 @@ export function Kanban<T extends Record<string, unknown>>({
 
   const renderBody = React.useCallback(
     (item: T): React.ReactNode => {
-      if (renderCard) return renderCard(item);
+      if (cardContent) return cardContent(item);
       if (!fields?.length) return null;
       return (
         <div className='flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground'>
@@ -242,7 +242,7 @@ export function Kanban<T extends Record<string, unknown>>({
         </div>
       );
     },
-    [renderCard, fields],
+    [cardContent, fields],
   );
 
   return (
