@@ -4,6 +4,7 @@ import {
   closestCorners,
   DndContext,
   type DragEndEvent,
+  type DragOverEvent,
   DragOverlay,
   type DragStartEvent,
   KeyboardSensor,
@@ -150,6 +151,36 @@ export function Kanban<T extends Record<string, unknown>>({
     setActiveId(id);
   }
 
+  function handleDragOver(event: DragOverEvent) {
+    const { active, over } = event;
+    if (!over) return;
+    const activeCardId = String(active.id);
+    const overId = String(over.id);
+    if (activeCardId === overId) return;
+
+    const activeItem = items.find((it) => getId(it) === activeCardId);
+    if (!activeItem) return;
+
+    const overIsColumn = columns.some((c) => c.id === overId);
+    const overItem = overIsColumn ? null : items.find((it) => getId(it) === overId);
+    const overColumn = overIsColumn ? overId : overItem ? getColumn(overItem) : null;
+    if (!overColumn || overColumn === getColumn(activeItem)) return;
+
+    setItems((prev) => {
+      const current = prev.find((it) => getId(it) === activeCardId);
+      if (!current) return prev;
+      const moved = { ...current, [columnField]: overColumn } as T;
+      const without = prev.filter((it) => getId(it) !== activeCardId);
+      if (overItem) {
+        const idx = without.findIndex((it) => getId(it) === overId);
+        without.splice(idx < 0 ? without.length : idx, 0, moved);
+        return without;
+      }
+      without.push(moved);
+      return without;
+    });
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     draggingRef.current = false;
     setActiveId(null);
@@ -206,6 +237,7 @@ export function Kanban<T extends Record<string, unknown>>({
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
