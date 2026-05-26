@@ -23,7 +23,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Plus, Search } from 'lucide-react';
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -219,6 +219,32 @@ export function Kanban<T extends Record<string, unknown>>({
 
   const activeItem = activeId ? (items.find((it) => getId(it) === activeId) ?? null) : null;
 
+  const renderTitle = React.useCallback(
+    (item: T): React.ReactNode => (titleField == null ? null : String(item[titleField] ?? '')),
+    [titleField],
+  );
+
+  const renderBody = React.useCallback(
+    (item: T): React.ReactNode => {
+      if (renderCard) return renderCard(item);
+      if (!fields?.length) return null;
+      return (
+        <div className='flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground'>
+          {fields.map((field) => {
+            const value = item[field.key];
+            return (
+              <span key={String(field.key)} className='whitespace-nowrap'>
+                {field.label ? <span className='font-medium'>{field.label}: </span> : null}
+                {field.render ? field.render(value, item) : String(value ?? '')}
+              </span>
+            );
+          })}
+        </div>
+      );
+    },
+    [renderCard, fields],
+  );
+
   return (
     <div className={cn('flex flex-col gap-4', className)}>
       {searchableFields?.length ? (
@@ -263,10 +289,10 @@ export function Kanban<T extends Record<string, unknown>>({
                         key={getId(item)}
                         id={getId(item)}
                         columnId={column.id}
+                        title={renderTitle(item)}
+                        body={renderBody(item)}
                         onClick={onCardClick ? () => onCardClick(item) : undefined}
-                      >
-                        <CardBody item={item} titleField={titleField} fields={fields} renderCard={renderCard} />
-                      </SortableCard>
+                      />
                     ))
                   )}
                 </SortableContext>
@@ -277,14 +303,12 @@ export function Kanban<T extends Record<string, unknown>>({
 
         <DragOverlay>
           {activeItem ? (
-            <Card className='rotate-3 shadow-lg'>
-              <CardContent className='flex items-start gap-2 p-3'>
-                <GripVertical className='mt-0.5 size-4 shrink-0 text-muted-foreground' />
-                <div className='min-w-0 flex-1'>
-                  <CardBody item={activeItem} titleField={titleField} fields={fields} renderCard={renderCard} />
-                </div>
-              </CardContent>
-            </Card>
+            <KanbanCardFace
+              title={renderTitle(activeItem)}
+              body={renderBody(activeItem)}
+              className='rotate-3 shadow-lg'
+              handle={<GripVertical className='mt-0.5 size-4 shrink-0 text-muted-foreground' />}
+            />
           ) : null}
         </DragOverlay>
       </DndContext>
@@ -335,13 +359,15 @@ function KanbanColumnView({
 function SortableCard({
   id,
   columnId,
+  title,
+  body,
   onClick,
-  children,
 }: {
   id: string;
   columnId: string;
+  title?: React.ReactNode;
+  body?: React.ReactNode;
   onClick?: () => void;
-  children: React.ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
@@ -353,8 +379,11 @@ function SortableCard({
   };
   return (
     <div ref={setNodeRef} style={style} className={cn(isDragging && 'opacity-50')}>
-      <Card className={cn('gap-0 py-0', onClick && 'cursor-pointer')} onClick={onClick}>
-        <CardContent className='flex items-start gap-2 p-3'>
+      <KanbanCardFace
+        title={title}
+        body={body}
+        onClick={onClick}
+        handle={
           <button
             type='button'
             className='mt-0.5 cursor-grab touch-none text-muted-foreground active:cursor-grabbing'
@@ -364,41 +393,37 @@ function SortableCard({
           >
             <GripVertical className='size-4' />
           </button>
-          <div className='min-w-0 flex-1'>{children}</div>
-        </CardContent>
-      </Card>
+        }
+      />
     </div>
   );
 }
 
-function CardBody<T extends Record<string, unknown>>({
-  item,
-  titleField,
-  fields,
-  renderCard,
+function KanbanCardFace({
+  title,
+  body,
+  onClick,
+  handle,
+  className,
 }: {
-  item: T;
-  titleField?: keyof T;
-  fields?: KanbanField<T>[];
-  renderCard?: (item: T) => React.ReactNode;
+  title?: React.ReactNode;
+  body?: React.ReactNode;
+  onClick?: () => void;
+  handle?: React.ReactNode;
+  className?: string;
 }) {
-  if (renderCard) return <>{renderCard(item)}</>;
+  const hasBody = body != null;
   return (
-    <div className='space-y-1'>
-      {titleField ? <p className='truncate text-sm font-medium'>{String(item[titleField] ?? '')}</p> : null}
-      {fields?.length ? (
-        <div className='flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-muted-foreground'>
-          {fields.map((field) => {
-            const value = item[field.key];
-            return (
-              <span key={String(field.key)} className='whitespace-nowrap'>
-                {field.label ? `${field.label}: ` : null}
-                {field.render ? field.render(value, item) : String(value ?? '')}
-              </span>
-            );
-          })}
-        </div>
-      ) : null}
-    </div>
+    <Card className={cn('gap-0 py-0', onClick && 'cursor-pointer', className)} onClick={onClick}>
+      <CardHeader className={cn('flex flex-row items-start gap-2 space-y-0 px-3 pt-3', hasBody ? 'pb-0' : 'pb-3')}>
+        {handle}
+        {title != null ? (
+          <CardTitle className='flex-1 text-sm leading-snug'>{title}</CardTitle>
+        ) : (
+          <span className='flex-1' />
+        )}
+      </CardHeader>
+      {hasBody ? <CardContent className='px-3 pb-3 pl-9 pt-1'>{body}</CardContent> : null}
+    </Card>
   );
 }

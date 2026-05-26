@@ -38,11 +38,11 @@ export default function KanbanCustomCardExample() {
       data={deals}
       onDataChange={setDeals}
       columnField='stage'
+      titleField='name'
       renderCard={(deal) => (
-        <div className='space-y-1'>
-          <p className='truncate text-sm font-medium'>{deal.name}</p>
-          <p className='truncate text-xs text-muted-foreground'>{deal.company}</p>
-          <p className='font-mono text-xs'>{formatCurrency(deal.value)}</p>
+        <div className='space-y-1 text-xs'>
+          <p className='truncate text-muted-foreground'>{deal.company}</p>
+          <p className='font-mono'>{formatCurrency(deal.value)}</p>
         </div>
       )}
       renderColumnSummary={(items) => formatCurrency(items.reduce((sum, d) => sum + d.value, 0))}
