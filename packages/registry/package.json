@@ -9,7 +9,8 @@
     "./stubs/*": "./stubs/*"
   },
   "scripts": {
-    "registry:generate": "bun run scripts/generate.ts"
+    "registry:generate": "bun run scripts/generate.ts",
+    "test": "bun test"
   },
   "dependencies": {
     "react": "catalog:",
