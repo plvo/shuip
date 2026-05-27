@@ -28,6 +28,11 @@ export function baseOptions(): BaseLayoutProps {
         on: 'nav',
       },
       {
+        text: 'Components',
+        url: '/components',
+        on: 'nav',
+      },
+      {
         text: 'Blocks',
         url: '/blocks',
         on: 'nav',
