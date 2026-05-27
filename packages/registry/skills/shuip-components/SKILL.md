@@ -20,27 +20,57 @@ description: Use when choosing which shuip item fits a need, or composing shuip 
 ## Catalog
 
 <!-- shuip:catalog:start -->
-**components** (import `@/components/ui/shuip/<name>`)
-- `confirmation-dialog` — modal to confirm a destructive action
-- `copy-button` — button that copies text to the clipboard with feedback
-- `hover-reveal` — reveal content on hover
-- `side-dialog` — sheet/drawer-style dialog anchored to a screen edge
-- `submit-button` — submit button with explicit `loading` state (used by react-hook-form forms)
-- `theme-button` — light/dark theme toggle
+**components**
+- `confirmation-dialog`
+- `copy-button`
+- `hover-reveal`
+- `side-dialog`
+- `submit-button`
+- `theme-button`
 
-**blocks** (import `@/components/block/shuip/<name>`)
-- `kanban` — drag-and-drop kanban board
-- `responsive-dialog` — dialog on desktop, drawer on mobile (composes `side-dialog`)
-- `title-section` — page/section heading layout
+**blocks**
+- `kanban`
+- `responsive-dialog`
+- `title-section`
 
-**react-hook-form** — `rhf-` items, lens-bound fields (see shuip-forms)
-- `input-field`, `password-field`, `number-field`, `textarea-field`, `select-field`, `checkbox-field`, `radio-field`, `autocomplete-field`, `date-field`, `date-range-field`, `datetime-field`, `month-field`, `time-field`, `time-range`, `inline-edit`, `address-field` (with Places autocomplete)
+**react-hook-form**
+- `rhf-address-field`
+- `rhf-autocomplete-field`
+- `rhf-checkbox-field`
+- `rhf-date-field`
+- `rhf-date-range-field`
+- `rhf-datetime-field`
+- `rhf-inline-edit`
+- `rhf-input-field`
+- `rhf-month-field`
+- `rhf-number-field`
+- `rhf-password-field`
+- `rhf-radio-field`
+- `rhf-select-field`
+- `rhf-textarea-field`
+- `rhf-time-field`
+- `rhf-time-range`
 
-**tanstack-form** — `tsf-` items, context-bound fields (see shuip-forms)
-- `form-context` (required foundation), `input-field`, `password-field`, `number-field`, `textarea-field`, `select-field`, `checkbox-field`, `radio-field`, `autocomplete-field`, `date-field`, `date-range-field`, `datetime-field`, `month-field`, `time-field`, `time-range`, `inline-edit`, `submit-button` (auto-disables via `form.Subscribe`)
+**tanstack-form**
+- `tsf-autocomplete-field`
+- `tsf-checkbox-field`
+- `tsf-date-field`
+- `tsf-date-range-field`
+- `tsf-datetime-field`
+- `tsf-form-context`
+- `tsf-inline-edit`
+- `tsf-input-field`
+- `tsf-month-field`
+- `tsf-password-field`
+- `tsf-radio-field`
+- `tsf-select-field`
+- `tsf-submit-button`
+- `tsf-textarea-field`
+- `tsf-time-field`
+- `tsf-time-range`
 
-**tanstack-query** (import `@/components/ui/shuip/tanstack-query/<name>`)
-- `query-boundary` — wrap a subtree to handle TanStack Query loading/error states
+**tanstack-query**
+- `tsq-query-boundary`
 <!-- shuip:catalog:end -->
 
 ## Composition notes
