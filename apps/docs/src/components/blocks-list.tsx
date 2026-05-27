@@ -10,22 +10,20 @@ export function BlocksList() {
   return (
     <div className='flex flex-col gap-6'>
       {blocksPages.map((page) => (
-        <Link
-          href={page.url}
-          key={page.url}
-          className='no-underline hover:**:data-arrow:translate-x-1 hover:**:data-arrow:-translate-y-1'
-        >
-          <Card className='overflow-hidden transition-all hover:bg-accent hover:shadow-2xl'>
-            <CardHeader className='relative'>
-              <CardTitle>{page.data.title}</CardTitle>
-              <CardDescription className='line-clamp-3'>{page.data.description}</CardDescription>
-              <ArrowUpRight data-arrow className='absolute top-4 right-4 size-4 transition' />
-            </CardHeader>
-            <div className='pointer-events-none h-80 overflow-hidden border-t border-border'>
-              <LazyPreview registryName={`${page.data.registryName}.example`} className='h-full' />
-            </div>
-          </Card>
-        </Link>
+        <Card key={page.url} className='overflow-hidden transition-all hover:shadow-2xl'>
+          <CardHeader>
+            <CardTitle>
+              <Link href={page.url} className='group inline-flex items-center gap-1 hover:underline'>
+                {page.data.title}
+                <ArrowUpRight className='size-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5' />
+              </Link>
+            </CardTitle>
+            <CardDescription className='line-clamp-3'>{page.data.description}</CardDescription>
+          </CardHeader>
+          <div className='h-80 overflow-hidden border-t border-border'>
+            <LazyPreview registryName={`${page.data.registryName}.example`} className='h-full' />
+          </div>
+        </Card>
       ))}
     </div>
   );

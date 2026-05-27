@@ -1,17 +1,5 @@
 {
   "title": "Components",
   "description": "All shuip items: components, form fields and utilities.",
-  "root": true,
-  "pages": [
-    "index",
-    "---COMPONENTS---",
-    "...components",
-    "---REACT HOOK FORM---",
-    "...react-hook-form",
-    "---TANSTACK QUERY---",
-    "...tanstack-query",
-    "---TANSTACK FORM---",
-    "...tanstack-form/overview",
-    "...tanstack-form"
-  ]
+  "root": true
 }

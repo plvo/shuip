@@ -1,0 +1,49 @@
+---
+title: React Hook Form
+description: How shuip's field components integrate React Hook Form — typed lenses from @hookform/lenses bind inputs to form state without per-call generics or string field paths.
+---
+
+These fields integrate [React Hook Form](https://react-hook-form.com) with shuip's shadcn/ui components. Each field connects to your form through a typed lens from [`@hookform/lenses`](https://github.com/react-hook-form/lenses), so field paths are autocompleted and type-checked — no generics repeated at every call site, no stringly-typed names.
+
+## How it works
+
+A lens is a typed pointer into your form's values. Create the form as usual, derive a lens from its `control`, then focus the lens on a field and hand it to a field component:
+
+```tsx
+'use client';
+
+import { useLens } from '@hookform/lenses';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { Form } from '@/components/ui/form';
+import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
+import { SubmitButton } from '@/components/ui/shuip/submit-button';
+
+const schema = z.object({ name: z.string().nonempty('Name is required') });
+type Values = z.infer<typeof schema>;
+
+export function NameForm() {
+  const form = useForm<Values>({ defaultValues: { name: '' }, resolver: zodResolver(schema) });
+  const lens = useLens({ control: form.control });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit((values) => alert(values.name))} className='space-y-4'>
+        <InputField lens={lens.focus('name')} label='Name' placeholder='John' />
+        <SubmitButton>Submit</SubmitButton>
+      </form>
+    </Form>
+  );
+}
+```
+
+`lens.focus('name')` only accepts real keys of `Values`, and the field's value type is inferred from there. Validation is whatever you wire on the form (here, a Zod resolver) — the field reads `fieldState.invalid` and renders the error for you.
+
+## What you get
+
+- **Typed field paths** — autocomplete from your form's value type, caught at compile time.
+- **Consistent UI** — every field renders shadcn's `Field`, `FieldLabel`, `FieldDescription` and `FieldError` primitives.
+- **Less boilerplate** — the field owns its `useController` wiring, error display and accessibility attributes.
+
+Browse the individual fields in the sidebar under **React Hook Form fields**.

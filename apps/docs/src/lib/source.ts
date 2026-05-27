@@ -1,4 +1,5 @@
 import { blocks, components, docs } from 'fumadocs-mdx:collections/server';
+import type { Item, Node, Root, Separator } from 'fumadocs-core/page-tree';
 import { type InferPageType, loader } from 'fumadocs-core/source';
 import { icons } from 'lucide-react';
 import React from 'react';
@@ -29,6 +30,51 @@ export const componentsSource = loader({
 });
 
 export const allPages = () => [...docsSource.getPages(), ...blocksSource.getPages(), ...componentsSource.getPages()];
+
+function buildSidebarTree(): Root {
+  const pages = componentsSource.getPages();
+  const pageNode = (page: { url: string; data: { title: string } }): Item => ({
+    type: 'page',
+    name: page.data.title,
+    url: page.url,
+  });
+  const separator = (name: string): Separator => ({ type: 'separator', name });
+  const guide = (url: string): Node[] => {
+    const page = pages.find((p) => p.url === url);
+    return page ? [pageNode(page)] : [];
+  };
+  const fields = (category: string): Node[] =>
+    pages
+      .filter((page) => page.slugs[0] === category && page.slugs.length === 2)
+      .sort((a, b) => a.data.title.localeCompare(b.data.title))
+      .map(pageNode);
+
+  const docsIndex = docsSource.getPages().find((page) => page.url === '/docs');
+
+  return {
+    name: 'Documentation',
+    children: [
+      separator('Documentation'),
+      ...(docsIndex ? [pageNode(docsIndex)] : []),
+      ...docsSource.pageTree.children,
+      separator('Components'),
+      ...guide('/components'),
+      ...guide('/components/react-hook-form'),
+      ...guide('/components/tanstack-form'),
+      ...guide('/components/tanstack-query'),
+      separator('UI Components'),
+      ...fields('components'),
+      separator('React Hook Form fields'),
+      ...fields('react-hook-form'),
+      separator('TanStack Form fields'),
+      ...fields('tanstack-form'),
+      separator('TanStack Query'),
+      ...fields('tanstack-query'),
+    ],
+  };
+}
+
+export const sidebarTree = buildSidebarTree();
 
 export function getPageImage(
   page: InferPageType<typeof docsSource | typeof blocksSource | typeof componentsSource>,
