@@ -29,3 +29,12 @@ export function resolveCatalog(items: CatalogItem[]): string {
   }
   return sections.join('\n\n');
 }
+
+const CATALOG_START = '<!-- shuip:catalog:start -->';
+const CATALOG_END = '<!-- shuip:catalog:end -->';
+
+export function applyCatalog(source: string, catalog: string): string {
+  if (!source.includes(CATALOG_START)) return source;
+  const region = new RegExp(`${CATALOG_START}\\n[\\s\\S]*?\\n${CATALOG_END}`);
+  return source.replace(region, `${CATALOG_START}\n${catalog}\n${CATALOG_END}`);
+}

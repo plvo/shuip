@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { parseSkillFrontmatter, resolveCatalog } from './skills';
+import { applyCatalog, parseSkillFrontmatter, resolveCatalog } from './skills';
 
 describe('parseSkillFrontmatter', () => {
   test('extracts name and description', () => {
@@ -40,5 +40,26 @@ describe('resolveCatalog', () => {
         '- `rhf-address-field`\n' +
         '- `rhf-input-field`',
     );
+  });
+});
+
+describe('applyCatalog', () => {
+  test('replaces content between markers, keeping the markers', () => {
+    const src = 'before\n<!-- shuip:catalog:start -->\nOLD\nLINES\n<!-- shuip:catalog:end -->\nafter\n';
+    const out = applyCatalog(src, '**components**\n- `x`');
+    expect(out).toBe(
+      'before\n<!-- shuip:catalog:start -->\n**components**\n- `x`\n<!-- shuip:catalog:end -->\nafter\n',
+    );
+  });
+
+  test('returns source unchanged when no start marker is present', () => {
+    const src = '# overview\nno markers here\n';
+    expect(applyCatalog(src, 'ANY')).toBe(src);
+  });
+
+  test('is idempotent when re-applied with the same catalog', () => {
+    const src = '<!-- shuip:catalog:start -->\nA\n<!-- shuip:catalog:end -->\n';
+    const once = applyCatalog(src, '**components**\n- `x`');
+    expect(applyCatalog(once, '**components**\n- `x`')).toBe(once);
   });
 });
