@@ -8,3 +8,24 @@ export function parseSkillFrontmatter(source: string): { name: string; descripti
   if (!description) throw new Error('skill frontmatter missing "description"');
   return { name, description };
 }
+
+export interface CatalogItem {
+  category: string;
+  publishedName: string;
+}
+
+const CATALOG_ORDER = ['components', 'blocks', 'react-hook-form', 'tanstack-form', 'tanstack-query'];
+
+export function resolveCatalog(items: CatalogItem[]): string {
+  const sections: string[] = [];
+  for (const category of CATALOG_ORDER) {
+    const names = items
+      .filter((i) => i.category === category)
+      .map((i) => i.publishedName)
+      .sort((a, b) => a.localeCompare(b));
+    if (names.length === 0) continue;
+    const lines = names.map((n) => `- \`${n}\``).join('\n');
+    sections.push(`**${category}**\n${lines}`);
+  }
+  return sections.join('\n\n');
+}
