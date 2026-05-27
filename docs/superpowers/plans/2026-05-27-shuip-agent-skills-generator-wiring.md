@@ -555,7 +555,7 @@ Expected: PASS — no type errors (the `RegistryItem` widening makes `skillItems
 - [ ] **Step 6: Run the generator**
 
 Run: `cd packages/registry && bun run scripts/generate.ts`
-Expected: STDOUT ends with `[generate] 46 items + 4 skill items processed` (42 component items + 4 lib/etc. as currently reported, plus 4 skill items = 3 skills + 1 bundle). Confirm the skill-item count is exactly `4` and there are no `skipping skill` warnings.
+Expected: STDOUT ends with `[generate] 43 items + 4 skill items processed` (43 scanned item dirs, plus 4 skill items = 3 skills + 1 bundle). The leading count must equal the pre-change run; the suffix `+ 4 skill items` is the key assertion. There must be no `skipping skill` warnings.
 
 - [ ] **Step 7: Commit**
 
@@ -675,7 +675,7 @@ git commit -m "feat(skills): ignore generated skills dir and snapshot catalog"
 - [ ] **Step 1: Build the public registry JSON**
 
 Run: `bun registry:build`
-Expected: STDOUT `[shadcn-build] N items written ...` with N = component items + 4. No Zod validation error (proves the files-less bundle and `registry:file` skill items pass the schema — Flag 1 + Flag 2).
+Expected: STDOUT `[shadcn-build] 47 items written ...` (43 component items + 4 skill items). No Zod validation error (proves the files-less bundle and `registry:file` skill items pass the schema — Flag 1 + Flag 2).
 
 - [ ] **Step 2: Verify a skill item inlines its content and targets `.claude/`**
 
