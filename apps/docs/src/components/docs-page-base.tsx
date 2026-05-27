@@ -4,10 +4,10 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ItemHeader } from '@/components/item-content';
 import { LLMCopyButton } from '@/components/llm-copy-button';
-import { blocksSource, docsSource, getPageImage } from '@/lib/source';
+import { blocksSource, componentsSource, docsSource, getPageImage } from '@/lib/source';
 import { getMDXComponents } from '@/mdx-components';
 
-type DocsPageType = 'docs' | 'blocks';
+type DocsPageType = 'docs' | 'blocks' | 'components';
 
 export async function DocsPageBase<T extends DocsPageType>({
   docsType,
@@ -17,7 +17,7 @@ export async function DocsPageBase<T extends DocsPageType>({
   props: PageProps<`/${T}/[[...slug]]`>;
 }) {
   const params = await props.params;
-  const source = docsType === 'docs' ? docsSource : blocksSource;
+  const source = { docs: docsSource, blocks: blocksSource, components: componentsSource }[docsType];
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
@@ -52,7 +52,7 @@ export async function generateDocsPageMetadata<T extends DocsPageType>(
   props: PageProps<`/${T}/[[...slug]]`>,
 ): Promise<Metadata> {
   const params = await props.params;
-  const source = docsType === 'docs' ? docsSource : blocksSource;
+  const source = { docs: docsSource, blocks: blocksSource, components: componentsSource }[docsType];
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
