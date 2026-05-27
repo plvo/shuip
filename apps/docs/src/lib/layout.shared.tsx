@@ -9,7 +9,7 @@ export function baseOptions(): BaseLayoutProps {
         <div className='flex items-center gap-0.5'>
           {/* <Image src='/shuip-light.png' alt='sh(ui)p' width={64} height={64} className='size-7 dark:hidden' />
           <Image src='/shuip-dark.png' alt='sh(ui)p' width={64} height={64} className='size-7 hidden dark:block' /> */}
-          <p className='font-bold whitespace-nowrap'>shuip</p>
+          <p className='font-bold whitespace-nowrap font-mono'>shuip</p>
         </div>
       ),
     },
@@ -28,8 +28,18 @@ export function baseOptions(): BaseLayoutProps {
         on: 'nav',
       },
       {
+        text: 'Components',
+        url: '/components',
+        on: 'nav',
+      },
+      {
         text: 'Blocks',
         url: '/blocks',
+        on: 'nav',
+      },
+      {
+        text: 'llms-full.txt',
+        url: '/llms-full.txt',
         on: 'nav',
       },
       {

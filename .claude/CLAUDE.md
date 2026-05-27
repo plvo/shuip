@@ -14,7 +14,8 @@ The codebase is a Bun-workspaces + turborepo monorepo (Next.js 16, React 19, Tai
 apps/docs/                     Next.js site (registry endpoints, MDX content, styles entry)
   scripts/shadcn-build.ts        Reads registry.json, writes public/r/*.json for shadcn CLI
   src/styles/globals.css         PostCSS entry; chains fumadocs + @repo/ui/styles/base.css
-  content/docs/                  fumadocs `docs` collection (symlinks from registry items)
+  content/docs/                  fumadocs `docs` collection (guide pages only, hand-written)
+  content/components/            fumadocs `components` collection (registry-item symlinks + hand-written category guides)
   content/blocks/                fumadocs `blocks` collection (real MDX files, hand-written)
 
 packages/ui/                   Shadcn primitives + base.css (cross-package @source rules)
@@ -44,14 +45,15 @@ bun clean              # Wipe node_modules, .next, .turbo, .source, bun.lock
 
 Each item lives at `packages/registry/items/<category>/<name>/`. The folder structure is the contract — `packages/registry/scripts/generate.ts` scans it and emits every downstream artifact.
 
-**Categories:** `components` (no prefix) · `blocks` (no prefix, type `registry:block`) · `react-hook-form` (prefix `rhf-`) · `tanstack-form` (prefix `tsf-`). The folder name is **unprefixed**; the script applies the prefix.
+**Categories:** `components` (no prefix) · `blocks` (no prefix, type `registry:block`) · `react-hook-form` (`rhf-`) · `tanstack-form` (`tsf-`) · `tanstack-query` (`tsq-`). The folder name is **unprefixed**; the script applies the prefix.
 
 ```
 items/<category>/<name>/
   component.tsx           REQUIRED. Exact filename. The published source.
   default.example.tsx     Primary preview (registry key: <prefixed-name>.example).
   <variant>.example.tsx   Extra previews (key: <prefixed-name>.<variant>.example).
-  index.mdx               Doc page. Symlinked into apps/docs/content/docs/<cat>/.
+  index.mdx               Doc page. Symlinked into apps/docs/content/components/ (UI `components` flat
+                          at the root; other categories under /<cat>/).
                           BLOCKS DO NOT USE THIS — see "Blocks doc flow" below.
   extras/                 Optional. Files copied alongside on install:
     <file>.action.ts        → installs as ./actions/shuip/<file>.ts
@@ -64,7 +66,14 @@ items/<category>/<name>/
 - External npm imports → `dependencies`
 - Anything else (relative, `@repo/*`, `#/*`) → ignored
 
-**Blocks doc flow:** Block items must not contain `index.mdx`. Their docs live as real MDX files at `apps/docs/content/blocks/<name>.mdx` (a separate fumadocs collection defined in `apps/docs/source.config.ts`). If you put `index.mdx` in `items/blocks/<name>/`, the generator will create a symlink in `apps/docs/content/docs/blocks/`, which no collection reads — the doc will silently not appear.
+**Blocks doc flow:** Block items must not contain `index.mdx`. Their docs live as real MDX files at `apps/docs/content/blocks/<name>.mdx` (a separate fumadocs collection defined in `apps/docs/source.config.ts`). If you put `index.mdx` in `items/blocks/<name>/`, the generator will create a symlink in `apps/docs/content/components/blocks/`, which no collection reads — the doc will silently not appear.
+
+## Docs Routing & Sidebar
+
+- Routes: `/docs` (guides only) · `/components` (all registry items) · `/blocks`. UI `components` items are flat at `/components/<name>`; other categories keep `/components/<cat>/<name>` (via `componentsDocsDir` in `generate.ts`).
+- The sidebar is one custom merged `PageTree` built in `apps/docs/src/lib/source.ts` (`sidebarTree`), shared by the `/docs` and `/components` layouts. Order lives in code — fumadocs `...folder` meta extracts *flatten* a folder, so meta can't split a folder's index from its children across sidebar positions.
+- PageTree node types (`Root`, `Item`, `Separator`, `Node`) import from `fumadocs-core/page-tree` (not `/server`).
+- After changing a collection or content, run `bunx fumadocs-mdx` (in `apps/docs`) to regenerate `.source` types before `tsc`.
 
 ## Path Mappings
 
@@ -111,6 +120,7 @@ Shared dependency versions live in `package.json` → `workspaces.catalog` (defa
 - **Biome** is the only linter/formatter (no ESLint/Prettier). Config: single quotes, 2-space indent, 120-col, trailing commas. Lint-staged runs `biome check --write --unsafe` on commit via husky.
 - **TypeScript 6**. Project references are declared at root but workspaces are not marked `composite: true` — IDE works, `tsc --build` from root does not. Per-workspace `tsc --noEmit` is fine.
 - **No test runner is configured.** Propose a setup before adding tests.
+- **`next build` is the authoritative type gate** — `apps/docs` `tsc --noEmit` works but emits a harmless `baseUrl` TS5101 deprecation. `bun build:docs` can OOM (exit 137) on low-RAM machines; use `NODE_OPTIONS=--max-old-space-size=6144 bun build:docs`.
 - **shadcn config** is at `packages/ui/components.json` (New York style, RSC enabled).
 
 ## Generated Artifacts — Never Edit by Hand
@@ -121,8 +131,7 @@ Shared dependency versions live in `package.json` → `workspaces.catalog` (defa
 - `packages/registry/__index__.ts`
 - `packages/registry/stubs/**`
 - `apps/docs/public/r/**` (regenerated by `registry:build`)
-- `apps/docs/content/docs/<cat>/<name>.mdx` (symlinks)
-- `apps/docs/content/docs/<cat>/.gitignore` (lists the symlinks)
+- `apps/docs/content/components/**` item-doc symlinks (UI `components` flat at the root; other categories under `<cat>/`) + the `.gitignore` files listing them
 
 To change anything in those, edit the source under `packages/registry/items/<cat>/<name>/` and run `bun registry:generate`.
 

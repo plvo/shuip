@@ -18,6 +18,9 @@ export default function HomePage() {
         <a href='/docs' className='hover:underline underline-offset-4'>
           /docs
         </a>
+        <a href='/components' className='hover:underline underline-offset-4'>
+          /components
+        </a>
       </div>
     </main>
   );

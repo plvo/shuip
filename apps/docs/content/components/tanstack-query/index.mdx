@@ -1,0 +1,31 @@
+---
+title: TanStack Query
+description: How shuip integrates TanStack Query — a single boundary component that pairs query error handling with React Suspense for unified loading and error states.
+---
+
+These utilities integrate [TanStack Query](https://tanstack.com/query) with shuip. Instead of manually nesting an error boundary and a Suspense boundary around every data-fetching component, you wrap them once with [`QueryBoundary`](/components/tanstack-query/query-boundary).
+
+## How it works
+
+`QueryBoundary` combines an error boundary with React Suspense, so the children can use suspense-enabled queries and let the boundary handle the loading and error UI:
+
+```tsx
+import { QueryBoundary } from '@/components/ui/shuip/tanstack-query/query-boundary';
+
+export default function Page() {
+  return (
+    <QueryBoundary queryKeys={['users']} loadingFallback={<div>Loading users…</div>}>
+      <UsersList />
+    </QueryBoundary>
+  );
+}
+
+function UsersList() {
+  const { data } = useQuery({ queryKey: ['users'], queryFn: fetchUsers });
+  return <ul>{data.map((user) => <li key={user.id}>{user.name}</li>)}</ul>;
+}
+```
+
+On error the boundary shows a retry fallback that resets the failing query; you can replace it with your own `errorFallback`. This keeps data components focused on the happy path while loading and failure states stay consistent across the app.
+
+Browse the component in the sidebar under **TanStack Query**.

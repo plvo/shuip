@@ -23,4 +23,9 @@ export const blocks = defineDocs({
   ...defaultOptions,
 });
 
+export const components = defineDocs({
+  dir: './content/components',
+  ...defaultOptions,
+});
+
 export default defineConfig({ mdxOptions: {} });
