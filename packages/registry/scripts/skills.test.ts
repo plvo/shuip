@@ -1,5 +1,8 @@
-import { describe, expect, test } from 'bun:test';
-import { applyCatalog, assertUniqueNames, parseSkillFrontmatter, resolveCatalog } from './skills';
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { applyCatalog, assertUniqueNames, emitSkills, parseSkillFrontmatter, resolveCatalog } from './skills';
 
 describe('parseSkillFrontmatter', () => {
   test('extracts name and description', () => {
@@ -73,5 +76,50 @@ describe('assertUniqueNames', () => {
     expect(() => assertUniqueNames(['shuip-forms', 'side-dialog'], ['shuip-forms'])).toThrow(
       'collide with component items: shuip-forms',
     );
+  });
+});
+
+describe('emitSkills', () => {
+  let root: string;
+  beforeAll(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'shuip-skills-'));
+    const skillsDir = path.join(root, 'skills');
+    fs.mkdirSync(path.join(skillsDir, 'demo'), { recursive: true });
+    fs.writeFileSync(
+      path.join(skillsDir, 'demo', 'SKILL.md'),
+      '---\nname: demo\ndescription: A demo.\n---\n<!-- shuip:catalog:start -->\nOLD\n<!-- shuip:catalog:end -->\n',
+    );
+  });
+  afterAll(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  test('writes resolved files and returns skill items + bundle', () => {
+    const skillsDir = path.join(root, 'skills');
+    const items = emitSkills({
+      skillsDir,
+      generatedDir: path.join(skillsDir, '.generated'),
+      registryRoot: root,
+      catalog: '**components**\n- `x`',
+      registryBaseUrl: 'https://shuip.plvo.dev/r',
+      bundleName: 'shuip-skills',
+    });
+
+    const written = fs.readFileSync(path.join(skillsDir, '.generated', 'demo', 'SKILL.md'), 'utf-8');
+    expect(written).toContain('**components**\n- `x`');
+    expect(written).not.toContain('OLD');
+
+    expect(items).toEqual([
+      {
+        name: 'demo',
+        type: 'registry:item',
+        files: [
+          { path: './skills/.generated/demo/SKILL.md', type: 'registry:file', target: '.claude/skills/demo/SKILL.md' },
+        ],
+      },
+      {
+        name: 'shuip-skills',
+        type: 'registry:item',
+        registryDependencies: ['https://shuip.plvo.dev/r/demo'],
+      },
+    ]);
   });
 });

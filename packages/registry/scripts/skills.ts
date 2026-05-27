@@ -1,3 +1,7 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import type { RegistryItem } from './generate';
+
 export function parseSkillFrontmatter(source: string): { name: string; description: string } {
   const match = source.match(/^---\n([\s\S]*?)\n---/);
   if (!match) throw new Error('skill SKILL.md missing YAML frontmatter');
@@ -45,4 +49,58 @@ export function assertUniqueNames(componentNames: string[], skillNames: string[]
   if (clash.length > 0) {
     throw new Error(`skill name(s) collide with component items: ${clash.join(', ')}`);
   }
+}
+
+export interface EmitSkillsOptions {
+  skillsDir: string;
+  generatedDir: string;
+  registryRoot: string;
+  catalog: string;
+  registryBaseUrl: string;
+  bundleName: string;
+}
+
+export function emitSkills(opts: EmitSkillsOptions): RegistryItem[] {
+  const { skillsDir, generatedDir, registryRoot, catalog, registryBaseUrl, bundleName } = opts;
+  fs.rmSync(generatedDir, { recursive: true, force: true });
+  if (!fs.existsSync(skillsDir)) return [];
+
+  const dirs = fs
+    .readdirSync(skillsDir)
+    .filter((d) => d !== '.generated' && fs.statSync(path.join(skillsDir, d)).isDirectory())
+    .sort();
+
+  const items: RegistryItem[] = [];
+  const skillNames: string[] = [];
+
+  for (const dir of dirs) {
+    const skillMd = path.join(skillsDir, dir, 'SKILL.md');
+    if (!fs.existsSync(skillMd)) {
+      console.warn(`[generate] skipping skill ${dir}: no SKILL.md`);
+      continue;
+    }
+    const source = fs.readFileSync(skillMd, 'utf-8');
+    const { name } = parseSkillFrontmatter(source);
+    const resolved = applyCatalog(source, catalog);
+    const outPath = path.join(generatedDir, name, 'SKILL.md');
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
+    fs.writeFileSync(outPath, resolved);
+    const relPath = path.relative(registryRoot, outPath).replace(/\\/g, '/');
+    items.push({
+      name,
+      type: 'registry:item',
+      files: [{ path: `./${relPath}`, type: 'registry:file', target: `.claude/skills/${name}/SKILL.md` }],
+    });
+    skillNames.push(name);
+  }
+
+  if (skillNames.length > 0) {
+    items.push({
+      name: bundleName,
+      type: 'registry:item',
+      registryDependencies: skillNames.map((n) => `${registryBaseUrl}/${n}`),
+    });
+  }
+
+  return items;
 }
