@@ -1,14 +1,20 @@
 import { Analytics } from '@vercel/analytics/next';
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
+import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import { AppProvider } from '@/components/app-provider';
 import '@/styles/globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const plexSans = IBM_Plex_Sans({
+  variable: '--font-plex-sans',
   subsets: ['latin'],
-  weight: ['200', '400', '600', '900'],
+  weight: ['400', '500', '600', '700'],
+});
+
+const plexMono = IBM_Plex_Mono({
+  variable: '--font-plex-mono',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
 });
 
 export const metadata: Metadata = {
@@ -27,8 +33,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en' suppressHydrationWarning>
-      <body className={`${geistSans.variable} antialiased overflow-x-hidden`} suppressHydrationWarning>
+    <html lang='en' className={`${plexSans.variable} ${plexMono.variable}`} suppressHydrationWarning>
+      <body className='antialiased overflow-x-hidden' suppressHydrationWarning>
         <RootProvider>
           <AppProvider>{children}</AppProvider>
         </RootProvider>
