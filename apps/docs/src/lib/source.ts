@@ -48,25 +48,26 @@ function buildSidebarTree(): Root {
       .filter((page) => page.slugs[0] === category && page.slugs.length === 2)
       .sort((a, b) => a.data.title.localeCompare(b.data.title))
       .map(pageNode);
-
-  const docsIndex = docsSource.getPages().find((page) => page.url === '/docs');
+  const uiComponents = (): Node[] =>
+    pages
+      .filter((page) => page.slugs.length === 1 && page.data.registryName)
+      .sort((a, b) => a.data.title.localeCompare(b.data.title))
+      .map(pageNode);
 
   return {
     name: 'Documentation',
     children: [
-      separator('Documentation'),
-      ...(docsIndex ? [pageNode(docsIndex)] : []),
       ...docsSource.pageTree.children,
-      separator('Components'),
+      { type: 'page', url: '/llms-full.txt', name: 'llms-full.txt' },
       ...guide('/components'),
       ...guide('/components/react-hook-form'),
       ...guide('/components/tanstack-form'),
       ...guide('/components/tanstack-query'),
-      separator('UI Components'),
-      ...fields('components'),
-      separator('React Hook Form fields'),
+      separator('Components'),
+      ...uiComponents(),
+      separator('React Hook Form'),
       ...fields('react-hook-form'),
-      separator('TanStack Form fields'),
+      separator('TanStack Form'),
       ...fields('tanstack-form'),
       separator('TanStack Query'),
       ...fields('tanstack-query'),

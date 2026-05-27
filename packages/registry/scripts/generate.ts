@@ -306,12 +306,16 @@ export * from '${exportPath}';
   }
 };
 
+// UI `components` items render flat under /components/<name>; other categories keep a subfolder.
+const componentsDocsDir = (category: string): string =>
+  category === 'components' ? COMPONENTS_CONTENT_DIR : path.join(COMPONENTS_CONTENT_DIR, category);
+
 const writeComponentSymlinks = (items: ScannedItem[]): void => {
   const symlinksByCategory = new Map<string, string[]>();
 
   for (const item of items) {
     if (!item.hasMdx) continue;
-    const symlinkPath = path.join(COMPONENTS_CONTENT_DIR, item.category, `${item.folderName}.mdx`);
+    const symlinkPath = path.join(componentsDocsDir(item.category), `${item.folderName}.mdx`);
     const sourceMdx = path.join(item.itemDir, 'index.mdx');
     const relTarget = path.relative(path.dirname(symlinkPath), sourceMdx);
     fs.mkdirSync(path.dirname(symlinkPath), { recursive: true });
@@ -328,7 +332,7 @@ const writeComponentSymlinks = (items: ScannedItem[]): void => {
   }
 
   for (const [category, filenames] of symlinksByCategory) {
-    const gitignorePath = path.join(COMPONENTS_CONTENT_DIR, category, '.gitignore');
+    const gitignorePath = path.join(componentsDocsDir(category), '.gitignore');
     const content = `# Auto-generated symlinks — do not commit (created by packages/registry/scripts/generate.ts)\n${filenames.sort().join('\n')}\n`;
     fs.writeFileSync(gitignorePath, content);
   }

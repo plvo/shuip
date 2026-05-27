@@ -23,7 +23,7 @@ export function ComponentsGallery() {
 
   const byCategory = new Map<string, typeof pages>();
   for (const page of pages) {
-    const category = page.slugs[0];
+    const category = page.slugs.length === 1 ? 'components' : page.slugs[0];
     if (!category) continue;
     const list = byCategory.get(category) ?? [];
     list.push(page);
@@ -38,7 +38,7 @@ export function ComponentsGallery() {
           <section key={category} className='space-y-6'>
             <h2 className='font-mono text-2xl font-bold'>
               {guide ? (
-                <Link href={guide} className='hover:underline'>
+                <Link href={guide} className='no-underline'>
                   {CATEGORY_LABELS[category]}
                 </Link>
               ) : (
@@ -51,14 +51,12 @@ export function ComponentsGallery() {
                   <div className='flex h-40 items-center justify-center overflow-hidden border-b border-border'>
                     <LazyPreview registryName={`${page.data.registryName}.example`} className='w-full' />
                   </div>
-                  <CardHeader>
-                    <CardTitle>
-                      <Link href={page.url} className='hover:underline'>
-                        {page.data.title}
-                      </Link>
-                    </CardTitle>
-                    <CardDescription className='line-clamp-2'>{page.data.description}</CardDescription>
-                  </CardHeader>
+                  <Link href={page.url} className='no-underline'>
+                    <CardHeader>
+                      <CardTitle>{page.data.title}</CardTitle>
+                      <CardDescription className='line-clamp-2'>{page.data.description}</CardDescription>
+                    </CardHeader>
+                  </Link>
                 </Card>
               ))}
             </div>
