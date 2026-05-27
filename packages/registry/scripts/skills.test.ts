@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { applyCatalog, parseSkillFrontmatter, resolveCatalog } from './skills';
+import { applyCatalog, assertUniqueNames, parseSkillFrontmatter, resolveCatalog } from './skills';
 
 describe('parseSkillFrontmatter', () => {
   test('extracts name and description', () => {
@@ -61,5 +61,17 @@ describe('applyCatalog', () => {
     const src = '<!-- shuip:catalog:start -->\nA\n<!-- shuip:catalog:end -->\n';
     const once = applyCatalog(src, '**components**\n- `x`');
     expect(applyCatalog(once, '**components**\n- `x`')).toBe(once);
+  });
+});
+
+describe('assertUniqueNames', () => {
+  test('passes when there is no overlap', () => {
+    expect(() => assertUniqueNames(['side-dialog', 'rhf-input-field'], ['shuip-forms'])).not.toThrow();
+  });
+
+  test('throws naming the colliding item', () => {
+    expect(() => assertUniqueNames(['shuip-forms', 'side-dialog'], ['shuip-forms'])).toThrow(
+      'collide with component items: shuip-forms',
+    );
   });
 });

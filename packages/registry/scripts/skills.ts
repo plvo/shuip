@@ -38,3 +38,11 @@ export function applyCatalog(source: string, catalog: string): string {
   const region = new RegExp(`${CATALOG_START}\\n[\\s\\S]*?\\n${CATALOG_END}`);
   return source.replace(region, `${CATALOG_START}\n${catalog}\n${CATALOG_END}`);
 }
+
+export function assertUniqueNames(componentNames: string[], skillNames: string[]): void {
+  const taken = new Set(componentNames);
+  const clash = skillNames.filter((n) => taken.has(n));
+  if (clash.length > 0) {
+    throw new Error(`skill name(s) collide with component items: ${clash.join(', ')}`);
+  }
+}
