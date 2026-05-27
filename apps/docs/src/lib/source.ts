@@ -1,4 +1,4 @@
-import { blocks, docs } from 'fumadocs-mdx:collections/server';
+import { blocks, components, docs } from 'fumadocs-mdx:collections/server';
 import { type InferPageType, loader } from 'fumadocs-core/source';
 import { icons } from 'lucide-react';
 import React from 'react';
@@ -22,11 +22,17 @@ export const blocksSource = loader({
   icon,
 });
 
-export const allPages = () => [...docsSource.getPages(), ...blocksSource.getPages()];
+export const componentsSource = loader({
+  baseUrl: '/components',
+  source: components.toFumadocsSource(),
+  icon,
+});
+
+export const allPages = () => [...docsSource.getPages(), ...blocksSource.getPages(), ...componentsSource.getPages()];
 
 export function getPageImage(
-  page: InferPageType<typeof docsSource | typeof blocksSource>,
-  docsType: 'docs' | 'blocks',
+  page: InferPageType<typeof docsSource | typeof blocksSource | typeof componentsSource>,
+  docsType: 'docs' | 'blocks' | 'components',
 ) {
   const segments = [...page.slugs, 'image.png'];
 
@@ -36,7 +42,9 @@ export function getPageImage(
   };
 }
 
-export async function getLLMText(page: InferPageType<typeof docsSource | typeof blocksSource>) {
+export async function getLLMText(
+  page: InferPageType<typeof docsSource | typeof blocksSource | typeof componentsSource>,
+) {
   const processed = await page.data.getText('processed');
 
   return `# ${page.data.title} (${page.url})
