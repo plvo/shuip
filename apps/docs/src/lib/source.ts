@@ -1,5 +1,5 @@
 import { blocks, docs } from 'fumadocs-mdx:collections/server';
-import { type InferPageType, loader, multiple } from 'fumadocs-core/source';
+import { type InferPageType, loader } from 'fumadocs-core/source';
 import { icons } from 'lucide-react';
 import React from 'react';
 
@@ -22,15 +22,7 @@ export const blocksSource = loader({
   icon,
 });
 
-export const combinedSource = loader(
-  multiple({
-    docs: docs.toFumadocsSource(),
-    blocks: blocks.toFumadocsSource(),
-  }),
-  {
-    baseUrl: '/',
-  },
-);
+export const allPages = () => [...docsSource.getPages(), ...blocksSource.getPages()];
 
 export function getPageImage(
   page: InferPageType<typeof docsSource | typeof blocksSource>,
@@ -44,9 +36,7 @@ export function getPageImage(
   };
 }
 
-export async function getLLMText(
-  page: InferPageType<typeof docsSource | typeof blocksSource> | InferPageType<typeof combinedSource>,
-) {
+export async function getLLMText(page: InferPageType<typeof docsSource | typeof blocksSource>) {
   const processed = await page.data.getText('processed');
 
   return `# ${page.data.title} (${page.url})
