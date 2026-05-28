@@ -2,7 +2,7 @@
 /** biome-ignore-all lint/suspicious/noAssignInExpressions: script */
 import fs from 'node:fs';
 import path from 'node:path';
-import { assertUniqueNames, emitSkills, resolveCatalog } from './skills';
+import { applySkillSourcesToDocs, assertUniqueNames, emitSkills, resolveCatalog } from './skills';
 
 const ROOT = path.resolve(import.meta.dir, '..');
 const ITEMS_DIR = path.join(ROOT, 'items');
@@ -10,6 +10,7 @@ const STUBS_DIR = path.join(ROOT, 'stubs');
 const COMPONENTS_CONTENT_DIR = path.resolve(ROOT, '../../apps/docs/content/components');
 const SKILLS_DIR = path.join(ROOT, 'skills');
 const SKILLS_GENERATED_DIR = path.join(SKILLS_DIR, '.generated');
+const AGENT_SKILLS_DOC = path.resolve(ROOT, '../../apps/docs/content/docs/agent-skills.mdx');
 
 export interface RegistryFile {
   path: string;
@@ -349,7 +350,7 @@ const main = () => {
     category: i.category,
     publishedName: namePrefix(i.category, i.folderName),
   }));
-  const skillItems = emitSkills({
+  const { items: skillItems, sources: skillSources } = emitSkills({
     skillsDir: SKILLS_DIR,
     generatedDir: SKILLS_GENERATED_DIR,
     registryRoot: ROOT,
@@ -368,6 +369,13 @@ const main = () => {
   fs.writeFileSync(path.join(ROOT, '__index__.ts'), buildIndexTs(items));
   writeStubs(items);
   writeComponentSymlinks(items);
+
+  if (fs.existsSync(AGENT_SKILLS_DOC)) {
+    const docs = fs.readFileSync(AGENT_SKILLS_DOC, 'utf-8');
+    const rewritten = applySkillSourcesToDocs(docs, skillSources);
+    if (rewritten !== docs) fs.writeFileSync(AGENT_SKILLS_DOC, rewritten);
+  }
+
   console.log(`[generate] ${items.length} items + ${skillItems.length} skill items processed`);
 };
 

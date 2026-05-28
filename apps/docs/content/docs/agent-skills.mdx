@@ -54,6 +54,7 @@ The exact Markdown each skill ships. This is what your agent reads.
 
 Routes the agent: what shuip is, how items install, and which skill to use next.
 
+{/* shuip:skill:start name="shuip-overview" */}
 ````md
 ---
 name: shuip-overview
@@ -89,11 +90,13 @@ Items install under `@/components/ui/shuip/...` (or `@/components/block/shuip/..
 
 Before building UI from scratch, check whether shuip already ships it.
 ````
+{/* shuip:skill:end */}
 
 ### shuip-components
 
 The full item catalog plus install and import conventions; the agent uses this to choose the right item before building UI from scratch.
 
+{/* shuip:skill:start name="shuip-components" */}
 ````md
 ---
 name: shuip-components
@@ -186,11 +189,13 @@ description: Use when choosing which shuip item fits a need, or composing shuip 
 | Flat path `@/components/ui/shuip/rhf-input-field` | Form categories use a sub-folder: `@/components/ui/shuip/react-hook-form/input-field`. |
 | Treating blocks as `@/components/ui/shuip/...` | Blocks import from `@/components/block/shuip/<name>`. |
 ````
+{/* shuip:skill:end */}
 
 ### shuip-forms
 
 The flagship: rhf vs tsf decision, the lens binding for react-hook-form, `createFormHook` for tanstack-form, full annotated examples, validation, submission, and accessibility.
 
+{/* shuip:skill:start name="shuip-forms" */}
 ````md
 ---
 name: shuip-forms
@@ -377,5 +382,6 @@ The field components already render `aria-invalid`, associate the error message,
 - About to write `FormField`/`FormItem`/`FormControl` by hand → a shuip field already does this.
 - Looking for an `rhf-form` install command → it doesn't exist.
 ````
+{/* shuip:skill:end */}
 
 > Skills currently target Claude Code (the `SKILL.md` format). The content is format-agnostic, so support for other agents can follow.

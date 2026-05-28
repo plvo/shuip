@@ -2,7 +2,14 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { applyCatalog, assertUniqueNames, emitSkills, parseSkillFrontmatter, resolveCatalog } from './skills';
+import {
+  applyCatalog,
+  applySkillSourcesToDocs,
+  assertUniqueNames,
+  emitSkills,
+  parseSkillFrontmatter,
+  resolveCatalog,
+} from './skills';
 
 describe('parseSkillFrontmatter', () => {
   test('extracts name and description', () => {
@@ -79,6 +86,60 @@ describe('assertUniqueNames', () => {
   });
 });
 
+describe('applySkillSourcesToDocs', () => {
+  test('replaces a single marked region with a 4-backtick md fence containing the source', () => {
+    const docs = 'before\n{/* shuip:skill:start name="a" */}\nOLD\n{/* shuip:skill:end */}\nafter\n';
+    const out = applySkillSourcesToDocs(docs, new Map([['a', '---\nname: a\n---\nbody\n']]));
+    expect(out).toBe(
+      'before\n{/* shuip:skill:start name="a" */}\n````md\n---\nname: a\n---\nbody\n````\n{/* shuip:skill:end */}\nafter\n',
+    );
+  });
+
+  test('replaces multiple marked regions independently', () => {
+    const docs =
+      '{/* shuip:skill:start name="a" */}\nOLD-A\n{/* shuip:skill:end */}\n' +
+      'middle\n' +
+      '{/* shuip:skill:start name="b" */}\nOLD-B\n{/* shuip:skill:end */}\n';
+    const out = applySkillSourcesToDocs(
+      docs,
+      new Map([
+        ['a', 'A\n'],
+        ['b', 'B\n'],
+      ]),
+    );
+    expect(out).toBe(
+      '{/* shuip:skill:start name="a" */}\n````md\nA\n````\n{/* shuip:skill:end */}\n' +
+        'middle\n' +
+        '{/* shuip:skill:start name="b" */}\n````md\nB\n````\n{/* shuip:skill:end */}\n',
+    );
+  });
+
+  test('is idempotent when re-applied with the same sources', () => {
+    const docs = '{/* shuip:skill:start name="a" */}\nOLD\n{/* shuip:skill:end */}\n';
+    const sources = new Map([['a', '---\nname: a\n---\n']]);
+    const once = applySkillSourcesToDocs(docs, sources);
+    expect(applySkillSourcesToDocs(once, sources)).toBe(once);
+  });
+
+  test('returns docs unchanged when no skill markers are present', () => {
+    const docs = '# agent skills\nno markers here\n';
+    expect(applySkillSourcesToDocs(docs, new Map([['a', 'A\n']]))).toBe(docs);
+  });
+
+  test('throws when a marker references an unknown skill', () => {
+    const docs = '{/* shuip:skill:start name="missing" */}\nX\n{/* shuip:skill:end */}\n';
+    expect(() => applySkillSourcesToDocs(docs, new Map([['a', 'A\n']]))).toThrow(
+      'unknown skill "missing" referenced in docs page',
+    );
+  });
+
+  test('normalizes a source without trailing newline', () => {
+    const docs = '{/* shuip:skill:start name="a" */}\nX\n{/* shuip:skill:end */}\n';
+    const out = applySkillSourcesToDocs(docs, new Map([['a', 'no-trailing-nl']]));
+    expect(out).toBe('{/* shuip:skill:start name="a" */}\n````md\nno-trailing-nl\n````\n{/* shuip:skill:end */}\n');
+  });
+});
+
 describe('emitSkills', () => {
   let root: string;
   beforeAll(() => {
@@ -92,9 +153,9 @@ describe('emitSkills', () => {
   });
   afterAll(() => fs.rmSync(root, { recursive: true, force: true }));
 
-  test('writes resolved files and returns skill items + bundle', () => {
+  test('writes resolved files, returns skill items + bundle, and exposes raw sources', () => {
     const skillsDir = path.join(root, 'skills');
-    const items = emitSkills({
+    const result = emitSkills({
       skillsDir,
       generatedDir: path.join(skillsDir, '.generated'),
       registryRoot: root,
@@ -107,7 +168,7 @@ describe('emitSkills', () => {
     expect(written).toContain('**components**\n- `x`');
     expect(written).not.toContain('OLD');
 
-    expect(items).toEqual([
+    expect(result.items).toEqual([
       {
         name: 'demo',
         type: 'registry:item',
@@ -121,5 +182,9 @@ describe('emitSkills', () => {
         registryDependencies: ['https://shuip.plvo.dev/r/demo'],
       },
     ]);
+
+    expect(result.sources.get('demo')).toBe(
+      '---\nname: demo\ndescription: A demo.\n---\n<!-- shuip:catalog:start -->\nOLD\n<!-- shuip:catalog:end -->\n',
+    );
   });
 });

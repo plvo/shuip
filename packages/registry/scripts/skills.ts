@@ -51,6 +51,19 @@ export function assertUniqueNames(componentNames: string[], skillNames: string[]
   }
 }
 
+const SKILL_REGION_RE = /\{\/\* shuip:skill:start name="([^"]+)" \*\/\}\n([\s\S]*?)\n\{\/\* shuip:skill:end \*\/\}/g;
+
+export function applySkillSourcesToDocs(docs: string, sources: Map<string, string>): string {
+  return docs.replace(SKILL_REGION_RE, (_match, name: string) => {
+    const source = sources.get(name);
+    if (source === undefined) {
+      throw new Error(`unknown skill "${name}" referenced in docs page`);
+    }
+    const normalized = source.endsWith('\n') ? source : `${source}\n`;
+    return `{/* shuip:skill:start name="${name}" */}\n\`\`\`\`md\n${normalized}\`\`\`\`\n{/* shuip:skill:end */}`;
+  });
+}
+
 export interface EmitSkillsOptions {
   skillsDir: string;
   generatedDir: string;
@@ -60,10 +73,15 @@ export interface EmitSkillsOptions {
   bundleName: string;
 }
 
-export function emitSkills(opts: EmitSkillsOptions): RegistryItem[] {
+export interface EmitSkillsResult {
+  items: RegistryItem[];
+  sources: Map<string, string>;
+}
+
+export function emitSkills(opts: EmitSkillsOptions): EmitSkillsResult {
   const { skillsDir, generatedDir, registryRoot, catalog, registryBaseUrl, bundleName } = opts;
   fs.rmSync(generatedDir, { recursive: true, force: true });
-  if (!fs.existsSync(skillsDir)) return [];
+  if (!fs.existsSync(skillsDir)) return { items: [], sources: new Map() };
 
   const dirs = fs
     .readdirSync(skillsDir)
@@ -71,6 +89,7 @@ export function emitSkills(opts: EmitSkillsOptions): RegistryItem[] {
     .sort();
 
   const items: RegistryItem[] = [];
+  const sources = new Map<string, string>();
   const skillNames: string[] = [];
 
   for (const dir of dirs) {
@@ -91,6 +110,7 @@ export function emitSkills(opts: EmitSkillsOptions): RegistryItem[] {
       type: 'registry:item',
       files: [{ path: `./${relPath}`, type: 'registry:file', target: `.claude/skills/${name}/SKILL.md` }],
     });
+    sources.set(name, source);
     skillNames.push(name);
   }
 
@@ -102,5 +122,5 @@ export function emitSkills(opts: EmitSkillsOptions): RegistryItem[] {
     });
   }
 
-  return items;
+  return { items, sources };
 }
