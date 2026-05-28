@@ -1,0 +1,49 @@
+---
+title: Agent Skills
+description: Install shuip know-how into your AI coding agent — skills that teach it when and how to use shuip
+---
+
+shuip ships **agent skills** alongside its components. A skill is a Markdown guide your AI coding agent (Claude Code) reads to learn what shuip is, when to reach for which item, and how to build production-grade forms — so the code it writes follows shuip's conventions instead of guessing at item names and APIs.
+
+Skills install through the same registry and CLI as components. Each lands in your project at `.claude/skills/<name>/SKILL.md`, versioned alongside your code.
+
+## Available skills
+
+| Skill | Use it for |
+| ----- | ---------- |
+| `shuip-overview` | Orientation — what shuip is, how to install items, the item categories, and which skill to reach for next. |
+| `shuip-components` | Choosing and composing components — the full item catalog plus install and import conventions. |
+| `shuip-forms` | Building production-grade forms with the react-hook-form (`rhf-`) and tanstack-form (`tsf-`) field items: validation, submission, and accessible error and loading states. |
+
+## Install
+
+Add a single skill:
+
+```npm
+npx shadcn@latest add https://shuip.plvo.dev/r/shuip-forms
+```
+
+Or install all of them at once with the bundle:
+
+```npm
+npx shadcn@latest add https://shuip.plvo.dev/r/shuip-skills
+```
+
+## Where they go
+
+Skills install into your project's `.claude/` directory:
+
+```bash
+.claude/
+└── skills/
+    ├── shuip-overview/
+    │   └── SKILL.md
+    ├── shuip-components/
+    │   └── SKILL.md
+    └── shuip-forms/
+        └── SKILL.md
+```
+
+Once installed, your agent picks them up automatically — ask it to build a form or add a component and it will follow shuip's patterns.
+
+> Skills currently target Claude Code (the `SKILL.md` format). The content is format-agnostic, so support for other agents can follow.
