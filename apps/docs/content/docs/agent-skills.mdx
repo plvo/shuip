@@ -1,0 +1,387 @@
+---
+title: Agent Skills
+description: Install shuip know-how into your AI coding agent — skills that teach it when and how to use shuip
+---
+
+shuip ships **agent skills** alongside its components. A skill is a Markdown guide your AI coding agent (Claude Code) reads to learn what shuip is, when to reach for which item, and how to build production-grade forms — so the code it writes follows shuip's conventions instead of guessing at item names and APIs.
+
+Skills install through the same registry and CLI as components. Each lands in your project at `.claude/skills/<name>/SKILL.md`, versioned alongside your code.
+
+## Available skills
+
+| Skill | Use it for |
+| ----- | ---------- |
+| [`shuip-overview`](#shuip-overview) | Orientation — what shuip is, how to install items, the item categories, and which skill to reach for next. |
+| [`shuip-components`](#shuip-components) | Choosing and composing components — the full item catalog plus install and import conventions. |
+| [`shuip-forms`](#shuip-forms) | Building production-grade forms with the react-hook-form (`rhf-`) and tanstack-form (`tsf-`) field items: validation, submission, and accessible error and loading states. |
+
+## Install
+
+Add a single skill:
+
+```npm
+npx shadcn@latest add https://shuip.plvo.dev/r/shuip-forms
+```
+
+Or install all of them at once with the bundle:
+
+```npm
+npx shadcn@latest add https://shuip.plvo.dev/r/shuip-skills
+```
+
+## Where they go
+
+Skills install into your project's `.claude/` directory:
+
+```bash
+.claude/
+└── skills/
+    ├── shuip-overview/
+    │   └── SKILL.md
+    ├── shuip-components/
+    │   └── SKILL.md
+    └── shuip-forms/
+        └── SKILL.md
+```
+
+Once installed, your agent picks them up automatically — ask it to build a form or add a component and it will follow shuip's patterns.
+
+## What each skill contains
+
+The exact Markdown each skill ships. This is what your agent reads.
+
+### shuip-overview
+
+Routes the agent: what shuip is, how items install, and which skill to use next.
+
+{/* shuip:skill:start name="shuip-overview" */}
+````md
+---
+name: shuip-overview
+description: Use when working in a project that uses shuip and you need to know what shuip provides, how to install items from its registry, or which shuip skill/category to reach for. Triggers on shuip imports (@/components/ui/shuip/...) or a shuip registry URL (shuip.plvo.dev/r/...).
+---
+
+# shuip
+
+## What it is
+
+shuip is a component library built on shadcn/ui for Next.js + React. You install individual **items** through the shadcn CLI from shuip's registry; the source is copied into the project (same model as shadcn) and you own it afterwards.
+
+## Install any item
+
+```bash
+npx shadcn@latest add "https://shuip.plvo.dev/r/<item-name>"
+```
+
+Items install under `@/components/ui/shuip/...` (or `@/components/block/shuip/...` for blocks) and pull their shadcn primitives and npm dependencies automatically. **Exported symbols are unprefixed** — the item `rhf-input-field` exports `InputField`; the `rhf-`/`tsf-`/`tsq-` prefix is only the registry name.
+
+## Categories
+
+- **components** — standalone UI: dialogs, buttons, theme toggle (e.g. `side-dialog`, `confirmation-dialog`, `copy-button`, `theme-button`).
+- **blocks** — composed multi-part UI (e.g. `kanban`, `responsive-dialog`, `title-section`).
+- **react-hook-form** (`rhf-`) — form fields wired to react-hook-form via typed lenses.
+- **tanstack-form** (`tsf-`) — form fields wired to tanstack-form via context.
+- **tanstack-query** (`tsq-`) — data-fetching helpers (e.g. `query-boundary`).
+
+## Which skill next
+
+- Building or editing a **form** → use the **shuip-forms** skill (rhf/tsf field patterns in depth).
+- Choosing or composing **components/blocks**, or you need the full item catalog → use the **shuip-components** skill.
+
+Before building UI from scratch, check whether shuip already ships it.
+````
+{/* shuip:skill:end */}
+
+### shuip-components
+
+The full item catalog plus install and import conventions; the agent uses this to choose the right item before building UI from scratch.
+
+{/* shuip:skill:start name="shuip-components" */}
+````md
+---
+name: shuip-components
+description: Use when choosing which shuip item fits a need, or composing shuip components and blocks — provides the full item catalog, install/import conventions, and composition notes. Use before building UI that shuip may already provide.
+---
+
+# Choosing & composing shuip components
+
+## Conventions
+
+- Install: `npx shadcn@latest add "https://shuip.plvo.dev/r/<item-name>"`.
+- Import paths by category:
+  - components → `@/components/ui/shuip/<name>`
+  - blocks → `@/components/block/shuip/<name>`
+  - react-hook-form → `@/components/ui/shuip/react-hook-form/<name>`
+  - tanstack-form → `@/components/ui/shuip/tanstack-form/<name>`
+  - tanstack-query → `@/components/ui/shuip/tanstack-query/<name>`
+- **Exports are unprefixed**: `rhf-input-field` → `InputField`, `kanban` → `Kanban`.
+- For anything form-related, use the **shuip-forms** skill — it covers the rhf/tsf field patterns in depth.
+
+## Catalog
+
+<!-- shuip:catalog:start -->
+**components**
+- `confirmation-dialog`
+- `copy-button`
+- `hover-reveal`
+- `side-dialog`
+- `submit-button`
+- `theme-button`
+
+**blocks**
+- `kanban`
+- `responsive-dialog`
+- `title-section`
+
+**react-hook-form**
+- `rhf-address-field`
+- `rhf-autocomplete-field`
+- `rhf-checkbox-field`
+- `rhf-date-field`
+- `rhf-date-range-field`
+- `rhf-datetime-field`
+- `rhf-inline-edit`
+- `rhf-input-field`
+- `rhf-month-field`
+- `rhf-number-field`
+- `rhf-password-field`
+- `rhf-radio-field`
+- `rhf-select-field`
+- `rhf-textarea-field`
+- `rhf-time-field`
+- `rhf-time-range`
+
+**tanstack-form**
+- `tsf-autocomplete-field`
+- `tsf-checkbox-field`
+- `tsf-date-field`
+- `tsf-date-range-field`
+- `tsf-datetime-field`
+- `tsf-form-context`
+- `tsf-inline-edit`
+- `tsf-input-field`
+- `tsf-month-field`
+- `tsf-password-field`
+- `tsf-radio-field`
+- `tsf-select-field`
+- `tsf-submit-button`
+- `tsf-textarea-field`
+- `tsf-time-field`
+- `tsf-time-range`
+
+**tanstack-query**
+- `tsq-query-boundary`
+<!-- shuip:catalog:end -->
+
+## Composition notes
+
+- `responsive-dialog` composes `side-dialog`; installing it resolves the dependency.
+- `confirmation-dialog` for destructive-action confirmation; `side-dialog` for sheet-style panels.
+- `query-boundary` wraps data-fetching subtrees so you don't hand-roll loading/error UI.
+- Form fields are never used alone — they compose inside a form. Use **shuip-forms**.
+
+## Common mistakes
+
+| Mistake | Reality |
+|---------|---------|
+| Building a dialog / kanban / clipboard button from scratch | Check the catalog first — shuip likely ships it. |
+| Importing a prefixed symbol (`RhfInputField`, `TsfInputField`) | Exports are unprefixed (`InputField`). |
+| Flat path `@/components/ui/shuip/rhf-input-field` | Form categories use a sub-folder: `@/components/ui/shuip/react-hook-form/input-field`. |
+| Treating blocks as `@/components/ui/shuip/...` | Blocks import from `@/components/block/shuip/<name>`. |
+````
+{/* shuip:skill:end */}
+
+### shuip-forms
+
+The flagship: rhf vs tsf decision, the lens binding for react-hook-form, `createFormHook` for tanstack-form, full annotated examples, validation, submission, and accessibility.
+
+{/* shuip:skill:start name="shuip-forms" */}
+````md
+---
+name: shuip-forms
+description: Use when building or editing a form in a project that uses shuip — covers shuip's react-hook-form (rhf-) and tanstack-form (tsf-) field components, their install commands, validation, submission, and accessible error/loading state. Use before hand-writing shadcn FormField boilerplate.
+---
+
+# Building forms with shuip
+
+## Overview
+
+shuip ships pre-wired form **field components** for two libraries: **react-hook-form** (registry prefix `rhf-`) and **tanstack-form** (prefix `tsf-`). Each field collapses the label / control / error-message / accessibility wiring into one component.
+
+**Core principle:** compose shuip field components — do NOT hand-write shadcn's `<FormField render={...}>` boilerplate. If you're reaching for `FormField`/`FormItem`/`FormControl`/`FormMessage`, you're rebuilding what these items already give you.
+
+There is **no composite "form" item** in the registry — you assemble a form from individual field items plus your own schema and submit handler.
+
+## Choose the library first
+
+Match whatever the project already uses. If it's greenfield:
+
+- **react-hook-form** (`rhf-*`) — mature ecosystem, uncontrolled/minimal re-renders, validates with a zod resolver. Fields bind through a typed **lens** (`@hookform/lenses`). Pick this unless you have a reason not to.
+- **tanstack-form** (`tsf-*`) — end-to-end type-safe field names, validators co-located on the field, good async validation. Natural fit if the project is already on the TanStack stack (Query/Router). Requires the `tsf-form-context` item as its foundation.
+
+Do not mix the two families in one form.
+
+## Install
+
+```bash
+# react-hook-form fields (install the ones you need)
+npx shadcn@latest add "https://shuip.plvo.dev/r/rhf-input-field"
+npx shadcn@latest add "https://shuip.plvo.dev/r/rhf-password-field"
+npx shadcn@latest add "https://shuip.plvo.dev/r/submit-button"
+
+# tanstack-form: install the form context FIRST, then fields
+npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-form-context"
+npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-input-field"
+npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-submit-button"
+```
+
+Field naming follows the input type: `input-field`, `password-field`, `number-field`, `select-field`, `checkbox-field`, `radio-field`, `textarea-field`, `date-field`, `date-range-field`, `datetime-field`, `time-field`, `month-field`, `autocomplete-field`, plus `address-field` (rhf only). For the full catalog use the **shuip-components** skill. The shadcn CLI pulls each item's shadcn primitives and npm deps (react-hook-form / zod / @hookform/lenses, or @tanstack/react-form) automatically.
+
+**Exports are unprefixed.** The item `rhf-input-field` exports `InputField`. The `rhf-`/`tsf-` prefix is only the registry name, never the import symbol.
+
+## react-hook-form pattern
+
+Create one lens per form with `useLens({ control })`, then give each field `lens.focus('fieldName')`. Wrap everything in `<Form {...form}>`.
+
+```tsx
+'use client';
+
+import { useLens } from '@hookform/lenses';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { Form } from '@/components/ui/form';
+import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
+import { PasswordField } from '@/components/ui/shuip/react-hook-form/password-field';
+import { SubmitButton } from '@/components/ui/shuip/submit-button';
+
+const schema = z
+  .object({
+    email: z.string().email('Enter a valid email'),
+    password: z.string().min(8, 'At least 8 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((v) => v.password === v.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+type Values = z.infer<typeof schema>;
+
+export function SignupForm() {
+  const form = useForm<Values>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: '', password: '', confirmPassword: '' },
+  });
+  const lens = useLens({ control: form.control });
+
+  async function onSubmit(values: Values) {
+    const result = await signup(values); // a server action
+    if (result?.fieldErrors) {
+      for (const [name, message] of Object.entries(result.fieldErrors)) {
+        form.setError(name as keyof Values, { message });
+      }
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <InputField lens={lens.focus('email')} label="Email" type="email" placeholder="you@example.com" />
+        <PasswordField lens={lens.focus('password')} label="Password" />
+        <PasswordField lens={lens.focus('confirmPassword')} label="Confirm password" />
+        <SubmitButton loading={form.formState.isSubmitting}>Create account</SubmitButton>
+      </form>
+    </Form>
+  );
+}
+```
+
+- Field-specific props (`type`, `placeholder`, …) pass straight through to the underlying input.
+- `SubmitButton` does **not** auto-disable — bind `loading={form.formState.isSubmitting}` (it disables and shows a spinner while loading).
+- Server-side validation failures map back onto fields with `form.setError`.
+
+## tanstack-form pattern
+
+Build the typed form hook once with `createFormHook`, passing the contexts from `tsf-form-context` and your field/form components. Bind fields with `<form.AppField>`; validators live on the field.
+
+```tsx
+'use client';
+
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { InputField } from '@/components/ui/shuip/tanstack-form/input-field';
+import { PasswordField } from '@/components/ui/shuip/tanstack-form/password-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
+
+const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { InputField, PasswordField },
+  formComponents: { SubmitButton },
+});
+
+export function SignupForm() {
+  const form = useAppForm({
+    defaultValues: { email: '', password: '' },
+    onSubmit: async ({ value }) => {
+      await signup(value); // a server action
+    },
+  });
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit();
+      }}
+      className="space-y-4"
+    >
+      <form.AppField
+        name="email"
+        validators={{ onChange: ({ value }) => (!value.includes('@') ? 'Invalid email' : undefined) }}
+        children={(field) => <field.InputField label="Email" props={{ type: 'email' }} />}
+      />
+      <form.AppField
+        name="password"
+        validators={{ onChange: ({ value }) => (value.length < 8 ? 'At least 8 characters' : undefined) }}
+        children={(field) => <field.PasswordField label="Password" />}
+      />
+      <form.AppForm>
+        <form.SubmitButton>Create account</form.SubmitButton>
+      </form.AppForm>
+    </form>
+  );
+}
+```
+
+- tsf fields take split props: `props` for the native input, `fieldProps` for the field wrapper. There is no lens and no `<Form>` wrapper.
+- The tsf `SubmitButton` auto-disables via `form.Subscribe` — render it inside `<form.AppForm>`, no `loading` prop needed.
+
+## Accessibility & states (both libraries)
+
+The field components already render `aria-invalid`, associate the error message, and show validation errors — you get accessible errors for free. For a form-level server error, render a `role="alert"` region yourself. Loading/disabled on submit is handled by `SubmitButton` as shown above.
+
+## Common mistakes
+
+| Mistake | Reality |
+|---------|---------|
+| `<InputField control={form.control} name="email" />` | Wrong API. rhf fields bind via a lens: `lens={lens.focus('email')}` after `const lens = useLens({ control: form.control })`. |
+| Importing `RhfInputField` / `TsfInputField` | Export is `InputField`. The `rhf-`/`tsf-` prefix is the registry name only. |
+| `@/components/ui/shuip/rhf-input-field` (flat) | Real path is `@/components/ui/shuip/react-hook-form/input-field` (category sub-folder). |
+| Installing a `rhf-form` / `tsf-form` item | No composite form item exists. Assemble from field items. |
+| Hand-writing `<FormField render={...}>` | That's the boilerplate shuip fields replace. Use the field component. |
+| Raw `<Button disabled={isSubmitting}>` | Use `SubmitButton`. rhf: `loading={form.formState.isSubmitting}`; tsf: auto via `form.Subscribe`. |
+| Using tsf fields without `tsf-form-context` | Every tsf field reads `useFieldContext`; install and wire `tsf-form-context` first via `createFormHook`. |
+| Mixing rhf and tsf fields in one form | Pick one family per form. |
+
+## Red flags — STOP
+
+- About to type `control={...}` or `name="..."` on an rhf shuip field → use the lens.
+- About to import a `Rhf*`/`Tsf*`-prefixed symbol → the export is unprefixed.
+- About to write `FormField`/`FormItem`/`FormControl` by hand → a shuip field already does this.
+- Looking for an `rhf-form` install command → it doesn't exist.
+````
+{/* shuip:skill:end */}
+
+> Skills currently target Claude Code (the `SKILL.md` format). The content is format-agnostic, so support for other agents can follow.
