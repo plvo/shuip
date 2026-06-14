@@ -1,0 +1,165 @@
+---
+title: Data Table
+description: An entity-agnostic, dual-mode data table built on TanStack Table. Define your columns and drop in your data — client-side out of the box, or server-side with pagination, sorting, and filtering.
+registryName: data-table
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+`DataTable` is a generic table system (`useDataTable<TData>` + composable sub-components) that renders any array of typed rows. All per-entity configuration lives in your TanStack `ColumnDef[]` and a typed `meta` extension; the components only ever read the table instance, so nothing is hardcoded to a domain.
+
+### Built-in features
+
+- **Generic data model**: `useDataTable<T>` works with any row type via `ColumnDef<T>[]`.
+- **Dual mode**: client-side out of the box (sorting, filtering, pagination computed in memory) or server-side by passing `pageCount` + controlled state and `on*Change` handlers.
+- **Auto-generated toolbar**: faceted filters are derived from each column's `meta.variant` / `meta.options` — no per-table wiring.
+- **Composable**: drop `DataTableToolbar`, `DataTable`, and `DataTablePagination` where you want them; swap any piece.
+- **Row selection, column visibility, column pinning** (sticky columns), sortable headers, global search.
+- **States**: loading skeleton, empty, and no-results-after-filter.
+
+## Examples
+
+<ItemExamples registryName={'data-table'} />
+
+## The `meta` convention
+
+Per-entity configuration rides on TanStack's `ColumnMeta`, augmented by this block:
+
+```ts
+interface ColumnMeta {
+  label?: string;
+  placeholder?: string;
+  variant?: 'text' | 'number' | 'date' | 'select' | 'multiSelect';
+  options?: { label: string; value: string; icon?: React.ComponentType; count?: number }[];
+  icon?: React.ComponentType;
+}
+```
+
+A column with `meta.variant: 'multiSelect'` and `meta.options` automatically gets a faceted filter in the toolbar. For client-side multi-select filtering, set `filterFn: 'arrIncludesSome'` on that column.
+
+## Client vs server mode
+
+Client mode is the default — pass `data` and `columns` and the table computes everything:
+
+```tsx
+const { table } = useDataTable({ data, columns, getRowId: (row) => row.id });
+```
+
+Server mode activates when you pass `pageCount`. Control the state yourself and react to changes by refetching:
+
+```tsx
+const { table } = useDataTable({
+  data: result.rows,
+  columns,
+  pageCount: Math.ceil(result.total / pagination.pageSize),
+  state: { pagination, sorting, columnFilters, globalFilter },
+  onPaginationChange: setPagination,
+  onSortingChange: setSorting,
+  onColumnFiltersChange: setColumnFilters,
+  onGlobalFilterChange: setGlobalFilter,
+});
+```
+
+## Recipe: sync state to the URL with nuqs
+
+Server mode pairs naturally with shareable, bookmarkable URLs. This is opt-in and not bundled with the block (it would force a router dependency on every consumer). Install nuqs and wrap your app once:
+
+```bash
+bun add nuqs
+```
+
+```tsx
+// app/layout.tsx
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang='en'>
+      <body>
+        <NuqsAdapter>{children}</NuqsAdapter>
+      </body>
+    </html>
+  );
+}
+```
+
+Then drop in this hook and feed its output straight into `useDataTable`:
+
+```tsx
+// hooks/use-data-table-url-state.ts
+'use client';
+
+import type { ColumnFiltersState, PaginationState, SortingState } from '@tanstack/react-table';
+import { parseAsInteger, parseAsJson, parseAsString, useQueryStates } from 'nuqs';
+
+export function useDataTableUrlState() {
+  const [state, setState] = useQueryStates(
+    {
+      pageIndex: parseAsInteger.withDefault(0),
+      pageSize: parseAsInteger.withDefault(10),
+      sorting: parseAsJson<SortingState>((value) => value as SortingState).withDefault([]),
+      columnFilters: parseAsJson<ColumnFiltersState>((value) => value as ColumnFiltersState).withDefault([]),
+      globalFilter: parseAsString.withDefault(''),
+    },
+    { history: 'push', shallow: false, throttleMs: 50, clearOnDefault: true },
+  );
+
+  const pagination: PaginationState = { pageIndex: state.pageIndex, pageSize: state.pageSize };
+
+  return {
+    pagination,
+    sorting: state.sorting,
+    columnFilters: state.columnFilters,
+    globalFilter: state.globalFilter,
+    onPaginationChange: (updater: PaginationState | ((old: PaginationState) => PaginationState)) => {
+      const next = typeof updater === 'function' ? updater(pagination) : updater;
+      void setState({ pageIndex: next.pageIndex, pageSize: next.pageSize });
+    },
+    onSortingChange: (updater: SortingState | ((old: SortingState) => SortingState)) => {
+      const next = typeof updater === 'function' ? updater(state.sorting) : updater;
+      void setState({ sorting: next, pageIndex: 0 });
+    },
+    onColumnFiltersChange: (updater: ColumnFiltersState | ((old: ColumnFiltersState) => ColumnFiltersState)) => {
+      const next = typeof updater === 'function' ? updater(state.columnFilters) : updater;
+      void setState({ columnFilters: next, pageIndex: 0 });
+    },
+    onGlobalFilterChange: (updater: string | ((old: string) => string)) => {
+      const next = typeof updater === 'function' ? updater(state.globalFilter) : updater;
+      void setState({ globalFilter: next, pageIndex: 0 });
+    },
+  };
+}
+```
+
+```tsx
+const url = useDataTableUrlState();
+const { table } = useDataTable({
+  data: result.rows,
+  columns,
+  pageCount: Math.ceil(result.total / url.pagination.pageSize),
+  state: url,
+  onPaginationChange: url.onPaginationChange,
+  onSortingChange: url.onSortingChange,
+  onColumnFiltersChange: url.onColumnFiltersChange,
+  onGlobalFilterChange: url.onGlobalFilterChange,
+});
+```
+
+## Props
+
+<TypeTable
+  type={{
+    data: { description: 'The rows to render.', type: 'TData[]' },
+    columns: { description: 'TanStack column definitions. Carry per-entity config in meta.', type: 'ColumnDef<TData>[]' },
+    pageCount: { description: 'Total page count. Passing it switches the table to server-side (manual) mode.', type: 'number?' },
+    getRowId: { description: 'Stable row id, so selection survives pagination/sorting/refetch.', type: '(row: TData, index: number) => string' },
+    enableRowSelection: { description: 'Enable row selection.', type: 'boolean', default: 'false' },
+    enableColumnPinning: { description: 'Enable sticky pinned columns.', type: 'boolean', default: 'false' },
+    initialState: { description: 'Initial pagination / sorting / columnVisibility / columnPinning.', type: 'object?' },
+    state: { description: 'Controlled state for server mode (pagination, sorting, columnFilters, globalFilter).', type: 'object?' },
+    onPaginationChange: { description: 'Pagination change handler (server mode).', type: 'OnChangeFn<PaginationState>?' },
+    onSortingChange: { description: 'Sorting change handler (server mode).', type: 'OnChangeFn<SortingState>?' },
+    onColumnFiltersChange: { description: 'Column filters change handler (server mode).', type: 'OnChangeFn<ColumnFiltersState>?' },
+    onGlobalFilterChange: { description: 'Global filter change handler (server mode).', type: 'OnChangeFn<string>?' },
+  }}
+/>
