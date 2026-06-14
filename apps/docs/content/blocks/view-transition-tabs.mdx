@@ -11,7 +11,7 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 `view-transition-tabs` is two pieces that share a directional contract:
 
 - **`TabsNav`** — the navigation. Renders a vertical sidebar or a horizontal tab bar and, when a tab is selected, fires a directional [view transition type](https://react.dev/reference/react/addTransitionType) (`slide-forward` when moving to a later tab, `slide-backward` when moving back).
-- **`ViewTransitionPanel`** — wraps the content that changes. It maps those transition types to slide-in / slide-out animations and ships its own keyframes, so no global CSS is required.
+- **`ViewTransitionPanel`** — wraps the content that changes. It animates the in-place content update with directional slide-in / slide-out keyframes, mapped to the transition types through React's `update` view-transition classes (`::view-transition-old` / `::view-transition-new` pseudo-element rules). It ships its own keyframes, so no global CSS is required.
 
 `TabsNav` works in two modes:
 

@@ -85,14 +85,14 @@ export function TabsNav({ items, orientation = 'horizontal', value, onValueChang
 }
 
 const SLIDE_KEYFRAMES = `
-@keyframes shuip-vt-slide-from-right { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-@keyframes shuip-vt-slide-from-left { from { transform: translateX(-30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-@keyframes shuip-vt-slide-to-left { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-30px); opacity: 0; } }
-@keyframes shuip-vt-slide-to-right { from { transform: translateX(0); opacity: 1; } to { transform: translateX(30px); opacity: 0; } }
-.shuip-vt-from-right { animation: shuip-vt-slide-from-right 0.25s ease-out; }
-.shuip-vt-from-left { animation: shuip-vt-slide-from-left 0.25s ease-out; }
-.shuip-vt-to-left { animation: shuip-vt-slide-to-left 0.15s ease-in; }
-.shuip-vt-to-right { animation: shuip-vt-slide-to-right 0.15s ease-in; }
+@keyframes shuip-vt-from-right { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes shuip-vt-from-left { from { transform: translateX(-30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes shuip-vt-to-left { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-30px); opacity: 0; } }
+@keyframes shuip-vt-to-right { from { transform: translateX(0); opacity: 1; } to { transform: translateX(30px); opacity: 0; } }
+::view-transition-old(.shuip-vt-forward) { animation: shuip-vt-to-left 0.2s ease-in-out; }
+::view-transition-new(.shuip-vt-forward) { animation: shuip-vt-from-right 0.2s ease-in-out; }
+::view-transition-old(.shuip-vt-backward) { animation: shuip-vt-to-right 0.2s ease-in-out; }
+::view-transition-new(.shuip-vt-backward) { animation: shuip-vt-from-left 0.2s ease-in-out; }
 `;
 
 type ViewTransitionPanelProps = {
@@ -107,15 +107,10 @@ export function ViewTransitionPanel({ children, className }: ViewTransitionPanel
         {SLIDE_KEYFRAMES}
       </style>
       <ViewTransition
-        enter={{
+        update={{
           default: 'none',
-          'slide-forward': 'shuip-vt-from-right',
-          'slide-backward': 'shuip-vt-from-left',
-        }}
-        exit={{
-          default: 'none',
-          'slide-forward': 'shuip-vt-to-left',
-          'slide-backward': 'shuip-vt-to-right',
+          'slide-forward': 'shuip-vt-forward',
+          'slide-backward': 'shuip-vt-backward',
         }}
       >
         <div className={cn('min-w-0 flex-1', className)}>{children}</div>
