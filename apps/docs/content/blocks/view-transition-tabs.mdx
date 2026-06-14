@@ -20,6 +20,8 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 > **Requires Next.js App Router.** `ViewTransition` and `addTransitionType` resolve through the React that Next.js vendors for the App Router. In a non–App-Router setup (e.g. Vite on stable React) these exports are unavailable and the component will not render.
 
+> **Avoid layout shift during the transition.** A view transition briefly hides the page scrollbar; in a layout whose width is otherwise flexible, the content can widen by the scrollbar width and shift for the duration of the animation. Reserve the gutter with `html { scrollbar-gutter: stable }` (or give the tabs row a stable width) so the panel slides without nudging the rest of the page.
+
 ## Usage
 
 ### State (self-contained)

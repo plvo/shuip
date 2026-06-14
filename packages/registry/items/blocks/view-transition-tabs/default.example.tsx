@@ -22,10 +22,10 @@ export default function ViewTransitionTabsExample() {
   const view = CONTENT[active];
 
   return (
-    <div className='flex gap-8'>
+    <div className='flex w-[34rem] max-w-full gap-8'>
       <TabsNav items={TABS} orientation='vertical' value={active} onValueChange={setActive} />
       <ViewTransitionPanel>
-        <div className='space-y-2'>
+        <div className='min-h-24 space-y-2'>
           <h3 className='text-lg font-semibold'>{view.title}</h3>
           <p className='text-sm text-muted-foreground'>{view.body}</p>
         </div>
