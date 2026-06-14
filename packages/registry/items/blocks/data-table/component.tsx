@@ -348,9 +348,10 @@ export function DataTableFacetedFilter<TData, TValue>({
                   <CommandItem
                     key={option.value}
                     onSelect={() => {
-                      if (isSelected) selectedValues.delete(option.value);
-                      else selectedValues.add(option.value);
-                      const filterValues = Array.from(selectedValues);
+                      const next = new Set(selectedValues);
+                      if (isSelected) next.delete(option.value);
+                      else next.add(option.value);
+                      const filterValues = Array.from(next);
                       column?.setFilterValue(filterValues.length ? filterValues : undefined);
                     }}
                   >
@@ -364,9 +365,9 @@ export function DataTableFacetedFilter<TData, TValue>({
                     </div>
                     {option.icon && <option.icon className='mr-2 size-4 text-muted-foreground' />}
                     <span>{option.label}</span>
-                    {facets?.get(option.value) && (
+                    {(facets?.get(option.value) ?? 0) > 0 && (
                       <span className='ml-auto flex size-4 items-center justify-center font-mono text-xs'>
-                        {facets.get(option.value)}
+                        {facets?.get(option.value)}
                       </span>
                     )}
                   </CommandItem>
