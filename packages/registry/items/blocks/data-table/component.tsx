@@ -117,10 +117,10 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
   const [pagination, setPagination] = React.useState<PaginationState>(
     initialState?.pagination ?? { pageIndex: 0, pageSize: 10 },
   );
-  const [columnPinning, setColumnPinning] = React.useState<ColumnPinningState>({
+  const [columnPinning, setColumnPinning] = React.useState<ColumnPinningState>(() => ({
     left: initialState?.columnPinning?.left ?? [],
     right: initialState?.columnPinning?.right ?? [],
-  });
+  }));
 
   const table = useReactTable({
     data,
@@ -182,6 +182,8 @@ function getPinClass<TData>(column: Column<TData>): string | undefined {
   return column.getIsPinned() ? 'bg-background' : undefined;
 }
 
+const skeletonBar = <div className='h-5 w-full animate-pulse rounded bg-muted' />;
+
 export type DataTableProps<TData> = {
   table: Table<TData>;
   isLoading?: boolean;
@@ -219,7 +221,7 @@ export function DataTable<TData>({ table, isLoading, emptyState, onRowClick, cla
               <TableRow key={rowIndex}>
                 {table.getVisibleLeafColumns().map((column) => (
                   <TableCell key={column.id} style={getColumnStyles(column)} className={getPinClass(column)}>
-                    <div className='h-5 w-full animate-pulse rounded bg-muted' />
+                    {skeletonBar}
                   </TableCell>
                 ))}
               </TableRow>
