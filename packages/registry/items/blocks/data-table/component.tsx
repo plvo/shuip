@@ -207,10 +207,8 @@ export function DataTable<TData>({ table, isLoading, emptyState, onRowClick, cla
         <TableBody>
           {isLoading ? (
             Array.from({ length: table.getState().pagination.pageSize }).map((_, rowIndex) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders
               <TableRow key={rowIndex}>
                 {Array.from({ length: columnCount }).map((__, cellIndex) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders
                   <TableCell key={cellIndex}>
                     <div className='h-5 w-full animate-pulse rounded bg-muted' />
                   </TableCell>
