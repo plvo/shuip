@@ -163,14 +163,18 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
   return { table };
 }
 
-function getPinStyles<TData>(column: Column<TData>): React.CSSProperties {
+function getColumnStyles<TData>(column: Column<TData>): React.CSSProperties {
   const pinned = column.getIsPinned();
-  if (!pinned) return {};
   return {
-    position: 'sticky',
-    left: pinned === 'left' ? column.getStart('left') : undefined,
-    right: pinned === 'right' ? column.getAfter('right') : undefined,
-    zIndex: 1,
+    width: column.getSize(),
+    ...(pinned
+      ? {
+          position: 'sticky',
+          left: pinned === 'left' ? column.getStart('left') : undefined,
+          right: pinned === 'right' ? column.getAfter('right') : undefined,
+          zIndex: 1,
+        }
+      : {}),
   };
 }
 
@@ -187,17 +191,22 @@ export type DataTableProps<TData> = {
 };
 
 export function DataTable<TData>({ table, isLoading, emptyState, onRowClick, className }: DataTableProps<TData>) {
-  const columnCount = table.getAllLeafColumns().length;
+  const columnCount = table.getVisibleLeafColumns().length;
   const rows = table.getRowModel().rows;
 
   return (
     <div className={cn('rounded-md border', className)}>
-      <TableRoot>
+      <TableRoot className='table-fixed' style={{ minWidth: table.getTotalSize() }}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id} style={getPinStyles(header.column)} className={getPinClass(header.column)}>
+                <TableHead
+                  key={header.id}
+                  colSpan={header.colSpan}
+                  style={getColumnStyles(header.column)}
+                  className={getPinClass(header.column)}
+                >
                   {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                 </TableHead>
               ))}
@@ -208,8 +217,8 @@ export function DataTable<TData>({ table, isLoading, emptyState, onRowClick, cla
           {isLoading ? (
             Array.from({ length: table.getState().pagination.pageSize }).map((_, rowIndex) => (
               <TableRow key={rowIndex}>
-                {Array.from({ length: columnCount }).map((__, cellIndex) => (
-                  <TableCell key={cellIndex}>
+                {table.getVisibleLeafColumns().map((column) => (
+                  <TableCell key={column.id} style={getColumnStyles(column)} className={getPinClass(column)}>
                     <div className='h-5 w-full animate-pulse rounded bg-muted' />
                   </TableCell>
                 ))}
@@ -224,7 +233,11 @@ export function DataTable<TData>({ table, isLoading, emptyState, onRowClick, cla
                 className={onRowClick ? 'cursor-pointer' : undefined}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} style={getPinStyles(cell.column)} className={getPinClass(cell.column)}>
+                  <TableCell
+                    key={cell.id}
+                    style={getColumnStyles(cell.column)}
+                    className={cn('overflow-hidden', getPinClass(cell.column))}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

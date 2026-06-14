@@ -75,10 +75,11 @@ export default function DataTableRichExample() {
         ),
         enableSorting: false,
         enableHiding: false,
-        size: 40,
+        size: 48,
       },
       {
         accessorKey: 'name',
+        size: 220,
         header: ({ column }) => <DataTableColumnHeader column={column} title='Name' />,
         meta: { label: 'Name' },
         cell: ({ row }) => (
@@ -90,17 +91,20 @@ export default function DataTableRichExample() {
       },
       {
         accessorKey: 'email',
+        size: 240,
         header: ({ column }) => <DataTableColumnHeader column={column} title='Email' />,
         meta: { label: 'Email' },
         cell: ({ row }) => <span className='text-muted-foreground'>{row.original.email}</span>,
       },
       {
         accessorKey: 'team',
+        size: 150,
         header: ({ column }) => <DataTableColumnHeader column={column} title='Team' />,
         meta: { label: 'Team' },
       },
       {
         accessorKey: 'stage',
+        size: 150,
         header: ({ column }) => <DataTableColumnHeader column={column} title='Stage' />,
         meta: { label: 'Stage', variant: 'multiSelect', options: stageOptions },
         filterFn: 'arrIncludesSome',
@@ -114,6 +118,7 @@ export default function DataTableRichExample() {
       },
       {
         accessorKey: 'tags',
+        size: 180,
         header: 'Tags',
         enableSorting: false,
         meta: { label: 'Tags' },
@@ -141,7 +146,7 @@ export default function DataTableRichExample() {
   });
 
   return (
-    <div className='flex flex-col gap-3'>
+    <div className='flex w-full min-w-0 flex-col gap-3'>
       <DataTableToolbar table={table} searchPlaceholder='Search people...' />
       <DataTable table={table} />
       <DataTablePagination table={table} />

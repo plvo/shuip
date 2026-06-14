@@ -46,7 +46,7 @@ export function Preview({ registryName }: { registryName: string }) {
   }, [registryName]);
 
   return (
-    <div className='w-full min-h-[150px] flex items-center justify-center p-8 bg-background border border-border rounded-md'>
+    <div className='not-prose w-full min-h-[150px] flex items-center justify-center p-8 bg-background border border-border rounded-md'>
       <React.Suspense
         fallback={
           <div className='flex w-full items-center justify-center text-sm text-muted-foreground'>

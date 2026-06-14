@@ -94,23 +94,27 @@ export default function DataTableServerExample() {
     () => [
       {
         accessorKey: 'id',
+        size: 130,
         header: ({ column }) => <DataTableColumnHeader column={column} title='Order' />,
         meta: { label: 'Order' },
         cell: ({ row }) => <span className='font-medium'>{row.original.id}</span>,
       },
       {
         accessorKey: 'customer',
+        size: 210,
         header: ({ column }) => <DataTableColumnHeader column={column} title='Customer' />,
         meta: { label: 'Customer' },
       },
       {
         accessorKey: 'total',
+        size: 110,
         header: ({ column }) => <DataTableColumnHeader column={column} title='Total' />,
         meta: { label: 'Total' },
         cell: ({ row }) => <span className='tabular-nums'>${row.original.total}</span>,
       },
       {
         accessorKey: 'status',
+        size: 130,
         header: ({ column }) => <DataTableColumnHeader column={column} title='Status' />,
         meta: { label: 'Status', variant: 'multiSelect', options: statusOptions },
         cell: ({ row }) => <span className='capitalize'>{row.original.status}</span>,
@@ -132,7 +136,7 @@ export default function DataTableServerExample() {
   });
 
   return (
-    <div className='flex flex-col gap-3'>
+    <div className='flex w-full min-w-0 flex-col gap-3'>
       <DataTableToolbar table={table} searchPlaceholder='Search orders...' />
       <DataTable table={table} isLoading={isLoading} />
       <DataTablePagination table={table} />

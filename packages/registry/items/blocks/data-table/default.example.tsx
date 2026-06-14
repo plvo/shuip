@@ -47,18 +47,21 @@ export default function DataTableDefaultExample() {
     () => [
       {
         accessorKey: 'name',
+        size: 190,
         header: ({ column }) => <DataTableColumnHeader column={column} title='Name' />,
         meta: { label: 'Name' },
         cell: ({ row }) => <span className='font-medium'>{row.original.name}</span>,
       },
       {
         accessorKey: 'email',
+        size: 220,
         header: ({ column }) => <DataTableColumnHeader column={column} title='Email' />,
         meta: { label: 'Email' },
         cell: ({ row }) => <span className='text-muted-foreground'>{row.original.email}</span>,
       },
       {
         accessorKey: 'role',
+        size: 120,
         header: ({ column }) => <DataTableColumnHeader column={column} title='Role' />,
         meta: { label: 'Role', variant: 'multiSelect', options: roleOptions },
         filterFn: 'arrIncludesSome',
@@ -66,6 +69,7 @@ export default function DataTableDefaultExample() {
       },
       {
         accessorKey: 'status',
+        size: 120,
         header: ({ column }) => <DataTableColumnHeader column={column} title='Status' />,
         meta: { label: 'Status', variant: 'multiSelect', options: statusOptions },
         filterFn: 'arrIncludesSome',
@@ -83,7 +87,7 @@ export default function DataTableDefaultExample() {
   });
 
   return (
-    <div className='flex flex-col gap-3'>
+    <div className='flex w-full min-w-0 flex-col gap-3'>
       <DataTableToolbar table={table} searchPlaceholder='Search users...' />
       <DataTable table={table} />
       <DataTablePagination table={table} />
