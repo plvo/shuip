@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type CalEvent = { id: string; title: string; start: Date; end: Date; color?: CalendarEventColor };
+type StoredEvent = { id: string; title: string; start: string; end: string; color?: CalendarEventColor };
+
+const STORAGE_KEY = 'shuip:calendar-events';
 
 const now = new Date();
 const at = (dayOffset: number, h: number, m = 0) =>
@@ -16,24 +18,59 @@ const at = (dayOffset: number, h: number, m = 0) =>
 
 const seed: CalEvent[] = [
   { id: '1', title: 'Standup', start: at(0, 9), end: at(0, 9, 30), color: 'blue' },
-  { id: '2', title: 'Design review', start: at(0, 11), end: at(0, 12), color: 'green' },
-  { id: '3', title: 'Lunch', start: at(1, 12), end: at(1, 13) },
-  { id: '4', title: 'Offsite', start: at(2, 0), end: at(3, 0), color: 'amber' },
+  { id: '2', title: 'Ship release', start: at(1, 15), end: at(1, 16), color: 'red' },
 ];
 
-const colors: CalendarEventColor[] = ['primary', 'blue', 'green', 'red', 'amber'];
+// Dates do not survive JSON, so we serialize to ISO strings and revive on read.
+// The artificial delay stands in for a real async source (an API, IndexedDB, …).
+async function loadEvents(): Promise<CalEvent[]> {
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return seed;
+  const stored = JSON.parse(raw) as StoredEvent[];
+  return stored.map((e) => ({ ...e, start: new Date(e.start), end: new Date(e.end) }));
+}
+
+async function saveEvents(events: CalEvent[]): Promise<void> {
+  const stored: StoredEvent[] = events.map((e) => ({ ...e, start: e.start.toISOString(), end: e.end.toISOString() }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+}
 
 export default function Example() {
-  const [events, setEvents] = React.useState<CalEvent[]>(seed);
+  const [events, setEvents] = React.useState<CalEvent[] | null>(null);
   const [draft, setDraft] = React.useState<CalEvent | null>(null);
   const [open, setOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    let active = true;
+    loadEvents().then((loaded) => {
+      if (active) setEvents(loaded);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const persist = React.useCallback((next: CalEvent[]) => {
+    setEvents(next);
+    void saveEvents(next);
+  }, []);
+
+  if (!events) {
+    return (
+      <div className='flex h-72 w-full items-center justify-center text-sm text-muted-foreground'>
+        Loading calendar…
+      </div>
+    );
+  }
+
   const isExisting = draft ? events.some((e) => e.id === draft.id) : false;
 
   return (
     <>
       <Calendar.Root<CalEvent>
         events={events}
-        onEventsChange={setEvents}
+        onEventsChange={persist}
         titleField='title'
         startField='start'
         endField='end'
@@ -60,33 +97,13 @@ export default function Example() {
             <DialogTitle>{isExisting ? 'Edit event' : 'New event'}</DialogTitle>
           </DialogHeader>
           {draft ? (
-            <div className='flex flex-col gap-4'>
-              <div className='flex flex-col gap-2'>
-                <Label htmlFor='cal-title'>Title</Label>
-                <Input
-                  id='cal-title'
-                  value={draft.title}
-                  onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-                />
-              </div>
-              <div className='flex flex-col gap-2'>
-                <Label htmlFor='cal-color'>Color</Label>
-                <Select
-                  value={draft.color ?? 'primary'}
-                  onValueChange={(v) => setDraft({ ...draft, color: v as CalendarEventColor })}
-                >
-                  <SelectTrigger id='cal-color'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {colors.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className='flex flex-col gap-2'>
+              <Label htmlFor='ls-title'>Title</Label>
+              <Input
+                id='ls-title'
+                value={draft.title}
+                onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+              />
             </div>
           ) : null}
           <DialogFooter>
@@ -94,7 +111,7 @@ export default function Example() {
               <Button
                 variant='outline'
                 onClick={() => {
-                  if (draft) setEvents((prev) => prev.filter((e) => e.id !== draft.id));
+                  if (draft) persist(events.filter((e) => e.id !== draft.id));
                   setOpen(false);
                 }}
               >
@@ -104,10 +121,10 @@ export default function Example() {
             <Button
               onClick={() => {
                 if (!draft) return;
-                setEvents((prev) =>
-                  prev.some((e) => e.id === draft.id)
-                    ? prev.map((e) => (e.id === draft.id ? draft : e))
-                    : [...prev, draft],
+                persist(
+                  events.some((e) => e.id === draft.id)
+                    ? events.map((e) => (e.id === draft.id ? draft : e))
+                    : [...events, draft],
                 );
                 setOpen(false);
               }}

@@ -15,12 +15,17 @@ const events: CalEvent[] = [
 
 export default function Example() {
   return (
-    <Calendar<CalEvent>
+    <Calendar.Root<CalEvent>
       defaultEvents={events}
       titleField='title'
       startField='start'
       endField='end'
       defaultView='agenda'
-    />
+    >
+      <div className='flex w-full flex-col gap-4'>
+        <Calendar.Nav />
+        <Calendar.View />
+      </div>
+    </Calendar.Root>
   );
 }

@@ -6,8 +6,25 @@ registryName: calendar
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 
-`Calendar` is a generic calendar (`Calendar<T>`) that renders any array of typed events. The
+`Calendar` is a generic, responsive calendar that renders any array of typed events. The
 event id, title, start, end, and all-day fields are mapped against your own data shape.
+
+It is split into composable parts that share state through context, so you can drop in the
+default toolbar or build your own navigation without prop drilling:
+
+```tsx
+import { Calendar, useCalendar } from '@/components/block/shuip/calendar';
+
+<Calendar.Root events={events} onEventsChange={setEvents} titleField='title' startField='start' endField='end' editable>
+  <Calendar.Nav />   {/* default toolbar — or your own navbar via useCalendar() */}
+  <Calendar.View />  {/* the views: month / week / day / agenda */}
+</Calendar.Root>;
+```
+
+- **`Calendar.Root`** holds all state and config. The props below live here.
+- **`Calendar.Nav`** is the default navigation (today, previous/next, period label, view switcher).
+- **`Calendar.View`** is the calendar surface itself.
+- **`useCalendar()`** exposes `view`, `date`, `periodLabel`, `goToToday`, `goToPrevious`, `goToNext`, `setView`, and more — read it from any descendant of `Calendar.Root` to build a custom toolbar.
 
 ### Built-in features
 
@@ -21,13 +38,15 @@ event id, title, start, end, and all-day fields are mapped against your own data
 - **Per-event colors**: derive a color per event with `color(item)`.
 - **Custom event content**: replace the default event label with `renderEvent(item)`.
 
-> Define your event type with a `type` alias, not an `interface` — `Calendar<T>` requires `T extends Record<string, unknown>`, which a TypeScript `interface` does not satisfy.
+> Define your event type with a `type` alias, not an `interface` — `Calendar.Root<T>` requires `T extends Record<string, unknown>`, which a TypeScript `interface` does not satisfy.
 
 ## Examples
 
 <ItemExamples registryName={'calendar'} />
 
 ## Props
+
+Props are passed to `Calendar.Root`.
 
 <TypeTable
   type={{
