@@ -70,6 +70,22 @@ function useControllableState<V>(
   return [value, setValue];
 }
 
+function useIsMobile(breakpoint = 768): boolean {
+  const subscribe = React.useCallback(
+    (cb: () => void) => {
+      const mql = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+      mql.addEventListener('change', cb);
+      return () => mql.removeEventListener('change', cb);
+    },
+    [breakpoint],
+  );
+  const getSnapshot = React.useCallback(
+    () => window.matchMedia(`(max-width: ${breakpoint - 1}px)`).matches,
+    [breakpoint],
+  );
+  return React.useSyncExternalStore(subscribe, getSnapshot, () => false);
+}
+
 export function Calendar<T extends Record<string, unknown>>(props: CalendarProps<T>) {
   const {
     events,
@@ -100,6 +116,9 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
   const [date, setDate] = useControllableState<Date>(dateProp, defaultDate ?? startOfDay(new Date()), onDateChange);
   const [items] = useControllableState<T[]>(events, defaultEvents, onEventsChange);
 
+  const isMobile = useIsMobile();
+  const effectiveView = isMobile && view === 'week' ? 'day' : view;
+
   const getStart = React.useCallback((it: T) => it[startField] as unknown as Date, [startField]);
   const getEnd = React.useCallback((it: T) => it[endField] as unknown as Date, [endField]);
   const isAllDay = React.useCallback((it: T) => (allDayField ? Boolean(it[allDayField]) : false), [allDayField]);
@@ -107,7 +126,7 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
   const getTitle = React.useCallback((it: T) => String(it[titleField] ?? ''), [titleField]);
 
   const periodLabel = React.useMemo(() => {
-    switch (view) {
+    switch (effectiveView) {
       case 'month':
         return format(date, 'MMMM yyyy');
       case 'week': {
@@ -120,11 +139,11 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
       case 'agenda':
         return format(date, 'MMMM yyyy');
     }
-  }, [view, date, weekStartsOn]);
+  }, [effectiveView, date, weekStartsOn]);
 
   const shift = React.useCallback(
     (dir: 1 | -1) => {
-      switch (view) {
+      switch (effectiveView) {
         case 'month':
           setDate(addMonths(date, dir));
           break;
@@ -137,7 +156,7 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
           break;
       }
     },
-    [view, date, setDate],
+    [effectiveView, date, setDate],
   );
 
   const onToday = React.useCallback(() => setDate(startOfDay(new Date())), [setDate]);
@@ -164,7 +183,7 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
         onNext={() => shift(1)}
       />
       {(() => {
-        switch (view) {
+        switch (effectiveView) {
           case 'month':
             return (
               <MonthView
