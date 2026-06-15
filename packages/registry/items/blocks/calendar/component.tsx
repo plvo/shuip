@@ -1,6 +1,18 @@
 'use client';
 
-import { addDays, addMonths, endOfWeek, format, startOfDay, startOfWeek } from 'date-fns';
+import {
+  addDays,
+  addMonths,
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  isSameMonth,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+} from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
@@ -86,6 +98,11 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
 
   const [view, setView] = useControllableState<CalendarView>(viewProp, defaultView, onViewChange);
   const [date, setDate] = useControllableState<Date>(dateProp, defaultDate ?? startOfDay(new Date()), onDateChange);
+  const [items] = useControllableState<T[]>(events, defaultEvents, onEventsChange);
+
+  const getStart = React.useCallback((it: T) => it[startField] as unknown as Date, [startField]);
+  const getId = React.useCallback((it: T) => String(it[idField]), [idField]);
+  const getTitle = React.useCallback((it: T) => String(it[titleField] ?? ''), [titleField]);
 
   const periodLabel = React.useMemo(() => {
     switch (view) {
@@ -137,7 +154,20 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
       {(() => {
         switch (view) {
           case 'month':
-            return null;
+            return (
+              <MonthView
+                date={date}
+                weekStartsOn={weekStartsOn}
+                items={items}
+                getStart={getStart}
+                getId={getId}
+                getTitle={getTitle}
+                color={color}
+                editable={editable}
+                onEventClick={onEventClick}
+                onSlotSelect={onSlotSelect}
+              />
+            );
           case 'week':
             return null;
           case 'day':
@@ -146,6 +176,109 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
             return null;
         }
       })()}
+    </div>
+  );
+}
+
+function monthGrid(date: Date, weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6): Date[] {
+  const start = startOfWeek(startOfMonth(date), { weekStartsOn });
+  const end = endOfWeek(endOfMonth(date), { weekStartsOn });
+  return eachDayOfInterval({ start, end });
+}
+
+function colorClasses(c?: CalendarEventColor): string {
+  switch (c) {
+    case 'blue':
+      return 'bg-blue-500 text-white';
+    case 'green':
+      return 'bg-green-600 text-white';
+    case 'red':
+      return 'bg-red-500 text-white';
+    case 'amber':
+      return 'bg-amber-500 text-black';
+    default:
+      return 'bg-primary text-primary-foreground';
+  }
+}
+
+function MonthView<T extends Record<string, unknown>>({
+  date,
+  weekStartsOn,
+  items,
+  getStart,
+  getId,
+  getTitle,
+  color,
+  editable,
+  onEventClick,
+  onSlotSelect,
+}: {
+  date: Date;
+  weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  items: T[];
+  getStart: (item: T) => Date;
+  getId: (item: T) => string;
+  getTitle: (item: T) => string;
+  color?: (item: T) => CalendarEventColor | undefined;
+  editable: boolean;
+  onEventClick?: (item: T) => void;
+  onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
+}) {
+  const days = monthGrid(date, weekStartsOn);
+  const weekdayLabels = days.slice(0, 7).map((day) => format(day, 'EEE'));
+
+  return (
+    <div className='overflow-hidden rounded-md border'>
+      <div className='grid grid-cols-7'>
+        {weekdayLabels.map((label) => (
+          <div
+            key={label}
+            className='border-b border-l p-2 text-center text-xs font-medium text-muted-foreground first:border-l-0'
+          >
+            {label}
+          </div>
+        ))}
+        {days.map((day) => {
+          const dayEvents = items
+            .filter((item) => isSameDay(getStart(item), day))
+            .sort((a, b) => getStart(a).getTime() - getStart(b).getTime());
+          const visible = dayEvents.slice(0, 3);
+          const overflow = dayEvents.length - visible.length;
+
+          const selectSlot = editable
+            ? () => onSlotSelect?.({ start: startOfDay(day), end: addDays(startOfDay(day), 1), allDay: true })
+            : undefined;
+
+          return (
+            <div
+              key={day.toISOString()}
+              className={cn(
+                'flex min-h-24 flex-col gap-1 border-b border-l p-1 [&:nth-child(7n+1)]:border-l-0',
+                editable && 'cursor-pointer hover:bg-accent/50',
+              )}
+              onClick={selectSlot}
+            >
+              <span className={cn('text-xs', !isSameMonth(day, date) && 'text-muted-foreground')}>
+                {format(day, 'd')}
+              </span>
+              {visible.map((item) => (
+                <button
+                  type='button'
+                  key={getId(item)}
+                  className={cn('w-full truncate rounded px-1 py-0.5 text-left text-xs', colorClasses(color?.(item)))}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEventClick?.(item);
+                  }}
+                >
+                  {getTitle(item)}
+                </button>
+              ))}
+              {overflow > 0 ? <span className='px-1 text-xs text-muted-foreground'>+{overflow} more</span> : null}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
