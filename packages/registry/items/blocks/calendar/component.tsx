@@ -101,6 +101,8 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
   const [items] = useControllableState<T[]>(events, defaultEvents, onEventsChange);
 
   const getStart = React.useCallback((it: T) => it[startField] as unknown as Date, [startField]);
+  const getEnd = React.useCallback((it: T) => it[endField] as unknown as Date, [endField]);
+  const isAllDay = React.useCallback((it: T) => (allDayField ? Boolean(it[allDayField]) : false), [allDayField]);
   const getId = React.useCallback((it: T) => String(it[idField]), [idField]);
   const getTitle = React.useCallback((it: T) => String(it[titleField] ?? ''), [titleField]);
 
@@ -140,6 +142,11 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
 
   const onToday = React.useCallback(() => setDate(startOfDay(new Date())), [setDate]);
 
+  const weekDays = React.useMemo(
+    () => eachDayOfInterval({ start: startOfWeek(date, { weekStartsOn }), end: endOfWeek(date, { weekStartsOn }) }),
+    [date, weekStartsOn],
+  );
+
   return (
     <div className={cn('flex flex-col gap-4', className)}>
       <CalendarToolbar
@@ -169,9 +176,37 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
               />
             );
           case 'week':
-            return null;
+            return (
+              <TimeGridView
+                days={weekDays}
+                items={items}
+                getStart={getStart}
+                getEnd={getEnd}
+                getId={getId}
+                getTitle={getTitle}
+                isAllDay={isAllDay}
+                color={color}
+                editable={editable}
+                onEventClick={onEventClick}
+                onSlotSelect={onSlotSelect}
+              />
+            );
           case 'day':
-            return null;
+            return (
+              <TimeGridView
+                days={[date]}
+                items={items}
+                getStart={getStart}
+                getEnd={getEnd}
+                getId={getId}
+                getTitle={getTitle}
+                isAllDay={isAllDay}
+                color={color}
+                editable={editable}
+                onEventClick={onEventClick}
+                onSlotSelect={onSlotSelect}
+              />
+            );
           case 'agenda':
             return null;
         }
@@ -199,6 +234,181 @@ function colorClasses(c?: CalendarEventColor): string {
     default:
       return 'bg-primary text-primary-foreground';
   }
+}
+
+const HOUR_HEIGHT = 48;
+
+function minutesSinceDayStart(date: Date): number {
+  return date.getHours() * 60 + date.getMinutes();
+}
+function eventTop(start: Date): number {
+  return (minutesSinceDayStart(start) / 60) * HOUR_HEIGHT;
+}
+function eventHeight(start: Date, end: Date): number {
+  const mins = Math.max(15, (end.getTime() - start.getTime()) / 60_000);
+  return (mins / 60) * HOUR_HEIGHT;
+}
+
+type LaidOut<T> = { item: T; col: number; cols: number };
+
+function layoutDay<T>(dayEvents: T[], getStart: (t: T) => Date, getEnd: (t: T) => Date): LaidOut<T>[] {
+  const sorted = [...dayEvents].sort((a, b) => getStart(a).getTime() - getStart(b).getTime());
+  const colEnds: number[] = [];
+  const placed = sorted.map((item) => {
+    const s = getStart(item).getTime();
+    let col = colEnds.findIndex((end) => end <= s);
+    if (col === -1) {
+      col = colEnds.length;
+      colEnds.push(0);
+    }
+    colEnds[col] = getEnd(item).getTime();
+    return { item, col };
+  });
+  const cols = Math.max(1, colEnds.length);
+  return placed.map((p) => ({ ...p, cols }));
+}
+
+function EventBlock({
+  title,
+  start,
+  end,
+  laidOut,
+  color,
+  onClick,
+}: {
+  title: string;
+  start: Date;
+  end: Date;
+  laidOut: { col: number; cols: number };
+  color?: CalendarEventColor;
+  onClick?: () => void;
+}) {
+  const widthPct = 100 / laidOut.cols;
+  return (
+    <button
+      type='button'
+      onClick={onClick}
+      style={{
+        top: eventTop(start),
+        height: eventHeight(start, end),
+        left: `${laidOut.col * widthPct}%`,
+        width: `calc(${widthPct}% - 2px)`,
+      }}
+      className={cn('absolute z-10 overflow-hidden rounded px-1 py-0.5 text-left text-xs', colorClasses(color))}
+    >
+      <span className='block truncate font-medium'>{title}</span>
+      <span className='block truncate opacity-80'>
+        {format(start, 'HH:mm')} – {format(end, 'HH:mm')}
+      </span>
+    </button>
+  );
+}
+
+const HOURS = Array.from({ length: 24 }, (_, h) => h);
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function TimeGridView<T extends Record<string, unknown>>({
+  days,
+  items,
+  getStart,
+  getEnd,
+  getId,
+  getTitle,
+  isAllDay,
+  color,
+  editable,
+  onEventClick,
+}: {
+  days: Date[];
+  items: T[];
+  getStart: (item: T) => Date;
+  getEnd: (item: T) => Date;
+  getId: (item: T) => string;
+  getTitle: (item: T) => string;
+  isAllDay: (item: T) => boolean;
+  color?: (item: T) => CalendarEventColor | undefined;
+  editable: boolean;
+  onEventClick?: (item: T) => void;
+  onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
+}) {
+  const spansAllDay = React.useCallback(
+    (item: T) => isAllDay(item) || getEnd(item).getTime() - getStart(item).getTime() >= DAY_MS,
+    [isAllDay, getEnd, getStart],
+  );
+
+  return (
+    <div className='overflow-hidden rounded-md border'>
+      <div className='flex border-b'>
+        <div className='w-14 shrink-0 border-r' />
+        {days.map((day) => (
+          <div key={day.toISOString()} className='flex-1 border-l p-2 text-center text-xs font-medium first:border-l-0'>
+            {format(day, 'EEE d')}
+          </div>
+        ))}
+      </div>
+
+      <div className='flex border-b'>
+        <div className='flex w-14 shrink-0 items-center justify-center border-r py-1 text-xs text-muted-foreground'>
+          all-day
+        </div>
+        {days.map((day) => {
+          const allDayEvents = items.filter((item) => spansAllDay(item) && isSameDay(getStart(item), day));
+          return (
+            <div key={day.toISOString()} className='flex flex-1 flex-col gap-1 border-l p-1 first:border-l-0'>
+              {allDayEvents.map((item) => (
+                <button
+                  type='button'
+                  key={getId(item)}
+                  onClick={() => onEventClick?.(item)}
+                  className={cn('w-full truncate rounded px-1 py-0.5 text-left text-xs', colorClasses(color?.(item)))}
+                >
+                  {getTitle(item)}
+                </button>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className='relative max-h-[600px] overflow-y-auto'>
+        <div className='flex'>
+          <div className='w-14 shrink-0 border-r'>
+            {HOURS.map((h) => (
+              <div key={h} className='h-12 pr-1 text-right text-xs text-muted-foreground'>
+                {`${String(h).padStart(2, '0')}:00`}
+              </div>
+            ))}
+          </div>
+          {days.map((day) => {
+            const timed = items.filter((item) => !spansAllDay(item) && isSameDay(getStart(item), day));
+            const laidOut = layoutDay(timed, getStart, getEnd);
+            return (
+              <div
+                key={day.toISOString()}
+                className={cn('relative flex-1 border-l first:border-l-0', editable && 'cursor-pointer')}
+                style={{ height: 24 * HOUR_HEIGHT }}
+              >
+                {HOURS.map((h) => (
+                  <div key={h} className='h-12 border-t first:border-t-0' />
+                ))}
+                {laidOut.map((entry) => (
+                  <EventBlock
+                    key={getId(entry.item)}
+                    title={getTitle(entry.item)}
+                    start={getStart(entry.item)}
+                    end={getEnd(entry.item)}
+                    laidOut={entry}
+                    color={color?.(entry.item)}
+                    onClick={() => onEventClick?.(entry.item)}
+                  />
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function MonthView<T extends Record<string, unknown>>({
