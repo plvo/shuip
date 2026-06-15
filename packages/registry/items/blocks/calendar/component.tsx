@@ -171,6 +171,13 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
     [items, getId, getStart, getEnd, effectiveView, startField, endField, setItems],
   );
 
+  const handleResize = React.useCallback(
+    (id: string, newEnd: Date) => {
+      setItems(items.map((it) => (getId(it) === id ? ({ ...it, [endField]: newEnd } as T) : it)));
+    },
+    [items, getId, endField, setItems],
+  );
+
   const periodLabel = React.useMemo(() => {
     switch (effectiveView) {
       case 'month':
@@ -248,6 +255,7 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
             color={color}
             editable={editable}
             draggedRef={draggedRef}
+            onResize={editable ? handleResize : undefined}
             onEventClick={onEventClick}
             onSlotSelect={onSlotSelect}
           />
@@ -265,6 +273,7 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
             color={color}
             editable={editable}
             draggedRef={draggedRef}
+            onResize={editable ? handleResize : undefined}
             onEventClick={onEventClick}
             onSlotSelect={onSlotSelect}
           />
@@ -421,19 +430,25 @@ function DraggableEventBlock({
   title,
   start,
   end,
+  realEnd,
   laidOut,
   color,
   draggedRef,
   onClick,
+  onResize,
+  onPreview,
 }: {
   id: string;
   title: string;
   start: Date;
   end: Date;
+  realEnd: Date;
   laidOut: { col: number; cols: number };
   color?: CalendarEventColor;
   draggedRef: React.MutableRefObject<boolean>;
   onClick?: () => void;
+  onResize?: (id: string, end: Date) => void;
+  onPreview: (end: Date | null) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
   return (
@@ -458,8 +473,61 @@ function DraggableEventBlock({
       className={cn(eventBlockClass, colorClasses(color))}
     >
       <EventBlockContent title={title} start={start} end={end} />
+      <ResizeHandle id={id} start={start} end={realEnd} onResize={onResize} onPreview={onPreview} />
     </button>
   );
+}
+
+function ResizeHandle({
+  id,
+  start,
+  end,
+  onResize,
+  onPreview,
+}: {
+  id: string;
+  start: Date;
+  end: Date;
+  onResize?: (id: string, end: Date) => void;
+  onPreview: (end: Date | null) => void;
+}) {
+  const handlePointerDown = (e: React.PointerEvent<HTMLSpanElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const target = e.target as HTMLElement;
+    target.setPointerCapture(e.pointerId);
+
+    const startY = e.clientY;
+    const originalEnd = end;
+    const minEnd = new Date(start.getTime() + SNAP_MINUTES * 60_000);
+    let finalEnd = originalEnd;
+
+    const compute = (clientY: number) => {
+      const deltaMin = ((clientY - startY) / HOUR_HEIGHT) * 60;
+      let proposed = snapToMinutes(new Date(originalEnd.getTime() + deltaMin * 60_000));
+      if (proposed.getTime() - start.getTime() < SNAP_MINUTES * 60_000) proposed = minEnd;
+      return proposed;
+    };
+
+    const onMove = (moveE: PointerEvent) => {
+      finalEnd = compute(moveE.clientY);
+      onPreview(finalEnd);
+    };
+
+    const onUp = (upE: PointerEvent) => {
+      finalEnd = compute(upE.clientY);
+      target.releasePointerCapture(e.pointerId);
+      target.removeEventListener('pointermove', onMove);
+      target.removeEventListener('pointerup', onUp);
+      onResize?.(id, finalEnd);
+      onPreview(null);
+    };
+
+    target.addEventListener('pointermove', onMove);
+    target.addEventListener('pointerup', onUp);
+  };
+
+  return <span className='absolute inset-x-0 bottom-0 z-20 h-1.5 cursor-ns-resize' onPointerDown={handlePointerDown} />;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
@@ -474,6 +542,9 @@ function DayColumnContent<T extends Record<string, unknown>>({
   color,
   editable,
   draggedRef,
+  resizing,
+  onResize,
+  onPreview,
   onEventClick,
 }: {
   laidOut: LaidOut<T>[];
@@ -484,6 +555,9 @@ function DayColumnContent<T extends Record<string, unknown>>({
   color?: (item: T) => CalendarEventColor | undefined;
   editable: boolean;
   draggedRef: React.MutableRefObject<boolean>;
+  resizing: { id: string; end: Date } | null;
+  onResize?: (id: string, end: Date) => void;
+  onPreview: (preview: { id: string; end: Date } | null) => void;
   onEventClick?: (item: T) => void;
 }) {
   return (
@@ -491,31 +565,38 @@ function DayColumnContent<T extends Record<string, unknown>>({
       {HOURS.map((h) => (
         <div key={h} className='h-12 border-t first:border-t-0' />
       ))}
-      {laidOut.map((entry) =>
-        editable ? (
+      {laidOut.map((entry) => {
+        const id = getId(entry.item);
+        const start = getStart(entry.item);
+        const realEnd = getEnd(entry.item);
+        const shownEnd = resizing?.id === id ? resizing.end : realEnd;
+        return editable ? (
           <DraggableEventBlock
-            key={getId(entry.item)}
-            id={getId(entry.item)}
+            key={id}
+            id={id}
             title={getTitle(entry.item)}
-            start={getStart(entry.item)}
-            end={getEnd(entry.item)}
+            start={start}
+            end={shownEnd}
+            realEnd={realEnd}
             laidOut={entry}
             color={color?.(entry.item)}
             draggedRef={draggedRef}
             onClick={() => onEventClick?.(entry.item)}
+            onResize={onResize}
+            onPreview={(end) => onPreview(end ? { id, end } : null)}
           />
         ) : (
           <EventBlock
-            key={getId(entry.item)}
+            key={id}
             title={getTitle(entry.item)}
-            start={getStart(entry.item)}
-            end={getEnd(entry.item)}
+            start={start}
+            end={realEnd}
             laidOut={entry}
             color={color?.(entry.item)}
             onClick={() => onEventClick?.(entry.item)}
           />
-        ),
-      )}
+        );
+      })}
     </>
   );
 }
@@ -535,6 +616,9 @@ function DroppableDayColumn<T extends Record<string, unknown>>({
   color?: (item: T) => CalendarEventColor | undefined;
   editable: boolean;
   draggedRef: React.MutableRefObject<boolean>;
+  resizing: { id: string; end: Date } | null;
+  onResize?: (id: string, end: Date) => void;
+  onPreview: (preview: { id: string; end: Date } | null) => void;
   onEventClick?: (item: T) => void;
 }) {
   const { setNodeRef } = useDroppable({ id: `col-${day.toISOString()}`, data: { day } });
@@ -554,6 +638,9 @@ function PlainDayColumn<T extends Record<string, unknown>>(content: {
   color?: (item: T) => CalendarEventColor | undefined;
   editable: boolean;
   draggedRef: React.MutableRefObject<boolean>;
+  resizing: { id: string; end: Date } | null;
+  onResize?: (id: string, end: Date) => void;
+  onPreview: (preview: { id: string; end: Date } | null) => void;
   onEventClick?: (item: T) => void;
 }) {
   return (
@@ -574,6 +661,7 @@ function TimeGridView<T extends Record<string, unknown>>({
   color,
   editable,
   draggedRef,
+  onResize,
   onEventClick,
 }: {
   days: Date[];
@@ -586,9 +674,12 @@ function TimeGridView<T extends Record<string, unknown>>({
   color?: (item: T) => CalendarEventColor | undefined;
   editable: boolean;
   draggedRef: React.MutableRefObject<boolean>;
+  onResize?: (id: string, end: Date) => void;
   onEventClick?: (item: T) => void;
   onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
 }) {
+  const [resizing, setResizing] = React.useState<{ id: string; end: Date } | null>(null);
+
   const spansAllDay = React.useCallback(
     (item: T) => isAllDay(item) || getEnd(item).getTime() - getStart(item).getTime() >= DAY_MS,
     [isAllDay, getEnd, getStart],
@@ -649,6 +740,9 @@ function TimeGridView<T extends Record<string, unknown>>({
               color,
               editable,
               draggedRef,
+              resizing,
+              onResize,
+              onPreview: setResizing,
               onEventClick,
             };
             return editable ? (
