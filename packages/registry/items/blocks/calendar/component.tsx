@@ -356,6 +356,13 @@ function eventHeight(start: Date, end: Date): number {
   return (mins / 60) * HOUR_HEIGHT;
 }
 
+function offsetToMinutes(clientY: number, columnEl: HTMLElement): number {
+  const rect = columnEl.getBoundingClientRect();
+  return ((clientY - rect.top) / HOUR_HEIGHT) * 60;
+}
+
+type Creating = { dayIndex: number; startMin: number; endMin: number };
+
 type LaidOut<T> = { item: T; col: number; cols: number };
 
 function layoutDay<T>(dayEvents: T[], getStart: (t: T) => Date, getEnd: (t: T) => Date): LaidOut<T>[] {
@@ -416,6 +423,7 @@ function EventBlock({
   return (
     <button
       type='button'
+      data-event=''
       onClick={onClick}
       style={eventBlockStyle(start, end, laidOut)}
       className={cn(eventBlockClass, colorClasses(color))}
@@ -454,6 +462,7 @@ function DraggableEventBlock({
   return (
     <button
       type='button'
+      data-event=''
       ref={setNodeRef}
       {...attributes}
       {...listeners}
@@ -527,11 +536,28 @@ function ResizeHandle({
     target.addEventListener('pointerup', onUp);
   };
 
-  return <span className='absolute inset-x-0 bottom-0 z-20 h-1.5 cursor-ns-resize' onPointerDown={handlePointerDown} />;
+  return (
+    <span
+      data-event=''
+      className='absolute inset-x-0 bottom-0 z-20 h-1.5 cursor-ns-resize'
+      onPointerDown={handlePointerDown}
+    />
+  );
 }
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+function CreatingOverlay({ startMin, endMin }: { startMin: number; endMin: number }) {
+  const lo = Math.min(startMin, endMin);
+  const span = Math.max(15, Math.abs(endMin - startMin));
+  return (
+    <div
+      className='pointer-events-none absolute inset-x-0 z-30 rounded border border-primary bg-primary/30'
+      style={{ top: (lo / 60) * HOUR_HEIGHT, height: (span / 60) * HOUR_HEIGHT }}
+    />
+  );
+}
 
 function DayColumnContent<T extends Record<string, unknown>>({
   laidOut,
@@ -543,6 +569,7 @@ function DayColumnContent<T extends Record<string, unknown>>({
   editable,
   draggedRef,
   resizing,
+  creatingRange,
   onResize,
   onPreview,
   onEventClick,
@@ -556,6 +583,7 @@ function DayColumnContent<T extends Record<string, unknown>>({
   editable: boolean;
   draggedRef: React.MutableRefObject<boolean>;
   resizing: { id: string; end: Date } | null;
+  creatingRange?: { startMin: number; endMin: number } | null;
   onResize?: (id: string, end: Date) => void;
   onPreview: (preview: { id: string; end: Date } | null) => void;
   onEventClick?: (item: T) => void;
@@ -565,6 +593,7 @@ function DayColumnContent<T extends Record<string, unknown>>({
       {HOURS.map((h) => (
         <div key={h} className='h-12 border-t first:border-t-0' />
       ))}
+      {creatingRange ? <CreatingOverlay startMin={creatingRange.startMin} endMin={creatingRange.endMin} /> : null}
       {laidOut.map((entry) => {
         const id = getId(entry.item);
         const start = getStart(entry.item);
@@ -605,9 +634,17 @@ const dayColumnClass = 'relative flex-1 border-l first:border-l-0';
 
 function DroppableDayColumn<T extends Record<string, unknown>>({
   day,
+  dayIndex,
+  creating,
+  onCreatingChange,
+  onSlotSelect,
   ...content
 }: {
   day: Date;
+  dayIndex: number;
+  creating: Creating | null;
+  onCreatingChange: (next: Creating | null) => void;
+  onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
   laidOut: LaidOut<T>[];
   getStart: (item: T) => Date;
   getEnd: (item: T) => Date;
@@ -622,9 +659,69 @@ function DroppableDayColumn<T extends Record<string, unknown>>({
   onEventClick?: (item: T) => void;
 }) {
   const { setNodeRef } = useDroppable({ id: `col-${day.toISOString()}`, data: { day } });
+  const columnRef = React.useRef<HTMLDivElement | null>(null);
+  const startMinRef = React.useRef(0);
+  const canCreate = Boolean(onSlotSelect);
+
+  const mergedRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      setNodeRef(node);
+      columnRef.current = node;
+    },
+    [setNodeRef],
+  );
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!canCreate) return;
+    if ((e.target as HTMLElement).closest('[data-event]')) return;
+    const columnEl = columnRef.current;
+    if (!columnEl) return;
+    e.preventDefault();
+    columnEl.setPointerCapture(e.pointerId);
+    const startMin = offsetToMinutes(e.clientY, columnEl);
+    startMinRef.current = startMin;
+    onCreatingChange({ dayIndex, startMin, endMin: startMin });
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!creating || creating.dayIndex !== dayIndex) return;
+    const columnEl = columnRef.current;
+    if (!columnEl) return;
+    onCreatingChange({ dayIndex, startMin: startMinRef.current, endMin: offsetToMinutes(e.clientY, columnEl) });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!creating || creating.dayIndex !== dayIndex) return;
+    const columnEl = columnRef.current;
+    if (columnEl?.hasPointerCapture(e.pointerId)) columnEl.releasePointerCapture(e.pointerId);
+    let lo = Math.min(creating.startMin, creating.endMin);
+    let hi = Math.max(creating.startMin, creating.endMin);
+    if (hi - lo < 5) {
+      lo = creating.startMin;
+      hi = creating.startMin + 60;
+    }
+    const base = startOfDay(day);
+    const start = snapToMinutes(addMinutes(base, lo));
+    let end = snapToMinutes(addMinutes(base, hi));
+    if (end.getTime() - start.getTime() < SNAP_MINUTES * 60_000) {
+      end = new Date(start.getTime() + SNAP_MINUTES * 60_000);
+    }
+    onCreatingChange(null);
+    onSlotSelect?.({ start, end, allDay: false });
+  };
+
+  const creatingRange = creating?.dayIndex === dayIndex ? creating : null;
+
   return (
-    <div ref={setNodeRef} className={cn(dayColumnClass, 'cursor-pointer')} style={{ height: 24 * HOUR_HEIGHT }}>
-      <DayColumnContent {...content} />
+    <div
+      ref={mergedRef}
+      className={cn(dayColumnClass, 'cursor-pointer')}
+      style={{ height: 24 * HOUR_HEIGHT }}
+      onPointerDown={canCreate ? handlePointerDown : undefined}
+      onPointerMove={canCreate ? handlePointerMove : undefined}
+      onPointerUp={canCreate ? handlePointerUp : undefined}
+    >
+      <DayColumnContent {...content} creatingRange={creatingRange} />
     </div>
   );
 }
@@ -679,6 +776,7 @@ function TimeGridView<T extends Record<string, unknown>>({
   onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
 }) {
   const [resizing, setResizing] = React.useState<{ id: string; end: Date } | null>(null);
+  const [creating, setCreating] = React.useState<Creating | null>(null);
 
   const spansAllDay = React.useCallback(
     (item: T) => isAllDay(item) || getEnd(item).getTime() - getStart(item).getTime() >= DAY_MS,
@@ -728,7 +826,7 @@ function TimeGridView<T extends Record<string, unknown>>({
               </div>
             ))}
           </div>
-          {days.map((day) => {
+          {days.map((day, dayIndex) => {
             const timed = items.filter((item) => !spansAllDay(item) && isSameDay(getStart(item), day));
             const laidOut = layoutDay(timed, getStart, getEnd);
             const columnProps = {
@@ -746,7 +844,15 @@ function TimeGridView<T extends Record<string, unknown>>({
               onEventClick,
             };
             return editable ? (
-              <DroppableDayColumn key={day.toISOString()} day={day} {...columnProps} />
+              <DroppableDayColumn
+                key={day.toISOString()}
+                day={day}
+                dayIndex={dayIndex}
+                creating={creating}
+                onCreatingChange={setCreating}
+                onSlotSelect={onSlotSelect}
+                {...columnProps}
+              />
             ) : (
               <PlainDayColumn key={day.toISOString()} {...columnProps} />
             );
