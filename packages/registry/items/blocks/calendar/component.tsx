@@ -147,6 +147,11 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
     [date, weekStartsOn],
   );
 
+  const agendaDays = React.useMemo(
+    () => eachDayOfInterval({ start: startOfDay(date), end: addDays(startOfDay(date), 29) }),
+    [date],
+  );
+
   return (
     <div className={cn('flex flex-col gap-4', className)}>
       <CalendarToolbar
@@ -208,7 +213,18 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
               />
             );
           case 'agenda':
-            return null;
+            return (
+              <AgendaView
+                days={agendaDays}
+                items={items}
+                getStart={getStart}
+                getEnd={getEnd}
+                getId={getId}
+                getTitle={getTitle}
+                color={color}
+                onEventClick={onEventClick}
+              />
+            );
         }
       })()}
     </div>
@@ -489,6 +505,63 @@ function MonthView<T extends Record<string, unknown>>({
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function AgendaView<T extends Record<string, unknown>>({
+  days,
+  items,
+  getStart,
+  getEnd,
+  getId,
+  getTitle,
+  color,
+  onEventClick,
+}: {
+  days: Date[];
+  items: T[];
+  getStart: (item: T) => Date;
+  getEnd: (item: T) => Date;
+  getId: (item: T) => string;
+  getTitle: (item: T) => string;
+  color?: (item: T) => CalendarEventColor | undefined;
+  onEventClick?: (item: T) => void;
+}) {
+  const groups = days
+    .map((day) => ({
+      day,
+      events: items
+        .filter((item) => isSameDay(getStart(item), day))
+        .sort((a, b) => getStart(a).getTime() - getStart(b).getTime()),
+    }))
+    .filter((group) => group.events.length > 0);
+
+  if (groups.length === 0) {
+    return <p className='text-sm text-muted-foreground'>No upcoming events</p>;
+  }
+
+  return (
+    <div className='flex max-h-[600px] flex-col gap-4 overflow-y-auto'>
+      {groups.map((group) => (
+        <div key={group.day.toISOString()} className='flex flex-col gap-1'>
+          <div className='text-sm font-medium'>{format(group.day, 'EEEE, MMM d')}</div>
+          {group.events.map((item) => (
+            <button
+              type='button'
+              key={getId(item)}
+              onClick={() => onEventClick?.(item)}
+              className='flex w-full items-center gap-2 text-left text-sm'
+            >
+              <span className={cn('size-2 rounded-full', colorClasses(color?.(item)))} />
+              <span className='text-muted-foreground'>
+                {format(getStart(item), 'HH:mm')} – {format(getEnd(item), 'HH:mm')}
+              </span>
+              <span>{getTitle(item)}</span>
+            </button>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
