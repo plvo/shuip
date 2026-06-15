@@ -236,6 +236,7 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
             getId={getId}
             getTitle={getTitle}
             color={color}
+            renderEvent={renderEvent}
             editable={editable}
             draggedRef={draggedRef}
             onEventClick={onEventClick}
@@ -253,6 +254,7 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
             getTitle={getTitle}
             isAllDay={isAllDay}
             color={color}
+            renderEvent={renderEvent}
             editable={editable}
             draggedRef={draggedRef}
             onResize={editable ? handleResize : undefined}
@@ -271,6 +273,7 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
             getTitle={getTitle}
             isAllDay={isAllDay}
             color={color}
+            renderEvent={renderEvent}
             editable={editable}
             draggedRef={draggedRef}
             onResize={editable ? handleResize : undefined}
@@ -288,6 +291,7 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
             getId={getId}
             getTitle={getTitle}
             color={color}
+            renderEvent={renderEvent}
             onEventClick={onEventClick}
           />
         );
@@ -392,7 +396,18 @@ function eventBlockStyle(start: Date, end: Date, laidOut: { col: number; cols: n
   };
 }
 
-function EventBlockContent({ title, start, end }: { title: string; start: Date; end: Date }) {
+function EventBlockContent({
+  title,
+  start,
+  end,
+  label,
+}: {
+  title: string;
+  start: Date;
+  end: Date;
+  label?: React.ReactNode;
+}) {
+  if (label !== undefined) return <>{label}</>;
   return (
     <>
       <span className='block truncate font-medium'>{title}</span>
@@ -409,6 +424,7 @@ function EventBlock({
   title,
   start,
   end,
+  label,
   laidOut,
   color,
   onClick,
@@ -416,6 +432,7 @@ function EventBlock({
   title: string;
   start: Date;
   end: Date;
+  label?: React.ReactNode;
   laidOut: { col: number; cols: number };
   color?: CalendarEventColor;
   onClick?: () => void;
@@ -428,7 +445,7 @@ function EventBlock({
       style={eventBlockStyle(start, end, laidOut)}
       className={cn(eventBlockClass, colorClasses(color))}
     >
-      <EventBlockContent title={title} start={start} end={end} />
+      <EventBlockContent title={title} start={start} end={end} label={label} />
     </button>
   );
 }
@@ -439,6 +456,7 @@ function DraggableEventBlock({
   start,
   end,
   realEnd,
+  label,
   laidOut,
   color,
   draggedRef,
@@ -451,6 +469,7 @@ function DraggableEventBlock({
   start: Date;
   end: Date;
   realEnd: Date;
+  label?: React.ReactNode;
   laidOut: { col: number; cols: number };
   color?: CalendarEventColor;
   draggedRef: React.MutableRefObject<boolean>;
@@ -481,7 +500,7 @@ function DraggableEventBlock({
       }}
       className={cn(eventBlockClass, colorClasses(color))}
     >
-      <EventBlockContent title={title} start={start} end={end} />
+      <EventBlockContent title={title} start={start} end={end} label={label} />
       <ResizeHandle id={id} start={start} end={realEnd} onResize={onResize} onPreview={onPreview} />
     </button>
   );
@@ -566,6 +585,7 @@ function DayColumnContent<T extends Record<string, unknown>>({
   getId,
   getTitle,
   color,
+  renderEvent,
   editable,
   draggedRef,
   resizing,
@@ -580,6 +600,7 @@ function DayColumnContent<T extends Record<string, unknown>>({
   getId: (item: T) => string;
   getTitle: (item: T) => string;
   color?: (item: T) => CalendarEventColor | undefined;
+  renderEvent?: (item: T) => React.ReactNode;
   editable: boolean;
   draggedRef: React.MutableRefObject<boolean>;
   resizing: { id: string; end: Date } | null;
@@ -599,6 +620,7 @@ function DayColumnContent<T extends Record<string, unknown>>({
         const start = getStart(entry.item);
         const realEnd = getEnd(entry.item);
         const shownEnd = resizing?.id === id ? resizing.end : realEnd;
+        const label = renderEvent ? renderEvent(entry.item) : undefined;
         return editable ? (
           <DraggableEventBlock
             key={id}
@@ -607,6 +629,7 @@ function DayColumnContent<T extends Record<string, unknown>>({
             start={start}
             end={shownEnd}
             realEnd={realEnd}
+            label={label}
             laidOut={entry}
             color={color?.(entry.item)}
             draggedRef={draggedRef}
@@ -620,6 +643,7 @@ function DayColumnContent<T extends Record<string, unknown>>({
             title={getTitle(entry.item)}
             start={start}
             end={realEnd}
+            label={label}
             laidOut={entry}
             color={color?.(entry.item)}
             onClick={() => onEventClick?.(entry.item)}
@@ -651,6 +675,7 @@ function DroppableDayColumn<T extends Record<string, unknown>>({
   getId: (item: T) => string;
   getTitle: (item: T) => string;
   color?: (item: T) => CalendarEventColor | undefined;
+  renderEvent?: (item: T) => React.ReactNode;
   editable: boolean;
   draggedRef: React.MutableRefObject<boolean>;
   resizing: { id: string; end: Date } | null;
@@ -733,6 +758,7 @@ function PlainDayColumn<T extends Record<string, unknown>>(content: {
   getId: (item: T) => string;
   getTitle: (item: T) => string;
   color?: (item: T) => CalendarEventColor | undefined;
+  renderEvent?: (item: T) => React.ReactNode;
   editable: boolean;
   draggedRef: React.MutableRefObject<boolean>;
   resizing: { id: string; end: Date } | null;
@@ -756,10 +782,12 @@ function TimeGridView<T extends Record<string, unknown>>({
   getTitle,
   isAllDay,
   color,
+  renderEvent,
   editable,
   draggedRef,
   onResize,
   onEventClick,
+  onSlotSelect: selectSlot,
 }: {
   days: Date[];
   items: T[];
@@ -769,6 +797,7 @@ function TimeGridView<T extends Record<string, unknown>>({
   getTitle: (item: T) => string;
   isAllDay: (item: T) => boolean;
   color?: (item: T) => CalendarEventColor | undefined;
+  renderEvent?: (item: T) => React.ReactNode;
   editable: boolean;
   draggedRef: React.MutableRefObject<boolean>;
   onResize?: (id: string, end: Date) => void;
@@ -809,7 +838,7 @@ function TimeGridView<T extends Record<string, unknown>>({
                   onClick={() => onEventClick?.(item)}
                   className={cn('w-full truncate rounded px-1 py-0.5 text-left text-xs', colorClasses(color?.(item)))}
                 >
-                  {getTitle(item)}
+                  {renderEvent ? renderEvent(item) : getTitle(item)}
                 </button>
               ))}
             </div>
@@ -836,6 +865,7 @@ function TimeGridView<T extends Record<string, unknown>>({
               getId,
               getTitle,
               color,
+              renderEvent,
               editable,
               draggedRef,
               resizing,
@@ -850,7 +880,7 @@ function TimeGridView<T extends Record<string, unknown>>({
                 dayIndex={dayIndex}
                 creating={creating}
                 onCreatingChange={setCreating}
-                onSlotSelect={onSlotSelect}
+                onSlotSelect={selectSlot}
                 {...columnProps}
               />
             ) : (
@@ -869,6 +899,7 @@ function MonthEventPill<T>({
   item,
   id,
   title,
+  label,
   color,
   draggedRef,
   onEventClick,
@@ -876,6 +907,7 @@ function MonthEventPill<T>({
   item: T;
   id: string;
   title: string;
+  label?: React.ReactNode;
   color?: CalendarEventColor;
   draggedRef: React.MutableRefObject<boolean>;
   onEventClick?: (item: T) => void;
@@ -898,7 +930,7 @@ function MonthEventPill<T>({
       style={{ transform: CSS.Translate.toString(transform), zIndex: isDragging ? 40 : undefined, touchAction: 'none' }}
       className={cn(monthPillClass, colorClasses(color))}
     >
-      {title}
+      {label ?? title}
     </button>
   );
 }
@@ -911,6 +943,7 @@ function MonthCell<T extends Record<string, unknown>>({
   getId,
   getTitle,
   color,
+  renderEvent,
   draggedRef,
   onEventClick,
   onSlotSelect,
@@ -922,6 +955,7 @@ function MonthCell<T extends Record<string, unknown>>({
   getId: (item: T) => string;
   getTitle: (item: T) => string;
   color?: (item: T) => CalendarEventColor | undefined;
+  renderEvent?: (item: T) => React.ReactNode;
   draggedRef: React.MutableRefObject<boolean>;
   onEventClick?: (item: T) => void;
   onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
@@ -940,6 +974,7 @@ function MonthCell<T extends Record<string, unknown>>({
           item={item}
           id={getId(item)}
           title={getTitle(item)}
+          label={renderEvent ? renderEvent(item) : undefined}
           color={color?.(item)}
           draggedRef={draggedRef}
           onEventClick={onEventClick}
@@ -958,6 +993,7 @@ function PlainMonthCell<T extends Record<string, unknown>>({
   getId,
   getTitle,
   color,
+  renderEvent,
   onEventClick,
 }: {
   day: Date;
@@ -967,6 +1003,7 @@ function PlainMonthCell<T extends Record<string, unknown>>({
   getId: (item: T) => string;
   getTitle: (item: T) => string;
   color?: (item: T) => CalendarEventColor | undefined;
+  renderEvent?: (item: T) => React.ReactNode;
   onEventClick?: (item: T) => void;
 }) {
   return (
@@ -979,7 +1016,7 @@ function PlainMonthCell<T extends Record<string, unknown>>({
           className={cn(monthPillClass, colorClasses(color?.(item)))}
           onClick={() => onEventClick?.(item)}
         >
-          {getTitle(item)}
+          {renderEvent ? renderEvent(item) : getTitle(item)}
         </button>
       ))}
       {overflow > 0 ? <span className='px-1 text-xs text-muted-foreground'>+{overflow} more</span> : null}
@@ -995,6 +1032,7 @@ function MonthView<T extends Record<string, unknown>>({
   getId,
   getTitle,
   color,
+  renderEvent,
   editable,
   draggedRef,
   onEventClick,
@@ -1007,6 +1045,7 @@ function MonthView<T extends Record<string, unknown>>({
   getId: (item: T) => string;
   getTitle: (item: T) => string;
   color?: (item: T) => CalendarEventColor | undefined;
+  renderEvent?: (item: T) => React.ReactNode;
   editable: boolean;
   draggedRef: React.MutableRefObject<boolean>;
   onEventClick?: (item: T) => void;
@@ -1043,6 +1082,7 @@ function MonthView<T extends Record<string, unknown>>({
               getId={getId}
               getTitle={getTitle}
               color={color}
+              renderEvent={renderEvent}
               draggedRef={draggedRef}
               onEventClick={onEventClick}
               onSlotSelect={onSlotSelect}
@@ -1057,6 +1097,7 @@ function MonthView<T extends Record<string, unknown>>({
               getId={getId}
               getTitle={getTitle}
               color={color}
+              renderEvent={renderEvent}
               onEventClick={onEventClick}
             />
           );
@@ -1074,6 +1115,7 @@ function AgendaView<T extends Record<string, unknown>>({
   getId,
   getTitle,
   color,
+  renderEvent,
   onEventClick,
 }: {
   days: Date[];
@@ -1083,6 +1125,7 @@ function AgendaView<T extends Record<string, unknown>>({
   getId: (item: T) => string;
   getTitle: (item: T) => string;
   color?: (item: T) => CalendarEventColor | undefined;
+  renderEvent?: (item: T) => React.ReactNode;
   onEventClick?: (item: T) => void;
 }) {
   const groups = days
@@ -1114,7 +1157,7 @@ function AgendaView<T extends Record<string, unknown>>({
               <span className='text-muted-foreground'>
                 {format(getStart(item), 'HH:mm')} – {format(getEnd(item), 'HH:mm')}
               </span>
-              <span>{getTitle(item)}</span>
+              <span>{renderEvent ? renderEvent(item) : getTitle(item)}</span>
             </button>
           ))}
         </div>

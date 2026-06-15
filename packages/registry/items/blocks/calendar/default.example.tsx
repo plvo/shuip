@@ -1,26 +1,117 @@
 'use client';
 
-import { Calendar } from '@/components/block/shuip/calendar';
+import * as React from 'react';
+import { Calendar, type CalendarEventColor } from '@/components/block/shuip/calendar';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-type Event = { id: string; title: string; start: Date; end: Date };
+type CalEvent = { id: string; title: string; start: Date; end: Date; color?: CalendarEventColor };
 
 const now = new Date();
-const at = (h: number) => new Date(now.getFullYear(), now.getMonth(), now.getDate(), h);
+const at = (dayOffset: number, h: number, m = 0) =>
+  new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOffset, h, m);
 
-const events: Event[] = [
-  { id: '1', title: 'Standup', start: at(9), end: at(10) },
-  { id: '2', title: 'Design review', start: at(11), end: at(12) },
+const seed: CalEvent[] = [
+  { id: '1', title: 'Standup', start: at(0, 9), end: at(0, 9, 30), color: 'blue' },
+  { id: '2', title: 'Design review', start: at(0, 11), end: at(0, 12), color: 'green' },
+  { id: '3', title: 'Lunch', start: at(1, 12), end: at(1, 13) },
+  { id: '4', title: 'Offsite', start: at(2, 0), end: at(3, 0), color: 'amber' },
 ];
 
+const colors: CalendarEventColor[] = ['primary', 'blue', 'green', 'red', 'amber'];
+
 export default function Example() {
+  const [events, setEvents] = React.useState<CalEvent[]>(seed);
+  const [draft, setDraft] = React.useState<CalEvent | null>(null);
+  const [open, setOpen] = React.useState(false);
+  const isExisting = draft ? events.some((e) => e.id === draft.id) : false;
+
   return (
-    <Calendar<Event>
-      defaultEvents={events}
-      titleField='title'
-      startField='start'
-      endField='end'
-      defaultView='week'
-      editable
-    />
+    <>
+      <Calendar<CalEvent>
+        events={events}
+        onEventsChange={setEvents}
+        titleField='title'
+        startField='start'
+        endField='end'
+        color={(e) => e.color}
+        defaultView='week'
+        editable
+        onEventClick={(e) => {
+          setDraft(e);
+          setOpen(true);
+        }}
+        onSlotSelect={({ start, end }) => {
+          setDraft({ id: crypto.randomUUID(), title: '', start, end });
+          setOpen(true);
+        }}
+      />
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{isExisting ? 'Edit event' : 'New event'}</DialogTitle>
+          </DialogHeader>
+          {draft ? (
+            <div className='flex flex-col gap-4'>
+              <div className='flex flex-col gap-2'>
+                <Label htmlFor='cal-title'>Title</Label>
+                <Input
+                  id='cal-title'
+                  value={draft.title}
+                  onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                />
+              </div>
+              <div className='flex flex-col gap-2'>
+                <Label htmlFor='cal-color'>Color</Label>
+                <Select
+                  value={draft.color ?? 'primary'}
+                  onValueChange={(v) => setDraft({ ...draft, color: v as CalendarEventColor })}
+                >
+                  <SelectTrigger id='cal-color'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {colors.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          ) : null}
+          <DialogFooter>
+            {isExisting ? (
+              <Button
+                variant='outline'
+                onClick={() => {
+                  if (draft) setEvents((prev) => prev.filter((e) => e.id !== draft.id));
+                  setOpen(false);
+                }}
+              >
+                Delete
+              </Button>
+            ) : null}
+            <Button
+              onClick={() => {
+                if (!draft) return;
+                setEvents((prev) =>
+                  prev.some((e) => e.id === draft.id)
+                    ? prev.map((e) => (e.id === draft.id ? draft : e))
+                    : [...prev, draft],
+                );
+                setOpen(false);
+              }}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
