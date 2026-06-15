@@ -34,8 +34,13 @@ import { cn } from '@/lib/utils';
 
 export type CalendarView = 'month' | 'week' | 'day' | 'agenda';
 export type CalendarEventColor = 'primary' | 'blue' | 'green' | 'red' | 'amber';
+export type CalendarSlot = { start: Date; end: Date; allDay: boolean };
 
-export type CalendarProps<T extends Record<string, unknown>> = {
+type CalendarEventLike = Record<string, unknown>;
+
+export type CalendarRootProps<T extends CalendarEventLike> = {
+  children: React.ReactNode;
+
   events?: T[];
   defaultEvents?: T[];
   onEventsChange?: (next: T[]) => void;
@@ -60,10 +65,45 @@ export type CalendarProps<T extends Record<string, unknown>> = {
   editable?: boolean;
 
   onEventClick?: (item: T) => void;
-  onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
-
-  className?: string;
+  onSlotSelect?: (range: CalendarSlot) => void;
 };
+
+type CalendarContextValue<T extends CalendarEventLike = CalendarEventLike> = {
+  view: CalendarView;
+  setView: (v: CalendarView) => void;
+  views: CalendarView[];
+  date: Date;
+  setDate: (d: Date) => void;
+  effectiveView: CalendarView;
+  isMobile: boolean;
+  weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  editable: boolean;
+  periodLabel: string;
+  goToToday: () => void;
+  goToPrevious: () => void;
+  goToNext: () => void;
+
+  events: T[];
+  getId: (item: T) => string;
+  getStart: (item: T) => Date;
+  getEnd: (item: T) => Date;
+  getTitle: (item: T) => string;
+  isAllDay: (item: T) => boolean;
+  getColor: (item: T) => CalendarEventColor | undefined;
+  renderEvent?: (item: T) => React.ReactNode;
+  onEventClick?: (item: T) => void;
+  onSlotSelect?: (range: CalendarSlot) => void;
+  resizeEvent: (id: string, end: Date) => void;
+  draggedRef: React.MutableRefObject<boolean>;
+};
+
+const CalendarContext = React.createContext<CalendarContextValue | null>(null);
+
+export function useCalendar<T extends CalendarEventLike = CalendarEventLike>(): CalendarContextValue<T> {
+  const ctx = React.useContext(CalendarContext);
+  if (!ctx) throw new Error('useCalendar must be used within <Calendar.Root>');
+  return ctx as CalendarContextValue<T>;
+}
 
 function useControllableState<V>(
   controlled: V | undefined,
@@ -99,47 +139,46 @@ function useIsMobile(breakpoint = 768): boolean {
   return React.useSyncExternalStore(subscribe, getSnapshot, () => false);
 }
 
-export function Calendar<T extends Record<string, unknown>>(props: CalendarProps<T>) {
-  const {
-    events,
-    defaultEvents = [] as T[],
-    onEventsChange,
-    idField = 'id' as keyof T,
-    titleField,
-    startField,
-    endField,
-    allDayField,
-    color,
-    renderEvent,
-    view: viewProp,
-    defaultView = 'month',
-    onViewChange,
-    date: dateProp,
-    defaultDate,
-    onDateChange,
-    views = ['month', 'week', 'day', 'agenda'] as CalendarView[],
-    weekStartsOn = 1,
-    editable = false,
-    onEventClick,
-    onSlotSelect,
-    className,
-  } = props;
-
+function CalendarRoot<T extends CalendarEventLike>({
+  children,
+  events,
+  defaultEvents = [] as T[],
+  onEventsChange,
+  idField = 'id' as keyof T,
+  titleField,
+  startField,
+  endField,
+  allDayField,
+  color,
+  renderEvent,
+  view: viewProp,
+  defaultView = 'month',
+  onViewChange,
+  date: dateProp,
+  defaultDate,
+  onDateChange,
+  views = ['month', 'week', 'day', 'agenda'],
+  weekStartsOn = 1,
+  editable = false,
+  onEventClick,
+  onSlotSelect,
+}: CalendarRootProps<T>) {
   const [view, setView] = useControllableState<CalendarView>(viewProp, defaultView, onViewChange);
   const [date, setDate] = useControllableState<Date>(dateProp, defaultDate ?? startOfDay(new Date()), onDateChange);
   const [items, setItems] = useControllableState<T[]>(events, defaultEvents, onEventsChange);
 
   const isMobile = useIsMobile();
   const effectiveView = isMobile && view === 'week' ? 'day' : view;
+  const draggedRef = React.useRef(false);
 
   const getStart = React.useCallback((it: T) => it[startField] as unknown as Date, [startField]);
   const getEnd = React.useCallback((it: T) => it[endField] as unknown as Date, [endField]);
   const isAllDay = React.useCallback((it: T) => (allDayField ? Boolean(it[allDayField]) : false), [allDayField]);
   const getId = React.useCallback((it: T) => String(it[idField]), [idField]);
   const getTitle = React.useCallback((it: T) => String(it[titleField] ?? ''), [titleField]);
+  const getColor = React.useCallback((it: T) => color?.(it), [color]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
-  const draggedRef = React.useRef(false);
 
   const handleDragEnd = React.useCallback(
     (e: DragEndEvent) => {
@@ -171,7 +210,7 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
     [items, getId, getStart, getEnd, effectiveView, startField, endField, setItems],
   );
 
-  const handleResize = React.useCallback(
+  const resizeEvent = React.useCallback(
     (id: string, newEnd: Date) => {
       setItems(items.map((it) => (getId(it) === id ? ({ ...it, [endField]: newEnd } as T) : it)));
     },
@@ -203,16 +242,139 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
         case 'week':
           setDate(addDays(date, 7 * dir));
           break;
-        case 'day':
-        case 'agenda':
+        default:
           setDate(addDays(date, dir));
-          break;
       }
     },
     [effectiveView, date, setDate],
   );
 
-  const onToday = React.useCallback(() => setDate(startOfDay(new Date())), [setDate]);
+  const goToToday = React.useCallback(() => setDate(startOfDay(new Date())), [setDate]);
+  const goToPrevious = React.useCallback(() => shift(-1), [shift]);
+  const goToNext = React.useCallback(() => shift(1), [shift]);
+
+  const value = React.useMemo<CalendarContextValue<T>>(
+    () => ({
+      view,
+      setView,
+      views,
+      date,
+      setDate,
+      effectiveView,
+      isMobile,
+      weekStartsOn,
+      editable,
+      periodLabel,
+      goToToday,
+      goToPrevious,
+      goToNext,
+      events: items,
+      getId,
+      getStart,
+      getEnd,
+      getTitle,
+      isAllDay,
+      getColor,
+      renderEvent,
+      onEventClick,
+      onSlotSelect,
+      resizeEvent,
+      draggedRef,
+    }),
+    [
+      view,
+      setView,
+      views,
+      date,
+      setDate,
+      effectiveView,
+      isMobile,
+      weekStartsOn,
+      editable,
+      periodLabel,
+      goToToday,
+      goToPrevious,
+      goToNext,
+      items,
+      getId,
+      getStart,
+      getEnd,
+      getTitle,
+      isAllDay,
+      getColor,
+      renderEvent,
+      onEventClick,
+      onSlotSelect,
+      resizeEvent,
+    ],
+  );
+
+  return (
+    <CalendarContext.Provider value={value as unknown as CalendarContextValue}>
+      {editable ? (
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          {children}
+        </DndContext>
+      ) : (
+        children
+      )}
+    </CalendarContext.Provider>
+  );
+}
+
+function CalendarNav({ className }: { className?: string }) {
+  const { periodLabel, views, view, setView, goToToday, goToPrevious, goToNext } = useCalendar();
+  return (
+    <div className={cn('flex w-full flex-wrap items-center justify-between gap-2', className)}>
+      <div className='flex items-center gap-1'>
+        <Button variant='outline' size='sm' onClick={goToToday}>
+          Today
+        </Button>
+        <Button variant='outline' size='icon' className='size-8' onClick={goToPrevious} aria-label='Previous'>
+          <ChevronLeft className='size-4' />
+        </Button>
+        <Button variant='outline' size='icon' className='size-8' onClick={goToNext} aria-label='Next'>
+          <ChevronRight className='size-4' />
+        </Button>
+        <span className='ml-2 text-sm font-medium'>{periodLabel}</span>
+      </div>
+      {views.length > 1 ? (
+        <Select value={view} onValueChange={(v) => setView(v as CalendarView)}>
+          <SelectTrigger className='w-32' size='sm'>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {views.map((v) => (
+              <SelectItem key={v} value={v}>
+                {v[0].toUpperCase() + v.slice(1)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : null}
+    </div>
+  );
+}
+
+function CalendarViewComponent({ className }: { className?: string }) {
+  const {
+    effectiveView,
+    date,
+    weekStartsOn,
+    events: items,
+    getStart,
+    getEnd,
+    getId,
+    getTitle,
+    isAllDay,
+    getColor,
+    renderEvent,
+    editable,
+    draggedRef,
+    resizeEvent,
+    onEventClick,
+    onSlotSelect,
+  } = useCalendar();
 
   const weekDays = React.useMemo(
     () => eachDayOfInterval({ start: startOfWeek(date, { weekStartsOn }), end: endOfWeek(date, { weekStartsOn }) }),
@@ -235,7 +397,7 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
             getStart={getStart}
             getId={getId}
             getTitle={getTitle}
-            color={color}
+            color={getColor}
             renderEvent={renderEvent}
             editable={editable}
             draggedRef={draggedRef}
@@ -244,39 +406,21 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
           />
         );
       case 'week':
-        return (
-          <TimeGridView
-            days={weekDays}
-            items={items}
-            getStart={getStart}
-            getEnd={getEnd}
-            getId={getId}
-            getTitle={getTitle}
-            isAllDay={isAllDay}
-            color={color}
-            renderEvent={renderEvent}
-            editable={editable}
-            draggedRef={draggedRef}
-            onResize={editable ? handleResize : undefined}
-            onEventClick={onEventClick}
-            onSlotSelect={onSlotSelect}
-          />
-        );
       case 'day':
         return (
           <TimeGridView
-            days={[date]}
+            days={effectiveView === 'week' ? weekDays : [date]}
             items={items}
             getStart={getStart}
             getEnd={getEnd}
             getId={getId}
             getTitle={getTitle}
             isAllDay={isAllDay}
-            color={color}
+            color={getColor}
             renderEvent={renderEvent}
             editable={editable}
             draggedRef={draggedRef}
-            onResize={editable ? handleResize : undefined}
+            onResize={editable ? resizeEvent : undefined}
             onEventClick={onEventClick}
             onSlotSelect={onSlotSelect}
           />
@@ -290,7 +434,7 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
             getEnd={getEnd}
             getId={getId}
             getTitle={getTitle}
-            color={color}
+            color={getColor}
             renderEvent={renderEvent}
             onEventClick={onEventClick}
           />
@@ -298,27 +442,14 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
     }
   })();
 
-  return (
-    <div className={cn('flex flex-col gap-4', className)}>
-      <CalendarToolbar
-        label={periodLabel}
-        views={views}
-        view={view}
-        onView={setView}
-        onToday={onToday}
-        onPrev={() => shift(-1)}
-        onNext={() => shift(1)}
-      />
-      {editable ? (
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          {body}
-        </DndContext>
-      ) : (
-        body
-      )}
-    </div>
-  );
+  return <div className={cn('w-full', className)}>{body}</div>;
 }
+
+export const Calendar = {
+  Root: CalendarRoot,
+  Nav: CalendarNav,
+  View: CalendarViewComponent,
+};
 
 function monthGrid(date: Date, weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6): Date[] {
   const start = startOfWeek(startOfMonth(date), { weekStartsOn });
@@ -560,6 +691,7 @@ function ResizeHandle({
       data-event=''
       className='absolute inset-x-0 bottom-0 z-20 h-1.5 cursor-ns-resize'
       onPointerDown={handlePointerDown}
+      onClick={(e) => e.stopPropagation()}
     />
   );
 }
@@ -668,7 +800,7 @@ function DroppableDayColumn<T extends Record<string, unknown>>({
   dayIndex: number;
   creating: Creating | null;
   onCreatingChange: (next: Creating | null) => void;
-  onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
+  onSlotSelect?: (range: CalendarSlot) => void;
   laidOut: LaidOut<T>[];
   getStart: (item: T) => Date;
   getEnd: (item: T) => Date;
@@ -802,7 +934,7 @@ function TimeGridView<T extends Record<string, unknown>>({
   draggedRef: React.MutableRefObject<boolean>;
   onResize?: (id: string, end: Date) => void;
   onEventClick?: (item: T) => void;
-  onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
+  onSlotSelect?: (range: CalendarSlot) => void;
 }) {
   const [resizing, setResizing] = React.useState<{ id: string; end: Date } | null>(null);
   const [creating, setCreating] = React.useState<Creating | null>(null);
@@ -813,40 +945,48 @@ function TimeGridView<T extends Record<string, unknown>>({
   );
 
   return (
-    <div className='overflow-hidden rounded-md border'>
-      <div className='flex border-b'>
-        <div className='w-14 shrink-0 border-r' />
-        {days.map((day) => (
-          <div key={day.toISOString()} className='flex-1 border-l p-2 text-center text-xs font-medium first:border-l-0'>
-            {format(day, 'EEE d')}
+    <div className='w-full overflow-hidden rounded-md border'>
+      <div className='max-h-[600px] overflow-y-auto'>
+        <div className='sticky top-0 z-30 bg-background'>
+          <div className='flex border-b'>
+            <div className='w-14 shrink-0 border-r' />
+            {days.map((day) => (
+              <div
+                key={day.toISOString()}
+                className='flex-1 border-l p-2 text-center text-xs font-medium first:border-l-0'
+              >
+                {format(day, 'EEE d')}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className='flex border-b'>
-        <div className='flex w-14 shrink-0 items-center justify-center border-r py-1 text-xs text-muted-foreground'>
-          all-day
-        </div>
-        {days.map((day) => {
-          const allDayEvents = items.filter((item) => spansAllDay(item) && isSameDay(getStart(item), day));
-          return (
-            <div key={day.toISOString()} className='flex flex-1 flex-col gap-1 border-l p-1 first:border-l-0'>
-              {allDayEvents.map((item) => (
-                <button
-                  type='button'
-                  key={getId(item)}
-                  onClick={() => onEventClick?.(item)}
-                  className={cn('w-full truncate rounded px-1 py-0.5 text-left text-xs', colorClasses(color?.(item)))}
-                >
-                  {renderEvent ? renderEvent(item) : getTitle(item)}
-                </button>
-              ))}
+          <div className='flex border-b'>
+            <div className='flex w-14 shrink-0 items-center justify-center border-r py-1 text-xs text-muted-foreground'>
+              all-day
             </div>
-          );
-        })}
-      </div>
+            {days.map((day) => {
+              const allDayEvents = items.filter((item) => spansAllDay(item) && isSameDay(getStart(item), day));
+              return (
+                <div key={day.toISOString()} className='flex flex-1 flex-col gap-1 border-l p-1 first:border-l-0'>
+                  {allDayEvents.map((item) => (
+                    <button
+                      type='button'
+                      key={getId(item)}
+                      onClick={() => onEventClick?.(item)}
+                      className={cn(
+                        'w-full truncate rounded px-1 py-0.5 text-left text-xs',
+                        colorClasses(color?.(item)),
+                      )}
+                    >
+                      {renderEvent ? renderEvent(item) : getTitle(item)}
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-      <div className='relative max-h-[600px] overflow-y-auto'>
         <div className='flex'>
           <div className='w-14 shrink-0 border-r'>
             {HOURS.map((h) => (
@@ -958,7 +1098,7 @@ function MonthCell<T extends Record<string, unknown>>({
   renderEvent?: (item: T) => React.ReactNode;
   draggedRef: React.MutableRefObject<boolean>;
   onEventClick?: (item: T) => void;
-  onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
+  onSlotSelect?: (range: CalendarSlot) => void;
 }) {
   const { setNodeRef } = useDroppable({ id: `cell-${day.toISOString()}`, data: { day } });
   return (
@@ -1049,13 +1189,13 @@ function MonthView<T extends Record<string, unknown>>({
   editable: boolean;
   draggedRef: React.MutableRefObject<boolean>;
   onEventClick?: (item: T) => void;
-  onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
+  onSlotSelect?: (range: CalendarSlot) => void;
 }) {
   const days = monthGrid(date, weekStartsOn);
   const weekdayLabels = days.slice(0, 7).map((day) => format(day, 'EEE'));
 
   return (
-    <div className='overflow-hidden rounded-md border'>
+    <div className='w-full overflow-hidden rounded-md border'>
       <div className='grid grid-cols-7'>
         {weekdayLabels.map((label) => (
           <div
@@ -1138,11 +1278,11 @@ function AgendaView<T extends Record<string, unknown>>({
     .filter((group) => group.events.length > 0);
 
   if (groups.length === 0) {
-    return <p className='text-sm text-muted-foreground'>No upcoming events</p>;
+    return <p className='w-full text-sm text-muted-foreground'>No upcoming events</p>;
   }
 
   return (
-    <div className='flex max-h-[600px] flex-col gap-4 overflow-y-auto'>
+    <div className='flex max-h-[600px] w-full flex-col gap-4 overflow-y-auto'>
       {groups.map((group) => (
         <div key={group.day.toISOString()} className='flex flex-col gap-1'>
           <div className='text-sm font-medium'>{format(group.day, 'EEEE, MMM d')}</div>
@@ -1162,55 +1302,6 @@ function AgendaView<T extends Record<string, unknown>>({
           ))}
         </div>
       ))}
-    </div>
-  );
-}
-
-function CalendarToolbar({
-  label,
-  views,
-  view,
-  onView,
-  onToday,
-  onPrev,
-  onNext,
-}: {
-  label: string;
-  views: CalendarView[];
-  view: CalendarView;
-  onView: (v: CalendarView) => void;
-  onToday: () => void;
-  onPrev: () => void;
-  onNext: () => void;
-}) {
-  return (
-    <div className='flex flex-wrap items-center justify-between gap-2'>
-      <div className='flex items-center gap-1'>
-        <Button variant='outline' size='sm' onClick={onToday}>
-          Today
-        </Button>
-        <Button variant='outline' size='icon' className='size-8' onClick={onPrev} aria-label='Previous'>
-          <ChevronLeft className='size-4' />
-        </Button>
-        <Button variant='outline' size='icon' className='size-8' onClick={onNext} aria-label='Next'>
-          <ChevronRight className='size-4' />
-        </Button>
-        <span className='ml-2 text-sm font-medium'>{label}</span>
-      </div>
-      {views.length > 1 ? (
-        <Select value={view} onValueChange={(v) => onView(v as CalendarView)}>
-          <SelectTrigger className='w-32' size='sm'>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {views.map((v) => (
-              <SelectItem key={v} value={v}>
-                {v[0].toUpperCase() + v.slice(1)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ) : null}
     </div>
   );
 }
