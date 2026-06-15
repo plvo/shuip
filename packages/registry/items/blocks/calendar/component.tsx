@@ -1,7 +1,18 @@
 'use client';
 
 import {
+  DndContext,
+  type DragEndEvent,
+  PointerSensor,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+import {
   addDays,
+  addMinutes,
   addMonths,
   eachDayOfInterval,
   endOfMonth,
@@ -9,6 +20,8 @@ import {
   format,
   isSameDay,
   isSameMonth,
+  setHours,
+  setMinutes,
   startOfDay,
   startOfMonth,
   startOfWeek,
@@ -114,7 +127,7 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
 
   const [view, setView] = useControllableState<CalendarView>(viewProp, defaultView, onViewChange);
   const [date, setDate] = useControllableState<Date>(dateProp, defaultDate ?? startOfDay(new Date()), onDateChange);
-  const [items] = useControllableState<T[]>(events, defaultEvents, onEventsChange);
+  const [items, setItems] = useControllableState<T[]>(events, defaultEvents, onEventsChange);
 
   const isMobile = useIsMobile();
   const effectiveView = isMobile && view === 'week' ? 'day' : view;
@@ -124,6 +137,39 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
   const isAllDay = React.useCallback((it: T) => (allDayField ? Boolean(it[allDayField]) : false), [allDayField]);
   const getId = React.useCallback((it: T) => String(it[idField]), [idField]);
   const getTitle = React.useCallback((it: T) => String(it[titleField] ?? ''), [titleField]);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const draggedRef = React.useRef(false);
+
+  const handleDragEnd = React.useCallback(
+    (e: DragEndEvent) => {
+      const { active, over, delta } = e;
+      draggedRef.current = Math.abs(delta.x) > 4 || Math.abs(delta.y) > 4;
+      const id = String(active.id);
+      const item = items.find((it) => getId(it) === id);
+      if (!item) return;
+      const oldStart = getStart(item);
+      const oldEnd = getEnd(item);
+      const duration = oldEnd.getTime() - oldStart.getTime();
+      const overDay = (over?.data.current?.day as Date | undefined) ?? oldStart;
+
+      let newStart: Date;
+      if (effectiveView === 'month') {
+        newStart = setMinutes(setHours(startOfDay(overDay), oldStart.getHours()), oldStart.getMinutes());
+      } else {
+        const movedMinutes = minutesSinceDayStart(oldStart) + (delta.y / HOUR_HEIGHT) * 60;
+        newStart = snapToMinutes(addMinutes(startOfDay(overDay), movedMinutes));
+      }
+      if (newStart.getTime() === oldStart.getTime()) return;
+      const next = items.map((it) =>
+        getId(it) === id
+          ? ({ ...it, [startField]: newStart, [endField]: new Date(newStart.getTime() + duration) } as T)
+          : it,
+      );
+      setItems(next);
+    },
+    [items, getId, getStart, getEnd, effectiveView, startField, endField, setItems],
+  );
 
   const periodLabel = React.useMemo(() => {
     switch (effectiveView) {
@@ -171,6 +217,74 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
     [date],
   );
 
+  const body = (() => {
+    switch (effectiveView) {
+      case 'month':
+        return (
+          <MonthView
+            date={date}
+            weekStartsOn={weekStartsOn}
+            items={items}
+            getStart={getStart}
+            getId={getId}
+            getTitle={getTitle}
+            color={color}
+            editable={editable}
+            draggedRef={draggedRef}
+            onEventClick={onEventClick}
+            onSlotSelect={onSlotSelect}
+          />
+        );
+      case 'week':
+        return (
+          <TimeGridView
+            days={weekDays}
+            items={items}
+            getStart={getStart}
+            getEnd={getEnd}
+            getId={getId}
+            getTitle={getTitle}
+            isAllDay={isAllDay}
+            color={color}
+            editable={editable}
+            draggedRef={draggedRef}
+            onEventClick={onEventClick}
+            onSlotSelect={onSlotSelect}
+          />
+        );
+      case 'day':
+        return (
+          <TimeGridView
+            days={[date]}
+            items={items}
+            getStart={getStart}
+            getEnd={getEnd}
+            getId={getId}
+            getTitle={getTitle}
+            isAllDay={isAllDay}
+            color={color}
+            editable={editable}
+            draggedRef={draggedRef}
+            onEventClick={onEventClick}
+            onSlotSelect={onSlotSelect}
+          />
+        );
+      case 'agenda':
+        return (
+          <AgendaView
+            days={agendaDays}
+            items={items}
+            getStart={getStart}
+            getEnd={getEnd}
+            getId={getId}
+            getTitle={getTitle}
+            color={color}
+            onEventClick={onEventClick}
+          />
+        );
+    }
+  })();
+
   return (
     <div className={cn('flex flex-col gap-4', className)}>
       <CalendarToolbar
@@ -182,70 +296,13 @@ export function Calendar<T extends Record<string, unknown>>(props: CalendarProps
         onPrev={() => shift(-1)}
         onNext={() => shift(1)}
       />
-      {(() => {
-        switch (effectiveView) {
-          case 'month':
-            return (
-              <MonthView
-                date={date}
-                weekStartsOn={weekStartsOn}
-                items={items}
-                getStart={getStart}
-                getId={getId}
-                getTitle={getTitle}
-                color={color}
-                editable={editable}
-                onEventClick={onEventClick}
-                onSlotSelect={onSlotSelect}
-              />
-            );
-          case 'week':
-            return (
-              <TimeGridView
-                days={weekDays}
-                items={items}
-                getStart={getStart}
-                getEnd={getEnd}
-                getId={getId}
-                getTitle={getTitle}
-                isAllDay={isAllDay}
-                color={color}
-                editable={editable}
-                onEventClick={onEventClick}
-                onSlotSelect={onSlotSelect}
-              />
-            );
-          case 'day':
-            return (
-              <TimeGridView
-                days={[date]}
-                items={items}
-                getStart={getStart}
-                getEnd={getEnd}
-                getId={getId}
-                getTitle={getTitle}
-                isAllDay={isAllDay}
-                color={color}
-                editable={editable}
-                onEventClick={onEventClick}
-                onSlotSelect={onSlotSelect}
-              />
-            );
-          case 'agenda':
-            return (
-              <AgendaView
-                days={agendaDays}
-                items={items}
-                getStart={getStart}
-                getEnd={getEnd}
-                getId={getId}
-                getTitle={getTitle}
-                color={color}
-                onEventClick={onEventClick}
-              />
-            );
-        }
-      })()}
+      {editable ? (
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          {body}
+        </DndContext>
+      ) : (
+        body
+      )}
     </div>
   );
 }
@@ -272,6 +329,12 @@ function colorClasses(c?: CalendarEventColor): string {
 }
 
 const HOUR_HEIGHT = 48;
+const SNAP_MINUTES = 15;
+
+function snapToMinutes(date: Date, minutes = SNAP_MINUTES): Date {
+  const ms = minutes * 60_000;
+  return new Date(Math.round(date.getTime() / ms) * ms);
+}
 
 function minutesSinceDayStart(date: Date): number {
   return date.getHours() * 60 + date.getMinutes();
@@ -303,6 +366,29 @@ function layoutDay<T>(dayEvents: T[], getStart: (t: T) => Date, getEnd: (t: T) =
   return placed.map((p) => ({ ...p, cols }));
 }
 
+function eventBlockStyle(start: Date, end: Date, laidOut: { col: number; cols: number }): React.CSSProperties {
+  const widthPct = 100 / laidOut.cols;
+  return {
+    top: eventTop(start),
+    height: eventHeight(start, end),
+    left: `${laidOut.col * widthPct}%`,
+    width: `calc(${widthPct}% - 2px)`,
+  };
+}
+
+function EventBlockContent({ title, start, end }: { title: string; start: Date; end: Date }) {
+  return (
+    <>
+      <span className='block truncate font-medium'>{title}</span>
+      <span className='block truncate opacity-80'>
+        {format(start, 'HH:mm')} – {format(end, 'HH:mm')}
+      </span>
+    </>
+  );
+}
+
+const eventBlockClass = 'absolute z-10 overflow-hidden rounded px-1 py-0.5 text-left text-xs';
+
 function EventBlock({
   title,
   start,
@@ -318,29 +404,164 @@ function EventBlock({
   color?: CalendarEventColor;
   onClick?: () => void;
 }) {
-  const widthPct = 100 / laidOut.cols;
   return (
     <button
       type='button'
       onClick={onClick}
-      style={{
-        top: eventTop(start),
-        height: eventHeight(start, end),
-        left: `${laidOut.col * widthPct}%`,
-        width: `calc(${widthPct}% - 2px)`,
-      }}
-      className={cn('absolute z-10 overflow-hidden rounded px-1 py-0.5 text-left text-xs', colorClasses(color))}
+      style={eventBlockStyle(start, end, laidOut)}
+      className={cn(eventBlockClass, colorClasses(color))}
     >
-      <span className='block truncate font-medium'>{title}</span>
-      <span className='block truncate opacity-80'>
-        {format(start, 'HH:mm')} – {format(end, 'HH:mm')}
-      </span>
+      <EventBlockContent title={title} start={start} end={end} />
+    </button>
+  );
+}
+
+function DraggableEventBlock({
+  id,
+  title,
+  start,
+  end,
+  laidOut,
+  color,
+  draggedRef,
+  onClick,
+}: {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  laidOut: { col: number; cols: number };
+  color?: CalendarEventColor;
+  draggedRef: React.MutableRefObject<boolean>;
+  onClick?: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
+  return (
+    <button
+      type='button'
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      onClick={() => {
+        if (draggedRef.current) {
+          draggedRef.current = false;
+          return;
+        }
+        onClick?.();
+      }}
+      style={{
+        ...eventBlockStyle(start, end, laidOut),
+        transform: CSS.Translate.toString(transform),
+        zIndex: isDragging ? 40 : undefined,
+        touchAction: 'none',
+      }}
+      className={cn(eventBlockClass, colorClasses(color))}
+    >
+      <EventBlockContent title={title} start={start} end={end} />
     </button>
   );
 }
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+function DayColumnContent<T extends Record<string, unknown>>({
+  laidOut,
+  getStart,
+  getEnd,
+  getId,
+  getTitle,
+  color,
+  editable,
+  draggedRef,
+  onEventClick,
+}: {
+  laidOut: LaidOut<T>[];
+  getStart: (item: T) => Date;
+  getEnd: (item: T) => Date;
+  getId: (item: T) => string;
+  getTitle: (item: T) => string;
+  color?: (item: T) => CalendarEventColor | undefined;
+  editable: boolean;
+  draggedRef: React.MutableRefObject<boolean>;
+  onEventClick?: (item: T) => void;
+}) {
+  return (
+    <>
+      {HOURS.map((h) => (
+        <div key={h} className='h-12 border-t first:border-t-0' />
+      ))}
+      {laidOut.map((entry) =>
+        editable ? (
+          <DraggableEventBlock
+            key={getId(entry.item)}
+            id={getId(entry.item)}
+            title={getTitle(entry.item)}
+            start={getStart(entry.item)}
+            end={getEnd(entry.item)}
+            laidOut={entry}
+            color={color?.(entry.item)}
+            draggedRef={draggedRef}
+            onClick={() => onEventClick?.(entry.item)}
+          />
+        ) : (
+          <EventBlock
+            key={getId(entry.item)}
+            title={getTitle(entry.item)}
+            start={getStart(entry.item)}
+            end={getEnd(entry.item)}
+            laidOut={entry}
+            color={color?.(entry.item)}
+            onClick={() => onEventClick?.(entry.item)}
+          />
+        ),
+      )}
+    </>
+  );
+}
+
+const dayColumnClass = 'relative flex-1 border-l first:border-l-0';
+
+function DroppableDayColumn<T extends Record<string, unknown>>({
+  day,
+  ...content
+}: {
+  day: Date;
+  laidOut: LaidOut<T>[];
+  getStart: (item: T) => Date;
+  getEnd: (item: T) => Date;
+  getId: (item: T) => string;
+  getTitle: (item: T) => string;
+  color?: (item: T) => CalendarEventColor | undefined;
+  editable: boolean;
+  draggedRef: React.MutableRefObject<boolean>;
+  onEventClick?: (item: T) => void;
+}) {
+  const { setNodeRef } = useDroppable({ id: `col-${day.toISOString()}`, data: { day } });
+  return (
+    <div ref={setNodeRef} className={cn(dayColumnClass, 'cursor-pointer')} style={{ height: 24 * HOUR_HEIGHT }}>
+      <DayColumnContent {...content} />
+    </div>
+  );
+}
+
+function PlainDayColumn<T extends Record<string, unknown>>(content: {
+  laidOut: LaidOut<T>[];
+  getStart: (item: T) => Date;
+  getEnd: (item: T) => Date;
+  getId: (item: T) => string;
+  getTitle: (item: T) => string;
+  color?: (item: T) => CalendarEventColor | undefined;
+  editable: boolean;
+  draggedRef: React.MutableRefObject<boolean>;
+  onEventClick?: (item: T) => void;
+}) {
+  return (
+    <div className={dayColumnClass} style={{ height: 24 * HOUR_HEIGHT }}>
+      <DayColumnContent {...content} />
+    </div>
+  );
+}
 
 function TimeGridView<T extends Record<string, unknown>>({
   days,
@@ -352,6 +573,7 @@ function TimeGridView<T extends Record<string, unknown>>({
   isAllDay,
   color,
   editable,
+  draggedRef,
   onEventClick,
 }: {
   days: Date[];
@@ -363,6 +585,7 @@ function TimeGridView<T extends Record<string, unknown>>({
   isAllDay: (item: T) => boolean;
   color?: (item: T) => CalendarEventColor | undefined;
   editable: boolean;
+  draggedRef: React.MutableRefObject<boolean>;
   onEventClick?: (item: T) => void;
   onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
 }) {
@@ -417,31 +640,149 @@ function TimeGridView<T extends Record<string, unknown>>({
           {days.map((day) => {
             const timed = items.filter((item) => !spansAllDay(item) && isSameDay(getStart(item), day));
             const laidOut = layoutDay(timed, getStart, getEnd);
-            return (
-              <div
-                key={day.toISOString()}
-                className={cn('relative flex-1 border-l first:border-l-0', editable && 'cursor-pointer')}
-                style={{ height: 24 * HOUR_HEIGHT }}
-              >
-                {HOURS.map((h) => (
-                  <div key={h} className='h-12 border-t first:border-t-0' />
-                ))}
-                {laidOut.map((entry) => (
-                  <EventBlock
-                    key={getId(entry.item)}
-                    title={getTitle(entry.item)}
-                    start={getStart(entry.item)}
-                    end={getEnd(entry.item)}
-                    laidOut={entry}
-                    color={color?.(entry.item)}
-                    onClick={() => onEventClick?.(entry.item)}
-                  />
-                ))}
-              </div>
+            const columnProps = {
+              laidOut,
+              getStart,
+              getEnd,
+              getId,
+              getTitle,
+              color,
+              editable,
+              draggedRef,
+              onEventClick,
+            };
+            return editable ? (
+              <DroppableDayColumn key={day.toISOString()} day={day} {...columnProps} />
+            ) : (
+              <PlainDayColumn key={day.toISOString()} {...columnProps} />
             );
           })}
         </div>
       </div>
+    </div>
+  );
+}
+
+const monthPillClass = 'w-full truncate rounded px-1 py-0.5 text-left text-xs';
+
+function MonthEventPill<T>({
+  item,
+  id,
+  title,
+  color,
+  draggedRef,
+  onEventClick,
+}: {
+  item: T;
+  id: string;
+  title: string;
+  color?: CalendarEventColor;
+  draggedRef: React.MutableRefObject<boolean>;
+  onEventClick?: (item: T) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
+  return (
+    <button
+      type='button'
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (draggedRef.current) {
+          draggedRef.current = false;
+          return;
+        }
+        onEventClick?.(item);
+      }}
+      style={{ transform: CSS.Translate.toString(transform), zIndex: isDragging ? 40 : undefined, touchAction: 'none' }}
+      className={cn(monthPillClass, colorClasses(color))}
+    >
+      {title}
+    </button>
+  );
+}
+
+function MonthCell<T extends Record<string, unknown>>({
+  day,
+  date,
+  visible,
+  overflow,
+  getId,
+  getTitle,
+  color,
+  draggedRef,
+  onEventClick,
+  onSlotSelect,
+}: {
+  day: Date;
+  date: Date;
+  visible: T[];
+  overflow: number;
+  getId: (item: T) => string;
+  getTitle: (item: T) => string;
+  color?: (item: T) => CalendarEventColor | undefined;
+  draggedRef: React.MutableRefObject<boolean>;
+  onEventClick?: (item: T) => void;
+  onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
+}) {
+  const { setNodeRef } = useDroppable({ id: `cell-${day.toISOString()}`, data: { day } });
+  return (
+    <div
+      ref={setNodeRef}
+      className='flex min-h-24 cursor-pointer flex-col gap-1 border-b border-l p-1 hover:bg-accent/50 [&:nth-child(7n+1)]:border-l-0'
+      onClick={() => onSlotSelect?.({ start: startOfDay(day), end: addDays(startOfDay(day), 1), allDay: true })}
+    >
+      <span className={cn('text-xs', !isSameMonth(day, date) && 'text-muted-foreground')}>{format(day, 'd')}</span>
+      {visible.map((item) => (
+        <MonthEventPill
+          key={getId(item)}
+          item={item}
+          id={getId(item)}
+          title={getTitle(item)}
+          color={color?.(item)}
+          draggedRef={draggedRef}
+          onEventClick={onEventClick}
+        />
+      ))}
+      {overflow > 0 ? <span className='px-1 text-xs text-muted-foreground'>+{overflow} more</span> : null}
+    </div>
+  );
+}
+
+function PlainMonthCell<T extends Record<string, unknown>>({
+  day,
+  date,
+  visible,
+  overflow,
+  getId,
+  getTitle,
+  color,
+  onEventClick,
+}: {
+  day: Date;
+  date: Date;
+  visible: T[];
+  overflow: number;
+  getId: (item: T) => string;
+  getTitle: (item: T) => string;
+  color?: (item: T) => CalendarEventColor | undefined;
+  onEventClick?: (item: T) => void;
+}) {
+  return (
+    <div className='flex min-h-24 flex-col gap-1 border-b border-l p-1 [&:nth-child(7n+1)]:border-l-0'>
+      <span className={cn('text-xs', !isSameMonth(day, date) && 'text-muted-foreground')}>{format(day, 'd')}</span>
+      {visible.map((item) => (
+        <button
+          type='button'
+          key={getId(item)}
+          className={cn(monthPillClass, colorClasses(color?.(item)))}
+          onClick={() => onEventClick?.(item)}
+        >
+          {getTitle(item)}
+        </button>
+      ))}
+      {overflow > 0 ? <span className='px-1 text-xs text-muted-foreground'>+{overflow} more</span> : null}
     </div>
   );
 }
@@ -455,6 +796,7 @@ function MonthView<T extends Record<string, unknown>>({
   getTitle,
   color,
   editable,
+  draggedRef,
   onEventClick,
   onSlotSelect,
 }: {
@@ -466,6 +808,7 @@ function MonthView<T extends Record<string, unknown>>({
   getTitle: (item: T) => string;
   color?: (item: T) => CalendarEventColor | undefined;
   editable: boolean;
+  draggedRef: React.MutableRefObject<boolean>;
   onEventClick?: (item: T) => void;
   onSlotSelect?: (range: { start: Date; end: Date; allDay: boolean }) => void;
 }) {
@@ -490,37 +833,32 @@ function MonthView<T extends Record<string, unknown>>({
           const visible = dayEvents.slice(0, 3);
           const overflow = dayEvents.length - visible.length;
 
-          const selectSlot = editable
-            ? () => onSlotSelect?.({ start: startOfDay(day), end: addDays(startOfDay(day), 1), allDay: true })
-            : undefined;
-
-          return (
-            <div
+          return editable ? (
+            <MonthCell
               key={day.toISOString()}
-              className={cn(
-                'flex min-h-24 flex-col gap-1 border-b border-l p-1 [&:nth-child(7n+1)]:border-l-0',
-                editable && 'cursor-pointer hover:bg-accent/50',
-              )}
-              onClick={selectSlot}
-            >
-              <span className={cn('text-xs', !isSameMonth(day, date) && 'text-muted-foreground')}>
-                {format(day, 'd')}
-              </span>
-              {visible.map((item) => (
-                <button
-                  type='button'
-                  key={getId(item)}
-                  className={cn('w-full truncate rounded px-1 py-0.5 text-left text-xs', colorClasses(color?.(item)))}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEventClick?.(item);
-                  }}
-                >
-                  {getTitle(item)}
-                </button>
-              ))}
-              {overflow > 0 ? <span className='px-1 text-xs text-muted-foreground'>+{overflow} more</span> : null}
-            </div>
+              day={day}
+              date={date}
+              visible={visible}
+              overflow={overflow}
+              getId={getId}
+              getTitle={getTitle}
+              color={color}
+              draggedRef={draggedRef}
+              onEventClick={onEventClick}
+              onSlotSelect={onSlotSelect}
+            />
+          ) : (
+            <PlainMonthCell
+              key={day.toISOString()}
+              day={day}
+              date={date}
+              visible={visible}
+              overflow={overflow}
+              getId={getId}
+              getTitle={getTitle}
+              color={color}
+              onEventClick={onEventClick}
+            />
           );
         })}
       </div>
