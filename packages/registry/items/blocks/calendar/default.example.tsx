@@ -3,12 +3,13 @@
 import * as React from 'react';
 import { Calendar, type CalendarEventColor, type CalendarSlot } from '@/components/block/shuip/calendar';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-type CalEvent = { id: string; title: string; start: Date; end: Date; color?: CalendarEventColor };
+type CalEvent = { id: string; title: string; start: Date; end: Date; color?: CalendarEventColor; allDay?: boolean };
 
 const now = new Date();
 const at = (dayOffset: number, h: number, m = 0) =>
@@ -29,8 +30,8 @@ export default function Example() {
   const [open, setOpen] = React.useState(false);
   const isExisting = draft ? events.some((e) => e.id === draft.id) : false;
 
-  const handleSlotSelect = React.useCallback(({ start, end }: CalendarSlot) => {
-    setDraft({ id: crypto.randomUUID(), title: '', start, end });
+  const handleSlotSelect = React.useCallback(({ start, end, allDay }: CalendarSlot) => {
+    setDraft({ id: crypto.randomUUID(), title: '', start, end, allDay });
     setOpen(true);
   }, []);
 
@@ -42,6 +43,7 @@ export default function Example() {
         titleField='title'
         startField='start'
         endField='end'
+        allDayField='allDay'
         color={(e) => e.color}
         defaultView='week'
         editable
@@ -88,6 +90,14 @@ export default function Example() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className='flex items-center gap-2'>
+                <Checkbox
+                  id='cal-allday'
+                  checked={draft.allDay ?? false}
+                  onCheckedChange={(v) => setDraft({ ...draft, allDay: v === true })}
+                />
+                <Label htmlFor='cal-allday'>All day</Label>
               </div>
             </div>
           ) : null}

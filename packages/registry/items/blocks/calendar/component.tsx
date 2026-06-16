@@ -996,6 +996,8 @@ function TimeGridView<T extends Record<string, unknown>>({
     [isAllDay, getEnd, getStart],
   );
 
+  const canCreateAllDay = editable && Boolean(selectSlot);
+
   return (
     <div className='w-full overflow-hidden rounded-md border'>
       <div className='max-h-[600px] overflow-y-auto'>
@@ -1019,12 +1021,26 @@ function TimeGridView<T extends Record<string, unknown>>({
             {days.map((day) => {
               const allDayEvents = items.filter((item) => spansAllDay(item) && isSameDay(getStart(item), day));
               return (
-                <div key={day.toISOString()} className='flex flex-1 flex-col gap-1 border-l p-1 first:border-l-0'>
+                <div
+                  key={day.toISOString()}
+                  className={cn(
+                    'flex min-h-7 flex-1 flex-col gap-1 border-l p-1 first:border-l-0',
+                    canCreateAllDay && 'cursor-pointer',
+                  )}
+                  onClick={
+                    canCreateAllDay
+                      ? () => selectSlot?.({ start: startOfDay(day), end: addDays(startOfDay(day), 1), allDay: true })
+                      : undefined
+                  }
+                >
                   {allDayEvents.map((item) => (
                     <button
                       type='button'
                       key={getId(item)}
-                      onClick={() => onEventClick?.(item)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEventClick?.(item);
+                      }}
                       className={cn(
                         'w-full truncate rounded px-1 py-0.5 text-left text-xs',
                         colorClasses(color?.(item)),
