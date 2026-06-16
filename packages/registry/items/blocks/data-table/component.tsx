@@ -1,6 +1,23 @@
 'use client';
 
 import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   type Column,
   type ColumnDef,
   type ColumnFiltersState,
@@ -35,6 +52,7 @@ import {
   ChevronsRight,
   ChevronsUpDown,
   EyeOff,
+  GripVertical,
   Inbox,
   ListFilter,
   Loader2,
@@ -1011,6 +1029,32 @@ function defaultValueFor(variant: FilterVariant): unknown {
   return MULTI_VALUE_OPERATORS.includes(defaultOperatorFor(variant)) ? [] : '';
 }
 
+function useReorderSensors() {
+  return useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+}
+
+function SortableRow({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = { transform: CSS.Transform.toString(transform), transition };
+  return (
+    <div ref={setNodeRef} style={style} className={cn('flex items-center gap-2', isDragging && 'opacity-60')}>
+      <button
+        type='button'
+        className='shrink-0 cursor-grab touch-none text-muted-foreground/50 active:cursor-grabbing'
+        aria-label='Reorder'
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className='size-4' />
+      </button>
+      {children}
+    </div>
+  );
+}
+
 function FieldSelect({
   fields,
   value,
@@ -1201,36 +1245,58 @@ function FilterBuilder<TData>({ table }: { table: Table<TData> }) {
 
   const allUsed = fields.length > 0 && fields.every((field) => columnFilters.some((item) => item.id === field.id));
 
+  const sensors = useReorderSensors();
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    table.setColumnFilters((current) => {
+      const oldIndex = current.findIndex((item) => item.id === active.id);
+      const newIndex = current.findIndex((item) => item.id === over.id);
+      if (oldIndex < 0 || newIndex < 0) return current;
+      return arrayMove(current, oldIndex, newIndex);
+    });
+  };
+
   return (
     <div className='flex flex-col gap-2'>
       {rows.length === 0 ? (
         <p className='px-1 py-2 text-muted-foreground text-sm'>No filters applied to this view.</p>
       ) : (
-        rows.map((row, index) => (
-          <div key={row.field.id} className='flex items-center gap-2'>
-            <span className='w-12 shrink-0 pl-1 text-muted-foreground text-sm'>{index === 0 ? 'Where' : 'And'}</span>
-            <FieldSelect fields={fields} value={row.field.id} onChange={(value) => changeField(row.field.id, value)} />
-            <OperatorSelect
-              variant={row.field.variant}
-              value={row.condition.operator}
-              onChange={(operator) => changeOperator(row.field, row.condition, operator)}
-            />
-            <FilterValueControl
-              field={row.field}
-              condition={row.condition}
-              onChange={(value) => setCondition(row.field.id, { ...row.condition, value })}
-            />
-            <Button
-              variant='ghost'
-              size='icon-sm'
-              className='shrink-0 text-muted-foreground'
-              onClick={() => removeCondition(row.field.id)}
-              aria-label='Remove filter'
-            >
-              <X className='size-4' />
-            </Button>
-          </div>
-        ))
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={rows.map((row) => row.field.id)} strategy={verticalListSortingStrategy}>
+            <div className='flex flex-col gap-2'>
+              {rows.map((row, index) => (
+                <SortableRow key={row.field.id} id={row.field.id}>
+                  <span className='w-12 shrink-0 text-muted-foreground text-sm'>{index === 0 ? 'Where' : 'And'}</span>
+                  <FieldSelect
+                    fields={fields}
+                    value={row.field.id}
+                    onChange={(value) => changeField(row.field.id, value)}
+                  />
+                  <OperatorSelect
+                    variant={row.field.variant}
+                    value={row.condition.operator}
+                    onChange={(operator) => changeOperator(row.field, row.condition, operator)}
+                  />
+                  <FilterValueControl
+                    field={row.field}
+                    condition={row.condition}
+                    onChange={(value) => setCondition(row.field.id, { ...row.condition, value })}
+                  />
+                  <Button
+                    variant='ghost'
+                    size='icon-sm'
+                    className='shrink-0 text-muted-foreground'
+                    onClick={() => removeCondition(row.field.id)}
+                    aria-label='Remove filter'
+                  >
+                    <X className='size-4' />
+                  </Button>
+                </SortableRow>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
       <div className='flex items-center justify-between pt-1'>
         <Button
@@ -1325,35 +1391,56 @@ function SortBuilder<TData>({ table }: { table: Table<TData> }) {
 
   const allUsed = fields.length > 0 && fields.every((field) => sorting.some((sort) => sort.id === field.id));
 
+  const sensors = useReorderSensors();
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    table.setSorting((current) => {
+      const oldIndex = current.findIndex((sort) => sort.id === active.id);
+      const newIndex = current.findIndex((sort) => sort.id === over.id);
+      if (oldIndex < 0 || newIndex < 0) return current;
+      return arrayMove(current, oldIndex, newIndex);
+    });
+  };
+
   return (
     <div className='flex flex-col gap-2'>
       {sorting.length === 0 ? (
         <p className='px-1 py-2 text-muted-foreground text-sm'>No sorts applied to this view.</p>
       ) : (
-        sorting.map((sort, index) => (
-          <div key={sort.id} className='flex items-center gap-2'>
-            <span className='w-12 shrink-0 pl-1 text-muted-foreground text-sm'>{index === 0 ? 'Sort' : 'Then'}</span>
-            <FieldSelect fields={fields} value={sort.id} onChange={(value) => changeField(sort.id, value)} />
-            <Select value={sort.desc ? 'desc' : 'asc'} onValueChange={(value) => setDir(sort.id, value === 'desc')}>
-              <SelectTrigger className='h-8 flex-1'>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='asc'>Ascending</SelectItem>
-                <SelectItem value='desc'>Descending</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              variant='ghost'
-              size='icon-sm'
-              className='shrink-0 text-muted-foreground'
-              onClick={() => remove(sort.id)}
-              aria-label='Remove sort'
-            >
-              <X className='size-4' />
-            </Button>
-          </div>
-        ))
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={sorting.map((sort) => sort.id)} strategy={verticalListSortingStrategy}>
+            <div className='flex flex-col gap-2'>
+              {sorting.map((sort, index) => (
+                <SortableRow key={sort.id} id={sort.id}>
+                  <span className='w-12 shrink-0 text-muted-foreground text-sm'>{index === 0 ? 'Sort' : 'Then'}</span>
+                  <FieldSelect fields={fields} value={sort.id} onChange={(value) => changeField(sort.id, value)} />
+                  <Select
+                    value={sort.desc ? 'desc' : 'asc'}
+                    onValueChange={(value) => setDir(sort.id, value === 'desc')}
+                  >
+                    <SelectTrigger className='h-8 flex-1'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='asc'>Ascending</SelectItem>
+                      <SelectItem value='desc'>Descending</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant='ghost'
+                    size='icon-sm'
+                    className='shrink-0 text-muted-foreground'
+                    onClick={() => remove(sort.id)}
+                    aria-label='Remove sort'
+                  >
+                    <X className='size-4' />
+                  </Button>
+                </SortableRow>
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
       <div className='pt-1'>
         <Button variant='ghost' size='sm' className='h-8 px-2 text-muted-foreground' onClick={add} disabled={allUsed}>

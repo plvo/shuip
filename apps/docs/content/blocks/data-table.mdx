@@ -68,8 +68,8 @@ Three composable controls — drop them in any row, no toolbar assumed. Each is 
 </div>
 ```
 
-- **`DataTableFilterMenu`** — a condition builder (`Where [field] [operator] [value]`). Operators are inferred from `meta.variant`: `text` → contains / is / is empty…, `number` → `= ≠ > < ≥ ≤`, `date` → before / after / on or before…, `select` / `multiSelect` → is / is any of / is none of. The `variant` prop renders the same builder in a popover or a dialog.
-- **`DataTableSortMenu`** — multi-column sort; order is priority (first row = primary). Secondary columns show a priority badge in their header.
+- **`DataTableFilterMenu`** — a condition builder (`Where [field] [operator] [value]`); rows reorder by dragging the handle. Operators are inferred from `meta.variant`: `text` → contains / is / is empty…, `number` → `= ≠ > < ≥ ≤`, `date` → before / after / on or before…, `select` / `multiSelect` → is / is any of / is none of. The `variant` prop renders the same builder in a popover or a dialog.
+- **`DataTableSortMenu`** — multi-column sort; order is priority (first row = primary), and rows reorder by dragging the handle. Secondary columns show a priority badge in their header.
 - **`DataTableViews`** — save the current `{ filters, sorting }` as a named view in `localStorage` (`shuip:dt-views:<storageKey>`), then apply or delete it.
 
 Conditions live in TanStack's `columnFilters` as `{ id, value: { operator, value } }`. In client mode `useDataTable` registers an operator-aware `filterFn` (`dataTableFilterFn`), so filtering works with no per-column wiring; in server mode, read `table.getState().columnFilters` and translate it to your query. One condition per column (the `columnFilters` model); conditions combine with AND.
