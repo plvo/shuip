@@ -10,6 +10,7 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import type { Locale } from 'date-fns';
 import {
   addDays,
   addMinutes,
@@ -35,6 +36,30 @@ import { cn } from '@/lib/utils';
 export type CalendarView = 'month' | 'week' | 'day' | 'agenda';
 export type CalendarEventColor = 'primary' | 'secondary' | 'accent' | 'destructive' | 'muted';
 export type CalendarSlot = { start: Date; end: Date; allDay: boolean };
+
+export type CalendarMessages = {
+  today: string;
+  previous: string;
+  next: string;
+  allDay: string;
+  noEvents: string;
+  more: (count: number) => string;
+  views: Record<CalendarView, string>;
+};
+
+export type CalendarMessagesInput = Partial<Omit<CalendarMessages, 'views'>> & {
+  views?: Partial<Record<CalendarView, string>>;
+};
+
+const defaultMessages: CalendarMessages = {
+  today: 'Today',
+  previous: 'Previous',
+  next: 'Next',
+  allDay: 'all-day',
+  noEvents: 'No upcoming events',
+  more: (count) => `+${count} more`,
+  views: { month: 'Month', week: 'Week', day: 'Day', agenda: 'Agenda' },
+};
 
 type CalendarEventLike = Record<string, unknown>;
 
@@ -63,6 +88,8 @@ export type CalendarRootProps<T extends CalendarEventLike> = {
   views?: CalendarView[];
   weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
   editable?: boolean;
+  locale?: Locale;
+  messages?: CalendarMessagesInput;
 
   onEventClick?: (item: T) => void;
   onSlotSelect?: (range: CalendarSlot) => void;
@@ -78,6 +105,8 @@ type CalendarContextValue<T extends CalendarEventLike = CalendarEventLike> = {
   isMobile: boolean;
   weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6;
   editable: boolean;
+  locale?: Locale;
+  messages: CalendarMessages;
   periodLabel: string;
   goToToday: () => void;
   goToPrevious: () => void;
@@ -160,9 +189,19 @@ function CalendarRoot<T extends CalendarEventLike>({
   views = ['month', 'week', 'day', 'agenda'],
   weekStartsOn = 1,
   editable = false,
+  locale,
+  messages: messagesProp,
   onEventClick,
   onSlotSelect,
 }: CalendarRootProps<T>) {
+  const messages = React.useMemo<CalendarMessages>(
+    () => ({
+      ...defaultMessages,
+      ...messagesProp,
+      views: { ...defaultMessages.views, ...messagesProp?.views },
+    }),
+    [messagesProp],
+  );
   const [view, setView] = useControllableState<CalendarView>(viewProp, defaultView, onViewChange);
   const [date, setDate] = useControllableState<Date>(dateProp, defaultDate ?? startOfDay(new Date()), onDateChange);
   const [items, setItems] = useControllableState<T[]>(events, defaultEvents, onEventsChange);
@@ -220,18 +259,18 @@ function CalendarRoot<T extends CalendarEventLike>({
   const periodLabel = React.useMemo(() => {
     switch (effectiveView) {
       case 'month':
-        return format(date, 'MMMM yyyy');
+        return format(date, 'MMMM yyyy', { locale });
       case 'week': {
         const weekStart = startOfWeek(date, { weekStartsOn });
         const weekEnd = endOfWeek(date, { weekStartsOn });
-        return `${format(weekStart, 'MMM d')} – ${format(weekEnd, 'MMM d, yyyy')}`;
+        return `${format(weekStart, 'MMM d', { locale })} – ${format(weekEnd, 'MMM d, yyyy', { locale })}`;
       }
       case 'day':
-        return format(date, 'PPP');
+        return format(date, 'PPP', { locale });
       case 'agenda':
-        return format(date, 'MMMM yyyy');
+        return format(date, 'MMMM yyyy', { locale });
     }
-  }, [effectiveView, date, weekStartsOn]);
+  }, [effectiveView, date, weekStartsOn, locale]);
 
   const shift = React.useCallback(
     (dir: 1 | -1) => {
@@ -264,6 +303,8 @@ function CalendarRoot<T extends CalendarEventLike>({
       isMobile,
       weekStartsOn,
       editable,
+      locale,
+      messages,
       periodLabel,
       goToToday,
       goToPrevious,
@@ -291,6 +332,8 @@ function CalendarRoot<T extends CalendarEventLike>({
       isMobile,
       weekStartsOn,
       editable,
+      locale,
+      messages,
       periodLabel,
       goToToday,
       goToPrevious,
@@ -323,17 +366,17 @@ function CalendarRoot<T extends CalendarEventLike>({
 }
 
 function CalendarNav({ className }: { className?: string }) {
-  const { periodLabel, views, view, setView, goToToday, goToPrevious, goToNext } = useCalendar();
+  const { periodLabel, views, view, setView, goToToday, goToPrevious, goToNext, messages } = useCalendar();
   return (
     <div className={cn('flex w-full flex-wrap items-center justify-between gap-2', className)}>
       <div className='flex items-center gap-1'>
         <Button variant='outline' size='sm' onClick={goToToday}>
-          Today
+          {messages.today}
         </Button>
-        <Button variant='outline' size='icon' className='size-8' onClick={goToPrevious} aria-label='Previous'>
+        <Button variant='outline' size='icon' className='size-8' onClick={goToPrevious} aria-label={messages.previous}>
           <ChevronLeft className='size-4' />
         </Button>
-        <Button variant='outline' size='icon' className='size-8' onClick={goToNext} aria-label='Next'>
+        <Button variant='outline' size='icon' className='size-8' onClick={goToNext} aria-label={messages.next}>
           <ChevronRight className='size-4' />
         </Button>
         <span className='ml-2 text-sm font-medium'>{periodLabel}</span>
@@ -346,7 +389,7 @@ function CalendarNav({ className }: { className?: string }) {
           <SelectContent>
             {views.map((v) => (
               <SelectItem key={v} value={v}>
-                {v[0].toUpperCase() + v.slice(1)}
+                {messages.views[v]}
               </SelectItem>
             ))}
           </SelectContent>
@@ -374,6 +417,8 @@ function CalendarViewComponent({ className }: { className?: string }) {
     resizeEvent,
     onEventClick,
     onSlotSelect,
+    locale,
+    messages,
   } = useCalendar();
 
   const weekDays = React.useMemo(
@@ -403,6 +448,8 @@ function CalendarViewComponent({ className }: { className?: string }) {
             draggedRef={draggedRef}
             onEventClick={onEventClick}
             onSlotSelect={onSlotSelect}
+            locale={locale}
+            more={messages.more}
           />
         );
       case 'week':
@@ -423,6 +470,8 @@ function CalendarViewComponent({ className }: { className?: string }) {
             onResize={editable ? resizeEvent : undefined}
             onEventClick={onEventClick}
             onSlotSelect={onSlotSelect}
+            locale={locale}
+            allDayLabel={messages.allDay}
           />
         );
       case 'agenda':
@@ -437,6 +486,8 @@ function CalendarViewComponent({ className }: { className?: string }) {
             color={getColor}
             renderEvent={renderEvent}
             onEventClick={onEventClick}
+            locale={locale}
+            noEventsLabel={messages.noEvents}
           />
         );
     }
@@ -917,6 +968,8 @@ function TimeGridView<T extends Record<string, unknown>>({
   onResize,
   onEventClick,
   onSlotSelect: selectSlot,
+  locale,
+  allDayLabel,
 }: {
   days: Date[];
   items: T[];
@@ -932,6 +985,8 @@ function TimeGridView<T extends Record<string, unknown>>({
   onResize?: (id: string, end: Date) => void;
   onEventClick?: (item: T) => void;
   onSlotSelect?: (range: CalendarSlot) => void;
+  locale?: Locale;
+  allDayLabel: string;
 }) {
   const [resizing, setResizing] = React.useState<{ id: string; end: Date } | null>(null);
   const [creating, setCreating] = React.useState<Creating | null>(null);
@@ -952,14 +1007,14 @@ function TimeGridView<T extends Record<string, unknown>>({
                 key={day.toISOString()}
                 className='flex-1 border-l p-2 text-center text-xs font-medium first:border-l-0'
               >
-                {format(day, 'EEE d')}
+                {format(day, 'EEE d', { locale })}
               </div>
             ))}
           </div>
 
           <div className='flex border-b'>
             <div className='flex w-14 shrink-0 items-center justify-center border-r py-1 text-xs text-muted-foreground'>
-              all-day
+              {allDayLabel}
             </div>
             {days.map((day) => {
               const allDayEvents = items.filter((item) => spansAllDay(item) && isSameDay(getStart(item), day));
@@ -1084,6 +1139,7 @@ function MonthCell<T extends Record<string, unknown>>({
   draggedRef,
   onEventClick,
   onSlotSelect,
+  more,
 }: {
   day: Date;
   date: Date;
@@ -1096,6 +1152,7 @@ function MonthCell<T extends Record<string, unknown>>({
   draggedRef: React.MutableRefObject<boolean>;
   onEventClick?: (item: T) => void;
   onSlotSelect?: (range: CalendarSlot) => void;
+  more: (count: number) => string;
 }) {
   const { setNodeRef } = useDroppable({ id: `cell-${day.toISOString()}`, data: { day } });
   return (
@@ -1117,7 +1174,7 @@ function MonthCell<T extends Record<string, unknown>>({
           onEventClick={onEventClick}
         />
       ))}
-      {overflow > 0 ? <span className='px-1 text-xs text-muted-foreground'>+{overflow} more</span> : null}
+      {overflow > 0 ? <span className='px-1 text-xs text-muted-foreground'>{more(overflow)}</span> : null}
     </div>
   );
 }
@@ -1132,6 +1189,7 @@ function PlainMonthCell<T extends Record<string, unknown>>({
   color,
   renderEvent,
   onEventClick,
+  more,
 }: {
   day: Date;
   date: Date;
@@ -1142,6 +1200,7 @@ function PlainMonthCell<T extends Record<string, unknown>>({
   color?: (item: T) => CalendarEventColor | undefined;
   renderEvent?: (item: T) => React.ReactNode;
   onEventClick?: (item: T) => void;
+  more: (count: number) => string;
 }) {
   return (
     <div className='flex min-h-24 flex-col gap-1 border-b border-l p-1 [&:nth-child(7n+1)]:border-l-0'>
@@ -1156,7 +1215,7 @@ function PlainMonthCell<T extends Record<string, unknown>>({
           {renderEvent ? renderEvent(item) : getTitle(item)}
         </button>
       ))}
-      {overflow > 0 ? <span className='px-1 text-xs text-muted-foreground'>+{overflow} more</span> : null}
+      {overflow > 0 ? <span className='px-1 text-xs text-muted-foreground'>{more(overflow)}</span> : null}
     </div>
   );
 }
@@ -1174,6 +1233,8 @@ function MonthView<T extends Record<string, unknown>>({
   draggedRef,
   onEventClick,
   onSlotSelect,
+  locale,
+  more,
 }: {
   date: Date;
   weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -1187,9 +1248,11 @@ function MonthView<T extends Record<string, unknown>>({
   draggedRef: React.MutableRefObject<boolean>;
   onEventClick?: (item: T) => void;
   onSlotSelect?: (range: CalendarSlot) => void;
+  locale?: Locale;
+  more: (count: number) => string;
 }) {
   const days = monthGrid(date, weekStartsOn);
-  const weekdayLabels = days.slice(0, 7).map((day) => format(day, 'EEE'));
+  const weekdayLabels = days.slice(0, 7).map((day) => format(day, 'EEE', { locale }));
 
   return (
     <div className='w-full overflow-hidden rounded-md border'>
@@ -1223,6 +1286,7 @@ function MonthView<T extends Record<string, unknown>>({
               draggedRef={draggedRef}
               onEventClick={onEventClick}
               onSlotSelect={onSlotSelect}
+              more={more}
             />
           ) : (
             <PlainMonthCell
@@ -1236,6 +1300,7 @@ function MonthView<T extends Record<string, unknown>>({
               color={color}
               renderEvent={renderEvent}
               onEventClick={onEventClick}
+              more={more}
             />
           );
         })}
@@ -1254,6 +1319,8 @@ function AgendaView<T extends Record<string, unknown>>({
   color,
   renderEvent,
   onEventClick,
+  locale,
+  noEventsLabel,
 }: {
   days: Date[];
   items: T[];
@@ -1264,6 +1331,8 @@ function AgendaView<T extends Record<string, unknown>>({
   color?: (item: T) => CalendarEventColor | undefined;
   renderEvent?: (item: T) => React.ReactNode;
   onEventClick?: (item: T) => void;
+  locale?: Locale;
+  noEventsLabel: string;
 }) {
   const groups = days
     .map((day) => ({
@@ -1275,14 +1344,14 @@ function AgendaView<T extends Record<string, unknown>>({
     .filter((group) => group.events.length > 0);
 
   if (groups.length === 0) {
-    return <p className='w-full text-sm text-muted-foreground'>No upcoming events</p>;
+    return <p className='w-full text-sm text-muted-foreground'>{noEventsLabel}</p>;
   }
 
   return (
     <div className='flex max-h-[600px] w-full flex-col gap-4 overflow-y-auto'>
       {groups.map((group) => (
         <div key={group.day.toISOString()} className='flex flex-col gap-1'>
-          <div className='text-sm font-medium'>{format(group.day, 'EEEE, MMM d')}</div>
+          <div className='text-sm font-medium'>{format(group.day, 'EEEE, MMM d', { locale })}</div>
           {group.events.map((item) => (
             <button
               type='button'
