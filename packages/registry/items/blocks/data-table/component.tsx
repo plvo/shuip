@@ -5,6 +5,7 @@ import {
   type ColumnDef,
   type ColumnFiltersState,
   type ColumnPinningState,
+  type FilterFn,
   flexRender,
   getCoreRowModel,
   getFacetedRowModel,
@@ -23,8 +24,11 @@ import {
 } from '@tanstack/react-table';
 import {
   ArrowDown,
+  ArrowDownUp,
   ArrowUp,
+  Bookmark,
   CheckIcon,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -32,14 +36,18 @@ import {
   ChevronsUpDown,
   EyeOff,
   Inbox,
+  ListFilter,
   Loader2,
+  Plus,
   PlusCircle,
   Settings2,
+  Trash2,
   X,
 } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Command,
   CommandEmpty,
@@ -49,6 +57,15 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -72,6 +89,131 @@ declare module '@tanstack/react-table' {
     icon?: React.ComponentType<{ className?: string }>;
   }
 }
+
+export type FilterVariant = NonNullable<DataTableColumnMetaVariant>;
+type DataTableColumnMetaVariant = 'text' | 'number' | 'date' | 'select' | 'multiSelect';
+
+export type FilterOperator =
+  | 'contains'
+  | 'notContains'
+  | 'is'
+  | 'isNot'
+  | 'isEmpty'
+  | 'isNotEmpty'
+  | 'eq'
+  | 'ne'
+  | 'gt'
+  | 'lt'
+  | 'gte'
+  | 'lte'
+  | 'before'
+  | 'after'
+  | 'onOrBefore'
+  | 'onOrAfter'
+  | 'isAnyOf'
+  | 'isNoneOf';
+
+export type FilterCondition = { operator: FilterOperator; value: unknown };
+
+const OPERATOR_LABELS: Record<FilterOperator, string> = {
+  contains: 'contains',
+  notContains: 'does not contain',
+  is: 'is',
+  isNot: 'is not',
+  isEmpty: 'is empty',
+  isNotEmpty: 'is not empty',
+  eq: '=',
+  ne: '≠',
+  gt: '>',
+  lt: '<',
+  gte: '≥',
+  lte: '≤',
+  before: 'is before',
+  after: 'is after',
+  onOrBefore: 'is on or before',
+  onOrAfter: 'is on or after',
+  isAnyOf: 'is any of',
+  isNoneOf: 'is none of',
+};
+
+const OPERATORS_BY_VARIANT: Record<FilterVariant, FilterOperator[]> = {
+  text: ['contains', 'notContains', 'is', 'isNot', 'isEmpty', 'isNotEmpty'],
+  number: ['eq', 'ne', 'gt', 'lt', 'gte', 'lte', 'isEmpty', 'isNotEmpty'],
+  date: ['is', 'before', 'after', 'onOrBefore', 'onOrAfter', 'isEmpty'],
+  select: ['is', 'isNot', 'isAnyOf', 'isNoneOf'],
+  multiSelect: ['isAnyOf', 'isNoneOf', 'is', 'isNot'],
+};
+
+const MULTI_VALUE_OPERATORS: FilterOperator[] = ['isAnyOf', 'isNoneOf'];
+
+function operatorTakesValue(operator: FilterOperator): boolean {
+  return operator !== 'isEmpty' && operator !== 'isNotEmpty';
+}
+
+function isFilterCondition(value: unknown): value is FilterCondition {
+  return typeof value === 'object' && value !== null && 'operator' in value;
+}
+
+function conditionIsEmpty(condition: FilterCondition): boolean {
+  if (!operatorTakesValue(condition.operator)) return false;
+  const { value } = condition;
+  return value == null || value === '' || (Array.isArray(value) && value.length === 0);
+}
+
+export const dataTableFilterFn: FilterFn<unknown> = (row, columnId, filterValue) => {
+  if (Array.isArray(filterValue)) {
+    const cell = row.getValue(columnId);
+    return filterValue.length === 0 || filterValue.includes(cell);
+  }
+  if (!isFilterCondition(filterValue)) return true;
+  const { operator, value } = filterValue;
+  if (conditionIsEmpty(filterValue)) return true;
+
+  const cell = row.getValue(columnId);
+  const text = String(cell ?? '').toLowerCase();
+  const target = String(value ?? '').toLowerCase();
+
+  switch (operator) {
+    case 'isEmpty':
+      return cell == null || cell === '';
+    case 'isNotEmpty':
+      return !(cell == null || cell === '');
+    case 'contains':
+      return text.includes(target);
+    case 'notContains':
+      return !text.includes(target);
+    case 'is':
+      return text === target;
+    case 'isNot':
+      return text !== target;
+    case 'eq':
+      return Number(cell) === Number(value);
+    case 'ne':
+      return Number(cell) !== Number(value);
+    case 'gt':
+      return Number(cell) > Number(value);
+    case 'lt':
+      return Number(cell) < Number(value);
+    case 'gte':
+      return Number(cell) >= Number(value);
+    case 'lte':
+      return Number(cell) <= Number(value);
+    case 'before':
+      return new Date(String(cell)) < new Date(String(value));
+    case 'after':
+      return new Date(String(cell)) > new Date(String(value));
+    case 'onOrBefore':
+      return new Date(String(cell)) <= new Date(String(value));
+    case 'onOrAfter':
+      return new Date(String(cell)) >= new Date(String(value));
+    case 'isAnyOf':
+      return Array.isArray(value) ? value.includes(cell) : true;
+    case 'isNoneOf':
+      return Array.isArray(value) ? !value.includes(cell) : true;
+    default:
+      return true;
+  }
+};
 
 export type UseDataTableProps<TData> = {
   data: TData[];
@@ -128,6 +270,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     data,
     columns,
     pageCount: pageCount ?? undefined,
+    defaultColumn: { filterFn: dataTableFilterFn },
     state: {
       sorting: props.state?.sorting ?? sorting,
       columnFilters: props.state?.columnFilters ?? columnFilters,
@@ -351,6 +494,11 @@ export function DataTableColumnHeader<TData, TValue>({
             <ArrowUp className='ml-2 size-4' />
           ) : (
             <ChevronsUpDown className='ml-2 size-4' />
+          )}
+          {sorted && column.getSortIndex() >= 1 && (
+            <span className='ml-1 rounded bg-muted px-1 font-mono text-[10px] text-muted-foreground tabular-nums'>
+              {column.getSortIndex() + 1}
+            </span>
           )}
         </Button>
       </PopoverTrigger>
@@ -830,5 +978,520 @@ export function DataTableLoadMore({
       )}
       {count && <span className='text-muted-foreground text-xs'>{count}</span>}
     </div>
+  );
+}
+
+type FilterField = { id: string; label: string; variant: FilterVariant; options?: DataTableFilterOption[] };
+type SortField = { id: string; label: string };
+
+function getFilterableFields<TData>(table: Table<TData>): FilterField[] {
+  return table
+    .getAllColumns()
+    .filter((column) => column.getCanFilter() && column.columnDef.meta?.variant)
+    .map((column) => ({
+      id: column.id,
+      label: column.columnDef.meta?.label ?? column.id,
+      variant: column.columnDef.meta?.variant as FilterVariant,
+      options: column.columnDef.meta?.options,
+    }));
+}
+
+function getSortableFields<TData>(table: Table<TData>): SortField[] {
+  return table
+    .getAllColumns()
+    .filter((column) => column.getCanSort())
+    .map((column) => ({ id: column.id, label: column.columnDef.meta?.label ?? column.id }));
+}
+
+function defaultOperatorFor(variant: FilterVariant): FilterOperator {
+  return OPERATORS_BY_VARIANT[variant][0];
+}
+
+function defaultValueFor(variant: FilterVariant): unknown {
+  return MULTI_VALUE_OPERATORS.includes(defaultOperatorFor(variant)) ? [] : '';
+}
+
+function FieldSelect({
+  fields,
+  value,
+  onChange,
+}: {
+  fields: { id: string; label: string }[];
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className='h-8 w-[120px] shrink-0'>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {fields.map((field) => (
+          <SelectItem key={field.id} value={field.id}>
+            {field.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function OperatorSelect({
+  variant,
+  value,
+  onChange,
+}: {
+  variant: FilterVariant;
+  value: FilterOperator;
+  onChange: (value: FilterOperator) => void;
+}) {
+  return (
+    <Select value={value} onValueChange={(next) => onChange(next as FilterOperator)}>
+      <SelectTrigger className='h-8 w-[136px] shrink-0'>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {OPERATORS_BY_VARIANT[variant].map((operator) => (
+          <SelectItem key={operator} value={operator}>
+            {OPERATOR_LABELS[operator]}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function MultiSelectValue({
+  options,
+  selected,
+  onChange,
+}: {
+  options: DataTableFilterOption[];
+  selected: string[];
+  onChange: (value: string[]) => void;
+}) {
+  const toggle = (value: string) =>
+    onChange(selected.includes(value) ? selected.filter((item) => item !== value) : [...selected, value]);
+  const label =
+    selected.length === 0
+      ? 'Select…'
+      : selected.length === 1
+        ? (options.find((option) => option.value === selected[0])?.label ?? selected[0])
+        : `${selected.length} selected`;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant='outline' size='sm' className='h-8 flex-1 justify-between font-normal'>
+          <span className='truncate'>{label}</span>
+          <ChevronDown className='ml-1 size-3.5 shrink-0 text-muted-foreground' />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align='start' className='w-48 p-1'>
+        <div className='flex flex-col gap-0.5'>
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type='button'
+              onClick={() => toggle(option.value)}
+              className='flex items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent'
+            >
+              <Checkbox checked={selected.includes(option.value)} className='pointer-events-none' />
+              <span>{option.label}</span>
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function FilterValueControl({
+  field,
+  condition,
+  onChange,
+}: {
+  field: FilterField;
+  condition: FilterCondition;
+  onChange: (value: unknown) => void;
+}) {
+  if (!operatorTakesValue(condition.operator)) {
+    return <div className='h-8 flex-1 rounded-md border border-dashed bg-muted/30' aria-hidden />;
+  }
+
+  if ((field.variant === 'select' || field.variant === 'multiSelect') && field.options) {
+    if (MULTI_VALUE_OPERATORS.includes(condition.operator)) {
+      const selected = Array.isArray(condition.value) ? (condition.value as string[]) : [];
+      return <MultiSelectValue options={field.options} selected={selected} onChange={onChange} />;
+    }
+    return (
+      <Select value={(condition.value as string) ?? ''} onValueChange={onChange}>
+        <SelectTrigger className='h-8 flex-1'>
+          <SelectValue placeholder='Select…' />
+        </SelectTrigger>
+        <SelectContent>
+          {field.options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
+
+  return (
+    <Input
+      value={(condition.value as string) ?? ''}
+      onChange={(event) => onChange(event.target.value)}
+      type={field.variant === 'number' ? 'number' : field.variant === 'date' ? 'date' : 'text'}
+      placeholder='Value'
+      className='h-8 flex-1'
+    />
+  );
+}
+
+function FilterBuilder<TData>({ table }: { table: Table<TData> }) {
+  const fields = getFilterableFields(table);
+  const columnFilters = table.getState().columnFilters;
+
+  const rows = columnFilters
+    .map((columnFilter) => {
+      const field = fields.find((candidate) => candidate.id === columnFilter.id);
+      if (!field) return null;
+      const condition = isFilterCondition(columnFilter.value)
+        ? columnFilter.value
+        : { operator: defaultOperatorFor(field.variant), value: columnFilter.value };
+      return { field, condition };
+    })
+    .filter((row): row is { field: FilterField; condition: FilterCondition } => row !== null);
+
+  const setCondition = (columnId: string, condition: FilterCondition) => {
+    table.setColumnFilters((current) => [
+      ...current.filter((item) => item.id !== columnId),
+      { id: columnId, value: condition },
+    ]);
+  };
+
+  const removeCondition = (columnId: string) =>
+    table.setColumnFilters((current) => current.filter((item) => item.id !== columnId));
+
+  const changeField = (oldId: string, newId: string) => {
+    const field = fields.find((candidate) => candidate.id === newId);
+    if (!field) return;
+    table.setColumnFilters((current) => [
+      ...current.filter((item) => item.id !== oldId && item.id !== newId),
+      { id: newId, value: { operator: defaultOperatorFor(field.variant), value: defaultValueFor(field.variant) } },
+    ]);
+  };
+
+  const changeOperator = (field: FilterField, previous: FilterCondition, operator: FilterOperator) => {
+    const wasMulti = Array.isArray(previous.value);
+    const willMulti = MULTI_VALUE_OPERATORS.includes(operator);
+    const value = willMulti ? (wasMulti ? previous.value : []) : wasMulti ? '' : previous.value;
+    setCondition(field.id, { operator, value });
+  };
+
+  const addCondition = () => {
+    const used = new Set(columnFilters.map((item) => item.id));
+    const next = fields.find((field) => !used.has(field.id));
+    if (!next) return;
+    setCondition(next.id, { operator: defaultOperatorFor(next.variant), value: defaultValueFor(next.variant) });
+  };
+
+  const allUsed = fields.length > 0 && fields.every((field) => columnFilters.some((item) => item.id === field.id));
+
+  return (
+    <div className='flex flex-col gap-2'>
+      {rows.length === 0 ? (
+        <p className='px-1 py-2 text-muted-foreground text-sm'>No filters applied to this view.</p>
+      ) : (
+        rows.map((row, index) => (
+          <div key={row.field.id} className='flex items-center gap-2'>
+            <span className='w-12 shrink-0 pl-1 text-muted-foreground text-sm'>{index === 0 ? 'Where' : 'And'}</span>
+            <FieldSelect fields={fields} value={row.field.id} onChange={(value) => changeField(row.field.id, value)} />
+            <OperatorSelect
+              variant={row.field.variant}
+              value={row.condition.operator}
+              onChange={(operator) => changeOperator(row.field, row.condition, operator)}
+            />
+            <FilterValueControl
+              field={row.field}
+              condition={row.condition}
+              onChange={(value) => setCondition(row.field.id, { ...row.condition, value })}
+            />
+            <Button
+              variant='ghost'
+              size='icon-sm'
+              className='shrink-0 text-muted-foreground'
+              onClick={() => removeCondition(row.field.id)}
+              aria-label='Remove filter'
+            >
+              <X className='size-4' />
+            </Button>
+          </div>
+        ))
+      )}
+      <div className='flex items-center justify-between pt-1'>
+        <Button
+          variant='ghost'
+          size='sm'
+          className='h-8 px-2 text-muted-foreground'
+          onClick={addCondition}
+          disabled={allUsed}
+        >
+          <Plus className='mr-1.5 size-4' /> Add filter
+        </Button>
+        {rows.length > 0 && (
+          <Button
+            variant='ghost'
+            size='sm'
+            className='h-8 px-2 text-muted-foreground'
+            onClick={() => table.setColumnFilters([])}
+          >
+            <Trash2 className='mr-1.5 size-4' /> Clear
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export type DataTableFilterMenuProps<TData> = {
+  table: Table<TData>;
+  variant?: 'popover' | 'dialog';
+};
+
+export function DataTableFilterMenu<TData>({ table, variant = 'popover' }: DataTableFilterMenuProps<TData>) {
+  const count = table.getState().columnFilters.length;
+  const trigger = (
+    <Button variant='outline' size='sm' className='h-8 border-dashed'>
+      <ListFilter className='mr-2 size-4' /> Filter
+      {count > 0 && <span className='ml-2 rounded-sm bg-secondary px-1.5 font-normal text-xs'>{count}</span>}
+      {variant === 'popover' && <ChevronDown className='ml-1 size-3.5 text-muted-foreground' />}
+    </Button>
+  );
+
+  if (variant === 'dialog') {
+    return (
+      <Dialog>
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
+        <DialogContent className='max-w-2xl'>
+          <DialogHeader>
+            <DialogTitle>Filters</DialogTitle>
+            <DialogDescription>Show rows that match all of these conditions.</DialogDescription>
+          </DialogHeader>
+          <FilterBuilder table={table} />
+          <DialogFooter>
+            <Button variant='ghost' size='sm' onClick={() => table.setColumnFilters([])}>
+              Clear all
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent align='start' className='w-[560px] p-2'>
+        <FilterBuilder table={table} />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function SortBuilder<TData>({ table }: { table: Table<TData> }) {
+  const fields = getSortableFields(table);
+  const sorting = table.getState().sorting;
+
+  const setDir = (id: string, desc: boolean) =>
+    table.setSorting((current) => current.map((sort) => (sort.id === id ? { ...sort, desc } : sort)));
+
+  const remove = (id: string) => table.setSorting((current) => current.filter((sort) => sort.id !== id));
+
+  const changeField = (oldId: string, newId: string) =>
+    table.setSorting((current) => [
+      ...current.filter((sort) => sort.id !== oldId && sort.id !== newId),
+      { id: newId, desc: false },
+    ]);
+
+  const add = () => {
+    const used = new Set(sorting.map((sort) => sort.id));
+    const next = fields.find((field) => !used.has(field.id));
+    if (next) table.setSorting((current) => [...current, { id: next.id, desc: false }]);
+  };
+
+  const allUsed = fields.length > 0 && fields.every((field) => sorting.some((sort) => sort.id === field.id));
+
+  return (
+    <div className='flex flex-col gap-2'>
+      {sorting.length === 0 ? (
+        <p className='px-1 py-2 text-muted-foreground text-sm'>No sorts applied to this view.</p>
+      ) : (
+        sorting.map((sort, index) => (
+          <div key={sort.id} className='flex items-center gap-2'>
+            <span className='w-12 shrink-0 pl-1 text-muted-foreground text-sm'>{index === 0 ? 'Sort' : 'Then'}</span>
+            <FieldSelect fields={fields} value={sort.id} onChange={(value) => changeField(sort.id, value)} />
+            <Select value={sort.desc ? 'desc' : 'asc'} onValueChange={(value) => setDir(sort.id, value === 'desc')}>
+              <SelectTrigger className='h-8 flex-1'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='asc'>Ascending</SelectItem>
+                <SelectItem value='desc'>Descending</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant='ghost'
+              size='icon-sm'
+              className='shrink-0 text-muted-foreground'
+              onClick={() => remove(sort.id)}
+              aria-label='Remove sort'
+            >
+              <X className='size-4' />
+            </Button>
+          </div>
+        ))
+      )}
+      <div className='pt-1'>
+        <Button variant='ghost' size='sm' className='h-8 px-2 text-muted-foreground' onClick={add} disabled={allUsed}>
+          <Plus className='mr-1.5 size-4' /> Add sort
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export function DataTableSortMenu<TData>({ table }: { table: Table<TData> }) {
+  const count = table.getState().sorting.length;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant='outline' size='sm' className='h-8 border-dashed'>
+          <ArrowDownUp className='mr-2 size-4' /> Sort
+          {count > 0 && <span className='ml-2 rounded-sm bg-secondary px-1.5 font-normal text-xs'>{count}</span>}
+          <ChevronDown className='ml-1 size-3.5 text-muted-foreground' />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align='start' className='w-[420px] p-2'>
+        <SortBuilder table={table} />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+export type DataTableView = { name: string; filters: ColumnFiltersState; sorting: SortingState };
+
+export type DataTableViewsProps<TData> = {
+  table: Table<TData>;
+  storageKey: string;
+};
+
+export function DataTableViews<TData>({ table, storageKey }: DataTableViewsProps<TData>) {
+  const key = `shuip:dt-views:${storageKey}`;
+  const [views, setViews] = React.useState<DataTableView[]>([]);
+  const [name, setName] = React.useState('');
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) setViews(JSON.parse(raw) as DataTableView[]);
+    } catch {
+      setViews([]);
+    }
+  }, [key]);
+
+  const persist = (next: DataTableView[]) => {
+    setViews(next);
+    try {
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch {
+      /* storage unavailable */
+    }
+  };
+
+  const save = () => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const view: DataTableView = {
+      name: trimmed,
+      filters: table.getState().columnFilters,
+      sorting: table.getState().sorting,
+    };
+    persist([...views.filter((current) => current.name !== trimmed), view]);
+    setName('');
+    setSaving(false);
+  };
+
+  const apply = (view: DataTableView) => {
+    table.setColumnFilters(view.filters);
+    table.setSorting(view.sorting);
+  };
+
+  const remove = (viewName: string) => persist(views.filter((current) => current.name !== viewName));
+
+  return (
+    <Popover onOpenChange={(open) => !open && setSaving(false)}>
+      <PopoverTrigger asChild>
+        <Button variant='outline' size='sm' className='h-8'>
+          <Bookmark className='mr-2 size-4' /> Views
+          {views.length > 0 && (
+            <span className='ml-2 rounded-sm bg-secondary px-1.5 font-normal text-xs'>{views.length}</span>
+          )}
+          <ChevronDown className='ml-1 size-3.5 text-muted-foreground' />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align='end' className='w-60 p-1'>
+        <div className='flex flex-col gap-0.5'>
+          {views.length === 0 ? (
+            <p className='px-2 py-1.5 text-muted-foreground text-sm'>No saved views.</p>
+          ) : (
+            views.map((view) => (
+              <div key={view.name} className='flex items-center'>
+                <button
+                  type='button'
+                  onClick={() => apply(view)}
+                  className='flex-1 truncate rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent'
+                >
+                  {view.name}
+                </button>
+                <Button
+                  variant='ghost'
+                  size='icon-sm'
+                  className='shrink-0 text-muted-foreground'
+                  onClick={() => remove(view.name)}
+                  aria-label={`Delete ${view.name}`}
+                >
+                  <Trash2 className='size-3.5' />
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
+        <Separator className='my-1' />
+        {saving ? (
+          <div className='flex items-center gap-1.5 p-1'>
+            <Input
+              autoFocus
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              onKeyDown={(event) => event.key === 'Enter' && save()}
+              placeholder='View name'
+              className='h-8'
+            />
+            <Button size='sm' className='h-8' onClick={save} disabled={!name.trim()}>
+              Save
+            </Button>
+          </div>
+        ) : (
+          <Button variant='ghost' size='sm' className='w-full justify-start' onClick={() => setSaving(true)}>
+            <Plus className='mr-2 size-4' /> Save current view
+          </Button>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 }

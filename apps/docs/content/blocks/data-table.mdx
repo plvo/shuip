@@ -15,6 +15,7 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 - **Auto-generated toolbar**: faceted filters are derived from each column's `meta.variant` / `meta.options` — no per-table wiring.
 - **Composable**: drop `DataTableToolbar`, `DataTable`, and `DataTablePagination` where you want them; swap any piece.
 - **Per-zone variants**: pagination (`simple` / `numbered`), progressive `DataTableLoadMore` (`button` / `infinite`), toolbar (`default` / `inline-chips` / `minimal`), empty state (`text` / `illustrated` / `with-action`), and loading (`skeleton` / `overlay` / `shimmer`).
+- **Advanced filtering & sorting**: a Notion-style condition builder (`DataTableFilterMenu`, popover or dialog), multi-sort (`DataTableSortMenu`), and saved views in localStorage (`DataTableViews`) — all derived from the same `meta` convention.
 - **Row selection, column visibility, column pinning** (sticky columns), sortable headers, global search.
 - **States**: loading skeleton, empty, and no-results-after-filter.
 
@@ -54,6 +55,24 @@ Each zone of the table is a separate sub-component with its own `variant`, so yo
 <DataTable table={table} isLoading={isLoading} loadingVariant='overlay' />   // keep rows, dim + spinner (best for refetch)
 <DataTable table={table} isLoading={isLoading} loadingVariant='shimmer' />   // animated sweep (reduced-motion aware)
 ```
+
+## Advanced filtering, sorting & saved views
+
+Three composable controls — drop them in any row, no toolbar assumed. Each is driven by the `table` instance alone; the filterable fields and their operators are derived from each column's existing `meta`, so there is no separate filter config to keep in sync.
+
+```tsx
+<div className='flex items-center gap-2'>
+  <DataTableFilterMenu table={table} variant='popover' />  {/* or 'dialog' */}
+  <DataTableSortMenu table={table} />
+  <DataTableViews table={table} storageKey='deals' />
+</div>
+```
+
+- **`DataTableFilterMenu`** — a condition builder (`Where [field] [operator] [value]`). Operators are inferred from `meta.variant`: `text` → contains / is / is empty…, `number` → `= ≠ > < ≥ ≤`, `date` → before / after / on or before…, `select` / `multiSelect` → is / is any of / is none of. The `variant` prop renders the same builder in a popover or a dialog.
+- **`DataTableSortMenu`** — multi-column sort; order is priority (first row = primary). Secondary columns show a priority badge in their header.
+- **`DataTableViews`** — save the current `{ filters, sorting }` as a named view in `localStorage` (`shuip:dt-views:<storageKey>`), then apply or delete it.
+
+Conditions live in TanStack's `columnFilters` as `{ id, value: { operator, value } }`. In client mode `useDataTable` registers an operator-aware `filterFn` (`dataTableFilterFn`), so filtering works with no per-column wiring; in server mode, read `table.getState().columnFilters` and translate it to your query. One condition per column (the `columnFilters` model); conditions combine with AND.
 
 ## The `meta` convention
 
