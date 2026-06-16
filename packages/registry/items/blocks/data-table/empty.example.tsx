@@ -13,6 +13,8 @@ type User = {
   email: string;
 };
 
+const noUsers: User[] = [];
+
 export default function DataTableEmptyExample() {
   const [variant, setVariant] = React.useState<'text' | 'illustrated' | 'with-action'>('illustrated');
 
@@ -34,7 +36,7 @@ export default function DataTableEmptyExample() {
     [],
   );
 
-  const { table } = useDataTable<User>({ data: [], columns, getRowId: (row) => row.id });
+  const { table } = useDataTable<User>({ data: noUsers, columns, getRowId: (row) => row.id });
 
   return (
     <div className='flex w-full min-w-0 flex-col gap-3'>
