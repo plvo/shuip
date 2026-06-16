@@ -15,6 +15,7 @@ It binds to React Hook Form through `@hookform/lenses` (`lens` prop). A preset i
 - **Two search modes**: static `options` (client-side substring filter on `label`) or async `onSearch` (debounced fetch). `onSearch` wins when both are passed.
 - **Recents on open**: `onSearch('')` fires when the menu opens empty, so you can return a suggested list.
 - **Keyboard navigation**: ArrowUp/ArrowDown to move, Enter to select, Escape to close, Backspace to remove the last chip (multi).
+- **Variants**: `variant` (`boxed` or borderless `ghost`) and `size` (`sm` or `default`).
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 
@@ -50,6 +51,16 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
     maxResults: {
       description: 'Caps the number of options shown in the list',
       type: 'number?',
+    },
+    variant: {
+      description: 'Field shell style. "ghost" is borderless and transparent, so multi reads as just the chips.',
+      type: "'boxed' | 'ghost'",
+      default: "'boxed'",
+    },
+    size: {
+      description: 'Field density. "sm" reduces height, padding and text.',
+      type: "'sm' | 'default'",
+      default: "'default'",
     },
     label: {
       description: 'Field label text',
