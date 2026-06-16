@@ -1,0 +1,144 @@
+---
+title: Calendar
+description: A generic, responsive calendar with month, week, day, and agenda views, driven by your typed event model.
+registryName: calendar
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+`Calendar` is a generic, responsive calendar that renders any array of typed events. The
+event id, title, start, end, and all-day fields are mapped against your own data shape.
+
+It is split into composable parts that share state through context, so you can drop in the
+default toolbar or build your own navigation without prop drilling:
+
+```tsx
+import { Calendar, useCalendar } from '@/components/block/shuip/calendar';
+
+<Calendar.Root events={events} onEventsChange={setEvents} titleField='title' startField='start' endField='end' editable>
+  <Calendar.Nav />   {/* default toolbar — or your own navbar via useCalendar() */}
+  <Calendar.View />  {/* the views: month / week / day / agenda */}
+</Calendar.Root>;
+```
+
+- **`Calendar.Root`** holds all state and config. The props below live here.
+- **`Calendar.Nav`** is the default navigation (today, previous/next, period label, view switcher).
+- **`Calendar.View`** is the calendar surface itself.
+- **`useCalendar()`** exposes `view`, `date`, `periodLabel`, `goToToday`, `goToPrevious`, `goToNext`, `setView`, and more — read it from any descendant of `Calendar.Root` to build a custom toolbar.
+
+### Built-in features
+
+- **Generic typed event model**: works with any item type `T`; the id, title, start, end, and all-day fields are mapped via `idField` / `titleField` / `startField` / `endField` / `allDayField`.
+- **Four views**: month, week, day, and agenda, switched from the toolbar or controlled via `view` / `defaultView`.
+- **Responsive week → day**: the week view falls back to a single-day view on narrow screens.
+- **Hybrid state**: works standalone from `defaultEvents`, or controlled via `events` + `onEventsChange`.
+- **Drag to move**: drag an event to another day (month) or time slot (week/day) when `editable`.
+- **Resize**: drag an event's bottom edge in week/day to change its end time when `editable`.
+- **Drag to create**: drag across an empty range to emit `onSlotSelect` when `editable`.
+- **Per-event colors**: derive a color per event with `color(item)`.
+- **Custom event content**: replace the default event label with `renderEvent(item)`.
+
+> Define your event type with a `type` alias, not an `interface` — `Calendar.Root<T>` requires `T extends Record<string, unknown>`, which a TypeScript `interface` does not satisfy.
+
+## Examples
+
+<ItemExamples registryName={'calendar'} />
+
+## Props
+
+Props are passed to `Calendar.Root`.
+
+<TypeTable
+  type={{
+    events: {
+      description: 'Controlled events. When provided, you own the state via onEventsChange.',
+      type: 'T[]?',
+    },
+    defaultEvents: {
+      description: 'Initial events for uncontrolled mode.',
+      type: 'T[]?',
+    },
+    onEventsChange: {
+      description: 'Fires with the full updated array after a move, resize, or other mutation.',
+      type: '(next: T[]) => void',
+    },
+    idField: {
+      description: 'Field holding the stable event id.',
+      type: 'keyof T',
+      default: "'id'",
+    },
+    titleField: {
+      description: 'Field rendered as the event label.',
+      type: 'keyof T',
+    },
+    startField: {
+      description: 'Field holding the event start Date.',
+      type: 'keyof T',
+    },
+    endField: {
+      description: 'Field holding the event end Date.',
+      type: 'keyof T',
+    },
+    allDayField: {
+      description: 'Field marking an event as all-day. Omit to treat day-spanning events as all-day.',
+      type: 'keyof T?',
+    },
+    color: {
+      description: 'Returns the color accent for an event.',
+      type: '(item: T) => CalendarEventColor | undefined',
+    },
+    renderEvent: {
+      description: 'Replaces the default event label across every view.',
+      type: '(item: T) => ReactNode',
+    },
+    view: {
+      description: 'Controlled active view.',
+      type: 'CalendarView?',
+    },
+    defaultView: {
+      description: 'Initial view for uncontrolled mode.',
+      type: 'CalendarView',
+      default: "'month'",
+    },
+    onViewChange: {
+      description: 'Fires when the active view changes.',
+      type: '(v: CalendarView) => void',
+    },
+    date: {
+      description: 'Controlled focused date.',
+      type: 'Date?',
+    },
+    defaultDate: {
+      description: 'Initial focused date for uncontrolled mode.',
+      type: 'Date?',
+      default: 'today',
+    },
+    onDateChange: {
+      description: 'Fires when the focused date changes.',
+      type: '(d: Date) => void',
+    },
+    views: {
+      description: 'Which views are selectable in the toolbar.',
+      type: 'CalendarView[]',
+      default: "['month', 'week', 'day', 'agenda']",
+    },
+    weekStartsOn: {
+      description: 'First day of the week (0 = Sunday).',
+      type: '0 | 1 | 2 | 3 | 4 | 5 | 6',
+      default: '1',
+    },
+    editable: {
+      description: 'Enables drag-to-move, resize, and drag-to-create.',
+      type: 'boolean',
+      default: 'false',
+    },
+    onEventClick: {
+      description: 'Called when an event is clicked.',
+      type: '(item: T) => void',
+    },
+    onSlotSelect: {
+      description: 'Called with the selected range when an empty slot or range is picked.',
+      type: '(range: { start: Date; end: Date; allDay: boolean }) => void',
+    },
+  }}
+/>
