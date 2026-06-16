@@ -20,6 +20,7 @@
     "@hookform/lenses": "catalog:forms",
     "@tanstack/react-form": "catalog:forms",
     "@tanstack/react-query": "catalog:forms",
+    "@tanstack/react-table": "catalog:",
     "react-error-boundary": "catalog:forms",
     "zod": "catalog:",
     "date-fns": "catalog:",

@@ -11,6 +11,7 @@
     "ignoreUnknown": true,
     "includes": [
       "**",
+      "!**/.claude/**/*",
       "!**/node_modules/**/*",
       "!**/.next/**/*",
       "!**/.turbo/**/*",
