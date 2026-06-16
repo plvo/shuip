@@ -17,8 +17,8 @@ const at = (dayOffset: number, h: number, m = 0) =>
   new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOffset, h, m);
 
 const seed: CalEvent[] = [
-  { id: '1', title: 'Standup', start: at(0, 9), end: at(0, 9, 30), color: 'blue' },
-  { id: '2', title: 'Ship release', start: at(1, 15), end: at(1, 16), color: 'red' },
+  { id: '1', title: 'Standup', start: at(0, 9), end: at(0, 9, 30), color: 'secondary' },
+  { id: '2', title: 'Ship release', start: at(1, 15), end: at(1, 16), color: 'destructive' },
 ];
 
 // Dates do not survive JSON, so we serialize to ISO strings and revive on read.

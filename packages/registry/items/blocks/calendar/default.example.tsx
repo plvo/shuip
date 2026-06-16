@@ -15,13 +15,13 @@ const at = (dayOffset: number, h: number, m = 0) =>
   new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOffset, h, m);
 
 const seed: CalEvent[] = [
-  { id: '1', title: 'Standup', start: at(0, 9), end: at(0, 9, 30), color: 'blue' },
-  { id: '2', title: 'Design review', start: at(0, 11), end: at(0, 12), color: 'green' },
+  { id: '1', title: 'Standup', start: at(0, 9), end: at(0, 9, 30), color: 'secondary' },
+  { id: '2', title: 'Design review', start: at(0, 11), end: at(0, 12), color: 'accent' },
   { id: '3', title: 'Lunch', start: at(1, 12), end: at(1, 13) },
-  { id: '4', title: 'Offsite', start: at(2, 0), end: at(3, 0), color: 'amber' },
+  { id: '4', title: 'Offsite', start: at(2, 0), end: at(3, 0), color: 'muted' },
 ];
 
-const colors: CalendarEventColor[] = ['primary', 'blue', 'green', 'red', 'amber'];
+const colors: CalendarEventColor[] = ['primary', 'secondary', 'accent', 'destructive', 'muted'];
 
 export default function Example() {
   const [events, setEvents] = React.useState<CalEvent[]>(seed);

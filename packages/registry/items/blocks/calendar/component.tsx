@@ -33,7 +33,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 
 export type CalendarView = 'month' | 'week' | 'day' | 'agenda';
-export type CalendarEventColor = 'primary' | 'blue' | 'green' | 'red' | 'amber';
+export type CalendarEventColor = 'primary' | 'secondary' | 'accent' | 'destructive' | 'muted';
 export type CalendarSlot = { start: Date; end: Date; allDay: boolean };
 
 type CalendarEventLike = Record<string, unknown>;
@@ -457,19 +457,16 @@ function monthGrid(date: Date, weekStartsOn: 0 | 1 | 2 | 3 | 4 | 5 | 6): Date[] 
   return eachDayOfInterval({ start, end });
 }
 
+const colorClassMap: Record<CalendarEventColor, string> = {
+  primary: 'bg-primary text-primary-foreground',
+  secondary: 'bg-secondary text-secondary-foreground',
+  accent: 'bg-accent text-accent-foreground',
+  destructive: 'bg-destructive text-destructive-foreground',
+  muted: 'bg-muted text-muted-foreground',
+};
+
 function colorClasses(c?: CalendarEventColor): string {
-  switch (c) {
-    case 'blue':
-      return 'bg-blue-500 text-white';
-    case 'green':
-      return 'bg-green-600 text-white';
-    case 'red':
-      return 'bg-red-500 text-white';
-    case 'amber':
-      return 'bg-amber-500 text-black';
-    default:
-      return 'bg-primary text-primary-foreground';
-  }
+  return c ? colorClassMap[c] : colorClassMap.primary;
 }
 
 const HOUR_HEIGHT = 48;
