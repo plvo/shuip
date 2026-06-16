@@ -78,22 +78,27 @@ The consumer maps its own data (tRPC rows, etc.) to `ComboboxOption[]` inside
 
 - At rest (not focused): the input displays the selected option's `label`, or the
   placeholder when empty.
-- On focus: the input clears to an empty query and fires `onSearch('')` (see
-  "Default options on open"); the result menu opens below.
-- Selecting an option (click or `Enter` on the highlighted row) commits its
-  `value`, closes the menu, and the input reverts to showing the label.
-- Closing without selecting (blur / `Escape`) keeps the previously committed value
-  and restores its label.
+- On focus: the input pre-fills the current `label` as **selected text** (so the
+  first keystroke replaces it) and opens the menu showing the **full list** with the
+  current option checked. The filter query stays empty until the user actually types
+  — pre-filled-but-untouched is treated as an empty query (so `onSearch('')` still
+  drives the "recents" list).
+- Typing replaces the selected label and filters; selecting an option (click or
+  `Enter`) commits its `value`, closes the menu, and the input shows the new label.
+- Closing without typing/selecting (blur / `Escape`) keeps the previously committed
+  value and restores its label.
 
 ### Multi mode
 
 - Selected options render as **chips** (the `badge` primitive) inside the field
-  container, before the query input.
+  container, after the magnifier and before the query input.
 - Selecting an option appends its `value`; the menu **stays open** so several can
   be picked in a row. Already-selected options show a check and toggle off when
   re-selected.
 - `Backspace` on an empty query removes the last chip.
 - The committed value is the ordered `string[]` of selected ids.
+- The container is `w-full` + `flex-wrap` with a `min-w-0` input, so chips wrap onto
+  new lines and never widen the field past its container.
 
 ### Search modes (mutually exclusive)
 
@@ -125,21 +130,42 @@ and async results, and to the default-on-open list).
 
 ## Interaction implementation
 
-Built on cmdk `Command` to get the command aesthetic and keyboard nav for free:
+cmdk-native combobox — **no Radix `Popover`**. A Radix `Popover` treats a click on
+its anchor (the field, which lives outside `PopoverContent`) as an outside-interaction
+and closes, while the input keeps focus — so `onFocus` never re-fires and the field
+gets stuck until a blur + re-click. Dropping the `Popover` removes that conflict at
+the root.
 
-- One `<Command shouldFilter={false}>` wraps an always-visible `<CommandInput>`
-  (built-in magnifier icon — this is the "command" look) and a `<CommandList>`
-  rendered in a `Popover`/anchored dropdown when `open`.
-- cmdk provides `ArrowUp` / `ArrowDown` / `Enter` / `Escape` navigation over the
-  rendered `CommandItem`s; we do not track `selectedIndex` manually (unlike
-  `autocomplete-field`, whose plain-input model required it).
-- Popover width pinned to the field via `var(--radix-popover-trigger-width)`;
-  `onOpenAutoFocus` prevented so focus stays in the input.
-- The single-mode "label at rest vs query while focused" is handled by syncing the
-  `CommandInput` displayed value to state (selected label when blurred, live query
-  when focused) — the fiddly part of this component.
+- One `<Command shouldFilter={false}>` wraps:
+  - a styled **shell** `<div>` laid out as `magnifier (always left) · chips (multi) ·
+    input`. The input is cmdk's raw `CommandPrimitive.Input` (no built-in icon
+    wrapper) so the magnifier position is fully ours; a `lucide` `Search` icon is
+    rendered explicitly at the far left.
+  - a **floating list** (`absolute`, `top-full`, `z-50`, `w-full`, bordered
+    `bg-popover`) rendered only when `open`, containing `CommandList` / `CommandEmpty`
+    / `CommandGroup` / `CommandItem`.
+- Open/close: open on input `focus` / `pointerdown`; close on input `blur` when
+  `relatedTarget` is outside the `Command` container, on `Escape`, and (single only)
+  on select. The list uses `onMouseDown` `preventDefault` so clicking an item /
+  chip-remove does not blur the input and pre-empt the select.
+- cmdk owns `ArrowUp` / `ArrowDown` / `Enter` navigation over the rendered
+  `CommandItem`s (no manual `selectedIndex`). `Escape` and multi `Backspace` are
+  handled on the input's `onKeyDown`.
+- Trade-off vs `Popover`: no automatic flip near the viewport edge — the list always
+  opens downward with an internal `max-h-60` scroll. Acceptable for now.
 - `CommandItem` renders `label` + optional `sublabel`, with a `Check` for selected
-  values (multi) / the active value (single).
+  values.
+
+## Variants
+
+Two independent axes, applied to the shell via plain class maps (the `inline-edit`
+pattern), valid in both single and multi:
+
+- `variant: 'boxed' | 'ghost'` (default `boxed`). `boxed` = bordered field with
+  focus ring; `ghost` = borderless, transparent background (multi then reads as just
+  the badges + magnifier).
+- `size: 'sm' | 'default'` (default `default`). `sm` reduces height, padding, text
+  and icon sizes.
 
 ## Props
 
@@ -156,6 +182,8 @@ type ComboboxFieldCommonProps = {
   options?: ComboboxOption[];
   onSearch?: (query: string) => Promise<ComboboxOption[]>;
   maxResults?: number;
+  variant?: 'boxed' | 'ghost'; // default "boxed"
+  size?: 'sm' | 'default';     // default "default"
   label?: string;
   description?: string;
   placeholder?: string;
@@ -203,8 +231,11 @@ Same logic and feature set. Differences follow the tsf field convention:
 - `multiple.example.tsx` — `multiple` with static `options` (chips).
 - `async.example.tsx` — `onSearch` with a simulated async fetch + a "recents on
   empty query" branch.
+- `variants.example.tsx` — `boxed` vs `ghost` (a multi `ghost` showing only badges).
+- `sizes.example.tsx` — `sm` vs `default`.
 - `index.mdx` — frontmatter (`title`, `description`, `registryName`),
-  `<ItemExamples registryName={...} />`, and a `<TypeTable>` for props.
+  `<ItemExamples registryName={...} />`, and a `<TypeTable>` for props (incl.
+  `variant` / `size`).
 
 Examples import the component via the stub alias
 (`@/components/ui/shuip/react-hook-form/combobox-field` /
@@ -212,8 +243,11 @@ Examples import the component via the stub alias
 
 ## Dependencies (auto-detected by generate.ts)
 
-- `registryDependencies`: `command`, `popover`, `field`, `input`, `badge` (chips).
-- `dependencies`: `lucide-react` (`Search`, `Check`, `Loader2`, `X`).
+- `registryDependencies`: `command`, `field`, `badge` (chips). No `popover` (the
+  cmdk-native rebuild drops it) and no `input` (the field uses cmdk's
+  `CommandPrimitive.Input`, not the shadcn `Input`).
+- `dependencies`: `lucide-react` (`Search`, `Check`, `Loader2`, `X`) and `cmdk`
+  (`CommandPrimitive.Input`).
 - RHF additionally pulls `@hookform/lenses` + `react-hook-form`; TSF pulls
   `@tanstack/react-form` and uses the `form-context` stub.
 
