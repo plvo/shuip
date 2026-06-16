@@ -14,12 +14,46 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 - **Dual mode**: client-side out of the box (sorting, filtering, pagination computed in memory) or server-side by passing `pageCount` + controlled state and `on*Change` handlers.
 - **Auto-generated toolbar**: faceted filters are derived from each column's `meta.variant` / `meta.options` — no per-table wiring.
 - **Composable**: drop `DataTableToolbar`, `DataTable`, and `DataTablePagination` where you want them; swap any piece.
+- **Per-zone variants**: pagination (`simple` / `numbered`), progressive `DataTableLoadMore` (`button` / `infinite`), toolbar (`default` / `inline-chips` / `minimal`), empty state (`text` / `illustrated` / `with-action`), and loading (`skeleton` / `overlay` / `shimmer`).
 - **Row selection, column visibility, column pinning** (sticky columns), sortable headers, global search.
 - **States**: loading skeleton, empty, and no-results-after-filter.
 
 ## Examples
 
 <ItemExamples registryName={'data-table'} />
+
+## Variants
+
+Each zone of the table is a separate sub-component with its own `variant`, so you compose the look you want by swapping the relevant piece — nothing else changes.
+
+```tsx
+// Pagination — page-based presentation of the same table state
+<DataTablePagination table={table} variant='simple' />   // arrows + "Page X of Y" (default)
+<DataTablePagination table={table} variant='numbered' />  // numbered pages with truncation
+
+// Progressive loading — accumulate rows instead of paging (server- or client-driven)
+<DataTableLoadMore mode='button' onLoadMore={loadMore} hasMore={hasMore} isLoading={isLoading} loaded={rows.length} total={total} />
+<DataTableLoadMore mode='infinite' onLoadMore={loadMore} hasMore={hasMore} isLoading={isLoading} />
+
+// Toolbar
+<DataTableToolbar table={table} variant='default' />       // search + faceted filters + view (default)
+<DataTableToolbar table={table} variant='inline-chips' />  // active filters as removable chips on a second row
+<DataTableToolbar table={table} variant='minimal' />       // search + view only
+
+// Empty state — pass a ready-made brick to `emptyState`, or any node of your own
+<DataTable
+  table={table}
+  emptyState={
+    <DataTableEmpty variant='illustrated' icon={Inbox} title='No results' description='Try adjusting your filters.' />
+  }
+/>
+<DataTableEmpty variant='with-action' title='No users yet' action={<Button size='sm'>Invite user</Button>} />
+
+// Loading
+<DataTable table={table} isLoading={isLoading} loadingVariant='skeleton' />  // skeleton rows (default)
+<DataTable table={table} isLoading={isLoading} loadingVariant='overlay' />   // keep rows, dim + spinner (best for refetch)
+<DataTable table={table} isLoading={isLoading} loadingVariant='shimmer' />   // animated sweep (reduced-motion aware)
+```
 
 ## The `meta` convention
 

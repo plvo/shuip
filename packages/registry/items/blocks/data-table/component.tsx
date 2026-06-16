@@ -31,6 +31,8 @@ import {
   ChevronsRight,
   ChevronsUpDown,
   EyeOff,
+  Inbox,
+  Loader2,
   PlusCircle,
   Settings2,
   X,
@@ -184,21 +186,45 @@ function getPinClass<TData>(column: Column<TData>): string | undefined {
 
 const skeletonBar = <div className='h-5 w-full animate-pulse rounded bg-muted' />;
 
+const shimmerBar = (
+  <div className='relative h-5 w-full overflow-hidden rounded bg-muted'>
+    <div
+      className='absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-foreground/10 to-transparent motion-reduce:hidden'
+      style={{ animation: 'shuip-dt-shimmer 1.5s infinite' }}
+    />
+  </div>
+);
+
+const shimmerKeyframes = <style>{'@keyframes shuip-dt-shimmer{100%{transform:translateX(100%)}}'}</style>;
+
 export type DataTableProps<TData> = {
   table: Table<TData>;
   isLoading?: boolean;
+  loadingVariant?: 'skeleton' | 'overlay' | 'shimmer';
   emptyState?: React.ReactNode;
   onRowClick?: (row: TData) => void;
   className?: string;
 };
 
-export function DataTable<TData>({ table, isLoading, emptyState, onRowClick, className }: DataTableProps<TData>) {
+export function DataTable<TData>({
+  table,
+  isLoading,
+  loadingVariant = 'skeleton',
+  emptyState,
+  onRowClick,
+  className,
+}: DataTableProps<TData>) {
   const columnCount = table.getVisibleLeafColumns().length;
   const rows = table.getRowModel().rows;
+  const showSkeleton = isLoading && loadingVariant !== 'overlay';
+  const showOverlay = isLoading && loadingVariant === 'overlay';
 
   return (
-    <div className={cn('rounded-md border', className)}>
-      <TableRoot className='table-fixed' style={{ minWidth: table.getTotalSize() }}>
+    <div className={cn('relative rounded-md border', className)}>
+      <TableRoot
+        className={cn('table-fixed', showOverlay && 'pointer-events-none opacity-60')}
+        style={{ minWidth: table.getTotalSize() }}
+      >
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -216,12 +242,12 @@ export function DataTable<TData>({ table, isLoading, emptyState, onRowClick, cla
           ))}
         </TableHeader>
         <TableBody>
-          {isLoading ? (
+          {showSkeleton ? (
             Array.from({ length: table.getState().pagination.pageSize }).map((_, rowIndex) => (
               <TableRow key={rowIndex}>
                 {table.getVisibleLeafColumns().map((column) => (
                   <TableCell key={column.id} style={getColumnStyles(column)} className={getPinClass(column)}>
-                    {skeletonBar}
+                    {loadingVariant === 'shimmer' ? shimmerBar : skeletonBar}
                   </TableCell>
                 ))}
               </TableRow>
@@ -254,6 +280,45 @@ export function DataTable<TData>({ table, isLoading, emptyState, onRowClick, cla
           )}
         </TableBody>
       </TableRoot>
+      {showOverlay && (
+        <div className='absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-[1px]'>
+          <Loader2 className='size-5 animate-spin text-muted-foreground' />
+        </div>
+      )}
+      {loadingVariant === 'shimmer' && shimmerKeyframes}
+    </div>
+  );
+}
+
+export type DataTableEmptyProps = {
+  variant?: 'text' | 'illustrated' | 'with-action';
+  title?: string;
+  description?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  action?: React.ReactNode;
+};
+
+export function DataTableEmpty({
+  variant = 'text',
+  title = 'No results',
+  description,
+  icon: Icon = Inbox,
+  action,
+}: DataTableEmptyProps) {
+  if (variant === 'text') {
+    return <span className='text-muted-foreground text-sm'>{title}</span>;
+  }
+
+  return (
+    <div className='flex flex-col items-center justify-center gap-3 py-6 text-center'>
+      <div className='flex size-12 items-center justify-center rounded-full bg-muted/50'>
+        <Icon className='size-6 text-muted-foreground' />
+      </div>
+      <div className='space-y-1'>
+        <p className='text-balance font-medium text-sm'>{title}</p>
+        {description && <p className='mx-auto max-w-xs text-balance text-muted-foreground text-sm'>{description}</p>}
+      </div>
+      {variant === 'with-action' && action}
     </div>
   );
 }
@@ -428,76 +493,164 @@ export function DataTableViewOptions<TData>({ table }: { table: Table<TData> }) 
   );
 }
 
+type FilterChip = { key: string; label: string; onRemove: () => void };
+
+function getFilterChips<TData>(table: Table<TData>): FilterChip[] {
+  const chips: FilterChip[] = [];
+  const globalFilter = table.getState().globalFilter as string;
+  if (globalFilter) {
+    chips.push({ key: 'global', label: `Search: ${globalFilter}`, onRemove: () => table.setGlobalFilter('') });
+  }
+  for (const filter of table.getState().columnFilters) {
+    const column = table.getColumn(filter.id);
+    const meta = column?.columnDef.meta;
+    const columnLabel = meta?.label ?? filter.id;
+    const values = Array.isArray(filter.value) ? (filter.value as string[]) : [filter.value as string];
+    for (const value of values) {
+      const optionLabel = meta?.options?.find((option) => option.value === value)?.label ?? String(value);
+      chips.push({
+        key: `${filter.id}-${value}`,
+        label: `${columnLabel}: ${optionLabel}`,
+        onRemove: () => {
+          const next = values.filter((item) => item !== value);
+          column?.setFilterValue(next.length ? next : undefined);
+        },
+      });
+    }
+  }
+  return chips;
+}
+
 export type DataTableToolbarProps<TData> = {
   table: Table<TData>;
   searchPlaceholder?: string;
+  variant?: 'default' | 'inline-chips' | 'minimal';
   children?: React.ReactNode;
 };
 
 export function DataTableToolbar<TData>({
   table,
   searchPlaceholder = 'Search...',
+  variant = 'default',
   children,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0 || Boolean(table.getState().globalFilter);
+  const showFacets = variant !== 'minimal';
+  const showChips = variant === 'inline-chips';
   const filterableColumns = table
     .getAllColumns()
     .filter((column) => column.getCanFilter() && column.columnDef.meta?.variant);
+  const chips = showChips ? getFilterChips(table) : [];
+
+  const clearAll = () => {
+    table.resetColumnFilters();
+    table.setGlobalFilter('');
+  };
 
   return (
-    <div className='flex flex-wrap items-center gap-2'>
-      <Input
-        placeholder={searchPlaceholder}
-        value={(table.getState().globalFilter as string) ?? ''}
-        onChange={(event) => table.setGlobalFilter(event.target.value)}
-        className='h-8 w-40 lg:w-56'
-      />
-      {filterableColumns.map((column) => {
-        const meta = column.columnDef.meta;
-        if ((meta?.variant === 'select' || meta?.variant === 'multiSelect') && meta.options) {
-          return (
-            <DataTableFacetedFilter
-              key={column.id}
-              column={column}
-              title={meta.label ?? column.id}
-              options={meta.options}
-            />
-          );
-        }
-        return null;
-      })}
-      {isFiltered && (
-        <Button
-          variant='ghost'
-          size='sm'
-          className='h-8 px-2'
-          onClick={() => {
-            table.resetColumnFilters();
-            table.setGlobalFilter('');
-          }}
-        >
-          Reset <X className='ml-2 size-4' />
-        </Button>
+    <div className='flex flex-col gap-2'>
+      <div className='flex flex-wrap items-center gap-2'>
+        <Input
+          placeholder={searchPlaceholder}
+          value={(table.getState().globalFilter as string) ?? ''}
+          onChange={(event) => table.setGlobalFilter(event.target.value)}
+          className='h-8 w-40 lg:w-56'
+        />
+        {showFacets &&
+          filterableColumns.map((column) => {
+            const meta = column.columnDef.meta;
+            if ((meta?.variant === 'select' || meta?.variant === 'multiSelect') && meta.options) {
+              return (
+                <DataTableFacetedFilter
+                  key={column.id}
+                  column={column}
+                  title={meta.label ?? column.id}
+                  options={meta.options}
+                />
+              );
+            }
+            return null;
+          })}
+        {isFiltered && !showChips && (
+          <Button variant='ghost' size='sm' className='h-8 px-2' onClick={clearAll}>
+            Reset <X className='ml-2 size-4' />
+          </Button>
+        )}
+        {children}
+        <DataTableViewOptions table={table} />
+      </div>
+      {showChips && chips.length > 0 && (
+        <div className='flex flex-wrap items-center gap-1.5'>
+          {chips.map((chip) => (
+            <span
+              key={chip.key}
+              className='inline-flex items-center gap-1 rounded-full bg-secondary py-0.5 pr-1 pl-2 text-secondary-foreground text-xs'
+            >
+              {chip.label}
+              <button
+                type='button'
+                onClick={chip.onRemove}
+                aria-label={`Remove ${chip.label}`}
+                className='flex size-4 items-center justify-center rounded-full hover:bg-background/60'
+              >
+                <X className='size-3' />
+              </button>
+            </span>
+          ))}
+          <Button variant='ghost' size='sm' className='h-6 px-2 text-xs' onClick={clearAll}>
+            Clear all
+          </Button>
+        </div>
       )}
-      {children}
-      <DataTableViewOptions table={table} />
     </div>
   );
+}
+
+function getPaginationRange(currentPage: number, pageCount: number, siblings = 1): (number | 'ellipsis')[] {
+  const totalPageNumbers = siblings * 2 + 5;
+  if (pageCount <= totalPageNumbers) {
+    return Array.from({ length: pageCount }, (_, index) => index + 1);
+  }
+
+  const leftSibling = Math.max(currentPage - siblings, 1);
+  const rightSibling = Math.min(currentPage + siblings, pageCount);
+  const showLeftEllipsis = leftSibling > 2;
+  const showRightEllipsis = rightSibling < pageCount - 1;
+  const edgeCount = 3 + 2 * siblings;
+
+  if (!showLeftEllipsis && showRightEllipsis) {
+    return [...Array.from({ length: edgeCount }, (_, index) => index + 1), 'ellipsis', pageCount];
+  }
+  if (showLeftEllipsis && !showRightEllipsis) {
+    return [1, 'ellipsis', ...Array.from({ length: edgeCount }, (_, index) => pageCount - edgeCount + 1 + index)];
+  }
+  return [
+    1,
+    'ellipsis',
+    ...Array.from({ length: rightSibling - leftSibling + 1 }, (_, index) => leftSibling + index),
+    'ellipsis',
+    pageCount,
+  ];
 }
 
 export type DataTablePaginationProps<TData> = {
   table: Table<TData>;
   pageSizeOptions?: number[];
+  variant?: 'simple' | 'numbered';
 };
 
 export function DataTablePagination<TData>({
   table,
   pageSizeOptions = [10, 20, 30, 40, 50],
+  variant = 'simple',
 }: DataTablePaginationProps<TData>) {
   const pageSize = table.getState().pagination.pageSize;
+  const pageIndex = table.getState().pagination.pageIndex;
+  const pageCount = Math.max(table.getPageCount(), 1);
   const options = pageSizeOptions.includes(pageSize)
     ? pageSizeOptions
     : [...pageSizeOptions, pageSize].sort((a, b) => a - b);
+
   return (
     <div className='flex flex-wrap items-center justify-between gap-4'>
       <div className='text-muted-foreground text-sm'>
@@ -519,41 +672,163 @@ export function DataTablePagination<TData>({
             </SelectContent>
           </Select>
         </div>
-        <div className='flex items-center font-medium text-sm'>
-          Page {table.getState().pagination.pageIndex + 1} of {Math.max(table.getPageCount(), 1)}
-        </div>
-        <div className='flex items-center gap-2'>
-          <Button
-            variant='outline'
-            size='icon-sm'
-            className='hidden lg:flex'
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <ChevronsLeft className='size-4' />
-          </Button>
-          <Button
-            variant='outline'
-            size='icon-sm'
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <ChevronLeft className='size-4' />
-          </Button>
-          <Button variant='outline' size='icon-sm' onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-            <ChevronRight className='size-4' />
-          </Button>
-          <Button
-            variant='outline'
-            size='icon-sm'
-            className='hidden lg:flex'
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-          >
-            <ChevronsRight className='size-4' />
-          </Button>
-        </div>
+        {variant === 'numbered' ? (
+          <div className='flex items-center gap-1'>
+            <Button
+              variant='outline'
+              size='icon-sm'
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              aria-label='Previous page'
+            >
+              <ChevronLeft className='size-4' />
+            </Button>
+            {getPaginationRange(pageIndex + 1, pageCount).map((page, index) =>
+              page === 'ellipsis' ? (
+                <span
+                  key={`ellipsis-${index}`}
+                  className='flex size-8 items-center justify-center text-muted-foreground text-sm'
+                >
+                  &hellip;
+                </span>
+              ) : (
+                <Button
+                  key={page}
+                  variant={page === pageIndex + 1 ? 'default' : 'ghost'}
+                  size='icon-sm'
+                  className='tabular-nums'
+                  aria-current={page === pageIndex + 1 ? 'page' : undefined}
+                  onClick={() => table.setPageIndex(page - 1)}
+                >
+                  {page}
+                </Button>
+              ),
+            )}
+            <Button
+              variant='outline'
+              size='icon-sm'
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              aria-label='Next page'
+            >
+              <ChevronRight className='size-4' />
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className='flex items-center font-medium text-sm'>
+              Page {pageIndex + 1} of {pageCount}
+            </div>
+            <div className='flex items-center gap-2'>
+              <Button
+                variant='outline'
+                size='icon-sm'
+                className='hidden lg:flex'
+                onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
+                aria-label='First page'
+              >
+                <ChevronsLeft className='size-4' />
+              </Button>
+              <Button
+                variant='outline'
+                size='icon-sm'
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                aria-label='Previous page'
+              >
+                <ChevronLeft className='size-4' />
+              </Button>
+              <Button
+                variant='outline'
+                size='icon-sm'
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                aria-label='Next page'
+              >
+                <ChevronRight className='size-4' />
+              </Button>
+              <Button
+                variant='outline'
+                size='icon-sm'
+                className='hidden lg:flex'
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
+                aria-label='Last page'
+              >
+                <ChevronsRight className='size-4' />
+              </Button>
+            </div>
+          </>
+        )}
       </div>
+    </div>
+  );
+}
+
+export type DataTableLoadMoreProps = {
+  onLoadMore: () => void;
+  hasMore: boolean;
+  mode?: 'button' | 'infinite';
+  isLoading?: boolean;
+  loaded?: number;
+  total?: number;
+};
+
+export function DataTableLoadMore({
+  onLoadMore,
+  hasMore,
+  mode = 'button',
+  isLoading = false,
+  loaded,
+  total,
+}: DataTableLoadMoreProps) {
+  const sentinelRef = React.useRef<HTMLDivElement>(null);
+  const onLoadMoreRef = React.useRef(onLoadMore);
+  onLoadMoreRef.current = onLoadMore;
+
+  React.useEffect(() => {
+    if (mode !== 'infinite' || !hasMore || isLoading) return;
+    const node = sentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) onLoadMoreRef.current();
+      },
+      { rootMargin: '120px' },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [mode, hasMore, isLoading]);
+
+  const count = loaded != null && total != null ? `Showing ${loaded} of ${total}` : null;
+
+  if (mode === 'infinite') {
+    return (
+      <div className='flex min-h-9 flex-col items-center justify-center gap-2 py-4 text-muted-foreground text-sm'>
+        {hasMore ? (
+          <>
+            <div ref={sentinelRef} aria-hidden className='h-px w-full' />
+            {isLoading && <Loader2 className='size-4 animate-spin' />}
+          </>
+        ) : (
+          <span>All caught up</span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className='flex flex-col items-center gap-2 py-4'>
+      {hasMore ? (
+        <Button variant='outline' size='sm' onClick={onLoadMore} disabled={isLoading}>
+          {isLoading && <Loader2 className='mr-2 size-4 animate-spin' />}
+          Load more
+        </Button>
+      ) : (
+        <span className='text-muted-foreground text-sm'>All caught up</span>
+      )}
+      {count && <span className='text-muted-foreground text-xs'>{count}</span>}
     </div>
   );
 }
