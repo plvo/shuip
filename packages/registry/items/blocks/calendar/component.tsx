@@ -100,7 +100,7 @@ type CalendarContextValue<T extends CalendarEventLike = CalendarEventLike> = {
 const CalendarContext = React.createContext<CalendarContextValue | null>(null);
 
 export function useCalendar<T extends CalendarEventLike = CalendarEventLike>(): CalendarContextValue<T> {
-  const ctx = React.useContext(CalendarContext);
+  const ctx = React.use(CalendarContext);
   if (!ctx) throw new Error('useCalendar must be used within <Calendar.Root>');
   return ctx as CalendarContextValue<T>;
 }

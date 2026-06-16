@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Calendar, type CalendarEventColor } from '@/components/block/shuip/calendar';
+import { Calendar, type CalendarEventColor, type CalendarSlot } from '@/components/block/shuip/calendar';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,11 @@ export default function Example() {
   const [open, setOpen] = React.useState(false);
   const isExisting = draft ? events.some((e) => e.id === draft.id) : false;
 
+  const handleSlotSelect = React.useCallback(({ start, end }: CalendarSlot) => {
+    setDraft({ id: crypto.randomUUID(), title: '', start, end });
+    setOpen(true);
+  }, []);
+
   return (
     <>
       <Calendar.Root<CalEvent>
@@ -44,10 +49,7 @@ export default function Example() {
           setDraft(e);
           setOpen(true);
         }}
-        onSlotSelect={({ start, end }) => {
-          setDraft({ id: crypto.randomUUID(), title: '', start, end });
-          setOpen(true);
-        }}
+        onSlotSelect={handleSlotSelect}
       >
         <div className='flex w-full flex-col gap-4'>
           <Calendar.Nav />
