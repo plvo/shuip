@@ -1,0 +1,105 @@
+---
+title: Combobox Field
+description: Command-style search field that commits an option's id while displaying its label, integrated with TanStack Form via React context. Supports single or multiple selection, static options or async search.
+registryName: tsf-combobox-field
+---
+
+`ComboboxField` is a searchable select: the user types to filter, navigates results with the keyboard, and picks one (or several) entries. The committed form value is the option's `value` (a stable id) while the `label` is shown for display — distinct from `autocomplete-field`, where the committed value *is* the typed string.
+
+It reads the surrounding field via `useFieldContext`, so you compose it inside a `<form.AppField>` rather than passing a `form` instance by prop. The field value type you declare drives single (`string`) vs multiple (`string[]`); a preset id renders its label immediately via `defaultSelected`.
+
+#### Built-in features
+
+- **Id / label split**: commits `value`, displays `label` — map your own rows to `ComboboxOption[]`.
+- **Single or multiple**: toggle with `multiple`; multi renders chips and toggles selection with a check.
+- **Two search modes**: static `options` (client-side substring filter on `label`) or async `onSearch` (debounced fetch). `onSearch` wins when both are passed.
+- **Recents on open**: `onSearch('')` fires when the menu opens empty, so you can return a suggested list.
+- **Keyboard navigation**: ArrowUp/ArrowDown to move, Enter to select, Escape to close, Backspace to remove the last chip (multi).
+- **Variants**: `variant` (`boxed` or borderless `ghost`) and `size` (`sm` or `default`).
+
+## Setup
+
+Field components are bound via React context. In your project, create `lib/form.ts` once:
+
+```tsx
+// lib/form.ts
+import { createFormHook } from '@tanstack/react-form';
+import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { ComboboxField } from '@/components/ui/shuip/tanstack-form/combobox-field';
+import { SubmitButton } from '@/components/ui/shuip/tanstack-form/submit-button';
+
+export const { useAppForm } = createFormHook({
+  fieldContext,
+  formContext,
+  fieldComponents: { ComboboxField },
+  formComponents: { SubmitButton },
+});
+```
+
+See the [`form-context`](/components/tanstack-form/form-context) item for details.
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Examples
+
+<ItemExamples registryName={'tsf-combobox-field'} />
+
+## Props
+
+<TypeTable
+  type={{
+    multiple: {
+      description: 'Switch to multi-select. The field value type should be string[] instead of string.',
+      type: 'boolean?',
+      default: 'false',
+    },
+    options: {
+      description: 'Static option list, filtered client-side on label. Ignored when onSearch is provided.',
+      type: 'ComboboxOption[]?',
+    },
+    onSearch: {
+      description: 'Async resolver called with the current query (and with an empty string on open for recents). Takes precedence over options.',
+      type: '((query: string) => Promise<ComboboxOption[]>)?',
+    },
+    defaultSelected: {
+      description: 'Preset option(s) used to render the label of an already-committed value at rest.',
+      type: 'ComboboxOption | ComboboxOption[] | undefined',
+    },
+    maxResults: {
+      description: 'Caps the number of options shown in the list',
+      type: 'number?',
+    },
+    variant: {
+      description: 'Field shell style. "ghost" is borderless and transparent, so multi reads as just the chips.',
+      type: "'boxed' | 'ghost'",
+      default: "'boxed'",
+    },
+    size: {
+      description: 'Field density. "sm" reduces height, padding and text.',
+      type: "'sm' | 'default'",
+      default: "'default'",
+    },
+    label: {
+      description: 'Field label text',
+      type: 'string?',
+    },
+    description: {
+      description: 'Helper text displayed below the field',
+      type: 'string?',
+    },
+    placeholder: {
+      description: 'Input placeholder',
+      type: 'string?',
+    },
+    emptyText: {
+      description: 'Message shown when a non-empty query has no matches',
+      type: 'string?',
+      default: "'No results'",
+    },
+    debounceMs: {
+      description: 'Debounce delay before calling onSearch (async mode only)',
+      type: 'number?',
+      default: '300',
+    },
+  }}
+/>
