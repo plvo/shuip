@@ -93,13 +93,19 @@ export function ComboboxField(props: ComboboxFieldProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  // Populated during render so a preset/selected value can show its label before any
-  // search runs; async results are added in `runSearch`, manual picks in `handleSelect`.
+  // Static options + presets, resolved during render so a value shows its label on first
+  // paint; async results and manual picks live in `cacheRef`. `getOption` reads both.
   const cacheRef = React.useRef<Map<string, ComboboxOption>>(new Map());
-  React.useMemo(() => {
+  const staticLookup = React.useMemo(() => {
+    const map = new Map<string, ComboboxOption>();
     const seed = Array.isArray(defaultSelected) ? defaultSelected : defaultSelected ? [defaultSelected] : [];
-    for (const option of [...seed, ...(options ?? [])]) cacheRef.current.set(option.value, option);
+    for (const option of [...seed, ...(options ?? [])]) map.set(option.value, option);
+    return map;
   }, [defaultSelected, options]);
+  const getOption = React.useCallback(
+    (value: string | undefined) => (value ? (staticLookup.get(value) ?? cacheRef.current.get(value)) : undefined),
+    [staticLookup],
+  );
 
   const selectedValues = toArray(field.value);
 
@@ -107,36 +113,34 @@ export function ComboboxField(props: ComboboxFieldProps) {
   // (or `onSearch('')` recents) shows on focus instead of filtering down to the label.
   const effectiveQuery = typed ? query : '';
 
-  const cacheOptions = React.useCallback((items: ComboboxOption[]) => {
-    for (const option of items) cacheRef.current.set(option.value, option);
+  // Held in a ref so an inline `onSearch` prop doesn't re-trigger the search effect every render.
+  const onSearchRef = React.useRef(onSearch);
+  onSearchRef.current = onSearch;
+  const hasSearch = Boolean(onSearch);
+
+  const runSearch = React.useCallback((search: string) => {
+    const search$ = onSearchRef.current;
+    if (!search$) return;
+    const requestId = ++requestIdRef.current;
+    startTransition(async () => {
+      try {
+        const res = await search$(search);
+        if (requestId !== requestIdRef.current) return;
+        for (const option of res) cacheRef.current.set(option.value, option);
+        setResults(res);
+      } catch {
+        if (requestId !== requestIdRef.current) return;
+        setResults([]);
+      }
+    });
   }, []);
 
-  const runSearch = React.useCallback(
-    (search: string) => {
-      if (!onSearch) return;
-      const requestId = ++requestIdRef.current;
-      startTransition(async () => {
-        try {
-          const res = await onSearch(search);
-          if (requestId !== requestIdRef.current) return;
-          cacheOptions(res);
-          setResults(res);
-        } catch {
-          if (requestId !== requestIdRef.current) return;
-          setResults([]);
-        }
-      });
-    },
-    [onSearch, cacheOptions],
-  );
-
   React.useEffect(() => {
-    if (!onSearch || !open) return;
+    if (!hasSearch || !open) return;
 
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
 
     if (!effectiveQuery) {
-      requestIdRef.current++;
       runSearch('');
       return;
     }
@@ -146,7 +150,7 @@ export function ComboboxField(props: ComboboxFieldProps) {
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
-  }, [effectiveQuery, onSearch, open, debounceMs, runSearch]);
+  }, [effectiveQuery, hasSearch, open, debounceMs, runSearch]);
 
   const items = React.useMemo(() => {
     let list: ComboboxOption[];
@@ -166,8 +170,9 @@ export function ComboboxField(props: ComboboxFieldProps) {
     field.onChange(multiple ? next : (next[0] ?? ''));
   };
 
-  const singleLabel = !multiple ? cacheRef.current.get(selectedValues[0])?.label : undefined;
-  const inputValue = open ? query : (singleLabel ?? '');
+  const firstValue = selectedValues[0];
+  const singleLabel = !multiple ? getOption(firstValue)?.label : undefined;
+  const inputValue = open ? query : multiple ? '' : (singleLabel ?? firstValue ?? '');
 
   const closeMenu = () => {
     setOpen(false);
@@ -231,13 +236,12 @@ export function ComboboxField(props: ComboboxFieldProps) {
     }
   };
 
-  const id = field.name;
   const iconSize = size === 'sm' ? 'size-3.5' : 'size-4';
   const showPlaceholder = multiple ? selectedValues.length === 0 : true;
 
   return (
     <Field className='gap-2' data-invalid={fieldState.invalid}>
-      {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
+      {label && <FieldLabel>{label}</FieldLabel>}
       <Command shouldFilter={false} className='relative h-auto overflow-visible bg-transparent'>
         <div
           ref={containerRef}
@@ -254,7 +258,7 @@ export function ComboboxField(props: ComboboxFieldProps) {
           {multiple &&
             selectedValues.map((value) => (
               <Badge key={value} variant='secondary' className='gap-1'>
-                {cacheRef.current.get(value)?.label ?? value}
+                {getOption(value)?.label ?? value}
                 <button
                   type='button'
                   className='cursor-pointer rounded-full outline-none focus-visible:ring-1 focus-visible:ring-ring'
@@ -262,7 +266,7 @@ export function ComboboxField(props: ComboboxFieldProps) {
                     e.preventDefault();
                     removeValue(value);
                   }}
-                  aria-label={`Remove ${cacheRef.current.get(value)?.label ?? value}`}
+                  aria-label={`Remove ${getOption(value)?.label ?? value}`}
                 >
                   <X className='size-3' />
                 </button>
@@ -270,12 +274,10 @@ export function ComboboxField(props: ComboboxFieldProps) {
             ))}
           <CommandPrimitive.Input
             ref={inputRef}
-            id={id}
             value={inputValue}
             placeholder={showPlaceholder ? placeholder : undefined}
-            autoComplete='off'
+            aria-label={label}
             aria-invalid={fieldState.invalid || undefined}
-            aria-expanded={open}
             onValueChange={handleValueChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
@@ -302,7 +304,6 @@ export function ComboboxField(props: ComboboxFieldProps) {
                       <CommandItem
                         key={option.value}
                         value={option.value}
-                        keywords={[option.label]}
                         onSelect={() => handleSelect(option)}
                         className='cursor-pointer'
                       >

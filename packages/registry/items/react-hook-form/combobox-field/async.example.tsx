@@ -1,6 +1,7 @@
 'use client';
 
 import { useLens } from '@hookform/lenses';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Form } from '@/components/ui/form';
@@ -31,7 +32,7 @@ const zodSchema = z.object({
 type Values = z.infer<typeof zodSchema>;
 
 export default function ComboboxFieldAsyncExample() {
-  const form = useForm<Values>({ defaultValues: { assignee: '' } });
+  const form = useForm<Values>({ defaultValues: { assignee: '' }, resolver: zodResolver(zodSchema) });
   const lens = useLens({ control: form.control });
 
   return (
