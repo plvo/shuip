@@ -33,14 +33,16 @@ export function SearchInput({
   const inputRef = React.useRef<HTMLInputElement>(null);
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const [text, setText] = React.useState(typeof value === 'string' ? value : '');
+  const [prevValue, setPrevValue] = React.useState(value);
   const [focused, setFocused] = React.useState(false);
   const [hintOpen, setHintOpen] = React.useState(false);
 
-  const resolvedTooltip = hotkeyTooltip ?? (hotkey ? `Press ${hotkey} to search` : undefined);
-
-  React.useEffect(() => {
+  if (prevValue !== value) {
+    setPrevValue(value);
     if (typeof value === 'string') setText(value);
-  }, [value]);
+  }
+
+  const resolvedTooltip = hotkeyTooltip ?? (hotkey ? `Press ${hotkey} to search` : undefined);
 
   React.useEffect(
     () => () => {
