@@ -1,5 +1,44 @@
 # Changelog
 
+## [2.0.0](https://github.com/plvo/shuip/compare/v1.3.0...v2.0.0) (2026-06-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **rhf-fields:** migrate to shadcn Field primitive, split InputField/NumberField ([#46](https://github.com/plvo/shuip/issues/46))
+* **rhf-fields:** `<InputField>` no longer accepts a `register` prop. Install `@hookform/lenses`, call `useLens({ control: form.control })` once, and pass focused lenses: `<InputField lens={lens.focus('x')} />`.
+* **tsf-fields:** All tsf-* field components and the submit button drop the `form`, `name`, and `formProps` props. Consumers must install `tsf-form-context`, call `createFormHook` once (typically in `lib/form.ts`), and switch from `<XField form={form} name='x' .../>` to `<form.AppField name='x' children={(f) => <f.XField .../>} />`.
+
+### Features
+
+* **autocomplete-field:** add rhf/tsf-autocomplete-field ([#54](https://github.com/plvo/shuip/issues/54)) ([e4bc459](https://github.com/plvo/shuip/commit/e4bc4599edacb63fb2986fd1028d5cc7f4140a25))
+* **calendar:** generic responsive calendar block ([#66](https://github.com/plvo/shuip/issues/66)) ([e3841ae](https://github.com/plvo/shuip/commit/e3841ae1fd84eb8703b2b5772d82ab923d69c79b))
+* **combobox-field:** searchable combobox field for rhf and tsf ([#67](https://github.com/plvo/shuip/issues/67)) ([c47e354](https://github.com/plvo/shuip/commit/c47e354c78f9d8835cac0752b14f24ceaf5e43c9))
+* **data-table:** add entity-agnostic dual-mode data-table block ([#65](https://github.com/plvo/shuip/issues/65)) ([2f46349](https://github.com/plvo/shuip/commit/2f46349d3b6912b2f1e3168a7fa09c7a5d869f85))
+* **date-field:** add rhf-date-field and tsf-date-field ([#47](https://github.com/plvo/shuip/issues/47)) ([9a0e58b](https://github.com/plvo/shuip/commit/9a0e58bdaad1bcaa8865b1f5634a69e92831ccb0))
+* **date-range-field:** add rhf-date-range-field and tsf-date-range-field ([#49](https://github.com/plvo/shuip/issues/49)) ([13e0765](https://github.com/plvo/shuip/commit/13e0765bb3b40635a62f12211e1aa0e4ec48f7e0))
+* **datetime-field:** add rhf-datetime-field and tsf-datetime-field ([#50](https://github.com/plvo/shuip/issues/50)) ([75f593c](https://github.com/plvo/shuip/commit/75f593c75ec8be732494e06f4fb00a0271bce7c7))
+* **docs:** /components gallery + top-level routing split ([#59](https://github.com/plvo/shuip/issues/59)) ([fbd0556](https://github.com/plvo/shuip/commit/fbd05561e73497f95068ef36362d9e352f2c51c2))
+* **inline-edit:** add rhf/tsf inline-edit fields ([#55](https://github.com/plvo/shuip/issues/55)) ([4ee00ba](https://github.com/plvo/shuip/commit/4ee00ba9d42e79394bf2fe43df68aec6b3f9e924))
+* **kanban:** add generic kanban block ([#56](https://github.com/plvo/shuip/issues/56)) ([6b14c87](https://github.com/plvo/shuip/commit/6b14c876a75c69676fc05085a62391423d813c55))
+* **month-field:** add rhf-month-field and tsf-month-field ([#51](https://github.com/plvo/shuip/issues/51)) ([3bafd20](https://github.com/plvo/shuip/commit/3bafd20a74014ffaf678ef3267c0fe8ba418ef9c))
+* **registry:** add tsf-form-context item ([#40](https://github.com/plvo/shuip/issues/40)) ([8da715b](https://github.com/plvo/shuip/commit/8da715beb34cd6f656ff884ef04c49e994300a1e))
+* **search-input:** agnostic debounced search input with hotkey ([#68](https://github.com/plvo/shuip/issues/68)) ([1e938fc](https://github.com/plvo/shuip/commit/1e938fc6939c6be198a1b65d74a59246f2b6e085))
+* **skills:** ship shuip agent skills via the registry ([#60](https://github.com/plvo/shuip/issues/60)) ([3753249](https://github.com/plvo/shuip/commit/3753249b0be579eabbdefaf0041a13bd7149d449))
+* **time-field:** add rhf/tsf-time-field ([#48](https://github.com/plvo/shuip/issues/48)) ([1d7018a](https://github.com/plvo/shuip/commit/1d7018a4df3eb5339729217a6a2ca9055eab0f6d))
+
+
+### Bug Fixes
+
+* **search:** correct cmd+k result URLs missing route prefix ([#58](https://github.com/plvo/shuip/issues/58)) ([78ee232](https://github.com/plvo/shuip/commit/78ee2321483233d0f50a2cbc822f82ef535de07a))
+
+
+### Code Refactoring
+
+* **rhf-fields:** bind via @hookform/lenses ([#45](https://github.com/plvo/shuip/issues/45)) ([1cd98ba](https://github.com/plvo/shuip/commit/1cd98ba49f20043b5537afa4d40b6e8108cdffc6))
+* **rhf-fields:** migrate to shadcn Field primitive, split InputField/NumberField ([#46](https://github.com/plvo/shuip/issues/46)) ([a93c13a](https://github.com/plvo/shuip/commit/a93c13a799fdff1272d27d5b049898eeb1bca6c9))
+* **tsf-fields:** migrate to createFormHook context (drop form prop) ([#43](https://github.com/plvo/shuip/issues/43)) ([7ee8832](https://github.com/plvo/shuip/commit/7ee883291869c32ae9191c0265ce2340ff8a4c81))
+
 ## [1.3.0](https://github.com/plvo/shuip/compare/v1.2.0...v1.3.0) (2026-05-11)
 
 
