@@ -95,7 +95,8 @@ export function ComboboxField(props: ComboboxFieldProps) {
 
   // Static options + presets, resolved during render so a value shows its label on first
   // paint; async results and manual picks live in `cacheRef`. `getOption` reads both.
-  const cacheRef = React.useRef<Map<string, ComboboxOption>>(new Map());
+  const cacheRef = React.useRef<Map<string, ComboboxOption> | null>(null);
+  cacheRef.current ??= new Map();
   const staticLookup = React.useMemo(() => {
     const map = new Map<string, ComboboxOption>();
     const seed = Array.isArray(defaultSelected) ? defaultSelected : defaultSelected ? [defaultSelected] : [];
@@ -103,7 +104,7 @@ export function ComboboxField(props: ComboboxFieldProps) {
     return map;
   }, [defaultSelected, options]);
   const getOption = React.useCallback(
-    (value: string | undefined) => (value ? (staticLookup.get(value) ?? cacheRef.current.get(value)) : undefined),
+    (value: string | undefined) => (value ? (staticLookup.get(value) ?? cacheRef.current?.get(value)) : undefined),
     [staticLookup],
   );
 
@@ -126,7 +127,7 @@ export function ComboboxField(props: ComboboxFieldProps) {
       try {
         const res = await search$(search);
         if (requestId !== requestIdRef.current) return;
-        for (const option of res) cacheRef.current.set(option.value, option);
+        for (const option of res) cacheRef.current?.set(option.value, option);
         setResults(res);
       } catch {
         if (requestId !== requestIdRef.current) return;
@@ -198,7 +199,7 @@ export function ComboboxField(props: ComboboxFieldProps) {
   };
 
   const handleSelect = (option: ComboboxOption) => {
-    cacheRef.current.set(option.value, option);
+    cacheRef.current?.set(option.value, option);
     if (multiple) {
       const next = selectedValues.includes(option.value)
         ? selectedValues.filter((value) => value !== option.value)

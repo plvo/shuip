@@ -24,16 +24,16 @@ const zodSchema = z.object({
 
 type Values = z.infer<typeof zodSchema>;
 
+function onSubmit(values: Values) {
+  alert(`Country: ${values.country}`);
+}
+
 export default function ComboboxFieldExample() {
   const form = useForm<Values>({
     defaultValues: { country: 'fr' },
     resolver: zodResolver(zodSchema),
   });
   const lens = useLens({ control: form.control });
-
-  function onSubmit(values: Values) {
-    alert(`Country: ${values.country}`);
-  }
 
   return (
     <Form {...form}>

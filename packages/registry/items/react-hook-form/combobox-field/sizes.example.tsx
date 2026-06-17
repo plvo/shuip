@@ -15,12 +15,13 @@ const COUNTRIES: ComboboxOption[] = [
 
 type Values = { small: string; normal: string };
 
+const PRESET: ComboboxOption = { value: 'fr', label: 'France' };
+
 export default function ComboboxFieldSizesExample() {
   const form = useForm<Values>({
     defaultValues: { small: 'fr', normal: 'fr' },
   });
   const lens = useLens({ control: form.control });
-  const preset: ComboboxOption = { value: 'fr', label: 'France' };
 
   return (
     <Form {...form}>
@@ -31,7 +32,7 @@ export default function ComboboxFieldSizesExample() {
           label='Small'
           placeholder='Search a country…'
           options={COUNTRIES}
-          defaultSelected={preset}
+          defaultSelected={PRESET}
         />
         <ComboboxField
           size='default'
@@ -39,7 +40,7 @@ export default function ComboboxFieldSizesExample() {
           label='Default'
           placeholder='Search a country…'
           options={COUNTRIES}
-          defaultSelected={preset}
+          defaultSelected={PRESET}
         />
       </form>
     </Form>

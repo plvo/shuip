@@ -23,16 +23,16 @@ const zodSchema = z.object({
 
 type Values = z.infer<typeof zodSchema>;
 
+function onSubmit(values: Values) {
+  alert(`Frameworks: ${values.frameworks.join(', ')}`);
+}
+
 export default function ComboboxFieldMultipleExample() {
   const form = useForm<Values>({
     defaultValues: { frameworks: ['next'] },
     resolver: zodResolver(zodSchema),
   });
   const lens = useLens({ control: form.control });
-
-  function onSubmit(values: Values) {
-    alert(`Frameworks: ${values.frameworks.join(', ')}`);
-  }
 
   return (
     <Form {...form}>
