@@ -55,6 +55,9 @@ next-env.d.ts
 
 *.tsbuildinfo
 
+# worktrees
+.claude/worktrees/
+
 # registry
 __index__.ts
 registry.json
