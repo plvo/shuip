@@ -1,0 +1,42 @@
+---
+title: Search Input
+description: A debounced search input with optional keyboard shortcut and hotkey badge.
+registryName: search-input
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+A controlled search input with built-in debounce. Press a configurable hotkey (default `/`) to focus it from anywhere on the page. When the field is empty and unfocused, a badge shows the active hotkey; hovering the badge reveals a tooltip.
+
+## Examples
+
+<ItemExamples registryName={'search-input'} />
+
+## Props
+
+<TypeTable
+  type={{
+    onChange: {
+      description: 'Called with the current string value after the debounce delay.',
+      type: '(value: string) => void',
+    },
+    debounceMs: {
+      description: 'Milliseconds to wait after the last keystroke before calling onChange. Set to 0 for immediate calls.',
+      type: 'number',
+      default: '250',
+    },
+    hotkey: {
+      description: 'Key that focuses the input when pressed outside an editable element. Set to false to disable.',
+      type: "string | false",
+      default: "'/'",
+    },
+    hotkeyTooltip: {
+      description: 'Text shown in the badge tooltip and used as aria-label. Defaults to "Press {hotkey} to search".',
+      type: 'string',
+    },
+    '...props': {
+      description: 'All other native <input> props (placeholder, disabled, name, aria-*, data-*, className, etc.).',
+      type: "Omit<React.ComponentProps<'input'>, 'onChange'>",
+    },
+  }}
+/>
