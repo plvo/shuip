@@ -21,6 +21,9 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 > Define your item type with a `type` alias, not an `interface` — `Kanban<T>` requires `T extends Record<string, unknown>`, which a TypeScript `interface` does not satisfy.
 
+> For boards that outgrow one screen — hundreds of cards, grouping into bands, hideable columns, a
+> persisted view — see [Data Board](/blocks/data-board).
+
 ## Examples
 
 <ItemExamples registryName={'kanban'} />

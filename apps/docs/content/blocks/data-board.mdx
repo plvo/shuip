@@ -1,0 +1,229 @@
+---
+title: Data Board
+description: A drag-and-drop board with bounded height, generic grouping into bands, per-column pagination and hideable columns, all driven by your typed data model.
+registryName: data-board
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+`DataBoard` renders any array of typed items into draggable columns and stays usable when that
+array grows: the board has a finite height with sticky column headers, each column scrolls on its
+own, and cards are paginated per column. Columns, card fields, grouping and search are all
+configured against your own data shape — nothing is hardcoded to a domain.
+
+### Built-in features
+
+- **Generic data model**: works with any item type `T` via `idField` / `columnField`.
+- **Bounded height**: sticky column headers, one scroll container per column.
+- **Grouping into bands**: `groupBy` any field to get collapsible horizontal bands; dropping a card
+  in another band emits the new value.
+- **Per-column pagination**: a "show more" step per column, or one per band when grouped.
+- **Hideable columns**: hide from the header, recall from the right-hand rail.
+- **Persisted view**: hidden columns, page size and collapsed bands survive a reload via `persistKey`.
+- **Global search**: filter cards across `searchableFields`.
+- **Hybrid state**: standalone from `defaultData`, or controlled via `data` + `onDataChange`.
+
+> Cards are only draggable when you pass `onCardMove`. A board without it is genuinely read-only.
+
+> Card order is implicit in the `data` array order. On any move the board emits the reordered array
+> via `onDataChange` and a semantic `onCardMove` event; map either to your own persistence.
+
+## Choosing between Kanban and Data Board
+
+Both are drag-and-drop boards. Pick on volume and on how much view control your users need.
+
+| | [`kanban`](/blocks/kanban) | `data-board` |
+| --- | --- | --- |
+| Height | grows with the tallest column | bounded, sticky headers, per-column scroll |
+| Volume | tens of cards | hundreds, via pagination |
+| Grouping | none | `groupBy` any field, collapsible bands |
+| Columns | fixed | hideable, with a recall rail |
+| View persistence | none | `localStorage` via `persistKey` |
+| Size | small | larger surface, more props |
+
+If a board fits on one screen and users never need to hide a column, `kanban` is the smaller and
+simpler install.
+
+## Sizing the board
+
+The board is `flex min-h-0 flex-col` and fills the height its parent gives it — so it never needs
+to know the page chrome around it, and there is no hardcoded `calc()`. The contract is on the
+parent:
+
+```tsx
+<div className='flex h-[calc(100svh-4rem)] flex-col'>
+  <DataBoard {...props} />
+</div>
+```
+
+Where the parent constrains nothing, pass `height` instead. A number is read as pixels.
+
+```tsx
+<DataBoard height={520} {...props} />
+```
+
+## Column accents
+
+The block ships no palette — it would impose a theme on your app. A column takes a Lucide `icon`
+and an `accentClassName` applied to it, so the semantics stay yours:
+
+```tsx
+const columns: DataBoardColumn[] = [
+  { id: 'todo', label: 'To do', icon: CircleDashed },
+  { id: 'doing', label: 'Doing', icon: CircleDot, accentClassName: 'text-primary' },
+  { id: 'blocked', label: 'Blocked', icon: CircleX, accentClassName: 'text-destructive' },
+  { id: 'done', label: 'Done', icon: CircleCheck, accentClassName: 'text-emerald-600' },
+];
+```
+
+## Examples
+
+<ItemExamples registryName={'data-board'} />
+
+## Notes and limitations
+
+- **`toIndex` is a whole-column index, including in grouped mode.** When `groupBy` is active, the
+  `toIndex` on `onCardMove` reflects the card's position within its entire column, not its position
+  inside the band the user sees. If you persist a rank, compute it from the item's position within
+  its group rather than from `toIndex` directly.
+- **Dropping into a declared-but-empty group writes the group's id as a string.** When
+  `groupBy.groups` declares a group that currently holds no items, the board has no item from which
+  to learn the field's real type, so a card dropped there receives the group's `id` as a string. If
+  the grouped field is numeric, coerce the value in `onCardMove` until the group holds at least one
+  item.
+- **Releasing a card outside any drop zone commits the last hovered position.** The board does not
+  revert the move when a card is released outside a valid drop zone; it keeps the position the card
+  last hovered over and fires `onCardMove` with that position. Implement your own revert inside
+  `onCardMove` if you need Trello-style cancellation on an out-of-bounds release.
+
+## Props
+
+<TypeTable
+  type={{
+    columns: {
+      description: 'Column definitions.',
+      type: 'DataBoardColumn[]',
+    },
+    data: {
+      description: 'Controlled items. When provided, you own the state via onDataChange.',
+      type: 'T[]?',
+    },
+    defaultData: {
+      description: 'Initial items for uncontrolled mode.',
+      type: 'T[]?',
+    },
+    onDataChange: {
+      description: 'Fires with the full reordered array after a move.',
+      type: '(next: T[]) => void',
+    },
+    idField: {
+      description: 'Field holding the stable card id.',
+      type: 'keyof T',
+      default: "'id'",
+    },
+    columnField: {
+      description: 'Field holding the column id the card belongs to.',
+      type: 'keyof T',
+    },
+    title: {
+      description: 'Renders the card title. Return a string or any ReactNode.',
+      type: '(item: T) => ReactNode',
+    },
+    fields: {
+      description: 'Properties shown on the default card.',
+      type: 'DataBoardField<T>[]?',
+    },
+    cardContent: {
+      description: 'Replaces the card content area (the title still comes from `title`).',
+      type: '(item: T) => ReactNode',
+    },
+    cardClassName: {
+      description: 'Extra classes on a card, computed per item.',
+      type: '(item: T) => string | undefined',
+    },
+    wrapCard: {
+      description: 'Wraps a rendered card without replacing it — for a link, a context menu, a badge overlay.',
+      type: '(item: T, card: ReactNode) => ReactNode',
+    },
+    renderColumnSummary: {
+      description: 'Renders an aggregate in the column header (e.g. a sum).',
+      type: '(items: T[], column: DataBoardColumn) => ReactNode',
+    },
+    onCardAdd: {
+      description: 'When set, shows a + button in the column header.',
+      type: '(columnId: string) => void',
+    },
+    onCardClick: {
+      description: 'Called when a card body is clicked.',
+      type: '(item: T) => void',
+    },
+    onCardMove: {
+      description: 'Semantic move event. Also gates dragging: without it, cards are not draggable.',
+      type: '(e: DataBoardMoveEvent<T>) => void',
+    },
+    searchableFields: {
+      description: 'Fields the search box matches against (the raw stored value, not a custom-rendered label). Omit to hide search.',
+      type: '(keyof T)[]?',
+    },
+    groupBy: {
+      description: 'Groups cards into collapsible horizontal bands by any field.',
+      type: 'DataBoardGroupBy<T>?',
+    },
+    pageSize: {
+      description: 'Cards shown per column before "show more". Pass false to disable pagination.',
+      type: 'number | false',
+      default: '20',
+    },
+    pageSizeOptions: {
+      description: 'Choices in the page-size select. A single value hides the select.',
+      type: 'number[]',
+      default: '[10, 20, 50]',
+    },
+    hiddenColumns: {
+      description: 'Controlled hidden column ids. Omit to let the board own them.',
+      type: 'string[]?',
+    },
+    onHiddenColumnsChange: {
+      description: 'Fires with the next hidden set in controlled mode.',
+      type: '(ids: string[]) => void',
+    },
+    persistKey: {
+      description: 'Persists hidden columns, page size and collapsed bands to localStorage under this key.',
+      type: 'string?',
+    },
+    height: {
+      description: 'Bounds the board where the parent constrains nothing. A number is read as pixels.',
+      type: 'number | string',
+    },
+    labels: {
+      description: 'Overrides any built-in string, aria-labels included.',
+      type: 'Partial<DataBoardLabels>?',
+    },
+  }}
+/>
+
+### DataBoardColumn
+
+<TypeTable
+  type={{
+    id: { description: 'Matches the value stored in `columnField`.', type: 'string' },
+    label: { description: 'Shown in the header and the recall rail.', type: 'string' },
+    icon: { description: 'Lucide icon shown before the label.', type: 'LucideIcon?', default: 'CircleDashed' },
+    accentClassName: { description: 'Classes applied to the icon. Your tokens, not ours.', type: 'string?' },
+  }}
+/>
+
+### DataBoardGroupBy
+
+<TypeTable
+  type={{
+    field: { description: 'Field whose value defines the band.', type: 'keyof T' },
+    label: { description: 'Renders a band label from the raw value.', type: '((value: unknown) => string)?' },
+    description: { description: 'Secondary text on the band header.', type: '((value: unknown) => ReactNode)?' },
+    groups: {
+      description: 'Explicit band order. Bands listed here stay visible even when empty; unlisted values are appended.',
+      type: 'DataBoardGroup[]?',
+    },
+    defaultCollapsed: { description: 'Bands starting collapsed, by id.', type: '((groupId: string) => boolean)?' },
+  }}
+/>
