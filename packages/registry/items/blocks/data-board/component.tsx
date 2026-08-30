@@ -1,7 +1,25 @@
 'use client';
 
-import { useDroppable } from '@dnd-kit/core';
-import { useSortable } from '@dnd-kit/sortable';
+import {
+  closestCorners,
+  DndContext,
+  type DragEndEvent,
+  type DragOverEvent,
+  DragOverlay,
+  type DragStartEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ChevronDown, CircleDashed, Eye, EyeOff, GripVertical, type LucideIcon, Plus, Search } from 'lucide-react';
 import * as React from 'react';
@@ -701,6 +719,529 @@ export function DataBoardToolbar({
           </SelectContent>
         </Select>
       ) : null}
+    </div>
+  );
+}
+
+export type DataBoardMoveEvent<T> = {
+  item: T;
+  fromColumn: string;
+  toColumn: string;
+  toIndex: number;
+  fromGroup?: string;
+  toGroup?: string;
+};
+
+/**
+ * The board's live card list and the drag state machine that mutates it.
+ *
+ * Hovering reorders optimistically; `onCardMove` fires on drop and only when
+ * the position actually changed. Every decision that does not need the DOM
+ * lives in the pure helpers above and is tested separately.
+ */
+function useDataBoardDrag<T extends object>({
+  data,
+  defaultData,
+  columnField,
+  groupBy,
+  ungroupedLabel,
+  getId,
+  getColumn,
+  getGroup,
+  shownColumns,
+  view,
+  onDataChange,
+  onCardMove,
+}: {
+  data?: T[];
+  defaultData?: T[];
+  columnField: keyof T;
+  groupBy?: DataBoardGroupBy<T>;
+  ungroupedLabel: string;
+  getId: (item: T) => string;
+  getColumn: (item: T) => string;
+  getGroup: (item: T) => string | undefined;
+  shownColumns: DataBoardColumn[];
+  view: DataBoardView;
+  onDataChange?: (items: T[]) => void;
+  onCardMove?: (event: DataBoardMoveEvent<T>) => void;
+}) {
+  const [items, setItems] = React.useState<T[]>(() => data ?? defaultData ?? []);
+  const draggingRef = React.useRef(false);
+  const fromColumnRef = React.useRef<string | null>(null);
+  const fromIndexRef = React.useRef<number | null>(null);
+  const fromGroupRef = React.useRef<string | undefined>(undefined);
+  const startItemsRef = React.useRef<T[] | null>(null);
+
+  React.useEffect(() => {
+    if (data && !draggingRef.current) setItems(data);
+  }, [data]);
+
+  const [activeId, setActiveId] = React.useState<string | null>(null);
+  const [pinnedBands, setPinnedBands] = React.useState<DataBoardBand<T>[] | null>(null);
+
+  const bands = React.useMemo(
+    () => (groupBy ? withPinnedBands(buildGroups(items, groupBy, ungroupedLabel), pinnedBands) : null),
+    [items, groupBy, ungroupedLabel, pinnedBands],
+  );
+
+  const zoneIds = React.useMemo(() => {
+    const ids = new Set<string>();
+    for (const column of shownColumns) {
+      if (bands) for (const band of bands) ids.add(dropZoneId(column.id, band.id));
+      else ids.add(dropZoneId(column.id));
+    }
+    return ids;
+  }, [shownColumns, bands]);
+
+  // With no `groupId`, the index spans the whole column (flat mode); with one,
+  // it spans only the column x band cell, which is the paginated unit.
+  const cellIndexOf = React.useCallback(
+    (list: T[], columnId: string, groupId: string | undefined, cardId: string) =>
+      list
+        .filter((item) => getColumn(item) === columnId && (groupId == null || getGroup(item) === groupId))
+        .findIndex((item) => getId(item) === cardId),
+    [getColumn, getGroup, getId],
+  );
+
+  function handleDragStart(event: DragStartEvent) {
+    draggingRef.current = true;
+    const id = String(event.active.id);
+    const startItem = items.find((item) => getId(item) === id);
+    const startColumn = startItem ? getColumn(startItem) : null;
+    fromColumnRef.current = startColumn;
+    fromIndexRef.current = startColumn == null ? null : cellIndexOf(items, startColumn, undefined, id);
+    fromGroupRef.current = startItem ? getGroup(startItem) : undefined;
+    startItemsRef.current = items;
+    setPinnedBands(bands);
+    setActiveId(id);
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    const { active, over } = event;
+    if (!over) return;
+    const activeCardId = String(active.id);
+    const overId = String(over.id);
+    if (activeCardId === overId) return;
+
+    setItems((prev) => {
+      const activeIndex = prev.findIndex((item) => getId(item) === activeCardId);
+      if (activeIndex < 0) return prev;
+
+      const overIsZone = zoneIds.has(overId);
+      const overItem = overIsZone ? undefined : prev.find((item) => getId(item) === overId);
+      const target = resolveDropTarget({
+        overId,
+        zones: zoneIds,
+        overItem: overItem ? { columnId: getColumn(overItem), groupId: getGroup(overItem) } : null,
+      });
+      if (!target) return prev;
+
+      const current = prev[activeIndex];
+      const columnChanged = getColumn(current) !== target.columnId;
+      const groupChanged = target.groupId != null && getGroup(current) !== target.groupId;
+      // Write the band's value, not its id: a board grouped by a numeric field
+      // expects the number back, not its string form.
+      const bandValue = bands?.find((band) => band.id === target.groupId)?.value ?? null;
+
+      const updated =
+        columnChanged || groupChanged
+          ? prev.map((item, index) => {
+              if (index !== activeIndex) return item;
+              const next = { ...item } as Record<string, unknown>;
+              if (columnChanged) next[columnField as string] = target.columnId;
+              if (groupChanged && groupBy) next[groupBy.field as string] = bandValue;
+              return next as T;
+            })
+          : prev;
+      const activeIndexNow =
+        columnChanged || groupChanged ? updated.findIndex((item) => getId(item) === activeCardId) : activeIndex;
+
+      const inTargetCell = (item: T) =>
+        getColumn(item) === target.columnId && (target.groupId == null || getGroup(item) === target.groupId);
+
+      let overIndex = activeIndexNow;
+      if (overIsZone) {
+        for (let index = 0; index < updated.length; index++) {
+          if (getId(updated[index]) !== activeCardId && inTargetCell(updated[index])) overIndex = index;
+        }
+      } else {
+        overIndex = updated.findIndex((item) => getId(item) === overId);
+      }
+
+      if (overIndex < 0 || (!columnChanged && !groupChanged && overIndex === activeIndexNow)) return updated;
+      return arrayMove(updated, activeIndexNow, overIndex);
+    });
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    draggingRef.current = false;
+    setActiveId(null);
+    setPinnedBands(null);
+    const fromColumn = fromColumnRef.current;
+    const fromIndex = fromIndexRef.current;
+    const fromGroup = fromGroupRef.current;
+    fromColumnRef.current = null;
+    fromIndexRef.current = null;
+    fromGroupRef.current = undefined;
+    if (fromColumn == null) return;
+
+    const activeCardId = String(event.active.id);
+    const movedItem = items.find((item) => getId(item) === activeCardId);
+    if (!movedItem) return;
+
+    const toColumn = getColumn(movedItem);
+    const toIndex = cellIndexOf(items, toColumn, undefined, activeCardId);
+    const toGroup = getGroup(movedItem);
+    startItemsRef.current = null;
+    if (isSamePosition({ fromColumn, toColumn, fromIndex, toIndex, fromGroup, toGroup })) return;
+
+    // A card dropped past its target cell's paginated window would be invisible
+    // until the next "show more": open just enough steps to reveal it.
+    const key = toGroup == null ? columnKey(toColumn) : bandKey(toGroup);
+    const indexInCell = toGroup == null ? toIndex : cellIndexOf(items, toColumn, toGroup, activeCardId);
+    const steps = revealStepsFor(view.pageSize, view.revealedFor(key), indexInCell);
+    for (let step = 0; step < steps; step++) view.revealMore(key);
+
+    onDataChange?.(items);
+    onCardMove?.({ item: movedItem, fromColumn, toColumn, toIndex, fromGroup, toGroup });
+  }
+
+  function handleDragCancel() {
+    draggingRef.current = false;
+    const snapshot = startItemsRef.current;
+    startItemsRef.current = null;
+    fromColumnRef.current = null;
+    fromIndexRef.current = null;
+    fromGroupRef.current = undefined;
+    setActiveId(null);
+    setPinnedBands(null);
+    if (snapshot) setItems(snapshot);
+  }
+
+  return {
+    items,
+    activeId,
+    bands,
+    handlers: {
+      onDragStart: handleDragStart,
+      onDragOver: handleDragOver,
+      onDragEnd: handleDragEnd,
+      onDragCancel: handleDragCancel,
+    },
+  };
+}
+
+export type DataBoardProps<T extends object> = {
+  columns: DataBoardColumn[];
+  data?: T[];
+  defaultData?: T[];
+  onDataChange?: (next: T[]) => void;
+  idField?: keyof T;
+  columnField: keyof T;
+  title?: (item: T) => React.ReactNode;
+  fields?: DataBoardField<T>[];
+  cardContent?: (item: T) => React.ReactNode;
+  cardClassName?: (item: T) => string | undefined;
+  wrapCard?: (item: T, card: React.ReactNode) => React.ReactNode;
+  renderColumnSummary?: (items: T[], column: DataBoardColumn) => React.ReactNode;
+  onCardAdd?: (columnId: string) => void;
+  onCardClick?: (item: T) => void;
+  onCardMove?: (event: DataBoardMoveEvent<T>) => void;
+  searchableFields?: (keyof T)[];
+  groupBy?: DataBoardGroupBy<T>;
+  pageSize?: number | false;
+  pageSizeOptions?: number[];
+  hiddenColumns?: string[];
+  onHiddenColumnsChange?: (ids: string[]) => void;
+  persistKey?: string;
+  height?: number | string;
+  labels?: Partial<DataBoardLabels>;
+  className?: string;
+};
+
+export function DataBoard<T extends object>({
+  columns,
+  data,
+  defaultData,
+  onDataChange,
+  idField = 'id' as keyof T,
+  columnField,
+  title,
+  fields,
+  cardContent,
+  cardClassName,
+  wrapCard,
+  renderColumnSummary,
+  onCardAdd,
+  onCardClick,
+  onCardMove,
+  searchableFields,
+  groupBy,
+  pageSize = 20,
+  pageSizeOptions = [10, 20, 50],
+  hiddenColumns,
+  onHiddenColumnsChange,
+  persistKey,
+  height,
+  labels: labelOverrides,
+  className,
+}: DataBoardProps<T>) {
+  const dndId = React.useId();
+  const labels = React.useMemo(() => ({ ...DEFAULT_LABELS, ...labelOverrides }), [labelOverrides]);
+
+  const getId = React.useCallback((item: T) => String(item[idField]), [idField]);
+  const getColumn = React.useCallback((item: T) => String(item[columnField]), [columnField]);
+  const getGroup = React.useCallback(
+    (item: T): string | undefined => (groupBy ? groupIdOf(item[groupBy.field]) : undefined),
+    [groupBy],
+  );
+
+  // A drag with no handler cannot accomplish anything: it would mutate local
+  // state without persisting, and the consumer's next refetch would undo it.
+  const draggable = onCardMove != null;
+
+  const view = useDataBoardView({
+    persistKey,
+    columnIds: columns.map((column) => column.id),
+    defaultPageSize: pageSize,
+    hiddenColumns,
+    onHiddenColumnsChange,
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const shownColumns = React.useMemo(() => visibleColumns(columns, view.hidden), [columns, view.hidden]);
+  const hiddenColumnList = React.useMemo(() => {
+    const hiddenSet = new Set(view.hidden);
+    return columns.filter((column) => hiddenSet.has(column.id));
+  }, [columns, view.hidden]);
+
+  const { items, activeId, bands, handlers } = useDataBoardDrag<T>({
+    data,
+    defaultData,
+    columnField,
+    groupBy,
+    ungroupedLabel: labels.ungrouped,
+    getId,
+    getColumn,
+    getGroup,
+    shownColumns,
+    view,
+    onDataChange,
+    onCardMove,
+  });
+
+  const [query, setQuery] = React.useState('');
+  const deferredQuery = React.useDeferredValue(query);
+
+  // Search is purely visual: it narrows what is rendered and never mutates the
+  // card list the drag machine owns.
+  const searchable = Boolean(searchableFields?.length);
+  const visibleItems = React.useMemo(() => {
+    const needle = deferredQuery.trim().toLowerCase();
+    if (!needle || !searchableFields?.length) return items;
+    return items.filter((item) =>
+      searchableFields.some((field) =>
+        String(item[field] ?? '')
+          .toLowerCase()
+          .includes(needle),
+      ),
+    );
+  }, [items, deferredQuery, searchableFields]);
+
+  // Bands are built from the unfiltered list so a band never disappears
+  // mid-search; this set is what narrows each cell.
+  const visibleIds = React.useMemo(() => new Set(visibleItems.map(getId)), [visibleItems, getId]);
+
+  const itemsByColumn = React.useMemo(() => {
+    const grouped = new Map<string, T[]>(columns.map((column) => [column.id, []]));
+    for (const item of visibleItems) grouped.get(getColumn(item))?.push(item);
+    return grouped;
+  }, [columns, visibleItems, getColumn]);
+
+  const counts = React.useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const column of columns) out[column.id] = (itemsByColumn.get(column.id) ?? []).length;
+    return out;
+  }, [columns, itemsByColumn]);
+
+  const activeItem = activeId ? (items.find((item) => getId(item) === activeId) ?? null) : null;
+
+  const renderTitle = React.useCallback((item: T): React.ReactNode => (title ? title(item) : null), [title]);
+
+  const renderBody = React.useCallback(
+    (item: T): React.ReactNode => {
+      if (cardContent) return cardContent(item);
+      if (!fields?.length) return null;
+      return (
+        <div className='flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground'>
+          {fields.map((field) => {
+            const value = item[field.key];
+            return (
+              <span key={String(field.key)} className='whitespace-nowrap'>
+                {field.label ? <span className='font-medium'>{field.label}: </span> : null}
+                {field.render ? field.render(value, item) : String(value ?? '')}
+              </span>
+            );
+          })}
+        </div>
+      );
+    },
+    [cardContent, fields],
+  );
+
+  // The rendered slice of a cell. `key` carries the pagination: a column in
+  // flat mode, a whole band in grouped mode.
+  const sliceOf = (all: T[], key: string) => {
+    const { shown, hidden } = paginate(all, limitFor(view.pageSize, view.revealedFor(key)));
+    return withActiveCard(all, shown, hidden, activeId, getId);
+  };
+
+  const renderCards = (list: T[], column: DataBoardColumn, groupId?: string) =>
+    list.map((item) => {
+      const card = (
+        <DataBoardCard
+          id={getId(item)}
+          columnId={column.id}
+          groupId={groupId}
+          draggable={draggable}
+          title={renderTitle(item)}
+          body={renderBody(item)}
+          className={cardClassName?.(item)}
+          onClick={onCardClick ? () => onCardClick(item) : undefined}
+        />
+      );
+      return <React.Fragment key={getId(item)}>{wrapCard ? wrapCard(item, card) : card}</React.Fragment>;
+    });
+
+  const renderMoreButton = (key: string, remaining: number, buttonClassName: string) => (
+    <Button
+      variant='outline'
+      size='sm'
+      className={cn(buttonClassName, 'text-muted-foreground')}
+      onClick={() => view.revealMore(key)}
+    >
+      {labels.showMore(remaining)}
+    </Button>
+  );
+
+  // A flat-mode column scrolls on its own and carries its own "show more";
+  // a grouped-mode cell delegates both to its band.
+  const renderColumnBody = (
+    column: DataBoardColumn,
+    rendered: T[],
+    remaining: number,
+    key: string,
+    groupId?: string,
+  ) => (
+    <DataBoardColumnBody key={column.id} zoneId={dropZoneId(column.id, groupId)} scrollable={groupId == null}>
+      <SortableContext items={rendered.map(getId)} strategy={verticalListSortingStrategy}>
+        {rendered.length === 0 ? (
+          <p className='rounded-md border border-dashed p-3 text-center text-xs text-muted-foreground'>
+            {labels.empty}
+          </p>
+        ) : (
+          renderCards(rendered, column, groupId)
+        )}
+      </SortableContext>
+      {groupId == null && remaining > 0 ? renderMoreButton(key, remaining, 'w-full') : null}
+    </DataBoardColumnBody>
+  );
+
+  const rootStyle: React.CSSProperties =
+    height == null ? {} : { height: typeof height === 'number' ? `${height}px` : height };
+
+  return (
+    <div data-slot='data-board' style={rootStyle} className={cn('flex min-h-0 flex-col gap-3', className)}>
+      <DataBoardToolbar
+        query={query}
+        onQueryChange={setQuery}
+        searchable={searchable}
+        pageSize={view.pageSize}
+        pageSizeOptions={pageSizeOptions}
+        onPageSizeChange={view.setPageSize}
+        labels={labels}
+      />
+
+      <DndContext id={dndId} sensors={sensors} collisionDetection={closestCorners} {...handlers}>
+        <div className='flex min-h-0 flex-1'>
+          <div className='min-h-0 flex-1 overflow-x-auto overflow-y-hidden'>
+            {shownColumns.length === 0 ? (
+              <p className='grid h-full place-items-center text-sm text-muted-foreground'>{labels.allColumnsHidden}</p>
+            ) : (
+              <div className='flex h-full w-max min-w-full flex-col'>
+                <div className='flex shrink-0 gap-2 border-b pb-2'>
+                  {shownColumns.map((column) => (
+                    <DataBoardColumnHeader
+                      key={column.id}
+                      column={column}
+                      count={counts[column.id] ?? 0}
+                      summary={renderColumnSummary?.(itemsByColumn.get(column.id) ?? [], column)}
+                      labels={labels}
+                      onAdd={onCardAdd ? () => onCardAdd(column.id) : undefined}
+                      onHide={() => view.toggleHidden(column.id)}
+                    />
+                  ))}
+                </div>
+                {bands ? (
+                  <div className='min-h-0 flex-1 overflow-y-auto'>
+                    {bands.map((band) => {
+                      const key = bandKey(band.id);
+                      const fallback = groupBy?.defaultCollapsed?.(band.id) ?? false;
+                      const bandItems = band.items.filter((item) => visibleIds.has(getId(item)));
+                      const cells = shownColumns.map((column) => {
+                        const all = bandItems.filter((item) => getColumn(item) === column.id);
+                        return { column, ...sliceOf(all, key) };
+                      });
+                      const remainingInBand = cells.reduce((total, cell) => total + cell.remaining, 0);
+                      return (
+                        <DataBoardBandRow
+                          key={band.id}
+                          label={band.label}
+                          count={bandItems.length}
+                          description={groupBy?.description?.(band.value)}
+                          collapsed={view.isCollapsed(band.id, fallback)}
+                          onToggle={() => view.toggleCollapsed(band.id, fallback)}
+                          footer={remainingInBand > 0 ? renderMoreButton(key, remainingInBand, 'self-start') : null}
+                        >
+                          {cells.map((cell) =>
+                            renderColumnBody(cell.column, cell.rendered, cell.remaining, key, band.id),
+                          )}
+                        </DataBoardBandRow>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className='flex min-h-0 flex-1 gap-2 pt-2'>
+                    {shownColumns.map((column) => {
+                      const all = itemsByColumn.get(column.id) ?? [];
+                      const key = columnKey(column.id);
+                      const { rendered, remaining } = sliceOf(all, key);
+                      return renderColumnBody(column, rendered, remaining, key);
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <DataBoardHiddenRail columns={hiddenColumnList} counts={counts} labels={labels} onShow={view.toggleHidden} />
+        </div>
+
+        <DragOverlay>
+          {activeItem ? (
+            <DataBoardCardFace
+              title={renderTitle(activeItem)}
+              body={renderBody(activeItem)}
+              className={cn('rotate-3 shadow-lg', cardClassName?.(activeItem))}
+              handle={<GripVertical className='mt-0.5 size-4 shrink-0 text-muted-foreground' />}
+            />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
     </div>
   );
 }
