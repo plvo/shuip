@@ -1,7 +1,16 @@
 'use client';
 
-import type { LucideIcon } from 'lucide-react';
+import { useDroppable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { ChevronDown, CircleDashed, Eye, EyeOff, GripVertical, type LucideIcon, Plus, Search } from 'lucide-react';
 import * as React from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 export type DataBoardColumn = {
   id: string;
@@ -391,4 +400,305 @@ export function useDataBoardView({
     isCollapsed,
     toggleCollapsed,
   };
+}
+
+export function DataBoardCardFace({
+  title,
+  body,
+  onClick,
+  handle,
+  className,
+}: {
+  title?: React.ReactNode;
+  body?: React.ReactNode;
+  onClick?: () => void;
+  handle?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Card className={cn('gap-0 py-0', onClick && 'cursor-pointer', className)} onClick={onClick}>
+      <div className='flex items-start gap-2 p-3'>
+        {handle}
+        <div className='min-w-0 flex-1 space-y-1'>
+          {title != null ? <div className='text-sm font-medium leading-snug'>{title}</div> : null}
+          {body}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+export function DataBoardCard({
+  id,
+  columnId,
+  groupId,
+  draggable,
+  title,
+  body,
+  onClick,
+  className,
+}: {
+  id: string;
+  columnId: string;
+  groupId?: string;
+  draggable: boolean;
+  title?: React.ReactNode;
+  body?: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    data: { columnId, groupId },
+    disabled: !draggable,
+  });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className={cn(isDragging && 'opacity-50')}>
+      <DataBoardCardFace
+        title={title}
+        body={body}
+        onClick={onClick}
+        className={className}
+        handle={
+          draggable ? (
+            <button
+              type='button'
+              className='mt-0.5 cursor-grab touch-none text-muted-foreground active:cursor-grabbing'
+              onClick={(event) => event.stopPropagation()}
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical className='size-4' />
+            </button>
+          ) : null
+        }
+      />
+    </div>
+  );
+}
+
+export function DataBoardColumnHeader({
+  column,
+  count,
+  summary,
+  labels,
+  onAdd,
+  onHide,
+}: {
+  column: DataBoardColumn;
+  count: number;
+  summary?: React.ReactNode;
+  labels: DataBoardLabels;
+  onAdd?: () => void;
+  onHide?: () => void;
+}) {
+  const Icon = column.icon ?? CircleDashed;
+  return (
+    <div data-slot='data-board-column-header' className='group/col flex w-72 shrink-0 items-center gap-1.5 px-1.5 py-1'>
+      <Icon className={cn('size-4 shrink-0 text-muted-foreground', column.accentClassName)} />
+      <span className='min-w-0 truncate text-sm font-medium'>{column.label}</span>
+      <span className='shrink-0 text-xs tabular-nums text-muted-foreground'>{count}</span>
+      {summary != null ? (
+        <span className='ml-auto shrink-0 text-xs tabular-nums text-muted-foreground'>{summary}</span>
+      ) : null}
+      <div className={cn('flex shrink-0 items-center', summary == null && 'ml-auto')}>
+        {onAdd ? (
+          <Button
+            variant='ghost'
+            size='icon'
+            className='size-6'
+            onClick={onAdd}
+            aria-label={labels.addToColumn(column.label)}
+          >
+            <Plus className='size-4' />
+          </Button>
+        ) : null}
+        {onHide ? (
+          <Button
+            variant='ghost'
+            size='icon'
+            className='size-6 opacity-0 transition-opacity focus-visible:opacity-100 group-hover/col:opacity-100'
+            onClick={onHide}
+            aria-label={labels.hideColumn(column.label)}
+          >
+            <EyeOff className='size-4' />
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+export function DataBoardColumnBody({
+  zoneId,
+  scrollable,
+  children,
+}: {
+  zoneId: string;
+  scrollable?: boolean;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: zoneId });
+  return (
+    <div
+      ref={setNodeRef}
+      data-slot='data-board-column-body'
+      className={cn(
+        // `p-1.5` leaves room for a badge a consumer positions at
+        // `-top-1.5 -right-1.5` on a card; without it the scrollport clips it.
+        'flex w-72 shrink-0 flex-col gap-1.5 rounded-lg border border-transparent p-1.5 transition-colors',
+        scrollable && 'min-h-0 overflow-x-hidden overflow-y-auto',
+        isOver && 'border-border bg-muted/50',
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function DataBoardBandRow({
+  label,
+  count,
+  description,
+  collapsed,
+  onToggle,
+  footer,
+  children,
+}: {
+  label: string;
+  count: number;
+  description?: React.ReactNode;
+  collapsed: boolean;
+  onToggle: () => void;
+  footer?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const bodyId = React.useId();
+  return (
+    <section className='border-b last:border-b-0'>
+      <button
+        type='button'
+        onClick={onToggle}
+        aria-expanded={!collapsed}
+        aria-controls={bodyId}
+        // Sticky within the band scroller, so a band header stays visible for
+        // as long as you are reading its cards.
+        className='sticky top-0 z-10 flex w-full items-center gap-2 bg-background py-2 text-left'
+      >
+        <ChevronDown
+          className={cn('size-4 shrink-0 text-muted-foreground transition-transform', collapsed && '-rotate-90')}
+        />
+        <span data-slot='data-board-band-label' className='shrink-0 text-sm font-medium'>
+          {label}
+        </span>
+        <span className='shrink-0 text-xs tabular-nums text-muted-foreground'>{count}</span>
+        {description != null ? (
+          <span
+            data-slot='data-board-band-description'
+            className='hidden min-w-0 flex-1 truncate text-xs text-muted-foreground sm:block'
+          >
+            {description}
+          </span>
+        ) : null}
+      </button>
+      {collapsed ? null : (
+        <>
+          <div id={bodyId} data-slot='data-board-band-body' className='pb-3'>
+            <div className='flex gap-2'>{children}</div>
+          </div>
+          {footer ? <div className='flex pb-3'>{footer}</div> : null}
+        </>
+      )}
+    </section>
+  );
+}
+
+export function DataBoardHiddenRail({
+  columns,
+  counts,
+  labels,
+  onShow,
+}: {
+  columns: DataBoardColumn[];
+  counts: Record<string, number>;
+  labels: DataBoardLabels;
+  onShow: (columnId: string) => void;
+}) {
+  if (columns.length === 0) return null;
+  return (
+    <div className='flex w-12 shrink-0 flex-col items-center gap-2 border-l bg-muted/40 py-3'>
+      {columns.map((column) => (
+        <Tooltip key={column.id}>
+          <TooltipTrigger asChild>
+            <Button
+              variant='outline'
+              className='h-auto w-8 flex-col gap-2 px-1 py-2.5 has-[>svg]:px-1'
+              onClick={() => onShow(column.id)}
+              aria-label={labels.showColumn(column.label)}
+            >
+              <span className='max-h-40 truncate text-xs font-medium [writing-mode:vertical-rl]'>{column.label}</span>
+              <Eye className={cn('size-3.5 text-muted-foreground', column.accentClassName)} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side='left'>
+            {labels.showColumn(column.label)} · {counts[column.id] ?? 0}
+          </TooltipContent>
+        </Tooltip>
+      ))}
+    </div>
+  );
+}
+
+export function DataBoardToolbar({
+  query,
+  onQueryChange,
+  searchable,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
+  labels,
+}: {
+  query: string;
+  onQueryChange: (next: string) => void;
+  searchable: boolean;
+  pageSize: number | false;
+  pageSizeOptions: number[];
+  onPageSizeChange: (next: number) => void;
+  labels: DataBoardLabels;
+}) {
+  const showPageSize = pageSizeOptions.length > 1 && pageSize !== false;
+  if (!searchable && !showPageSize) return null;
+  return (
+    <div className='flex shrink-0 items-center gap-2'>
+      {searchable ? (
+        <div className='relative w-full max-w-xs'>
+          <Search className='absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
+          <Input
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            placeholder={labels.searchPlaceholder}
+            className='pl-8'
+          />
+        </div>
+      ) : null}
+      {showPageSize ? (
+        <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
+          <SelectTrigger size='sm' className='ml-auto w-36' aria-label={labels.pageSizeLabel}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {pageSizeOptions.map((option) => (
+              <SelectItem key={option} value={String(option)}>
+                {labels.pageSizeOption(option)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : null}
+    </div>
+  );
 }
