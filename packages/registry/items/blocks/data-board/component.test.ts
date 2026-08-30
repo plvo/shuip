@@ -274,3 +274,55 @@ describe('revealStepsFor', () => {
     expect(revealStepsFor(20, 0, -1)).toBe(0);
   });
 });
+
+import { DEFAULT_LABELS, parseStoredView } from './component';
+
+describe('DEFAULT_LABELS', () => {
+  test('every label is defined', () => {
+    for (const [key, value] of Object.entries(DEFAULT_LABELS)) {
+      expect(value, `label ${key}`).toBeDefined();
+    }
+  });
+
+  test('the countable labels read naturally', () => {
+    expect(DEFAULT_LABELS.showMore(3)).toBe('Show 3 more');
+    expect(DEFAULT_LABELS.pageSizeOption(20)).toBe('20 per column');
+    expect(DEFAULT_LABELS.hideColumn('Backlog')).toBe('Hide Backlog');
+  });
+});
+
+describe('parseStoredView', () => {
+  const known = ['a', 'b'];
+
+  test('returns nothing for absent storage', () => {
+    expect(parseStoredView(null, known)).toEqual({});
+  });
+
+  test('returns nothing for corrupt JSON instead of throwing', () => {
+    expect(parseStoredView('{not json', known)).toEqual({});
+  });
+
+  test('drops hidden ids that no longer match a column', () => {
+    expect(parseStoredView(JSON.stringify({ hidden: ['a', 'gone'] }), known)).toEqual({ hidden: ['a'] });
+  });
+
+  test('keeps a positive page size and the disabled sentinel', () => {
+    expect(parseStoredView(JSON.stringify({ pageSize: 50 }), known).pageSize).toBe(50);
+    expect(parseStoredView(JSON.stringify({ pageSize: false }), known).pageSize).toBe(false);
+  });
+
+  test('rejects a nonsensical page size', () => {
+    expect(parseStoredView(JSON.stringify({ pageSize: 0 }), known).pageSize).toBeUndefined();
+    expect(parseStoredView(JSON.stringify({ pageSize: -5 }), known).pageSize).toBeUndefined();
+    expect(parseStoredView(JSON.stringify({ pageSize: 'big' }), known).pageSize).toBeUndefined();
+  });
+
+  test('accepts a collapsed map and rejects a non-object', () => {
+    expect(parseStoredView(JSON.stringify({ collapsed: { '1': true } }), known).collapsed).toEqual({ '1': true });
+    expect(parseStoredView(JSON.stringify({ collapsed: ['1'] }), known).collapsed).toBeUndefined();
+  });
+
+  test('ignores unknown keys', () => {
+    expect(parseStoredView(JSON.stringify({ nope: 1 }), known)).toEqual({});
+  });
+});

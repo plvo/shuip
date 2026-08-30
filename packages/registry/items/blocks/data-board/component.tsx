@@ -1,7 +1,7 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import type * as React from 'react';
+import * as React from 'react';
 
 export type DataBoardColumn = {
   id: string;
@@ -204,4 +204,191 @@ export function revealStepsFor(pageSize: number | false, revealed: number, index
   if (pageSize === false || pageSize <= 0 || index < 0) return 0;
   if (index < limitFor(pageSize, revealed)) return 0;
   return Math.floor(index / pageSize) - revealed;
+}
+
+export type DataBoardLabels = {
+  empty: string;
+  ungrouped: string;
+  allColumnsHidden: string;
+  searchPlaceholder: string;
+  showMore: (remaining: number) => string;
+  pageSizeOption: (size: number) => string;
+  pageSizeLabel: string;
+  addToColumn: (label: string) => string;
+  hideColumn: (label: string) => string;
+  showColumn: (label: string) => string;
+};
+
+export const DEFAULT_LABELS: DataBoardLabels = {
+  empty: 'No items',
+  ungrouped: 'Ungrouped',
+  allColumnsHidden: 'All columns are hidden',
+  searchPlaceholder: 'Search...',
+  showMore: (remaining) => `Show ${remaining} more`,
+  pageSizeOption: (size) => `${size} per column`,
+  pageSizeLabel: 'Cards per column',
+  addToColumn: (label) => `Add to ${label}`,
+  hideColumn: (label) => `Hide ${label}`,
+  showColumn: (label) => `Show ${label}`,
+};
+
+export const STORAGE_PREFIX = 'shuip-data-board:';
+
+export type StoredView = {
+  hidden: string[];
+  pageSize: number | false;
+  collapsed: Record<string, boolean>;
+};
+
+export function parseStoredView(raw: string | null, knownColumnIds: string[]): Partial<StoredView> {
+  if (!raw) return {};
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return {};
+  }
+  if (typeof parsed !== 'object' || parsed === null) return {};
+  const source = parsed as Partial<StoredView>;
+  const out: Partial<StoredView> = {};
+
+  if (Array.isArray(source.hidden)) {
+    const known = new Set(knownColumnIds);
+    out.hidden = source.hidden.filter((id): id is string => typeof id === 'string' && known.has(id));
+  }
+  if (source.pageSize === false || (typeof source.pageSize === 'number' && source.pageSize > 0)) {
+    out.pageSize = source.pageSize;
+  }
+  if (source.collapsed && typeof source.collapsed === 'object' && !Array.isArray(source.collapsed)) {
+    out.collapsed = source.collapsed;
+  }
+  return out;
+}
+
+function writeStoredView(persistKey: string | undefined, view: StoredView): void {
+  if (!persistKey || typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(STORAGE_PREFIX + persistKey, JSON.stringify(view));
+  } catch {
+    // Storage full or unavailable: the view stays in memory for this session.
+  }
+}
+
+export type DataBoardView = {
+  hidden: string[];
+  toggleHidden: (columnId: string) => void;
+  pageSize: number | false;
+  setPageSize: (next: number | false) => void;
+  revealedFor: (key: string) => number;
+  revealMore: (key: string) => void;
+  isCollapsed: (groupId: string, fallback: boolean) => boolean;
+  toggleCollapsed: (groupId: string, fallback: boolean) => void;
+};
+
+export function useDataBoardView({
+  persistKey,
+  columnIds,
+  defaultPageSize,
+  hiddenColumns,
+  onHiddenColumnsChange,
+}: {
+  persistKey?: string;
+  columnIds: string[];
+  defaultPageSize: number | false;
+  hiddenColumns?: string[];
+  onHiddenColumnsChange?: (ids: string[]) => void;
+}): DataBoardView {
+  const columnIdsRef = React.useRef(columnIds);
+
+  const [ownHidden, setOwnHidden] = React.useState<string[]>([]);
+  const [pageSize, setPageSizeState] = React.useState<number | false>(defaultPageSize);
+  const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>({});
+  const [revealed, setRevealed] = React.useState<Record<string, number>>({});
+  const hydrated = React.useRef(false);
+
+  const controlled = hiddenColumns != null;
+  const hidden = controlled ? hiddenColumns : ownHidden;
+
+  // Always-current reflection of what belongs in storage. Unlike the state
+  // values, which only change on the next render, this ref is also rewritten
+  // by each mutator: two mutations batched into one render must both reach
+  // storage.
+  const storedRef = React.useRef<StoredView>({ hidden, pageSize, collapsed });
+
+  // Resynchronised on commit, never during render: React can replay or discard
+  // a render, and a ref written in a discarded render would leak state that was
+  // never displayed.
+  React.useEffect(() => {
+    columnIdsRef.current = columnIds;
+    storedRef.current = { hidden, pageSize, collapsed };
+  });
+
+  // Read after mount only: reading during render would make the server HTML
+  // diverge from the first client render. `columnIds` is deliberately not a
+  // dependency — adding a column must not re-read storage and clobber the
+  // current view.
+  React.useEffect(() => {
+    hydrated.current = true;
+    if (!persistKey || typeof window === 'undefined') return;
+    let raw: string | null = null;
+    try {
+      raw = window.localStorage.getItem(STORAGE_PREFIX + persistKey);
+    } catch {
+      return;
+    }
+    const stored = parseStoredView(raw, columnIdsRef.current);
+    if (stored.hidden) setOwnHidden(stored.hidden);
+    if (stored.pageSize !== undefined) setPageSizeState(stored.pageSize);
+    if (stored.collapsed) setCollapsed(stored.collapsed);
+  }, [persistKey]);
+
+  const persist = (patch: Partial<StoredView>) => {
+    const next = { ...storedRef.current, ...patch };
+    storedRef.current = next;
+    if (!hydrated.current) return;
+    writeStoredView(persistKey, next);
+  };
+
+  const toggleHidden = (columnId: string) => {
+    const base = storedRef.current.hidden;
+    const next = base.includes(columnId) ? base.filter((id) => id !== columnId) : [...base, columnId];
+    if (controlled) {
+      onHiddenColumnsChange?.(next);
+      return;
+    }
+    setOwnHidden(next);
+    persist({ hidden: next });
+  };
+
+  const setPageSize = (next: number | false) => {
+    setPageSizeState(next);
+    setRevealed({});
+    persist({ pageSize: next });
+  };
+
+  const revealedFor = (key: string) => revealed[key] ?? 0;
+
+  const revealMore = (key: string) => {
+    setRevealed((prev) => ({ ...prev, [key]: (prev[key] ?? 0) + 1 }));
+  };
+
+  const isCollapsed = (groupId: string, fallback: boolean) => collapsed[groupId] ?? fallback;
+
+  const toggleCollapsed = (groupId: string, fallback: boolean) => {
+    const base = storedRef.current.collapsed;
+    const next = { ...base, [groupId]: !(base[groupId] ?? fallback) };
+    setCollapsed(next);
+    persist({ collapsed: next });
+  };
+
+  return {
+    hidden,
+    toggleHidden,
+    pageSize,
+    setPageSize,
+    revealedFor,
+    revealMore,
+    isCollapsed,
+    toggleCollapsed,
+  };
 }
