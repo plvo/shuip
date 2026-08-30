@@ -374,13 +374,17 @@ not clipped by the scrollport.
 
 ## Testing
 
-shuip has no test runner. The repo CLAUDE.md says to propose a setup before adding tests — this is
-that proposal, and it is approved.
+The repo CLAUDE.md claims no test runner is configured. That is out of date:
+`packages/registry/package.json` already declares `"test": "bun test"` and
+`packages/registry/scripts/skills.test.ts` runs green (17 tests). Bun's runner is built into the
+runtime — **no dependency to add, no config file**.
 
-Add `vitest` at the root with a `test` script and a config that picks up
-`packages/registry/**/*.test.ts`. Scope for this work: **the pure helpers only** — no DOM, no
-jsdom, no `@testing-library/react`. That keeps the setup to one dev dependency and one config file
-while covering the part of the port that can break silently.
+Verified empirically before planning: under `bun test`, a test file inside an item folder resolves
+the `packages/registry/tsconfig.json` path aliases, so `import { ... } from './component'` pulls the
+block — dnd-kit and Radix imports included — without a module-resolution error.
+
+Scope for this work: **the pure helpers only** — no DOM, no jsdom, no `@testing-library/react`.
+That covers the part of the port that can break silently, at zero infrastructure cost.
 
 `packages/registry/items/blocks/data-board/component.test.ts` covers:
 
