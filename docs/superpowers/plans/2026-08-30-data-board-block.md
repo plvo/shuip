@@ -2209,7 +2209,7 @@ configured against your own data shape — nothing is hardcoded to a domain.
 - **Global search**: filter cards across `searchableFields`.
 - **Hybrid state**: standalone from `defaultData`, or controlled via `data` + `onDataChange`.
 
-> Cards are only draggable when you pass `onCardMove`. A board without it is genuinely read-only.
+> Cards become draggable as soon as you pass either `onCardMove` or `onDataChange`. A board that passes neither is genuinely read-only — the cards have no drag handle at all.
 
 > Card order is implicit in the `data` array order. On any move the board emits the reordered array
 > via `onDataChange` and a semantic `onCardMove` event; map either to your own persistence.
@@ -2283,7 +2283,7 @@ const columns: DataBoardColumn[] = [
       type: 'T[]?',
     },
     onDataChange: {
-      description: 'Fires with the full reordered array after a move.',
+      description: 'Fires with the full reordered array after a move. Passing it, or onCardMove, is what makes cards draggable.',
       type: '(next: T[]) => void',
     },
     idField: {
@@ -2328,7 +2328,7 @@ const columns: DataBoardColumn[] = [
       type: '(item: T) => void',
     },
     onCardMove: {
-      description: 'Semantic move event. Also gates dragging: without it, cards are not draggable.',
+      description: 'Semantic move event, fired once per move. Together with onDataChange it gates dragging: a board passing neither is read-only.',
       type: '(e: DataBoardMoveEvent<T>) => void',
     },
     searchableFields: {
