@@ -1154,7 +1154,9 @@ export function DataBoardBandRow({
         type='button'
         onClick={onToggle}
         aria-expanded={!collapsed}
-        aria-controls={bodyId}
+        // The body is unmounted when collapsed, so `aria-controls` must not
+        // reference an id that is absent from the DOM.
+        aria-controls={collapsed ? undefined : bodyId}
         // Sticky within the band scroller, so a band header stays visible for
         // as long as you are reading its cards.
         className='sticky top-0 z-10 flex w-full items-center gap-2 bg-background py-2 text-left'
