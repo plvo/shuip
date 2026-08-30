@@ -691,6 +691,13 @@ export function DataBoardToolbar({
   labels: DataBoardLabels;
 }) {
   const showPageSize = pageSizeOptions.length > 1 && pageSize !== false;
+  // `pageSize` and `pageSizeOptions` default independently, so a consumer who
+  // overrides only one leaves the select holding a value that matches no item,
+  // which renders as an empty trigger. Fold the active size in.
+  const options = React.useMemo(() => {
+    if (pageSize === false || pageSizeOptions.includes(pageSize)) return pageSizeOptions;
+    return [...pageSizeOptions, pageSize].sort((a, b) => a - b);
+  }, [pageSizeOptions, pageSize]);
   if (!searchable && !showPageSize) return null;
   return (
     <div className='flex shrink-0 items-center gap-2'>
@@ -701,6 +708,7 @@ export function DataBoardToolbar({
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder={labels.searchPlaceholder}
+            aria-label={labels.searchPlaceholder}
             className='pl-8'
           />
         </div>
@@ -711,7 +719,7 @@ export function DataBoardToolbar({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {pageSizeOptions.map((option) => (
+            {options.map((option) => (
               <SelectItem key={option} value={String(option)}>
                 {labels.pageSizeOption(option)}
               </SelectItem>

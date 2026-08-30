@@ -45,7 +45,8 @@ export default function DataBoardGroupedExample() {
         persistKey='docs-data-board-grouped'
         title={(ticket) => ticket.title}
         fields={[{ key: 'owner' }]}
-        pageSize={4}
+        pageSize={2}
+        pageSizeOptions={[2, 4, 8]}
         groupBy={{
           field: 'sprint',
           groups: [

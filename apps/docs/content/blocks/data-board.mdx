@@ -175,7 +175,8 @@ const columns: DataBoardColumn[] = [
       default: '20',
     },
     pageSizeOptions: {
-      description: 'Choices in the page-size select. A single value hides the select.',
+      description:
+        'Choices in the page-size select. A single value hides the select, and so does pageSize={false}.',
       type: 'number[]',
       default: '[10, 20, 50]',
     },
@@ -188,7 +189,8 @@ const columns: DataBoardColumn[] = [
       type: '(ids: string[]) => void',
     },
     persistKey: {
-      description: 'Persists hidden columns, page size and collapsed bands to localStorage under this key.',
+      description:
+        'Persists hidden columns, page size and collapsed bands to localStorage under this key. Hidden columns are only persisted when the board owns them — in controlled mode (hiddenColumns passed) the board does not restore hidden columns from storage, since the consumer keeps that state itself.',
       type: 'string?',
     },
     height: {
@@ -225,5 +227,60 @@ const columns: DataBoardColumn[] = [
       type: 'DataBoardGroup[]?',
     },
     defaultCollapsed: { description: 'Bands starting collapsed, by id.', type: '((groupId: string) => boolean)?' },
+  }}
+/>
+
+### DataBoardLabels
+
+`labels` takes a `Partial<DataBoardLabels>`, so a consumer overrides only the keys they need.
+
+<TypeTable
+  type={{
+    empty: { description: 'Shown in an empty column or cell.', type: 'string', default: "'No items'" },
+    ungrouped: {
+      description: 'Band label for items whose grouped field is null or undefined.',
+      type: 'string',
+      default: "'Ungrouped'",
+    },
+    allColumnsHidden: {
+      description: 'Shown when every column has been hidden.',
+      type: 'string',
+      default: "'All columns are hidden'",
+    },
+    searchPlaceholder: {
+      description: 'Placeholder and accessible name of the search input.',
+      type: 'string',
+      default: "'Search...'",
+    },
+    showMore: {
+      description: 'Label of the "show more" button, given the number of hidden cards.',
+      type: '(remaining: number) => string',
+      default: '`Show ${remaining} more`',
+    },
+    pageSizeOption: {
+      description: 'Label of one page-size choice in the select.',
+      type: '(size: number) => string',
+      default: '`${size} per column`',
+    },
+    pageSizeLabel: {
+      description: 'Accessible name of the page-size select.',
+      type: 'string',
+      default: "'Cards per column'",
+    },
+    addToColumn: {
+      description: 'Accessible name of the add button in a column header.',
+      type: '(label: string) => string',
+      default: '`Add to ${label}`',
+    },
+    hideColumn: {
+      description: 'Accessible name of the hide button in a column header.',
+      type: '(label: string) => string',
+      default: '`Hide ${label}`',
+    },
+    showColumn: {
+      description: 'Accessible name of a hidden column’s recall button in the rail.',
+      type: '(label: string) => string',
+      default: '`Show ${label}`',
+    },
   }}
 />

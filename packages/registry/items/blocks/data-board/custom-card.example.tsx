@@ -54,7 +54,6 @@ export default function DataBoardCustomCardExample() {
           </div>
         )}
         renderColumnSummary={(items) => money(items.reduce((total, deal) => total + deal.value, 0))}
-        pageSizeOptions={[10]}
         onCardMove={(event) => console.log('moved', event.item.id, '->', event.toColumn)}
       />
     </div>

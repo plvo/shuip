@@ -41,6 +41,7 @@ export default function DataBoardDefaultExample() {
         searchableFields={['title', 'assignee']}
         renderColumnSummary={(tasks) => `${tasks.reduce((total, task) => total + task.points, 0)} pts`}
         pageSize={5}
+        pageSizeOptions={[5, 10, 20]}
         onCardMove={(event) => console.log('moved', event.item.id, '->', event.toColumn)}
         onCardAdd={(columnId) => console.log('add to', columnId)}
         onCardClick={(task) => console.log('open', task.id)}
