@@ -1397,9 +1397,18 @@ function useDataBoardDrag<T extends object>({
   const fromIndexRef = React.useRef<number | null>(null);
   const fromGroupRef = React.useRef<string | undefined>(undefined);
   const startItemsRef = React.useRef<T[] | null>(null);
+  const pendingDataRef = React.useRef<T[] | null>(null);
 
+  // A `data` update that lands mid-drag must not be dropped: the guard is a
+  // ref, so this effect will not re-run when the drag ends. Hold the value and
+  // drain it on the paths where the drag changed nothing.
   React.useEffect(() => {
-    if (data && !draggingRef.current) setItems(data);
+    if (!data) return;
+    if (draggingRef.current) {
+      pendingDataRef.current = data;
+      return;
+    }
+    setItems(data);
   }, [data]);
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
@@ -1428,6 +1437,15 @@ function useDataBoardDrag<T extends object>({
         .findIndex((item) => getId(item) === cardId),
     [getColumn, getGroup, getId],
   );
+
+  // Applied when the drag produced no change. On the success path the board
+  // emits `onDataChange` instead, which makes the parent the source of truth
+  // and leaves any value held here stale.
+  const drainPendingData = (apply: boolean) => {
+    const pending = pendingDataRef.current;
+    pendingDataRef.current = null;
+    if (apply && pending) setItems(pending);
+  };
 
   function handleDragStart(event: DragStartEvent) {
     draggingRef.current = true;
@@ -1509,17 +1527,26 @@ function useDataBoardDrag<T extends object>({
     fromColumnRef.current = null;
     fromIndexRef.current = null;
     fromGroupRef.current = undefined;
-    if (fromColumn == null) return;
+    if (fromColumn == null) {
+      drainPendingData(true);
+      return;
+    }
 
     const activeCardId = String(event.active.id);
     const movedItem = items.find((item) => getId(item) === activeCardId);
-    if (!movedItem) return;
+    if (!movedItem) {
+      drainPendingData(true);
+      return;
+    }
 
     const toColumn = getColumn(movedItem);
     const toIndex = cellIndexOf(items, toColumn, undefined, activeCardId);
     const toGroup = getGroup(movedItem);
     startItemsRef.current = null;
-    if (isSamePosition({ fromColumn, toColumn, fromIndex, toIndex, fromGroup, toGroup })) return;
+    if (isSamePosition({ fromColumn, toColumn, fromIndex, toIndex, fromGroup, toGroup })) {
+      drainPendingData(true);
+      return;
+    }
 
     // A card dropped past its target cell's paginated window would be invisible
     // until the next "show more": open just enough steps to reveal it.
@@ -1528,6 +1555,7 @@ function useDataBoardDrag<T extends object>({
     const steps = revealStepsFor(view.pageSize, view.revealedFor(key), indexInCell);
     for (let step = 0; step < steps; step++) view.revealMore(key);
 
+    drainPendingData(false);
     onDataChange?.(items);
     onCardMove?.({ item: movedItem, fromColumn, toColumn, toIndex, fromGroup, toGroup });
   }
@@ -1542,6 +1570,7 @@ function useDataBoardDrag<T extends object>({
     setActiveId(null);
     setPinnedBands(null);
     if (snapshot) setItems(snapshot);
+    drainPendingData(true);
   }
 
   return {
@@ -1628,7 +1657,8 @@ export function DataBoard<T extends object>({
 
   // A drag with no handler cannot accomplish anything: it would mutate local
   // state without persisting, and the consumer's next refetch would undo it.
-  const draggable = onCardMove != null;
+  // Either handler is enough — a read-only board passes neither.
+  const draggable = onCardMove != null || onDataChange != null;
 
   const view = useDataBoardView({
     persistKey,
@@ -1685,6 +1715,7 @@ export function DataBoard<T extends object>({
   // Bands are built from the unfiltered list so a band never disappears
   // mid-search; this set is what narrows each cell.
   const visibleIds = React.useMemo(() => new Set(visibleItems.map(getId)), [visibleItems, getId]);
+  const shownColumnIds = React.useMemo(() => new Set(shownColumns.map((column) => column.id)), [shownColumns]);
 
   const itemsByColumn = React.useMemo(() => {
     const grouped = new Map<string, T[]>(columns.map((column) => [column.id, []]));
@@ -1821,7 +1852,11 @@ export function DataBoard<T extends object>({
                     {bands.map((band) => {
                       const key = bandKey(band.id);
                       const fallback = groupBy?.defaultCollapsed?.(band.id) ?? false;
-                      const bandItems = band.items.filter((item) => visibleIds.has(getId(item)));
+                      // Narrowed by both search and column visibility so the header count
+                      // always agrees with the cells rendered beneath it.
+                      const bandItems = band.items.filter(
+                        (item) => visibleIds.has(getId(item)) && shownColumnIds.has(getColumn(item)),
+                      );
                       const cells = shownColumns.map((column) => {
                         const all = bandItems.filter((item) => getColumn(item) === column.id);
                         return { column, ...sliceOf(all, key) };
