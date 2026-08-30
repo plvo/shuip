@@ -15,6 +15,7 @@
 - **Branch:** `feat/data-board-block`. Already created and checked out.
 - **This is a public open-source repo.** English only, in code, comments, commit messages and docs. Never reference a private or personal project in a commit message, comment, or doc.
 - **Do not modify `packages/registry/items/blocks/kanban/`.** The only permitted edit to the existing block is one cross-reference sentence in `apps/docs/content/blocks/kanban.mdx` (Task 7).
+- **Generated artifacts are gitignored and must never be staged.** `packages/registry/registry.json`, `packages/registry/__index__.ts` and `packages/registry/stubs/` are listed in `.gitignore` (lines 62-64). `git add` on any of them fails with exit 1; never reach for `git add -f`. Stage only sources under `items/` and `apps/docs/content/`. Reading these files to verify generator output is correct and expected.
 - **Never edit generated artifacts:** `packages/registry/registry.json`, `packages/registry/__index__.ts`, `packages/registry/stubs/**`, `apps/docs/public/r/**`, `apps/docs/content/components/**` symlinks. Edit sources under `items/` and run `bun registry:generate`.
 - **Item folder name is `data-board`, unprefixed.** The `blocks` category applies no prefix; registry name is `data-board`.
 - **Exact filename `component.tsx`.** Anything else and the generator silently skips the item.
@@ -329,7 +330,7 @@ export function visibleColumns(columns: DataBoardColumn[], hidden: string[]): Da
 - [ ] **Step 4: Run the test to verify it passes**
 
 Run: `cd packages/registry && bun test items/blocks/data-board/component.test.ts`
-Expected: PASS, 20 tests.
+Expected: PASS, 17 tests.
 
 - [ ] **Step 5: Confirm the test file is invisible to the generator**
 
@@ -357,7 +358,7 @@ Expected: `export * from '../../items/blocks/data-board/component';`
 
 ```bash
 bun check
-git add packages/registry/items/blocks/data-board packages/registry/registry.json packages/registry/stubs packages/registry/__index__.ts
+git add packages/registry/items/blocks/data-board
 git commit -m "feat(data-board): grouping and pagination helpers"
 ```
 
@@ -1300,7 +1301,7 @@ Expected: PASS. The helpers are unchanged; this catches an accidental edit.
 
 ```bash
 bun check
-git add packages/registry/items/blocks/data-board packages/registry/registry.json
+git add packages/registry/items/blocks/data-board
 git commit -m "feat(data-board): column, band, card, rail and toolbar subcomponents"
 ```
 
@@ -2127,7 +2128,7 @@ Expected: no errors.
 
 ```bash
 bun check
-git add packages/registry/items/blocks/data-board packages/registry/__index__.ts packages/registry/registry.json
+git add packages/registry/items/blocks/data-board
 git commit -m "feat(data-board): default, grouped and custom-card examples"
 ```
 
