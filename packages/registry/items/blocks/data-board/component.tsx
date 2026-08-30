@@ -120,3 +120,88 @@ export function visibleColumns(columns: DataBoardColumn[], hidden: string[]): Da
   const hiddenSet = new Set(hidden);
   return columns.filter((column) => !hiddenSet.has(column.id));
 }
+
+const DROP_SEPARATOR = '::';
+
+export const columnKey = (columnId: string) => `col:${columnId}`;
+
+// Pagination applies per cell (column x band) but the key is the band's:
+// one "show more" raises every column in the band at once.
+export const bandKey = (groupId: string) => `band:${groupId}`;
+
+export function dropZoneId(columnId: string, groupId?: string): string {
+  return groupId == null ? columnId : `${groupId}${DROP_SEPARATOR}${columnId}`;
+}
+
+export function parseDropZoneId(id: string): { columnId: string; groupId?: string } {
+  const at = id.indexOf(DROP_SEPARATOR);
+  if (at === -1) return { columnId: id };
+  return { groupId: id.slice(0, at), columnId: id.slice(at + DROP_SEPARATOR.length) };
+}
+
+// The hovered zone when there is one, otherwise the cell of the hovered card.
+// `groupId` stays absent outside grouped mode.
+export function resolveDropTarget({
+  overId,
+  zones,
+  overItem,
+}: {
+  overId: string;
+  zones: Set<string>;
+  overItem: { columnId: string; groupId?: string } | null;
+}): { columnId: string; groupId?: string } | null {
+  if (zones.has(overId)) return parseDropZoneId(overId);
+  if (overItem) return { ...overItem };
+  return null;
+}
+
+// A move that changes neither column, rank nor band has nothing to report.
+// `fromGroup` and `toGroup` are both undefined outside grouped mode, which
+// neutralises their comparison.
+export function isSamePosition(move: {
+  fromColumn: string;
+  toColumn: string;
+  fromIndex: number | null;
+  toIndex: number;
+  fromGroup?: string;
+  toGroup?: string;
+}): boolean {
+  return move.fromColumn === move.toColumn && move.fromIndex === move.toIndex && move.fromGroup === move.toGroup;
+}
+
+// A card dropped outside the paginated slice must stay mounted: unmounting it
+// mid-drag would make it vanish until the next "show more" and would deprive
+// dnd-kit of its active node. `shown` is a prefix of `all`, so appending the
+// card preserves order.
+export function withActiveCard<T>(
+  all: T[],
+  shown: T[],
+  hidden: number,
+  activeId: string | null,
+  getId: (item: T) => string,
+): { rendered: T[]; remaining: number } {
+  if (activeId == null || shown.some((item) => getId(item) === activeId)) return { rendered: shown, remaining: hidden };
+  const active = all.find((item) => getId(item) === activeId);
+  if (!active) return { rendered: shown, remaining: hidden };
+  return { rendered: [...shown, active], remaining: hidden - 1 };
+}
+
+// A band emptied mid-drag would disappear under the cursor: the layout would
+// jump, dnd-kit's measurements would go stale, and the card could no longer
+// return to its original band. Bands present at drag start stay rendered —
+// empty, in place — until the drag ends. A band born during the drag is added.
+export function withPinnedBands<T>(bands: DataBoardBand<T>[], pinned: DataBoardBand<T>[] | null): DataBoardBand<T>[] {
+  if (!pinned) return bands;
+  const live = new Map(bands.map((band) => [band.id, band]));
+  const pinnedIds = new Set(pinned.map((band) => band.id));
+  const kept = pinned.map((band) => live.get(band.id) ?? { ...band, items: [] });
+  return [...kept, ...bands.filter((band) => !pinnedIds.has(band.id))];
+}
+
+// How many steps to open so the card at `index` enters the paginated window.
+// Zero when it is already inside — the common case must not inflate pagination.
+export function revealStepsFor(pageSize: number | false, revealed: number, index: number): number {
+  if (pageSize === false || pageSize <= 0 || index < 0) return 0;
+  if (index < limitFor(pageSize, revealed)) return 0;
+  return Math.floor(index / pageSize) - revealed;
+}

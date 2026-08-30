@@ -136,3 +136,141 @@ describe('visibleColumns', () => {
     expect(visibleColumns(columns, []).map((c) => c.id)).toEqual(['a', 'b', 'c']);
   });
 });
+
+import {
+  bandKey,
+  columnKey,
+  dropZoneId,
+  isSamePosition,
+  parseDropZoneId,
+  resolveDropTarget,
+  revealStepsFor,
+  withActiveCard,
+  withPinnedBands,
+} from './component';
+
+describe('drop zone ids', () => {
+  test('a flat zone id is the column id', () => {
+    expect(dropZoneId('todo')).toBe('todo');
+    expect(parseDropZoneId('todo')).toEqual({ columnId: 'todo' });
+  });
+
+  test('a grouped zone id round-trips group and column', () => {
+    const id = dropZoneId('todo', '3');
+    expect(parseDropZoneId(id)).toEqual({ groupId: '3', columnId: 'todo' });
+  });
+
+  test('a group id containing the separator still round-trips the column', () => {
+    const id = dropZoneId('todo', 'a::b');
+    expect(parseDropZoneId(id)).toEqual({ groupId: 'a', columnId: 'b::todo' });
+  });
+
+  test('column and band pagination keys never collide', () => {
+    expect(columnKey('x')).not.toBe(bandKey('x'));
+  });
+});
+
+describe('resolveDropTarget', () => {
+  const zones = new Set(['todo', 'done']);
+
+  test('prefers the hovered zone', () => {
+    expect(resolveDropTarget({ overId: 'done', zones, overItem: { columnId: 'todo' } })).toEqual({ columnId: 'done' });
+  });
+
+  test('falls back to the hovered card cell', () => {
+    expect(resolveDropTarget({ overId: 'card-1', zones, overItem: { columnId: 'todo', groupId: '2' } })).toEqual({
+      columnId: 'todo',
+      groupId: '2',
+    });
+  });
+
+  test('resolves nothing when hovering neither a zone nor a card', () => {
+    expect(resolveDropTarget({ overId: 'elsewhere', zones, overItem: null })).toBeNull();
+  });
+});
+
+describe('isSamePosition', () => {
+  test('is true when column, index and band are unchanged', () => {
+    expect(isSamePosition({ fromColumn: 'a', toColumn: 'a', fromIndex: 2, toIndex: 2 })).toBe(true);
+  });
+
+  test('is false when only the band changed', () => {
+    expect(
+      isSamePosition({ fromColumn: 'a', toColumn: 'a', fromIndex: 2, toIndex: 2, fromGroup: '1', toGroup: '2' }),
+    ).toBe(false);
+  });
+
+  test('is false when only the index changed', () => {
+    expect(isSamePosition({ fromColumn: 'a', toColumn: 'a', fromIndex: 1, toIndex: 2 })).toBe(false);
+  });
+
+  test('is false when the card had no known origin index', () => {
+    expect(isSamePosition({ fromColumn: 'a', toColumn: 'a', fromIndex: null, toIndex: 0 })).toBe(false);
+  });
+});
+
+describe('withActiveCard', () => {
+  const all = ['a', 'b', 'c', 'd'];
+  const id = (value: string) => value;
+
+  test('appends the dragged card when it fell outside the slice', () => {
+    expect(withActiveCard(all, ['a', 'b'], 2, 'd', id)).toEqual({ rendered: ['a', 'b', 'd'], remaining: 1 });
+  });
+
+  test('leaves the slice untouched when the dragged card is already in it', () => {
+    expect(withActiveCard(all, ['a', 'b'], 2, 'a', id)).toEqual({ rendered: ['a', 'b'], remaining: 2 });
+  });
+
+  test('leaves the slice untouched when nothing is being dragged', () => {
+    expect(withActiveCard(all, ['a', 'b'], 2, null, id)).toEqual({ rendered: ['a', 'b'], remaining: 2 });
+  });
+
+  test('leaves the slice untouched when the dragged card belongs to another cell', () => {
+    expect(withActiveCard(all, ['a', 'b'], 2, 'zzz', id)).toEqual({ rendered: ['a', 'b'], remaining: 2 });
+  });
+});
+
+describe('withPinnedBands', () => {
+  const band = (id: string, items: string[] = []) => ({ id, label: id, value: id, items });
+
+  test('is a passthrough when no drag is in progress', () => {
+    const bands = [band('1'), band('2')];
+    expect(withPinnedBands(bands, null)).toBe(bands);
+  });
+
+  test('keeps a band that emptied mid-drag, in place and empty', () => {
+    const pinned = [band('1', ['x']), band('2', ['y'])];
+    const live = [band('2', ['y', 'x'])];
+    const result = withPinnedBands(live, pinned);
+    expect(result.map((b) => b.id)).toEqual(['1', '2']);
+    expect(result[0].items).toEqual([]);
+    expect(result[1].items).toEqual(['y', 'x']);
+  });
+
+  test('appends a band born during the drag', () => {
+    const pinned = [band('1', ['x'])];
+    const live = [band('1'), band('2', ['x'])];
+    expect(withPinnedBands(live, pinned).map((b) => b.id)).toEqual(['1', '2']);
+  });
+});
+
+describe('revealStepsFor', () => {
+  test('opens nothing when the card landed inside the window', () => {
+    expect(revealStepsFor(20, 0, 5)).toBe(0);
+    expect(revealStepsFor(20, 0, 19)).toBe(0);
+  });
+
+  test('opens exactly enough steps to reveal the card', () => {
+    expect(revealStepsFor(20, 0, 20)).toBe(1);
+    expect(revealStepsFor(20, 0, 45)).toBe(2);
+    expect(revealStepsFor(20, 1, 45)).toBe(1);
+  });
+
+  test('opens nothing when pagination is disabled', () => {
+    expect(revealStepsFor(false, 0, 500)).toBe(0);
+  });
+
+  test('opens nothing for an unknown index', () => {
+    expect(revealStepsFor(20, 0, -1)).toBe(0);
+  });
+});
