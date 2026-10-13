@@ -126,6 +126,8 @@ describe('generated paths for the registry items', () => {
   });
 });
 
+const PRIMITIVES_DIR = path.resolve(import.meta.dir, '../../ui/src/components/ui');
+
 const writeItem = (
   root: string,
   category: ScannedItem['category'],
@@ -205,14 +207,23 @@ describe('real registry items', () => {
     expect(() => buildRegistryJson(scanItems(), readRootCatalog())).not.toThrow();
   });
 
-  test('every shuip dependency refers to a published item', () => {
-    const { items } = buildRegistryJson(scanItems(), readRootCatalog());
-    const published = new Set(items.map((item) => item.name));
-    const unresolved = items.flatMap((item) =>
+  const { items } = buildRegistryJson(scanItems(), readRootCatalog());
+  const published = new Set(items.map((item) => item.name));
+
+  test('tsf fields depend on the namespaced form context', () => {
+    const field = items.find((item) => item.name === 'tsf-input-field');
+    expect(field?.registryDependencies).toContain('@shuip/tsf-form-context');
+  });
+
+  test('every dependency is either a namespaced published item or a bare shadcn primitive', () => {
+    const primitives = new Set(fs.readdirSync(PRIMITIVES_DIR).map((filename) => filename.replace(/\.tsx$/, '')));
+    const misclassified = items.flatMap((item) =>
       (item.registryDependencies ?? [])
-        .filter((dep) => dep.startsWith('@shuip/') && !published.has(dep.slice('@shuip/'.length)))
+        .filter((dep) =>
+          dep.startsWith('@shuip/') ? !published.has(dep.slice('@shuip/'.length)) : !primitives.has(dep),
+        )
         .map((dep) => `${item.name} -> ${dep}`),
     );
-    expect(unresolved).toEqual([]);
+    expect(misclassified).toEqual([]);
   });
 });
