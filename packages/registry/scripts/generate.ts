@@ -247,9 +247,9 @@ export const scanItems = (itemsDir: string = ITEMS_DIR): ScannedItem[] => {
   return out;
 };
 
-const readRootCatalog = (): Catalog => flattenCatalogs(JSON.parse(fs.readFileSync(ROOT_PACKAGE_JSON, 'utf-8')));
+export const readRootCatalog = (): Catalog => flattenCatalogs(JSON.parse(fs.readFileSync(ROOT_PACKAGE_JSON, 'utf-8')));
 
-const buildRegistryJson = (
+export const buildRegistryJson = (
   items: ScannedItem[],
   catalog: Catalog,
 ): { name: string; homepage: string; items: RegistryItem[] } => {

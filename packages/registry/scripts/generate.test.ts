@@ -1,8 +1,16 @@
-import { afterEach, beforeEach, describe, expect, type Mock, spyOn, test } from 'bun:test';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, type Mock, spyOn, test } from 'bun:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { buildIndexTs, buildStubContent, computeStubPath, scanItems } from './generate';
+import {
+  buildIndexTs,
+  buildRegistryJson,
+  buildStubContent,
+  computeStubPath,
+  readRootCatalog,
+  type ScannedItem,
+  scanItems,
+} from './generate';
 
 const REGISTRY_ROOT = path.resolve(import.meta.dir, '..');
 
@@ -115,5 +123,96 @@ describe('generated paths for the registry items', () => {
     for (const specifier of importSpecifiers) {
       expect(fs.existsSync(path.join(REGISTRY_ROOT, `${specifier.replace('@repo/registry/', '')}.tsx`))).toBe(true);
     }
+  });
+});
+
+const writeItem = (
+  root: string,
+  category: ScannedItem['category'],
+  folderName: string,
+  source: string,
+  meta?: object,
+): ScannedItem => {
+  const itemDir = path.join(root, 'items', category, folderName);
+  fs.mkdirSync(itemDir, { recursive: true });
+  const componentPath = path.join(itemDir, 'component.radix.tsx');
+  fs.writeFileSync(componentPath, source);
+  if (meta) fs.writeFileSync(path.join(itemDir, 'meta.shuip.json'), JSON.stringify(meta));
+  return { category, folderName, itemDir, componentPath, examples: [], extras: [], hasMdx: false };
+};
+
+describe('buildRegistryJson', () => {
+  let root: string;
+  let entries: Record<string, { dependencies?: string[]; registryDependencies?: string[] }>;
+
+  beforeAll(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'shuip-generate-'));
+    const items = [
+      writeItem(
+        root,
+        'tanstack-form',
+        'widget',
+        [
+          "import { Input } from '@/components/ui/input';",
+          "import { useFieldContext } from '@/components/ui/shuip/tanstack-form/form-context';",
+          "import { format } from 'date-fns';",
+          "import { useState } from 'react';",
+        ].join('\n'),
+      ),
+      writeItem(
+        root,
+        'components',
+        'panel',
+        [
+          "import { Button } from '@/components/ui/button';",
+          "import { cn } from '@/lib/utils';",
+          "import { parseTime } from '@/lib/time';",
+          "import { SideDialog } from '@/components/ui/shuip/side-dialog';",
+        ].join('\n'),
+        { dependsOn: ['title-section'] },
+      ),
+    ];
+    const registry = buildRegistryJson(items, { 'date-fns': '^4.2.1' });
+    entries = Object.fromEntries(registry.items.map((item) => [item.name, item]));
+  });
+  afterAll(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  test('namespaces the shuip item behind a prefixed category and keeps the primitive bare', () => {
+    expect(entries['tsf-widget']?.registryDependencies).toEqual(['@shuip/tsf-form-context', 'input']);
+  });
+
+  test('pins npm packages from the catalog and leaves react to the project', () => {
+    expect(entries['tsf-widget']?.dependencies).toEqual(['date-fns@^4.2.1']);
+  });
+
+  test('namespaces lib items, direct shuip imports and meta dependsOn, ignoring @/lib/utils', () => {
+    expect(entries.panel?.registryDependencies).toEqual([
+      '@shuip/side-dialog',
+      '@shuip/time',
+      '@shuip/title-section',
+      'button',
+    ]);
+  });
+
+  test('fails when an imported package has no catalog entry', () => {
+    const item = writeItem(root, 'components', 'orphan', "import x from 'left-pad';");
+    expect(() => buildRegistryJson([item], {})).toThrow('orphan imports "left-pad"');
+  });
+});
+
+describe('real registry items', () => {
+  test('every imported npm package has an entry in the root catalog', () => {
+    expect(() => buildRegistryJson(scanItems(), readRootCatalog())).not.toThrow();
+  });
+
+  test('every shuip dependency refers to a published item', () => {
+    const { items } = buildRegistryJson(scanItems(), readRootCatalog());
+    const published = new Set(items.map((item) => item.name));
+    const unresolved = items.flatMap((item) =>
+      (item.registryDependencies ?? [])
+        .filter((dep) => dep.startsWith('@shuip/') && !published.has(dep.slice('@shuip/'.length)))
+        .map((dep) => `${item.name} -> ${dep}`),
+    );
+    expect(unresolved).toEqual([]);
   });
 });
