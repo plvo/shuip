@@ -11,7 +11,7 @@ export function BlocksList() {
       {blocksPages.map((page) => (
         <Card key={page.url} className='gap-0 overflow-hidden py-0 transition-all hover:shadow-2xl'>
           <Link href={page.url} className='no-underline'>
-            <CardHeader className='py-6'>
+            <CardHeader className='py-(--card-spacing)'>
               <CardTitle>{page.data.title}</CardTitle>
               <CardDescription className='line-clamp-3'>{page.data.description}</CardDescription>
             </CardHeader>

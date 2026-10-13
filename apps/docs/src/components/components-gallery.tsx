@@ -52,7 +52,7 @@ export function ComponentsGallery() {
                     <LazyPreview registryName={`${page.data.registryName}.example`} className='w-full' />
                   </div>
                   <Link href={page.url} className='no-underline'>
-                    <CardHeader className='py-6'>
+                    <CardHeader className='py-(--card-spacing)'>
                       <CardTitle>{page.data.title}</CardTitle>
                       <CardDescription className='line-clamp-2'>{page.data.description}</CardDescription>
                     </CardHeader>
