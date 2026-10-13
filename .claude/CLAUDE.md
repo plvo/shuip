@@ -150,4 +150,4 @@ To change anything in those, edit the source under `packages/registry/items/<cat
 
 - Examples import the item itself via the stub alias (`@/components/ui/shuip/<cat-subdir>/<name>`), never via `./component.radix`. Consumers will use the stub path after `shadcn add`.
 - `component.radix.tsx` must not import `@/components/ui/shuip/*` — circular. Import shadcn primitives via `@/components/ui/<name>`.
-- The generator skips silently (warning only) any item folder missing `component.radix.tsx`. Watch the console output. A legacy `component.tsx`, an example without a recognised base suffix, or a scan that finds zero items makes it fail instead.
+- The generator skips silently (warning only) any item folder missing `component.radix.tsx`. Watch the console output. An unsuffixed `component.tsx`, an example without a recognised base suffix, or a scan that finds zero items makes it fail instead.

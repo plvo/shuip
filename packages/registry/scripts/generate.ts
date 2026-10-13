@@ -29,11 +29,9 @@ export interface RegistryItem {
 const CANONICAL_BASE = 'radix';
 const COMPONENT_BASENAME = `component.${CANONICAL_BASE}`;
 const COMPONENT_FILENAME = `${COMPONENT_BASENAME}.tsx`;
-const LEGACY_COMPONENT_FILENAME = 'component.tsx';
-const EXAMPLE_INFIX = `.example.${CANONICAL_BASE}`;
-const EXAMPLE_FILE_SUFFIX = `${EXAMPLE_INFIX}.tsx`;
+const UNSUFFIXED_COMPONENT_FILENAME = 'component.tsx';
 const RECOGNISED_EXAMPLE_BASES: readonly string[] = [CANONICAL_BASE];
-const EXAMPLE_FILE_PATTERN = /\.example(?:\.([^.]+))?\.tsx$/;
+const EXAMPLE_FILE_PATTERN = /^(.+)\.example(?:\.([^.]+))?\.tsx$/;
 
 interface ItemMeta {
   dependsOn?: string[];
@@ -165,16 +163,27 @@ export interface ScannedItem {
   folderName: string;
   itemDir: string;
   componentPath: string;
-  examples: { filename: string; absPath: string }[];
+  examples: { filename: string; absPath: string; variant: string; base: string }[];
   extras: { filename: string; absPath: string }[];
   hasMdx: boolean;
 }
 
-const invalidExampleFiles = (itemDir: string): string[] =>
-  fs.readdirSync(itemDir).filter((f) => {
-    const base = f.match(EXAMPLE_FILE_PATTERN);
-    return base !== null && !RECOGNISED_EXAMPLE_BASES.includes(base[1] ?? '');
-  });
+interface ExampleFile {
+  filename: string;
+  variant: string;
+  base: string | undefined;
+}
+
+const parseExampleFile = (filename: string): ExampleFile | null => {
+  const match = filename.match(EXAMPLE_FILE_PATTERN);
+  return match ? { filename, variant: match[1] as string, base: match[2] } : null;
+};
+
+const hasRecognisedBase = (example: ExampleFile): example is ExampleFile & { base: string } =>
+  example.base !== undefined && RECOGNISED_EXAMPLE_BASES.includes(example.base);
+
+const listExampleFiles = (itemDir: string): ExampleFile[] =>
+  fs.readdirSync(itemDir).flatMap((f) => parseExampleFile(f) ?? []);
 
 export const scanItems = (itemsDir: string = ITEMS_DIR): ScannedItem[] => {
   const out: ScannedItem[] = [];
@@ -198,25 +207,25 @@ export const scanItems = (itemsDir: string = ITEMS_DIR): ScannedItem[] => {
       const itemDir = path.join(catDir, folderName);
       const mainFile = category === 'lib' ? `${folderName}.ts` : COMPONENT_FILENAME;
       const componentPath = path.join(itemDir, mainFile);
-      if (category !== 'lib' && fs.existsSync(path.join(itemDir, LEGACY_COMPONENT_FILENAME))) {
+      if (category !== 'lib' && fs.existsSync(path.join(itemDir, UNSUFFIXED_COMPONENT_FILENAME))) {
         problems.push(
-          `${category}/${folderName}: ${LEGACY_COMPONENT_FILENAME} must be renamed to ${COMPONENT_FILENAME}`,
+          `${category}/${folderName}: ${UNSUFFIXED_COMPONENT_FILENAME} must be renamed to ${COMPONENT_FILENAME}`,
         );
         continue;
       }
-      for (const file of invalidExampleFiles(itemDir)) {
+      const exampleFiles = listExampleFiles(itemDir);
+      for (const { filename } of exampleFiles.filter((e) => !hasRecognisedBase(e))) {
         problems.push(
-          `${category}/${folderName}: ${file} has no recognised base suffix (${RECOGNISED_EXAMPLE_BASES.join(', ')})`,
+          `${category}/${folderName}: ${filename} has no recognised base suffix (${RECOGNISED_EXAMPLE_BASES.join(', ')})`,
         );
       }
       if (!fs.existsSync(componentPath)) {
         console.warn(`[generate] skipping ${category}/${folderName}: no ${mainFile}`);
         continue;
       }
-      const examples = fs
-        .readdirSync(itemDir)
-        .filter((f) => f.endsWith(EXAMPLE_FILE_SUFFIX))
-        .map((filename) => ({ filename, absPath: path.join(itemDir, filename) }));
+      const examples = exampleFiles
+        .filter(hasRecognisedBase)
+        .map(({ filename, variant, base }) => ({ filename, absPath: path.join(itemDir, filename), variant, base }));
       const extrasDir = path.join(itemDir, 'extras');
       const extras = fs.existsSync(extrasDir)
         ? fs.readdirSync(extrasDir).map((filename) => ({ filename, absPath: path.join(extrasDir, filename) }))
@@ -311,10 +320,11 @@ export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
     component: React.lazy(() => import('${importPath}')),
   },`;
     for (const ex of examples) {
-      const variant = ex.filename.slice(0, -EXAMPLE_FILE_SUFFIX.length);
-      const exImport = `@repo/registry/items/${category}/${folderName}/${variant}${EXAMPLE_INFIX}`;
+      const exImport = `@repo/registry/items/${category}/${folderName}/${ex.filename.replace(/\.tsx$/, '')}`;
       const exCode = fs.readFileSync(ex.absPath, 'utf-8');
-      const exKey = variant === 'default' ? `${itemName}.example` : `${itemName}.${variant}.example`;
+      const variantKey = ex.variant === 'default' ? '' : `.${ex.variant}`;
+      const baseKey = ex.base === CANONICAL_BASE ? '' : `.${ex.base}`;
+      const exKey = `${itemName}${variantKey}.example${baseKey}`;
       body += `
   '${exKey}': {
     path: '${exImport}',
@@ -330,17 +340,20 @@ export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
   return body;
 };
 
+export const buildStubContent = (
+  cat: Category,
+  name: string,
+): string => `// AUTO-GENERATED by packages/registry/scripts/generate.ts — DO NOT EDIT
+export * from '${stubExportPath(cat, name)}';
+`;
+
 const writeStubs = (items: ScannedItem[]): void => {
   fs.rmSync(STUBS_DIR, { recursive: true, force: true });
   for (const item of items) {
     if (item.category === 'lib') continue;
     const stubPath = computeStubPath(item.category, item.folderName);
     fs.mkdirSync(path.dirname(stubPath), { recursive: true });
-    const exportPath = stubExportPath(item.category, item.folderName);
-    const content = `// AUTO-GENERATED by packages/registry/scripts/generate.ts — DO NOT EDIT
-export * from '${exportPath}';
-`;
-    fs.writeFileSync(stubPath, content);
+    fs.writeFileSync(stubPath, buildStubContent(item.category, item.folderName));
   }
 };
 
