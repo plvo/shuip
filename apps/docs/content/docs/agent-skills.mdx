@@ -5,7 +5,7 @@ description: Install shuip know-how into your AI coding agent — skills that te
 
 shuip ships **agent skills** alongside its components. A skill is a Markdown guide your AI coding agent (Claude Code) reads to learn what shuip is, when to reach for which item, and how to build production-grade forms — so the code it writes follows shuip's conventions instead of guessing at item names and APIs.
 
-Skills install through the same registry and CLI as components. Each lands in your project at `.claude/skills/<name>/SKILL.md`, versioned alongside your code.
+Skills install through the same registry and CLI as components, so the `@shuip` namespace from the [installation guide](/docs/installation) must be configured first. Each lands in your project at `.claude/skills/<name>/SKILL.md`, versioned alongside your code.
 
 ## Available skills
 
@@ -20,13 +20,13 @@ Skills install through the same registry and CLI as components. Each lands in yo
 Add a single skill:
 
 ```npm
-npx shadcn@latest add https://shuip.plvo.dev/r/shuip-forms
+npx shadcn@latest add @shuip/shuip-forms
 ```
 
 Or install all of them at once with the bundle:
 
 ```npm
-npx shadcn@latest add https://shuip.plvo.dev/r/shuip-skills
+npx shadcn@latest add @shuip/shuip-skills
 ```
 
 ## Where they go
@@ -58,7 +58,7 @@ Routes the agent: what shuip is, how items install, and which skill to use next.
 ````md
 ---
 name: shuip-overview
-description: Use when working in a project that uses shuip and you need to know what shuip provides, how to install items from its registry, or which shuip skill/category to reach for. Triggers on shuip imports (@/components/ui/shuip/...) or a shuip registry URL (shuip.plvo.dev/r/...).
+description: Use when working in a project that uses shuip and you need to know what shuip provides, how to install items from its registry, or which shuip skill/category to reach for. Triggers on shuip imports (@/components/ui/shuip/...) or a shuip registry reference (@shuip/<name>).
 ---
 
 # shuip
@@ -69,8 +69,16 @@ shuip is a component library built on shadcn/ui for Next.js + React. You install
 
 ## Install any item
 
+Declare the namespace once in the project's `components.json`:
+
+```json
+{ "registries": { "@shuip": "https://shuip.plvo.dev/r/{style}/{name}.json" } }
+```
+
+Then install by name:
+
 ```bash
-npx shadcn@latest add "https://shuip.plvo.dev/r/<item-name>"
+npx shadcn@latest add @shuip/<item-name>
 ```
 
 Items install under `@/components/ui/shuip/...` (or `@/components/block/shuip/...` for blocks) and pull their shadcn primitives and npm dependencies automatically. **Exported symbols are unprefixed** — the item `rhf-input-field` exports `InputField`; the `rhf-`/`tsf-`/`tsq-` prefix is only the registry name.
@@ -107,7 +115,7 @@ description: Use when choosing which shuip item fits a need, or composing shuip 
 
 ## Conventions
 
-- Install: `npx shadcn@latest add "https://shuip.plvo.dev/r/<item-name>"`.
+- Install: `npx shadcn@latest add @shuip/<item-name>` (requires the `@shuip` namespace in `components.json`, see **shuip-overview**).
 - Import paths by category:
   - components → `@/components/ui/shuip/<name>`
   - blocks → `@/components/block/shuip/<name>`
@@ -225,14 +233,13 @@ Do not mix the two families in one form.
 
 ```bash
 # react-hook-form fields (install the ones you need)
-npx shadcn@latest add "https://shuip.plvo.dev/r/rhf-input-field"
-npx shadcn@latest add "https://shuip.plvo.dev/r/rhf-password-field"
-npx shadcn@latest add "https://shuip.plvo.dev/r/submit-button"
+npx shadcn@latest add @shuip/rhf-input-field
+npx shadcn@latest add @shuip/rhf-password-field
+npx shadcn@latest add @shuip/submit-button
 
-# tanstack-form: install the form context FIRST, then fields
-npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-form-context"
-npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-input-field"
-npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-submit-button"
+# tanstack-form: each field pulls in tsf-form-context automatically
+npx shadcn@latest add @shuip/tsf-input-field
+npx shadcn@latest add @shuip/tsf-submit-button
 ```
 
 Field naming follows the input type: `input-field`, `password-field`, `number-field`, `select-field`, `checkbox-field`, `radio-field`, `textarea-field`, `date-field`, `date-range-field`, `datetime-field`, `time-field`, `month-field`, `autocomplete-field`, plus `address-field` (rhf only). For the full catalog use the **shuip-components** skill. The shadcn CLI pulls each item's shadcn primitives and npm deps (react-hook-form / zod / @hookform/lenses, or @tanstack/react-form) automatically.

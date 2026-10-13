@@ -6,10 +6,20 @@ For more details, see the full documentation: https://shuip.plvo.dev/docs
 
 ## Quick Start
 
-Use the shadcn/ui CLI to add shuip components to your project:
+Declare the shuip namespace once in your `components.json`:
+
+```json
+{
+  "registries": {
+    "@shuip": "https://shuip.plvo.dev/r/{style}/{name}.json"
+  }
+}
+```
+
+Then use the shadcn/ui CLI to add shuip components to your project:
 
 ```bash
-npx shadcn@latest add "https://shuip.plvo.dev/r/submit-button"
+npx shadcn@latest add @shuip/submit-button
 ```
 
 More informations on the [documentation](https://shuip.plvo.dev/docs/installation)

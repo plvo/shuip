@@ -26,14 +26,13 @@ Do not mix the two families in one form.
 
 ```bash
 # react-hook-form fields (install the ones you need)
-npx shadcn@latest add "https://shuip.plvo.dev/r/rhf-input-field"
-npx shadcn@latest add "https://shuip.plvo.dev/r/rhf-password-field"
-npx shadcn@latest add "https://shuip.plvo.dev/r/submit-button"
+npx shadcn@latest add @shuip/rhf-input-field
+npx shadcn@latest add @shuip/rhf-password-field
+npx shadcn@latest add @shuip/submit-button
 
-# tanstack-form: install the form context FIRST, then fields
-npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-form-context"
-npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-input-field"
-npx shadcn@latest add "https://shuip.plvo.dev/r/tsf-submit-button"
+# tanstack-form: each field pulls in tsf-form-context automatically
+npx shadcn@latest add @shuip/tsf-input-field
+npx shadcn@latest add @shuip/tsf-submit-button
 ```
 
 Field naming follows the input type: `input-field`, `password-field`, `number-field`, `select-field`, `checkbox-field`, `radio-field`, `textarea-field`, `date-field`, `date-range-field`, `datetime-field`, `time-field`, `month-field`, `autocomplete-field`, plus `address-field` (rhf only). For the full catalog use the **shuip-components** skill. The shadcn CLI pulls each item's shadcn primitives and npm deps (react-hook-form / zod / @hookform/lenses, or @tanstack/react-form) automatically.
