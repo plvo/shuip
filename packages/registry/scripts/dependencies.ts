@@ -1,6 +1,4 @@
-const SHUIP_NAMESPACE = '@shuip';
-
-export const shuipItemRef = (name: string): string => `${SHUIP_NAMESPACE}/${name}`;
+import { shuipItemRef } from '../src/namespace';
 
 interface BunWorkspacesPackageJson {
   workspaces?: {

@@ -15,7 +15,7 @@ export async function ItemHeader({ registryName, text }: ItemHeaderProps) {
   return (
     <div className='space-y-4'>
       {text && <p>{text}</p>}
-      <InstallationCmd registryPath={registryName} manualCode={code} />
+      <InstallationCmd itemName={registryName} manualCode={code} />
       <Preview registryName={`${registryName}.example`} />
     </div>
   );

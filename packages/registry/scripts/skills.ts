@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { shuipItemRef } from './dependencies';
+import { shuipItemRef } from '../src/namespace';
 import type { RegistryItem } from './generate';
 
 export function parseSkillFrontmatter(source: string): { name: string; description: string } {
