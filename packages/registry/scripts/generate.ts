@@ -2,9 +2,11 @@
 /** biome-ignore-all lint/suspicious/noAssignInExpressions: script */
 import fs from 'node:fs';
 import path from 'node:path';
+import { buildRegistryDependencies, type Catalog, flattenCatalogs, pinDependencies } from './dependencies';
 import { applySkillSourcesToDocs, assertUniqueNames, emitSkills, resolveCatalog } from './skills';
 
 const ROOT = path.resolve(import.meta.dir, '..');
+const ROOT_PACKAGE_JSON = path.resolve(ROOT, '../../package.json');
 const ITEMS_DIR = path.join(ROOT, 'items');
 const STUBS_DIR = path.join(ROOT, 'stubs');
 const COMPONENTS_CONTENT_DIR = path.resolve(ROOT, '../../apps/docs/content/components');
@@ -245,20 +247,23 @@ export const scanItems = (itemsDir: string = ITEMS_DIR): ScannedItem[] => {
   return out;
 };
 
-const buildRegistryJson = (items: ScannedItem[]): { name: string; homepage: string; items: RegistryItem[] } => {
+const readRootCatalog = (): Catalog => flattenCatalogs(JSON.parse(fs.readFileSync(ROOT_PACKAGE_JSON, 'utf-8')));
+
+const buildRegistryJson = (
+  items: ScannedItem[],
+  catalog: Catalog,
+): { name: string; homepage: string; items: RegistryItem[] } => {
   const out: RegistryItem[] = [];
   for (const item of items) {
     const { category, folderName, componentPath, extras } = item;
     const source = fs.readFileSync(componentPath, 'utf-8');
-    const dependencies = parseImports(source);
-    const registryDependencies = parseRegistryDeps(source);
-    const shuipDeps = parseShuipDeps(source);
-    const libDeps = parseLibDeps(source);
-    const meta = readMeta(item.itemDir);
-    const fullDeps = Array.from(
-      new Set([...registryDependencies, ...shuipDeps, ...libDeps, ...(meta.dependsOn ?? [])]),
-    ).sort();
     const itemName = namePrefix(category, folderName);
+    const dependencies = pinDependencies(parseImports(source), catalog, itemName);
+    const meta = readMeta(item.itemDir);
+    const fullDeps = buildRegistryDependencies({
+      primitives: parseRegistryDeps(source),
+      shuipItems: [...parseShuipDeps(source), ...parseLibDeps(source), ...(meta.dependsOn ?? [])],
+    });
     const target = computeTarget(category, folderName);
     const componentRelPath = path.relative(ROOT, componentPath).replace(/\\/g, '/');
     const files: RegistryFile[] = [
@@ -391,7 +396,7 @@ const writeComponentSymlinks = (items: ScannedItem[]): void => {
 
 const main = () => {
   const items = scanItems();
-  const registry = buildRegistryJson(items);
+  const registry = buildRegistryJson(items, readRootCatalog());
 
   const catalogItems = items.map((i) => ({
     category: i.category,
@@ -402,7 +407,6 @@ const main = () => {
     generatedDir: SKILLS_GENERATED_DIR,
     registryRoot: ROOT,
     catalog: resolveCatalog(catalogItems),
-    registryBaseUrl: 'https://shuip.plvo.dev/r',
     bundleName: 'shuip-skills',
   });
   assertUniqueNames(

@@ -160,7 +160,6 @@ describe('emitSkills', () => {
       generatedDir: path.join(skillsDir, '.generated'),
       registryRoot: root,
       catalog: '**components**\n- `x`',
-      registryBaseUrl: 'https://shuip.plvo.dev/r',
       bundleName: 'shuip-skills',
     });
 
@@ -179,7 +178,7 @@ describe('emitSkills', () => {
       {
         name: 'shuip-skills',
         type: 'registry:item',
-        registryDependencies: ['https://shuip.plvo.dev/r/demo'],
+        registryDependencies: ['@shuip/demo'],
       },
     ]);
 
