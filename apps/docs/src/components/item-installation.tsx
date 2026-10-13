@@ -43,13 +43,20 @@ export function InstallationCmd({ itemName, manualCode, ...props }: Installation
           </Tab>
         )}
       </Tabs>
-      <p className='text-sm text-fd-muted-foreground'>
-        Requires the <code>{SHUIP_NAMESPACE}</code> namespace in <code>components.json</code>:{' '}
-        <code>{`"registries": { "${SHUIP_NAMESPACE}": "${SHUIP_REGISTRY_URL}" }`}</code>.{' '}
-        <Link href='/docs/installation' className='underline underline-offset-4'>
-          Installation guide
-        </Link>
-      </p>
+      <div className='space-y-2 text-sm text-fd-muted-foreground'>
+        <p>
+          Requires the <code>{SHUIP_NAMESPACE}</code> namespace in <code>components.json</code>. See the{' '}
+          <Link href='/docs/installation' className='underline underline-offset-4'>
+            installation guide
+          </Link>
+          .
+        </p>
+        <div className='**:data-code:px-4'>
+          <CodeBlock keepBackground data-code>
+            <Pre>{`"registries": { "${SHUIP_NAMESPACE}": "${SHUIP_REGISTRY_URL}" }`}</Pre>
+          </CodeBlock>
+        </div>
+      </div>
     </>
   );
 }
