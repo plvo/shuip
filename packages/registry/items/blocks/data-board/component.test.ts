@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { buildGroups, groupIdOf, limitFor, paginate, UNGROUPED_ID, visibleColumns } from './component';
+import { buildGroups, groupIdOf, limitFor, paginate, UNGROUPED_ID, visibleColumns } from './component.radix';
 
 type Task = { id: string; status: string; sprint?: number | null; team?: string };
 
@@ -147,7 +147,7 @@ import {
   revealStepsFor,
   withActiveCard,
   withPinnedBands,
-} from './component';
+} from './component.radix';
 
 describe('drop zone ids', () => {
   test('a flat zone id is the column id', () => {
@@ -275,7 +275,7 @@ describe('revealStepsFor', () => {
   });
 });
 
-import { DEFAULT_LABELS, parseStoredView } from './component';
+import { DEFAULT_LABELS, parseStoredView } from './component.radix';
 
 describe('DEFAULT_LABELS', () => {
   test('every label is defined', () => {

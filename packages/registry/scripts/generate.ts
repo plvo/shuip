@@ -78,7 +78,7 @@ const computeStubPath = (cat: Category, name: string): string =>
 
 const stubExportPath = (cat: Category, name: string): string => {
   const prefix = cat === 'components' ? '../' : '../../';
-  return `${prefix}items/${cat}/${name}/component`;
+  return `${prefix}items/${cat}/${name}/component.radix`;
 };
 
 // Parse TS imports from a source file. Returns named npm packages (and their submodules)
@@ -179,7 +179,7 @@ const scanItems = (): ScannedItem[] => {
 
     for (const folderName of entries) {
       const itemDir = path.join(catDir, folderName);
-      const mainFile = category === 'lib' ? `${folderName}.ts` : 'component.tsx';
+      const mainFile = category === 'lib' ? `${folderName}.ts` : 'component.radix.tsx';
       const componentPath = path.join(itemDir, mainFile);
       if (!fs.existsSync(componentPath)) {
         console.warn(`[generate] skipping ${category}/${folderName}: no ${mainFile}`);
@@ -187,7 +187,7 @@ const scanItems = (): ScannedItem[] => {
       }
       const examples = fs
         .readdirSync(itemDir)
-        .filter((f) => f.endsWith('.example.tsx'))
+        .filter((f) => f.endsWith('.example.radix.tsx'))
         .map((filename) => ({ filename, absPath: path.join(itemDir, filename) }));
       const extrasDir = path.join(itemDir, 'extras');
       const extras = fs.existsSync(extrasDir)
@@ -268,7 +268,7 @@ export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
     if (item.category === 'lib') continue;
     const { category, folderName, componentPath, examples } = item;
     const itemName = namePrefix(category, folderName);
-    const importPath = `@repo/registry/items/${category}/${folderName}/component`;
+    const importPath = `@repo/registry/items/${category}/${folderName}/component.radix`;
     const code = fs.readFileSync(componentPath, 'utf-8');
     body += `
   '${itemName}': {
@@ -277,8 +277,8 @@ export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
     component: React.lazy(() => import('${importPath}')),
   },`;
     for (const ex of examples) {
-      const variant = ex.filename.replace(/\.example\.tsx$/, '');
-      const exImport = `@repo/registry/items/${category}/${folderName}/${variant}.example`;
+      const variant = ex.filename.replace(/\.example\.radix\.tsx$/, '');
+      const exImport = `@repo/registry/items/${category}/${folderName}/${variant}.example.radix`;
       const exCode = fs.readFileSync(ex.absPath, 'utf-8');
       const exKey = variant === 'default' ? `${itemName}.example` : `${itemName}.${variant}.example`;
       body += `
