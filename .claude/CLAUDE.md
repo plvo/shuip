@@ -18,7 +18,10 @@ apps/docs/                     Next.js site (registry endpoints, MDX content, st
   content/components/            fumadocs `components` collection (registry-item symlinks + hand-written category guides)
   content/blocks/                fumadocs `blocks` collection (real MDX files, hand-written)
 
-packages/ui/                   Shadcn primitives + base.css (cross-package @source rules)
+packages/ui/                   Vendored shadcn primitives + base.css (cross-package @source rules)
+  src/components/ui/             radix-vega set (synced, never hand-edited; form.tsx is the only local file)
+  src/components/ui-base/        base-vega set (synced, Base UI; `bun run --filter @repo/ui typecheck:base`)
+  scripts/sync-primitives.ts     Declares the primitive list and refreshes both sets via the shadcn CLI
 packages/registry/             SOURCE OF TRUTH for published items
   items/<cat>/<name>/            See "Registry items" below
   scripts/generate.ts            Scans items/, produces all downstream artifacts
@@ -37,6 +40,7 @@ bun registry:build     # Produce apps/docs/public/r/*.json from registry.json
 bun check              # Biome check + write (also runs on lint-staged pre-commit)
 bun format             # Biome format
 bun lint               # Biome lint
+bun primitives:sync    # Refresh both vendored primitive sets from ui.shadcn.com (needs network)
 bun check:unused       # knip
 bun clean              # Wipe node_modules, .next, .turbo, .source, bun.lock
 ```
@@ -121,7 +125,7 @@ Shared dependency versions live in `package.json` → `workspaces.catalog` (defa
 - **TypeScript 6**. Project references are declared at root but workspaces are not marked `composite: true` — IDE works, `tsc --build` from root does not. Per-workspace `tsc --noEmit` is fine.
 - **No test runner is configured.** Propose a setup before adding tests.
 - **`next build` is the authoritative type gate** — `apps/docs` `tsc --noEmit` works but emits a harmless `baseUrl` TS5101 deprecation. `bun build:docs` can OOM (exit 137) on low-RAM machines; use `NODE_OPTIONS=--max-old-space-size=6144 bun build:docs`.
-- **shadcn config** is at `packages/ui/components.json` (New York style, RSC enabled).
+- **shadcn config** is at `packages/ui/components.json` (radix-vega style, RSC enabled).
 
 ## Generated Artifacts — Never Edit by Hand
 
