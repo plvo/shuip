@@ -58,19 +58,13 @@ const registrySchema = z.object({
   items: z.array(registryItemCommonSchema),
 });
 
-const build = async () => {
-  const options = buildOptionsSchema.parse({
-    cwd: REGISTRY_PKG,
-    registryFile: path.resolve(REGISTRY_PKG, 'registry.json'),
-    outputDir: path.resolve(import.meta.dir, '..', 'public', 'r'),
-  });
+export const build = async (rawOptions: z.input<typeof buildOptionsSchema>) => {
+  const options = buildOptionsSchema.parse(rawOptions);
 
   const content = await fs.readFile(options.registryFile, 'utf-8');
   const result = registrySchema.safeParse(JSON.parse(content));
   if (!result.success) {
-    console.error(`Invalid registry file: ${options.registryFile}`);
-    console.error(result.error.message);
-    process.exit(1);
+    throw new Error(`Invalid registry file: ${options.registryFile}\n${result.error.message}`);
   }
 
   await fs.rm(options.outputDir, { recursive: true, force: true });
@@ -90,7 +84,13 @@ const build = async () => {
   }
 };
 
-build().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+if (import.meta.main) {
+  build({
+    cwd: REGISTRY_PKG,
+    registryFile: path.resolve(REGISTRY_PKG, 'registry.json'),
+    outputDir: path.resolve(import.meta.dir, '..', 'public', 'r'),
+  }).catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}
