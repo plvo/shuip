@@ -28,7 +28,7 @@ Run each check, capture findings, report at the end. Don't fix mid-audit — the
 
 ### 1. Items missing `component.radix.tsx` — silent skip
 
-Generator logs `[generate] skipping <cat>/<name>: no component.radix.tsx` and the item never reaches `registry.json`. Catches wrong-case (`Component.tsx`), missing file, or stub-only folders.
+Generator logs `[generate] skipping <cat>/<name>: no component.radix.tsx` and the item never reaches `registry.json`. Catches wrong-case (`Component.radix.tsx`), missing file, or stub-only folders.
 
 ```bash
 find packages/registry/items -mindepth 2 -maxdepth 2 -type d \
@@ -206,7 +206,7 @@ Sample shape:
 
 ```
 CRITICAL
-  packages/registry/items/components/foo/Component.tsx
+  packages/registry/items/components/foo/Component.radix.tsx
     Generator skips the folder (filename must be lowercase).
     Fix: rename to component.radix.tsx.
 
