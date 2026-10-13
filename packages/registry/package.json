@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./__index__": "./__index__.ts",
+    "./style-base": "./src/style-base.ts",
     "./items/*": "./items/*",
     "./stubs/*": "./stubs/*"
   },

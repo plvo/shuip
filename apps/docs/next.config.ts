@@ -1,3 +1,4 @@
+import { styleRewrites } from '@repo/registry/style-base';
 import { createMDX } from 'fumadocs-mdx/next';
 import type { NextConfig } from 'next';
 
@@ -19,6 +20,8 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
+
+  rewrites: async () => styleRewrites(),
 
   images: {
     remotePatterns: [{ protocol: 'https', hostname: '*' }],

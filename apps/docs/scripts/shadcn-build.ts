@@ -1,5 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { PUBLISHED_VARIANTS } from '@repo/registry/style-base';
 import { z } from 'zod';
 
 const REGISTRY_PKG = path.resolve(import.meta.dir, '..', '..', '..', 'packages', 'registry');
@@ -64,8 +65,6 @@ const build = async () => {
     outputDir: path.resolve(import.meta.dir, '..', 'public', 'r'),
   });
 
-  await fs.mkdir(options.outputDir, { recursive: true });
-
   const content = await fs.readFile(options.registryFile, 'utf-8');
   const result = registrySchema.safeParse(JSON.parse(content));
   if (!result.success) {
@@ -74,15 +73,21 @@ const build = async () => {
     process.exit(1);
   }
 
-  for (const registryItem of result.data.items) {
-    const item: any = { ...registryItem, $schema: 'https://ui.shadcn.com/schema/registry-item.json' };
-    for (const file of item.files ?? []) {
-      file.content = await fs.readFile(path.resolve(options.cwd, file.path), 'utf-8');
+  await fs.rm(options.outputDir, { recursive: true, force: true });
+
+  for (const variant of PUBLISHED_VARIANTS) {
+    const variantDir = path.resolve(options.outputDir, variant);
+    await fs.mkdir(variantDir, { recursive: true });
+    for (const registryItem of result.data.items) {
+      const item: any = { ...registryItem, $schema: 'https://ui.shadcn.com/schema/registry-item.json' };
+      for (const file of item.files ?? []) {
+        file.content = await fs.readFile(path.resolve(options.cwd, file.path), 'utf-8');
+      }
+      await fs.writeFile(path.resolve(variantDir, `${item.name}.json`), `${JSON.stringify(item, null, 2)}\n`);
     }
-    await fs.writeFile(path.resolve(options.outputDir, `${item.name}.json`), `${JSON.stringify(item, null, 2)}\n`);
+    await fs.copyFile(options.registryFile, path.resolve(variantDir, 'registry.json'));
+    console.log(`[shadcn-build] ${result.data.items.length} items written to ${variantDir}`);
   }
-  await fs.copyFile(options.registryFile, path.resolve(options.outputDir, 'registry.json'));
-  console.log(`[shadcn-build] ${result.data.items.length} items written to ${options.outputDir}`);
 };
 
 build().catch((e) => {
