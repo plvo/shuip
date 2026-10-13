@@ -83,7 +83,7 @@ const computeTarget = (cat: Category, name: string): string => {
 export const computeStubPath = (cat: Category, name: string): string =>
   cat === 'components' ? path.join(STUBS_DIR, `${name}.tsx`) : path.join(STUBS_DIR, cat, `${name}.tsx`);
 
-export const stubExportPath = (cat: Category, name: string): string => {
+const stubExportPath = (cat: Category, name: string): string => {
   const prefix = cat === 'components' ? '../' : '../../';
   return `${prefix}items/${cat}/${name}/${COMPONENT_BASENAME}`;
 };
@@ -158,20 +158,22 @@ const readMeta = (itemDir: string): ItemMeta => {
   return {};
 };
 
+interface ExampleFile {
+  filename: string;
+  variant: string;
+  base: string | undefined;
+}
+
+type ScannedExample = Pick<ExampleFile, 'filename' | 'variant'> & { absPath: string };
+
 export interface ScannedItem {
   category: Category;
   folderName: string;
   itemDir: string;
   componentPath: string;
-  examples: { filename: string; absPath: string; variant: string; base: string }[];
+  examples: ScannedExample[];
   extras: { filename: string; absPath: string }[];
   hasMdx: boolean;
-}
-
-interface ExampleFile {
-  filename: string;
-  variant: string;
-  base: string | undefined;
 }
 
 const parseExampleFile = (filename: string): ExampleFile | null => {
@@ -225,7 +227,7 @@ export const scanItems = (itemsDir: string = ITEMS_DIR): ScannedItem[] => {
       }
       const examples = exampleFiles
         .filter(hasRecognisedBase)
-        .map(({ filename, variant, base }) => ({ filename, absPath: path.join(itemDir, filename), variant, base }));
+        .map(({ filename, variant }) => ({ filename, absPath: path.join(itemDir, filename), variant }));
       const extrasDir = path.join(itemDir, 'extras');
       const extras = fs.existsSync(extrasDir)
         ? fs.readdirSync(extrasDir).map((filename) => ({ filename, absPath: path.join(extrasDir, filename) }))
@@ -322,9 +324,7 @@ export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
     for (const ex of examples) {
       const exImport = `@repo/registry/items/${category}/${folderName}/${ex.filename.replace(/\.tsx$/, '')}`;
       const exCode = fs.readFileSync(ex.absPath, 'utf-8');
-      const variantKey = ex.variant === 'default' ? '' : `.${ex.variant}`;
-      const baseKey = ex.base === CANONICAL_BASE ? '' : `.${ex.base}`;
-      const exKey = `${itemName}${variantKey}.example${baseKey}`;
+      const exKey = ex.variant === 'default' ? `${itemName}.example` : `${itemName}.${ex.variant}.example`;
       body += `
   '${exKey}': {
     path: '${exImport}',
