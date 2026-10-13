@@ -11,7 +11,8 @@
   },
   "scripts": {
     "primitives:sync": "bun run scripts/sync-primitives.ts",
-    "typecheck:base": "tsc --noEmit -p tsconfig.base-ui.json"
+    "typecheck:base": "tsc --noEmit -p tsconfig.base-ui.json",
+    "test": "bun test"
   },
   "dependencies": {
     "react": "catalog:",
@@ -27,7 +28,7 @@
     "next-themes": "catalog:",
     "react-day-picker": "catalog:",
     "date-fns": "catalog:",
-    "radix-ui": "catalog:",
+    "radix-ui": "catalog:radix",
     "@base-ui/react": "catalog:",
     "cn": "catalog:",
     "shadcn": "catalog:"
