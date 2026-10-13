@@ -3,12 +3,14 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import {
+  applyPlan,
   assertDeclared,
   buildComponentsConfig,
   declaredFiles,
   diffDeclared,
   mirrorInstalledFiles,
   PRIMITIVES,
+  planSet,
   SETS,
 } from './sync-primitives';
 
@@ -32,12 +34,24 @@ describe('buildComponentsConfig', () => {
     const config = buildComponentsConfig(baseConfig, setFor('radix-vega'));
     expect(config.style).toBe('radix-vega');
     expect(config.aliases.ui).toBe('@/components/ui');
+    expect(config.aliases).toMatchObject({
+      components: '@/components',
+      utils: '@/lib/utils',
+      lib: '@/lib',
+      hooks: '@/hooks',
+    });
   });
 
   test('base-vega installs into the ui-base folder so siblings import from the same set', () => {
     const config = buildComponentsConfig(baseConfig, setFor('base-vega'));
     expect(config.style).toBe('base-vega');
     expect(config.aliases.ui).toBe('@/components/ui-base');
+    expect(config.aliases).toMatchObject({
+      components: '@/components',
+      utils: '@/lib/utils',
+      lib: '@/lib',
+      hooks: '@/hooks',
+    });
   });
 
   test('keeps every other setting of the UI package config', () => {
@@ -73,8 +87,8 @@ describe('diffDeclared', () => {
     expect(() => assertDeclared('radix-vega', ['button.tsx', 'label.tsx'], expected)).not.toThrow();
   });
 
-  test('declares one file per primitive', () => {
-    expect(declaredFiles(PRIMITIVES)).toHaveLength(PRIMITIVES.length);
+  test('declares each primitive once', () => {
+    expect(new Set(PRIMITIVES).size).toBe(PRIMITIVES.length);
   });
 });
 
@@ -126,9 +140,83 @@ describe('mirrorInstalledFiles', () => {
     expect(await exists(target, 'orphan.tsx')).toBe(false);
   });
 
+  test('mirrors a nested file into a missing subfolder', async () => {
+    await fs.mkdir(path.join(installedDir, 'nested'));
+    await write(installedDir, path.join('nested', 'deep.tsx'), 'deep');
+    expect(await mirrorInstalledFiles(installedDir, target, [])).toEqual({ written: 3, removed: 0 });
+    expect(await read(target, path.join('nested', 'deep.tsx'))).toBe('deep');
+  });
+
   test('keeps an unmanaged file untouched', async () => {
     await write(target, 'form.tsx', 'form');
     expect(await mirrorInstalledFiles(installedDir, target, ['form.tsx'])).toEqual({ written: 2, removed: 0 });
     expect(await read(target, 'form.tsx')).toBe('form');
+  });
+});
+
+describe('planSet', () => {
+  test('radix-vega mirrors into ui and never touches the hand-kept form primitive', () => {
+    const plan = planSet(setFor('radix-vega'), '/components');
+    expect(plan.target).toBe('/components/ui');
+    expect(plan.unmanaged).toContain('form.tsx');
+  });
+
+  test('base-vega mirrors into ui-base and manages every file', () => {
+    const plan = planSet(setFor('base-vega'), '/components');
+    expect(plan.target).toBe('/components/ui-base');
+    expect(plan.unmanaged).toEqual([]);
+  });
+
+  test('both sets declare the same primitives', () => {
+    expect(planSet(setFor('base-vega')).declared).toEqual(declaredFiles(PRIMITIVES));
+    expect(planSet(setFor('radix-vega')).declared).toEqual(declaredFiles(PRIMITIVES));
+  });
+});
+
+describe('applyPlan', () => {
+  let workDir: string;
+  let installedDir: string;
+
+  const populate = (dir: string, files: string[]) =>
+    Promise.all(files.map((file) => fs.writeFile(path.join(dir, file), file)));
+
+  beforeEach(async () => {
+    workDir = await fs.mkdtemp(path.join(os.tmpdir(), 'sync-primitives-plan-'));
+    installedDir = path.join(workDir, 'installed');
+    await fs.mkdir(installedDir);
+  });
+
+  afterEach(() => fs.rm(workDir, { recursive: true, force: true }));
+
+  test('writes a complete install into the target of each set', async () => {
+    await populate(installedDir, declaredFiles(PRIMITIVES));
+    const radix = planSet(setFor('radix-vega'), workDir);
+    const base = planSet(setFor('base-vega'), workDir);
+
+    await applyPlan(radix, installedDir);
+    await applyPlan(base, installedDir);
+
+    expect(await fs.readdir(radix.target)).toHaveLength(PRIMITIVES.length);
+    expect(await fs.readdir(base.target)).toHaveLength(PRIMITIVES.length);
+    expect(radix.target).not.toBe(base.target);
+  });
+
+  test('rejects an undeclared file before writing anything', async () => {
+    await populate(installedDir, [...declaredFiles(PRIMITIVES), 'surprise.tsx']);
+    const plan = planSet(setFor('radix-vega'), workDir);
+
+    await expect(applyPlan(plan, installedDir)).rejects.toThrow(/surprise\.tsx/);
+    expect(await fs.readdir(workDir)).toEqual(['installed']);
+  });
+
+  test('keeps form.tsx of the radix target while syncing', async () => {
+    await populate(installedDir, declaredFiles(PRIMITIVES));
+    const plan = planSet(setFor('radix-vega'), workDir);
+    await fs.mkdir(plan.target);
+    await fs.writeFile(path.join(plan.target, 'form.tsx'), 'form');
+
+    await applyPlan(plan, installedDir);
+
+    expect(await fs.readFile(path.join(plan.target, 'form.tsx'), 'utf-8')).toBe('form');
   });
 });

@@ -170,17 +170,34 @@ const installIntoThrowawayProject = async (set: PrimitiveSet) => {
   return project;
 };
 
+interface SetPlan {
+  style: string;
+  declared: string[];
+  target: string;
+  unmanaged: string[];
+}
+
+export const planSet = (set: PrimitiveSet, componentsDir = COMPONENTS_DIR): SetPlan => ({
+  style: set.style,
+  declared: declaredFiles(PRIMITIVES),
+  target: path.join(componentsDir, set.dir),
+  unmanaged: set.unmanaged,
+});
+
+/**
+ * Checks the installed files against the declared list, then mirrors them into the target.
+ * Nothing is written when the check fails.
+ */
+export const applyPlan = async (plan: SetPlan, installedDir: string) => {
+  assertDeclared(plan.style, await listFiles(installedDir), plan.declared);
+  return mirrorInstalledFiles(installedDir, plan.target, plan.unmanaged);
+};
+
 const syncSet = async (set: PrimitiveSet) => {
   const project = await installIntoThrowawayProject(set);
   try {
     const installedDir = path.join(project, 'src', 'components', set.dir);
-    assertDeclared(set.style, await listFiles(installedDir), declaredFiles(PRIMITIVES));
-
-    const { written, removed } = await mirrorInstalledFiles(
-      installedDir,
-      path.join(COMPONENTS_DIR, set.dir),
-      set.unmanaged,
-    );
+    const { written, removed } = await applyPlan(planSet(set), installedDir);
     console.log(`[sync-primitives] ${set.style} -> src/components/${set.dir}: ${written} written, ${removed} removed`);
   } finally {
     await fs.rm(project, { recursive: true, force: true });
