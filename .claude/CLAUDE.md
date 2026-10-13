@@ -49,19 +49,19 @@ Each item lives at `packages/registry/items/<category>/<name>/`. The folder stru
 
 ```
 items/<category>/<name>/
-  component.tsx           REQUIRED. Exact filename. The published source.
-  default.example.tsx     Primary preview (registry key: <prefixed-name>.example).
-  <variant>.example.tsx   Extra previews (key: <prefixed-name>.<variant>.example).
-  index.mdx               Doc page. Symlinked into apps/docs/content/components/ (UI `components` flat
-                          at the root; other categories under /<cat>/).
-                          BLOCKS DO NOT USE THIS — see "Blocks doc flow" below.
-  extras/                 Optional. Files copied alongside on install:
-    <file>.action.ts        → installs as ./actions/shuip/<file>.ts
-    <file>.<ext>            → installs as ./components/ui/shuip/<file>.<ext>
-  meta.shuip.json         Optional. { "dependsOn": ["<other-shuip-item>"] }
+  component.radix.tsx          REQUIRED. Exact filename. The canonical (Radix) published source.
+  default.example.radix.tsx    Primary preview (registry key: <prefixed-name>.example).
+  <variant>.example.radix.tsx  Extra previews (key: <prefixed-name>.<variant>.example).
+  index.mdx                    Doc page. Symlinked into apps/docs/content/components/ (UI `components` flat
+                               at the root; other categories under /<cat>/).
+                               BLOCKS DO NOT USE THIS — see "Blocks doc flow" below.
+  extras/                      Optional. Files copied alongside on install:
+    <file>.action.ts             → installs as ./actions/shuip/<file>.ts
+    <file>.<ext>                 → installs as ./components/ui/shuip/<file>.<ext>
+  meta.shuip.json              Optional. { "dependsOn": ["<other-shuip-item>"] }
 ```
 
-**Auto-detected from `component.tsx` imports:**
+**Auto-detected from `component.radix.tsx` imports:**
 - `import ... from '@/components/ui/<name>'` → `registryDependencies` (consumer installs that shadcn primitive)
 - External npm imports → `dependencies`
 - Anything else (relative, `@repo/*`, `#/*`) → ignored
@@ -81,7 +81,7 @@ Configured identically in `apps/docs/tsconfig.json` and `packages/registry/tscon
 
 | Alias | Resolves to |
 |-------|-------------|
-| `@/components/ui/shuip/*` | `packages/registry/stubs/*` (auto-generated re-exports of `items/<cat>/<name>/component.tsx`) |
+| `@/components/ui/shuip/*` | `packages/registry/stubs/*` (auto-generated re-exports of `items/<cat>/<name>/component.radix.tsx`) |
 | `@/components/block/shuip/*` | `packages/registry/stubs/blocks/*` |
 | `@/components/ui/*` | `packages/ui/src/components/ui/*` (shadcn primitives) |
 | `@/lib/utils` | `packages/ui/src/lib/utils` |
@@ -138,7 +138,7 @@ To change anything in those, edit the source under `packages/registry/items/<cat
 ## Workflows
 
 **Adding a registry item:**
-1. Create `packages/registry/items/<cat>/<name>/{component.tsx, default.example.tsx, index.mdx}` (skip `index.mdx` for blocks; use `content/blocks/` instead).
+1. Create `packages/registry/items/<cat>/<name>/{component.radix.tsx, default.example.radix.tsx, index.mdx}` (skip `index.mdx` for blocks; use `content/blocks/` instead).
 2. `bun registry:generate` — confirm `[generate] N items processed` increased.
 3. `bun build:docs` end-to-end check.
 
@@ -148,6 +148,6 @@ To change anything in those, edit the source under `packages/registry/items/<cat
 
 ## Important Notes
 
-- Examples import the item itself via the stub alias (`@/components/ui/shuip/<cat-subdir>/<name>`), never via `./component`. Consumers will use the stub path after `shadcn add`.
-- `component.tsx` must not import `@/components/ui/shuip/*` — circular. Import shadcn primitives via `@/components/ui/<name>`.
-- The generator skips silently (warning only) any item folder missing `component.tsx`. Watch the console output.
+- Examples import the item itself via the stub alias (`@/components/ui/shuip/<cat-subdir>/<name>`), never via `./component.radix`. Consumers will use the stub path after `shadcn add`.
+- `component.radix.tsx` must not import `@/components/ui/shuip/*` — circular. Import shadcn primitives via `@/components/ui/<name>`.
+- The generator skips silently (warning only) any item folder missing `component.radix.tsx`. Watch the console output.

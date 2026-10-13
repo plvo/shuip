@@ -26,13 +26,13 @@ CLAUDE.md has the layout reference; the `creating-registry-item` skill has the p
 
 Run each check, capture findings, report at the end. Don't fix mid-audit — the act of running `bun registry:generate` mid-pass cleans up some inconsistencies before you've recorded them.
 
-### 1. Items missing `component.tsx` — silent skip
+### 1. Items missing `component.radix.tsx` — silent skip
 
-Generator logs `[generate] skipping <cat>/<name>: no component.tsx` and the item never reaches `registry.json`. Catches wrong-case (`Component.tsx`), missing file, or stub-only folders.
+Generator logs `[generate] skipping <cat>/<name>: no component.radix.tsx` and the item never reaches `registry.json`. Catches wrong-case (`Component.tsx`), missing file, or stub-only folders.
 
 ```bash
 find packages/registry/items -mindepth 2 -maxdepth 2 -type d \
-  ! -exec test -e {}/component.tsx \; -print
+  ! -exec test -e {}/component.radix.tsx \; -print
 ```
 
 ### 2. Blocks with stray `index.mdx` — wrong fumadocs collection
@@ -43,7 +43,7 @@ Block items should not contain `index.mdx`. Their docs are hand-written in `apps
 ls packages/registry/items/blocks/*/index.mdx 2>/dev/null
 ```
 
-### 3. `component.tsx` shuip-internal imports that silently drop
+### 3. `component.radix.tsx` shuip-internal imports that silently drop
 
 `parseShuipDeps` (`packages/registry/scripts/generate.ts`) auto-detects `@/components/ui/shuip/<...>` imports into `registryDependencies`:
 
@@ -57,17 +57,17 @@ So a stub import does **not** need a `meta.shuip.json` — it resolves automatic
 
 ```bash
 # List shuip-internal imports; eyeball each category segment + target item against items/
-grep -rn "from '@/components/ui/shuip/" packages/registry/items/*/*/component.tsx
+grep -rn "from '@/components/ui/shuip/" packages/registry/items/*/*/component.radix.tsx
 ```
 
 `responsive-dialog` (`dependsOn: ["side-dialog"]`) is the canonical `meta.shuip.json` example — note its `dependsOn` is now redundant with the single-segment auto-detection, but harmless (the generator dedups). Reach for `dependsOn` only when the dep isn't an import.
 
-### 4. Examples with relative `./component` imports
+### 4. Examples with relative `./component.radix` imports
 
 Examples must import via the stub alias (`@/components/ui/shuip/<cat-subdir>/<name>`) so the preview exercises the same path consumers will use after `shadcn add`. Relative imports compile locally but never test the install path.
 
 ```bash
-grep -rn "from '\./component'" packages/registry/items/
+grep -rn "from '\./component.radix'" packages/registry/items/
 ```
 
 ### 5. Folder names with `rhf-` / `tsf-` / `tsq-` prefix
@@ -113,7 +113,7 @@ find apps/docs/content/docs -type l ! -exec test -e {} \; -print
 Components using `useState`/`useEffect`/`useRef`/`useCallback`/`useMemo`/any `use<X>` hook (including `useTheme`, `useFormContext`) must declare `'use client'` or they break in Server Component contexts (the App Router default). This check needs manual triage — many client hooks come from Radix transitively where the directive isn't needed.
 
 ```bash
-for f in $(find packages/registry/items -name component.tsx); do
+for f in $(find packages/registry/items -name component.radix.tsx); do
   if grep -q "useState\|useEffect\|useRef\|useCallback\|useMemo\|useTheme\|useFormContext" "$f"; then
     head -1 "$f" | grep -q "'use client'" || echo "missing 'use client': $f"
   fi
@@ -122,12 +122,12 @@ done
 
 ### 9. Item completeness
 
-For each item: should have `default.example.tsx`, should have at least one variant example, and should have `index.mdx` (unless it's a block, in which case the doc lives in `apps/docs/content/blocks/`).
+For each item: should have `default.example.radix.tsx`, should have at least one variant example, and should have `index.mdx` (unless it's a block, in which case the doc lives in `apps/docs/content/blocks/`).
 
 ```bash
-# Missing default.example.tsx
+# Missing default.example.radix.tsx
 find packages/registry/items -mindepth 2 -maxdepth 2 -type d \
-  ! -exec test -e {}/default.example.tsx \; -print
+  ! -exec test -e {}/default.example.radix.tsx \; -print
 
 # Non-block items missing index.mdx
 find packages/registry/items -mindepth 2 -maxdepth 2 -type d \
@@ -135,7 +135,7 @@ find packages/registry/items -mindepth 2 -maxdepth 2 -type d \
 
 # Items with only one example (default, no variant)
 for d in $(find packages/registry/items -mindepth 2 -maxdepth 2 -type d); do
-  count=$(ls "$d"/*.example.tsx 2>/dev/null | wc -l)
+  count=$(ls "$d"/*.example.radix.tsx 2>/dev/null | wc -l)
   [ "$count" -le 1 ] && echo "single example: $d"
 done
 ```
@@ -208,12 +208,12 @@ Sample shape:
 CRITICAL
   packages/registry/items/components/foo/Component.tsx
     Generator skips the folder (filename must be lowercase).
-    Fix: rename to component.tsx.
+    Fix: rename to component.radix.tsx.
 
 WARNING
   packages/registry/items/components/bar/
-    Missing default.example.tsx; docs page renders empty <ItemExamples>.
-    Fix: add default.example.tsx importing via the stub alias.
+    Missing default.example.radix.tsx; docs page renders empty <ItemExamples>.
+    Fix: add default.example.radix.tsx importing via the stub alias.
 ```
 
 ## Common Mistakes During the Audit
