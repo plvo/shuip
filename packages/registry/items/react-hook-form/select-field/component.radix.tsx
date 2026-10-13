@@ -1,14 +1,15 @@
 'use client';
 
 import type { Lens } from '@hookform/lenses';
-import type { SelectProps } from '@radix-ui/react-select';
+import type { ComponentProps } from 'react';
 import { useController } from 'react-hook-form';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export type SelectFieldOption = Record<string, string>;
 
-export interface SelectFieldProps extends Omit<SelectProps, 'value' | 'defaultValue' | 'onValueChange'> {
+export interface SelectFieldProps
+  extends Omit<ComponentProps<typeof Select>, 'value' | 'defaultValue' | 'onValueChange'> {
   lens: Lens<string>;
   options: SelectFieldOption;
   label?: string;
