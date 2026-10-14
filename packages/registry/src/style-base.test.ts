@@ -1,13 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { SHUIP_REGISTRY_URL } from './namespace';
-import {
-  PUBLISHED_VARIANTS,
-  publishedVariants,
-  rewrittenPathname,
-  styleRewrites,
-  styleToBase,
-  type VariantForBase,
-} from './style-base';
+import { rewrittenPathname } from './rewrite-match';
+import { PUBLISHED_VARIANTS, publishedVariants, styleRewrites, styleToBase, type VariantForBase } from './style-base';
 
 describe('styleToBase', () => {
   test.each(['base-nova', 'base-vega'])('maps %s to base', (style) => {

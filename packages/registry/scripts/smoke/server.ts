@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { rewrittenPathname } from '@repo/registry/style-base';
+import { rewrittenPathname } from '@repo/registry/rewrite-match';
 
 export interface RegistryServer {
   origin: string;
