@@ -26,6 +26,13 @@ export interface RegistryItem {
   files?: RegistryFile[];
 }
 
+const CANONICAL_BASE = 'radix';
+const COMPONENT_BASENAME = `component.${CANONICAL_BASE}`;
+const COMPONENT_FILENAME = `${COMPONENT_BASENAME}.tsx`;
+const UNSUFFIXED_COMPONENT_FILENAME = 'component.tsx';
+const RECOGNISED_EXAMPLE_BASES: readonly string[] = [CANONICAL_BASE];
+const EXAMPLE_FILE_PATTERN = /^(.+)\.example(?:\.([^.]+))?\.tsx$/;
+
 interface ItemMeta {
   dependsOn?: string[];
 }
@@ -73,12 +80,12 @@ const computeTarget = (cat: Category, name: string): string => {
   return `${CATEGORIES[cat].targetPath}/${name}.${ext}`;
 };
 
-const computeStubPath = (cat: Category, name: string): string =>
+export const computeStubPath = (cat: Category, name: string): string =>
   cat === 'components' ? path.join(STUBS_DIR, `${name}.tsx`) : path.join(STUBS_DIR, cat, `${name}.tsx`);
 
 const stubExportPath = (cat: Category, name: string): string => {
   const prefix = cat === 'components' ? '../' : '../../';
-  return `${prefix}items/${cat}/${name}/component`;
+  return `${prefix}items/${cat}/${name}/${COMPONENT_BASENAME}`;
 };
 
 // Parse TS imports from a source file. Returns named npm packages (and their submodules)
@@ -151,27 +158,48 @@ const readMeta = (itemDir: string): ItemMeta => {
   return {};
 };
 
-interface ScannedItem {
+interface ExampleFile {
+  filename: string;
+  variant: string;
+  base: string | undefined;
+}
+
+type ScannedExample = Pick<ExampleFile, 'filename' | 'variant'> & { absPath: string };
+
+export interface ScannedItem {
   category: Category;
   folderName: string;
   itemDir: string;
   componentPath: string;
-  examples: { filename: string; absPath: string }[];
+  examples: ScannedExample[];
   extras: { filename: string; absPath: string }[];
   hasMdx: boolean;
 }
 
-const scanItems = (): ScannedItem[] => {
+const parseExampleFile = (filename: string): ExampleFile | null => {
+  const match = filename.match(EXAMPLE_FILE_PATTERN);
+  return match ? { filename, variant: match[1] as string, base: match[2] } : null;
+};
+
+const hasRecognisedBase = (example: ExampleFile): example is ExampleFile & { base: string } =>
+  example.base !== undefined && RECOGNISED_EXAMPLE_BASES.includes(example.base);
+
+const listExampleFiles = (itemDir: string): ExampleFile[] =>
+  fs.readdirSync(itemDir).flatMap((f) => parseExampleFile(f) ?? []);
+
+export const scanItems = (itemsDir: string = ITEMS_DIR): ScannedItem[] => {
   const out: ScannedItem[] = [];
-  if (!fs.existsSync(ITEMS_DIR)) return out;
-  const dirs = fs.readdirSync(ITEMS_DIR).filter((d) => fs.statSync(path.join(ITEMS_DIR, d)).isDirectory());
+  const problems: string[] = [];
+  const dirs = fs.existsSync(itemsDir)
+    ? fs.readdirSync(itemsDir).filter((d) => fs.statSync(path.join(itemsDir, d)).isDirectory())
+    : [];
 
   for (const category of dirs) {
     if (!isCategory(category)) {
       console.warn(`[generate] skipping unknown category "${category}" — add it to CATEGORIES in generate.ts`);
       continue;
     }
-    const catDir = path.join(ITEMS_DIR, category);
+    const catDir = path.join(itemsDir, category);
     const entries = fs.readdirSync(catDir).filter((d) => {
       const p = path.join(catDir, d);
       return fs.statSync(p).isDirectory();
@@ -179,16 +207,27 @@ const scanItems = (): ScannedItem[] => {
 
     for (const folderName of entries) {
       const itemDir = path.join(catDir, folderName);
-      const mainFile = category === 'lib' ? `${folderName}.ts` : 'component.tsx';
+      const mainFile = category === 'lib' ? `${folderName}.ts` : COMPONENT_FILENAME;
       const componentPath = path.join(itemDir, mainFile);
+      if (category !== 'lib' && fs.existsSync(path.join(itemDir, UNSUFFIXED_COMPONENT_FILENAME))) {
+        problems.push(
+          `${category}/${folderName}: ${UNSUFFIXED_COMPONENT_FILENAME} must be renamed to ${COMPONENT_FILENAME}`,
+        );
+        continue;
+      }
+      const exampleFiles = listExampleFiles(itemDir);
+      for (const { filename } of exampleFiles.filter((e) => !hasRecognisedBase(e))) {
+        problems.push(
+          `${category}/${folderName}: ${filename} has no recognised base suffix (${RECOGNISED_EXAMPLE_BASES.join(', ')})`,
+        );
+      }
       if (!fs.existsSync(componentPath)) {
         console.warn(`[generate] skipping ${category}/${folderName}: no ${mainFile}`);
         continue;
       }
-      const examples = fs
-        .readdirSync(itemDir)
-        .filter((f) => f.endsWith('.example.tsx'))
-        .map((filename) => ({ filename, absPath: path.join(itemDir, filename) }));
+      const examples = exampleFiles
+        .filter(hasRecognisedBase)
+        .map(({ filename, variant }) => ({ filename, absPath: path.join(itemDir, filename), variant }));
       const extrasDir = path.join(itemDir, 'extras');
       const extras = fs.existsSync(extrasDir)
         ? fs.readdirSync(extrasDir).map((filename) => ({ filename, absPath: path.join(extrasDir, filename) }))
@@ -196,6 +235,12 @@ const scanItems = (): ScannedItem[] => {
       const hasMdx = fs.existsSync(path.join(itemDir, 'index.mdx'));
       out.push({ category, folderName, itemDir, componentPath, examples, extras, hasMdx });
     }
+  }
+  if (problems.length > 0) {
+    throw new Error(`[generate] invalid item files:\n${problems.map((p) => `  - ${p}`).join('\n')}`);
+  }
+  if (out.length === 0) {
+    throw new Error(`[generate] no items found in ${itemsDir}`);
   }
   return out;
 };
@@ -247,7 +292,7 @@ const buildRegistryJson = (items: ScannedItem[]): { name: string; homepage: stri
   return { name: 'shuip', homepage: 'https://shuip.plvo.dev', items: out };
 };
 
-const buildIndexTs = (items: ScannedItem[]): string => {
+export const buildIndexTs = (items: ScannedItem[]): string => {
   let body = `// @ts-nocheck
 
 /**
@@ -268,7 +313,7 @@ export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
     if (item.category === 'lib') continue;
     const { category, folderName, componentPath, examples } = item;
     const itemName = namePrefix(category, folderName);
-    const importPath = `@repo/registry/items/${category}/${folderName}/component`;
+    const importPath = `@repo/registry/items/${category}/${folderName}/${COMPONENT_BASENAME}`;
     const code = fs.readFileSync(componentPath, 'utf-8');
     body += `
   '${itemName}': {
@@ -277,10 +322,9 @@ export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
     component: React.lazy(() => import('${importPath}')),
   },`;
     for (const ex of examples) {
-      const variant = ex.filename.replace(/\.example\.tsx$/, '');
-      const exImport = `@repo/registry/items/${category}/${folderName}/${variant}.example`;
+      const exImport = `@repo/registry/items/${category}/${folderName}/${ex.filename.replace(/\.tsx$/, '')}`;
       const exCode = fs.readFileSync(ex.absPath, 'utf-8');
-      const exKey = variant === 'default' ? `${itemName}.example` : `${itemName}.${variant}.example`;
+      const exKey = ex.variant === 'default' ? `${itemName}.example` : `${itemName}.${ex.variant}.example`;
       body += `
   '${exKey}': {
     path: '${exImport}',
@@ -296,17 +340,20 @@ export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
   return body;
 };
 
+export const buildStubContent = (
+  cat: Category,
+  name: string,
+): string => `// AUTO-GENERATED by packages/registry/scripts/generate.ts — DO NOT EDIT
+export * from '${stubExportPath(cat, name)}';
+`;
+
 const writeStubs = (items: ScannedItem[]): void => {
   fs.rmSync(STUBS_DIR, { recursive: true, force: true });
   for (const item of items) {
     if (item.category === 'lib') continue;
     const stubPath = computeStubPath(item.category, item.folderName);
     fs.mkdirSync(path.dirname(stubPath), { recursive: true });
-    const exportPath = stubExportPath(item.category, item.folderName);
-    const content = `// AUTO-GENERATED by packages/registry/scripts/generate.ts — DO NOT EDIT
-export * from '${exportPath}';
-`;
-    fs.writeFileSync(stubPath, content);
+    fs.writeFileSync(stubPath, buildStubContent(item.category, item.folderName));
   }
 };
 
@@ -379,4 +426,4 @@ const main = () => {
   console.log(`[generate] ${items.length} items + ${skillItems.length} skill items processed`);
 };
 
-main();
+if (import.meta.main) main();

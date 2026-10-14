@@ -25,17 +25,17 @@ shuip items live at `packages/registry/items/<category>/<name>/`. `packages/regi
 
 Create `packages/registry/items/<category>/<name>/`. `<name>` has NO prefix — `rhf-` / `tsf-` is applied by the generator. Naming the folder `rhf-foo` publishes as `rhf-rhf-foo`.
 
-### 2. Write `component.tsx` (exact filename)
+### 2. Write `component.radix.tsx` (exact filename)
 
 - Import shadcn primitives via `@/components/ui/<name>`. These become `registryDependencies` (the consumer's shadcn CLI will install them).
-- Generally avoid importing `@/components/ui/shuip/*` from a `component.tsx`. The one legitimate case is a **block or composite item that consumes another shuip item** — `blocks/responsive-dialog/component.tsx` imports `@/components/ui/shuip/side-dialog` and ships a `meta.shuip.json` with `dependsOn: ["side-dialog"]`, which adds `side-dialog` to `registryDependencies` so the consumer's shadcn install resolves the import. Without that `dependsOn`, the dep is silently dropped (the regex in `parseRegistryDeps` excludes `shuip` paths). If you need a cross-item shuip dep: import via the stub alias AND declare it in `meta.shuip.json`.
-- For RHF / TSF items, use the `register: UseFormRegisterReturn<FieldPath<T>>` prop signature as in `input-field/component.tsx`. **The transferable pattern is the RHF integration (register prop + `FormField` + render-props plumbing), not the underlying primitive.** Which shadcn primitive you wrap is a separate decision driven by the task — `input-field`/`password-field` wrap `InputGroupInput` for addon slots; `address-field` wraps bare `Input`. If the task spec names a specific primitive, follow the spec.
+- Generally avoid importing `@/components/ui/shuip/*` from a `component.radix.tsx`. The one legitimate case is a **block or composite item that consumes another shuip item** — `blocks/responsive-dialog/component.radix.tsx` imports `@/components/ui/shuip/side-dialog` and ships a `meta.shuip.json` with `dependsOn: ["side-dialog"]`, which adds `side-dialog` to `registryDependencies` so the consumer's shadcn install resolves the import. Without that `dependsOn`, the dep is silently dropped (the regex in `parseRegistryDeps` excludes `shuip` paths). If you need a cross-item shuip dep: import via the stub alias AND declare it in `meta.shuip.json`.
+- For RHF / TSF items, use the `register: UseFormRegisterReturn<FieldPath<T>>` prop signature as in `input-field/component.radix.tsx`. **The transferable pattern is the RHF integration (register prop + `FormField` + render-props plumbing), not the underlying primitive.** Which shadcn primitive you wrap is a separate decision driven by the task — `input-field`/`password-field` wrap `InputGroupInput` for addon slots; `address-field` wraps bare `Input`. If the task spec names a specific primitive, follow the spec.
 - Add `'use client'` at the top only when the component uses client-only React features (state, refs, effects, browser APIs). Half the existing RHF components have it for that reason; the other half (purely presentational wrappers over `FormField`) correctly do not. Don't cargo-cult it.
-- **Schemas / types may be exported** when the item describes a domain shape — see `address-field/component.tsx` which exports `addressSchema` and `AddressData`. For format-only validation (E.164, URL, etc.), exporting a regex or zod schema next to the component is fine; consumers can opt in.
+- **Schemas / types may be exported** when the item describes a domain shape — see `address-field/component.radix.tsx` which exports `addressSchema` and `AddressData`. For format-only validation (E.164, URL, etc.), exporting a regex or zod schema next to the component is fine; consumers can opt in.
 
-### 3. Write `default.example.tsx`
+### 3. Write `default.example.radix.tsx`
 
-- Import the new component via the stub alias (see table below). Never via relative `./component` — the example must exercise the same path consumers will use after `shadcn add`.
+- Import the new component via the stub alias (see table below). Never via relative `./component.radix` — the example must exercise the same path consumers will use after `shadcn add`.
 - The default example is keyed as `<prefixed-name>.example` in `__index__.ts`.
 
 **Stub alias per category:**
@@ -50,7 +50,7 @@ Create `packages/registry/items/<category>/<name>/`. `<name>` has NO prefix — 
 
 ### 4. Add at least one variant example
 
-Beyond the default, add `<variant>.example.tsx` showing a meaningful alternate use (e.g. `email.example.tsx`, `validation.example.tsx`, `tooltip.example.tsx`). This keeps documentation richer than a single canonical preview and proves the component is flexible. Variants are keyed as `<prefixed-name>.<variant>.example`. Look at `input-field/` for the multi-example pattern.
+Beyond the default, add `<variant>.example.radix.tsx` showing a meaningful alternate use (e.g. `email.example.radix.tsx`, `validation.example.radix.tsx`, `tooltip.example.radix.tsx`). This keeps documentation richer than a single canonical preview and proves the component is flexible. Variants are keyed as `<prefixed-name>.<variant>.example`. Look at `input-field/` for the multi-example pattern.
 
 ### 5. Write `index.mdx` — but only for components / RHF / TSF
 
@@ -96,7 +96,7 @@ Model on a sibling item's `index.mdx` for prose style and prop documentation pat
 - `extras/<file>.action.ts` → installed at `./actions/shuip/<file>.ts` on the consumer side.
 - `extras/<file>.<ext>` → installed at `./components/ui/shuip/<file>.<ext>`.
 - `meta.shuip.json` with `{ "dependsOn": ["<other-shuip-item>"] }` for cross-item registry deps that the import scanner cannot detect.
-- If an extras file is referenced from `component.tsx` via a new alias not already mapped (the only precedent is `@/actions/shuip/places`), add the path mapping to **both** `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json`. Forgetting either breaks IDE resolution or the docs build.
+- If an extras file is referenced from `component.radix.tsx` via a new alias not already mapped (the only precedent is `@/actions/shuip/places`), add the path mapping to **both** `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json`. Forgetting either breaks IDE resolution or the docs build.
 
 ### 7. Run the generator and verify
 
@@ -106,7 +106,7 @@ bun registry:generate
 
 Confirm in the output:
 - `[generate] N items processed` with N incremented by 1
-- No `[generate] skipping <cat>/<name>: no component.tsx` warning for your item (that warning means the filename is wrong and the item is invisible)
+- No `[generate] skipping <cat>/<name>: no component.radix.tsx` warning for your item (that warning means the filename is wrong and the item is invisible)
 
 Then sanity-check the produced artifacts:
 - New entry in `packages/registry/registry.json` (correct prefixed name, expected `registryDependencies` and `dependencies`)
@@ -130,22 +130,22 @@ This chains `registry:generate` → `registry:build` (apps/docs/public/r/*.json)
 | Mistake | Symptom | Fix |
 |---------|---------|-----|
 | Folder prefixed (`rhf-foo`) | Item published as `rhf-rhf-foo` | Drop the prefix; generator adds it |
-| `component.tsx` missing or misnamed | `[generate] skipping ...` warning; item invisible | Filename must be exactly `component.tsx` |
-| Example imports `./component` | Preview works locally; the actual install path is unverified | Use `@/components/ui/shuip/<cat-subdir>/<name>` |
-| `component.tsx` imports `@/components/ui/shuip/*` without a matching `meta.shuip.json` `dependsOn` | Dep silently dropped from `registryDependencies`; consumer install missing the referenced item | Either declare the dep in `meta.shuip.json` (legitimate composite-item case, see `responsive-dialog`), or import shadcn primitives via `@/components/ui/<name>` instead |
+| `component.radix.tsx` missing or misnamed | `[generate] skipping ...` warning; item invisible | Filename must be exactly `component.radix.tsx` |
+| Example imports `./component.radix` | Preview works locally; the actual install path is unverified | Use `@/components/ui/shuip/<cat-subdir>/<name>` |
+| `component.radix.tsx` imports `@/components/ui/shuip/*` without a matching `meta.shuip.json` `dependsOn` | Dep silently dropped from `registryDependencies`; consumer install missing the referenced item | Either declare the dep in `meta.shuip.json` (legitimate composite-item case, see `responsive-dialog`), or import shadcn primitives via `@/components/ui/<name>` instead |
 | Block has `index.mdx` in its item folder | Symlink lands in `content/docs/blocks/`, fumadocs doesn't read it, page absent | Move the MDX to `apps/docs/content/blocks/<name>.mdx`; remove the symlink |
 | Edits write to the MDX symlink in `content/docs/` | Edit succeeds (writes through the symlink) but the source-of-truth confusion is real | Edit `items/<cat>/<name>/index.mdx` |
 | Skipping `registry:generate` after adding files | New item never appears | Always run it; `bun build:docs` chains it for you |
 | `bun add` for a shared dep | Catalog drift between workspaces | Add via the root `workspaces.catalog` (or sub-catalog), reference as `"catalog:"` |
 | Aliased extras with mapping in only one tsconfig | IDE or build breaks | Mirror in both `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json` |
-| Skipping the variant example | Doc page shows only one preview, looks thin | Add at least one `<variant>.example.tsx` showing an alternate prop usage |
+| Skipping the variant example | Doc page shows only one preview, looks thin | Add at least one `<variant>.example.radix.tsx` showing an alternate prop usage |
 
 ## Red Flags — STOP
 
 - About to write to `stubs/`, `__index__.ts`, `registry.json`, `apps/docs/public/r/`, or a `content/docs/<cat>/<name>.mdx` symlink
 - Folder name starts with `rhf-`, `tsf-`, or `tsq-`
-- An `.example.tsx` has `from './component'` (relative)
-- A `component.tsx` has `from '@/components/ui/shuip/` without a matching `meta.shuip.json` `dependsOn`
+- An `.example.radix.tsx` has `from './component.radix'` (relative)
+- A `component.radix.tsx` has `from '@/components/ui/shuip/` without a matching `meta.shuip.json` `dependsOn`
 - Putting an `index.mdx` in `items/blocks/<name>/`
 - `[generate] N items processed` with N unchanged after you added the item
 - Adding a path mapping in only one tsconfig
