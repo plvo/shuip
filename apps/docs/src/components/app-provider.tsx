@@ -1,9 +1,9 @@
 'use client';
 
-import { TooltipProvider } from '@radix-ui/react-tooltip';
 import { ThemeProvider as NextThemesProvider, type ThemeProviderProps } from 'next-themes';
 import type React from 'react';
 import { Toaster } from 'sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 export interface AppProviderProps extends ThemeProviderProps {
   children: React.ReactNode;

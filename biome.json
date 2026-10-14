@@ -25,6 +25,7 @@
       "!packages/registry/registry.json",
       "!packages/registry/stubs",
       "!packages/ui/src/components/ui/**/*",
+      "!packages/ui/src/components/ui-base/**/*",
       "!packages/ui/src/styles/**/*",
       "!apps/docs/public/r"
     ]
