@@ -6,6 +6,7 @@
   "exports": {
     "./__index__": "./__index__.ts",
     "./namespace": "./src/namespace.ts",
+    "./registry-file": "./src/registry-file.ts",
     "./rewrite-match": "./src/rewrite-match.ts",
     "./style-base": "./src/style-base.ts",
     "./items/*": "./items/*",
@@ -13,6 +14,7 @@
   },
   "scripts": {
     "registry:generate": "bun run scripts/generate.ts",
+    "typecheck:base": "bun run scripts/generate.ts && tsc --noEmit -p items",
     "test": "bun test"
   },
   "dependencies": {

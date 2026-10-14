@@ -18,18 +18,19 @@ const STYLE_RULES: StyleRule[] = [
   { base: 'radix', stylePatterns: ['radix-[^/]+', 'new-york', 'new-york-v4', 'default'] },
 ];
 
-// Maps each base to the variant folder that serves it. Base UI styles are served the Radix variant
-// until a dedicated Base UI variant is published.
+// Variant folders built under `/r/`, each holding every item. Routing is separate: see `VARIANT_FOR_BASE`.
+export const PUBLISHED_VARIANTS: readonly Variant[] = ['base', 'radix'];
+
+// Maps each base to the variant folder that serves its styles. Base UI styles map to the `radix` folder,
+// so no style reaches the `base` folder.
 const VARIANT_FOR_BASE: VariantForBase = {
   base: 'radix',
   radix: 'radix',
 };
 
-export const publishedVariants = (variantForBase: VariantForBase = VARIANT_FOR_BASE): Variant[] => [
+export const routedVariants = (variantForBase: VariantForBase = VARIANT_FOR_BASE): Variant[] => [
   ...new Set(Object.values(variantForBase)),
 ];
-
-export const PUBLISHED_VARIANTS: Variant[] = publishedVariants();
 
 const ruleMatcher = (rule: StyleRule): RegExp => new RegExp(`^(?:${rule.stylePatterns.join('|')})$`);
 
@@ -42,7 +43,7 @@ export interface StyleRewrite {
 }
 
 export const styleRewrites = (variantForBase: VariantForBase = VARIANT_FOR_BASE): StyleRewrite[] =>
-  publishedVariants(variantForBase).map((variant) => ({
+  routedVariants(variantForBase).map((variant) => ({
     source: `/r/:style(${STYLE_RULES.filter((rule) => variantForBase[rule.base] === variant)
       .flatMap((rule) => rule.stylePatterns)
       .join('|')})/:name.json`,

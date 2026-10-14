@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { PUBLISHED_VARIANTS } from '@repo/registry/style-base';
+import { PUBLISHED_VARIANTS, styleRewrites } from '@repo/registry/style-base';
 import { type RegistryServer, serveRegistry } from './server';
 
 describe('serveRegistry', () => {
@@ -26,6 +26,18 @@ describe('serveRegistry', () => {
   });
 
   const get = (pathname: string): Promise<Response> => fetch(new URL(pathname, server.origin));
+
+  test('serves the variants the given rewrites route to', async () => {
+    const dedicated = serveRegistry(path.join(workDir, 'public'), styleRewrites({ base: 'base', radix: 'radix' }));
+    try {
+      const fetchVariant = async (style: string) =>
+        (await (await fetch(new URL(`/r/${style}/demo.json`, dedicated.origin))).json()) as { variant: string };
+      expect((await fetchVariant('base-vega')).variant).toBe('base');
+      expect((await fetchVariant('radix-vega')).variant).toBe('radix');
+    } finally {
+      dedicated.stop();
+    }
+  });
 
   test.each([
     'base-vega',

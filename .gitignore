@@ -61,6 +61,8 @@ next-env.d.ts
 # registry
 __index__.ts
 registry.json
+registry.base.json
+packages/registry/generated/
 stubs/
 packages/registry/skills/.generated/
 

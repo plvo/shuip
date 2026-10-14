@@ -3,8 +3,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { SHUIP_NAMESPACE, shuipItemRef, shuipRegistryUrl } from '@repo/registry/namespace';
-import { type Base, styleToBase } from '@repo/registry/style-base';
+import { type Base, styleRewrites, styleToBase, type VariantForBase } from '@repo/registry/style-base';
 import { assertEveryItemServedLocally } from './install-source';
+import { assertNoRadixPackages } from './project-dependencies';
+import { selectItems } from './select-items';
 import { serveRegistry } from './server';
 import { runStep, StepFailure } from './step';
 
@@ -12,6 +14,15 @@ const REPO_ROOT = path.resolve(import.meta.dir, '..', '..', '..', '..');
 const DOCS_PUBLIC = path.join(REPO_ROOT, 'apps', 'docs', 'public');
 const DEFAULT_STYLE = 'radix-vega';
 const PROJECT_NAME = 'app';
+
+// Routes base-* styles to the base variant, which the production routing does not.
+const BASE_VARIANT_ROUTING: VariantForBase = { base: 'base', radix: 'radix' };
+
+interface SmokeOptions {
+  keep: boolean;
+  servesBaseVariant: boolean;
+  items: string[] | undefined;
+}
 
 interface ScaffoldStyle {
   style: string;
@@ -62,8 +73,11 @@ const settleAll = async (...tasks: Promise<unknown>[]): Promise<void> => {
   }
 };
 
-const smokeTest = async (scaffold: ScaffoldStyle, keep: boolean): Promise<string> => {
-  const server = serveRegistry(DOCS_PUBLIC);
+const smokeTest = async (
+  scaffold: ScaffoldStyle,
+  { keep, servesBaseVariant, items }: SmokeOptions,
+): Promise<string> => {
+  const server = serveRegistry(DOCS_PUBLIC, styleRewrites(servesBaseVariant ? BASE_VARIANT_ROUTING : undefined));
   const workDir = await fs.mkdtemp(path.join(os.tmpdir(), 'shuip-smoke-'));
   const projectDir = path.join(workDir, PROJECT_NAME);
   try {
@@ -72,7 +86,7 @@ const smokeTest = async (scaffold: ScaffoldStyle, keep: boolean): Promise<string
       runStep('scaffold project', ['bunx', 'shadcn@latest', ...initArgs(scaffold)], workDir),
     );
 
-    const names = await fetchItemNames(server.origin, scaffold.style);
+    const names = selectItems(await fetchItemNames(server.origin, scaffold.style), items);
     await configureNamespace(projectDir, server.origin);
     await runStep(
       'install items',
@@ -80,6 +94,9 @@ const smokeTest = async (scaffold: ScaffoldStyle, keep: boolean): Promise<string
       projectDir,
     );
     assertEveryItemServedLocally(server.servedPaths, scaffold.style, names);
+    if (servesBaseVariant && scaffold.base === 'base') {
+      await assertNoRadixPackages(projectDir);
+    }
     await runStep('type-check', [path.join(projectDir, 'node_modules', '.bin', 'tsc'), '--noEmit'], projectDir);
 
     return `${names.length} items installed and type-checked${keep ? ` (project kept at ${projectDir})` : ''}`;
@@ -94,7 +111,11 @@ const smokeTest = async (scaffold: ScaffoldStyle, keep: boolean): Promise<string
 const main = async (): Promise<void> => {
   const { values, positionals } = parseArgs({
     args: Bun.argv.slice(2),
-    options: { keep: { type: 'boolean', default: false } },
+    options: {
+      keep: { type: 'boolean', default: false },
+      'base-variant': { type: 'boolean', default: false },
+      items: { type: 'string' },
+    },
     allowPositionals: true,
   });
   const style = positionals[0] ?? DEFAULT_STYLE;
@@ -106,7 +127,11 @@ const main = async (): Promise<void> => {
 
   const startedAt = performance.now();
   try {
-    const summary = await smokeTest(scaffold, values.keep);
+    const summary = await smokeTest(scaffold, {
+      keep: values.keep,
+      servesBaseVariant: values['base-variant'],
+      items: values.items?.split(','),
+    });
     console.log(`[smoke] ${style}: ${summary} in ${Math.round((performance.now() - startedAt) / 1000)}s`);
   } catch (error) {
     if (error instanceof StepFailure) {

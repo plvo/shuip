@@ -44,3 +44,30 @@ jobs:
 
       - name: "🔌 Smoke Test"
         run: bun run smoke radix-vega
+
+  base:
+    name: "🔌 Install & type-check (base-vega, search-input)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: "📥 Checkout Code"
+        uses: actions/checkout@v4
+
+      - name: "🔧 Setup Bun Runtime"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: "🗄️ Cache Bun Packages"
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: "📦 Install Dependencies"
+        run: bun install
+
+      - name: "🔌 Smoke Test"
+        run: bun run smoke base-vega --base-variant --items search-input

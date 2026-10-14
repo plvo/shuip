@@ -3,6 +3,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { SHUIP_ORIGIN } from '../src/namespace';
+import { registryFilename } from '../src/registry-file';
+import type { Variant } from '../src/style-base';
+import {
+  type AliasTargets,
+  type BaseSource,
+  findStaleOverrides,
+  formatWithBiome,
+  type OverridePair,
+  readPathAliases,
+  resolveBaseSource,
+  toDocsSource,
+} from './base-variant';
 import { buildRegistryDependencies, type Catalog, flattenCatalogs, pinDependencies } from './dependencies';
 import { applySkillSourcesToDocs, assertUniqueNames, emitSkills, resolveCatalog } from './skills';
 
@@ -10,6 +22,9 @@ const ROOT = path.resolve(import.meta.dir, '..');
 const ROOT_PACKAGE_JSON = path.resolve(ROOT, '../../package.json');
 const ITEMS_DIR = path.join(ROOT, 'items');
 const STUBS_DIR = path.join(ROOT, 'stubs');
+const GENERATED_BASE_DIR = path.join(ROOT, 'generated', 'base');
+const UI_PACKAGE_DIR = path.resolve(ROOT, '../ui/src');
+const CANONICAL_TSCONFIG = path.join(ROOT, 'tsconfig.json');
 const COMPONENTS_CONTENT_DIR = path.resolve(ROOT, '../../apps/docs/content/components');
 const SKILLS_DIR = path.join(ROOT, 'skills');
 const SKILLS_GENERATED_DIR = path.join(SKILLS_DIR, '.generated');
@@ -29,11 +44,13 @@ export interface RegistryItem {
   files?: RegistryFile[];
 }
 
-const CANONICAL_BASE = 'radix';
-const COMPONENT_BASENAME = `component.${CANONICAL_BASE}`;
+const CANONICAL_VARIANT = 'radix' satisfies Variant;
+const BASE_UI_VARIANT = 'base' satisfies Variant;
+const COMPONENT_BASENAME = `component.${CANONICAL_VARIANT}`;
 const COMPONENT_FILENAME = `${COMPONENT_BASENAME}.tsx`;
+const BASE_UI_COMPONENT_FILENAME = `component.${BASE_UI_VARIANT}.tsx`;
 const UNSUFFIXED_COMPONENT_FILENAME = 'component.tsx';
-const RECOGNISED_EXAMPLE_BASES: readonly string[] = [CANONICAL_BASE];
+const RECOGNISED_EXAMPLE_BASES: readonly string[] = [CANONICAL_VARIANT, BASE_UI_VARIANT];
 const EXAMPLE_FILE_PATTERN = /^(.+)\.example(?:\.([^.]+))?\.tsx$/;
 
 interface ItemMeta {
@@ -83,12 +100,12 @@ const computeTarget = (cat: Category, name: string): string => {
   return `${CATEGORIES[cat].targetPath}/${name}.${ext}`;
 };
 
-export const computeStubPath = (cat: Category, name: string): string =>
-  cat === 'components' ? path.join(STUBS_DIR, `${name}.tsx`) : path.join(STUBS_DIR, cat, `${name}.tsx`);
+export const computeStubPath = (cat: Category, name: string, stubsDir: string = STUBS_DIR): string =>
+  cat === 'components' ? path.join(stubsDir, `${name}.tsx`) : path.join(stubsDir, cat, `${name}.tsx`);
 
-const stubExportPath = (cat: Category, name: string): string => {
+const stubExportPath = (cat: Category, name: string, base: string): string => {
   const prefix = cat === 'components' ? '../' : '../../';
-  return `${prefix}items/${cat}/${name}/${COMPONENT_BASENAME}`;
+  return `${prefix}items/${cat}/${name}/component.${base}`;
 };
 
 // Parse TS imports from a source file. Returns named npm packages (and their submodules)
@@ -167,13 +184,14 @@ interface ExampleFile {
   base: string | undefined;
 }
 
-type ScannedExample = Pick<ExampleFile, 'filename' | 'variant'> & { absPath: string };
+type ScannedExample = Pick<ExampleFile, 'filename' | 'variant'> & { absPath: string; overridePath?: string };
 
 export interface ScannedItem {
   category: Category;
   folderName: string;
   itemDir: string;
   componentPath: string;
+  componentOverridePath?: string;
   examples: ScannedExample[];
   extras: { filename: string; absPath: string }[];
   hasMdx: boolean;
@@ -228,15 +246,40 @@ export const scanItems = (itemsDir: string = ITEMS_DIR): ScannedItem[] => {
         console.warn(`[generate] skipping ${category}/${folderName}: no ${mainFile}`);
         continue;
       }
-      const examples = exampleFiles
-        .filter(hasRecognisedBase)
-        .map(({ filename, variant }) => ({ filename, absPath: path.join(itemDir, filename), variant }));
+      const recognised = exampleFiles.filter(hasRecognisedBase);
+      const overrides = recognised.filter((e) => e.base === BASE_UI_VARIANT);
+      const examples = recognised
+        .filter((e) => e.base === CANONICAL_VARIANT)
+        .map(({ filename, variant }) => {
+          const override = overrides.find((e) => e.variant === variant);
+          return {
+            filename,
+            absPath: path.join(itemDir, filename),
+            variant,
+            ...(override && { overridePath: path.join(itemDir, override.filename) }),
+          };
+        });
+      for (const { filename, variant } of overrides.filter((o) => !examples.some((e) => e.variant === o.variant))) {
+        problems.push(
+          `${category}/${folderName}: ${filename} overrides ${variant}.example.${CANONICAL_VARIANT}.tsx, which does not exist`,
+        );
+      }
+      const overridePath = path.join(itemDir, BASE_UI_COMPONENT_FILENAME);
       const extrasDir = path.join(itemDir, 'extras');
       const extras = fs.existsSync(extrasDir)
         ? fs.readdirSync(extrasDir).map((filename) => ({ filename, absPath: path.join(extrasDir, filename) }))
         : [];
       const hasMdx = fs.existsSync(path.join(itemDir, 'index.mdx'));
-      out.push({ category, folderName, itemDir, componentPath, examples, extras, hasMdx });
+      out.push({
+        category,
+        folderName,
+        itemDir,
+        componentPath,
+        ...(fs.existsSync(overridePath) && { componentOverridePath: overridePath }),
+        examples,
+        extras,
+        hasMdx,
+      });
     }
   }
   if (problems.length > 0) {
@@ -250,13 +293,21 @@ export const scanItems = (itemsDir: string = ITEMS_DIR): ScannedItem[] => {
 
 export const readRootCatalog = (): Catalog => flattenCatalogs(JSON.parse(fs.readFileSync(ROOT_PACKAGE_JSON, 'utf-8')));
 
+export interface RegistryJson {
+  name: string;
+  homepage: string;
+  items: RegistryItem[];
+}
+
 export const buildRegistryJson = (
   items: ScannedItem[],
   catalog: Catalog,
-): { name: string; homepage: string; items: RegistryItem[] } => {
+  publishedComponentPath: (item: ScannedItem) => string = (item) => item.componentPath,
+): RegistryJson => {
   const out: RegistryItem[] = [];
   for (const item of items) {
-    const { category, folderName, componentPath, extras } = item;
+    const { category, folderName, extras } = item;
+    const componentPath = publishedComponentPath(item);
     const source = fs.readFileSync(componentPath, 'utf-8');
     const itemName = namePrefix(category, folderName);
     const dependencies = pinDependencies(parseImports(source), catalog, itemName);
@@ -349,17 +400,153 @@ export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
 export const buildStubContent = (
   cat: Category,
   name: string,
+  base: string = CANONICAL_VARIANT,
 ): string => `// AUTO-GENERATED by packages/registry/scripts/generate.ts — DO NOT EDIT
-export * from '${stubExportPath(cat, name)}';
+export * from '${stubExportPath(cat, name, base)}';
 `;
 
-const writeStubs = (items: ScannedItem[]): void => {
-  fs.rmSync(STUBS_DIR, { recursive: true, force: true });
+const writeStubs = (items: ScannedItem[], stubsDir: string, base: string): void => {
+  fs.rmSync(stubsDir, { recursive: true, force: true });
   for (const item of items) {
     if (item.category === 'lib') continue;
-    const stubPath = computeStubPath(item.category, item.folderName);
+    const stubPath = computeStubPath(item.category, item.folderName, stubsDir);
     fs.mkdirSync(path.dirname(stubPath), { recursive: true });
-    fs.writeFileSync(stubPath, buildStubContent(item.category, item.folderName));
+    fs.writeFileSync(stubPath, buildStubContent(item.category, item.folderName, base));
+  }
+};
+
+export interface BaseVariantLayout {
+  /** Receives the `items/` and `stubs/` trees the docs compile and the `consumer/items/` tree that is published. */
+  outDir: string;
+  itemsDir: string;
+}
+
+const DEFAULT_BASE_VARIANT_LAYOUT: BaseVariantLayout = { outDir: GENERATED_BASE_DIR, itemsDir: ITEMS_DIR };
+
+const baseStubsDir = (outDir: string): string => path.join(outDir, 'stubs');
+
+/** The aliases of the canonical sources, where the Base UI copies of the stubs and the primitives replace the Radix ones. */
+export const baseAliasTargets = (outDir: string): AliasTargets => ({
+  aliases: readPathAliases(CANONICAL_TSCONFIG),
+  relocations: [
+    { from: STUBS_DIR, to: baseStubsDir(outDir) },
+    { from: path.join(UI_PACKAGE_DIR, 'components', 'ui'), to: path.join(UI_PACKAGE_DIR, 'components', 'ui-base') },
+  ],
+});
+
+export interface BaseVariantBuild {
+  /** The consumer form of the item's main file; lib items have no Base UI copy and keep their own file. */
+  publishedComponentPath: (item: ScannedItem) => string;
+  warnings: string[];
+  fileCounts: Record<BaseSource['origin'], number>;
+}
+
+const overridePairs = (items: ScannedItem[]): OverridePair[] =>
+  items.flatMap((item) => [
+    ...(item.componentOverridePath ? [{ override: item.componentOverridePath, canonical: item.componentPath }] : []),
+    ...item.examples.flatMap(({ absPath, overridePath }) =>
+      overridePath ? [{ override: overridePath, canonical: absPath }] : [],
+    ),
+  ]);
+
+interface BaseFile {
+  item: ScannedItem;
+  canonical: string;
+  filename: string;
+  source: BaseSource;
+}
+
+/**
+ * Writes the Base UI variant of every item: the codemod output, or the override that wins over it.
+ * Each file lands twice, in the consumer form that is published and in the form the docs compile.
+ */
+export const writeBaseVariant = (
+  items: ScannedItem[],
+  layout: BaseVariantLayout = DEFAULT_BASE_VARIANT_LAYOUT,
+): BaseVariantBuild => {
+  const targets = baseAliasTargets(layout.outDir);
+  const warnings: string[] = [];
+  const fileCounts: BaseVariantBuild['fileCounts'] = { override: 0, codemod: 0, identical: 0 };
+  const consumerComponentPaths = new Map<ScannedItem, string>();
+  fs.rmSync(layout.outDir, { recursive: true, force: true });
+
+  const variantItems = items.filter((item) => item.category !== 'lib');
+  const files: BaseFile[] = variantItems
+    .flatMap((item) => [
+      {
+        item,
+        canonical: item.componentPath,
+        filename: BASE_UI_COMPONENT_FILENAME,
+        overridePath: item.componentOverridePath,
+      },
+      ...item.examples.map(({ absPath, overridePath, variant }) => ({
+        item,
+        canonical: absPath,
+        filename: `${variant}.example.${BASE_UI_VARIANT}.tsx`,
+        overridePath,
+      })),
+    ])
+    .map(({ overridePath, ...file }) => ({ ...file, source: resolveBaseSource(file.canonical, overridePath) }));
+
+  const converted = files.filter((file) => file.source.origin === 'codemod');
+  const formatted = formatWithBiome(converted.map((file) => file.source.code));
+  converted.forEach((file, index) => {
+    file.source = { ...file.source, code: formatted[index] as string };
+  });
+
+  const writeFile = (filePath: string, content: string): void => {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, content);
+  };
+
+  for (const { item, canonical, filename, source } of files) {
+    fileCounts[source.origin]++;
+    warnings.push(...source.warnings.map((warning) => `${path.relative(layout.itemsDir, canonical)}: ${warning}`));
+    const itemPath = path.join('items', item.category, item.folderName, filename);
+    const docsPath = path.join(layout.outDir, itemPath);
+    const consumerPath = path.join(layout.outDir, 'consumer', itemPath);
+    writeFile(consumerPath, source.code);
+    writeFile(docsPath, toDocsSource(source.code, docsPath, targets));
+    if (filename === BASE_UI_COMPONENT_FILENAME) consumerComponentPaths.set(item, consumerPath);
+  }
+  writeStubs(variantItems, baseStubsDir(layout.outDir), BASE_UI_VARIANT);
+  warnings.push(...findStaleOverrides(overridePairs(items), layout.itemsDir));
+
+  return {
+    publishedComponentPath: (item) => consumerComponentPaths.get(item) ?? item.componentPath,
+    warnings,
+    fileCounts,
+  };
+};
+
+/** One registry per published variant: the Base UI one points at the Base UI files, both carry the same extra items. */
+export const buildRegistries = ({
+  items,
+  catalog,
+  publishedComponentPath,
+  extraItems,
+}: {
+  items: ScannedItem[];
+  catalog: Catalog;
+  publishedComponentPath: (item: ScannedItem) => string;
+  extraItems: RegistryItem[];
+}): Record<Variant, RegistryJson> => {
+  const withExtraItems = (registry: RegistryJson): RegistryJson => {
+    assertUniqueNames(
+      registry.items.map((item) => item.name),
+      extraItems.map((item) => item.name),
+    );
+    return { ...registry, items: [...registry.items, ...extraItems].sort((a, b) => a.name.localeCompare(b.name)) };
+  };
+  return {
+    [CANONICAL_VARIANT]: withExtraItems(buildRegistryJson(items, catalog)),
+    [BASE_UI_VARIANT]: withExtraItems(buildRegistryJson(items, catalog, publishedComponentPath)),
+  };
+};
+
+export const writeRegistries = (dir: string, registries: Record<Variant, RegistryJson>): void => {
+  for (const [variant, registry] of Object.entries(registries)) {
+    fs.writeFileSync(path.join(dir, registryFilename(variant as Variant)), `${JSON.stringify(registry, null, 2)}\n`);
   }
 };
 
@@ -397,7 +584,8 @@ const writeComponentSymlinks = (items: ScannedItem[]): void => {
 
 const main = () => {
   const items = scanItems();
-  const registry = buildRegistryJson(items, readRootCatalog());
+  const baseVariant = writeBaseVariant(items);
+  for (const warning of baseVariant.warnings) console.warn(`[generate] warning: ${warning}`);
 
   const catalogItems = items.map((i) => ({
     category: i.category,
@@ -410,16 +598,17 @@ const main = () => {
     catalog: resolveCatalog(catalogItems),
     bundleName: 'shuip-skills',
   });
-  assertUniqueNames(
-    registry.items.map((i) => i.name),
-    skillItems.map((i) => i.name),
+  writeRegistries(
+    ROOT,
+    buildRegistries({
+      items,
+      catalog: readRootCatalog(),
+      publishedComponentPath: baseVariant.publishedComponentPath,
+      extraItems: skillItems,
+    }),
   );
-  registry.items.push(...skillItems);
-  registry.items.sort((a, b) => a.name.localeCompare(b.name));
-
-  fs.writeFileSync(path.join(ROOT, 'registry.json'), `${JSON.stringify(registry, null, 2)}\n`);
   fs.writeFileSync(path.join(ROOT, '__index__.ts'), buildIndexTs(items));
-  writeStubs(items);
+  writeStubs(items, STUBS_DIR, CANONICAL_VARIANT);
   writeComponentSymlinks(items);
 
   if (fs.existsSync(AGENT_SKILLS_DOC)) {
@@ -428,6 +617,10 @@ const main = () => {
     if (rewritten !== docs) fs.writeFileSync(AGENT_SKILLS_DOC, rewritten);
   }
 
+  const { override, codemod, identical } = baseVariant.fileCounts;
+  console.log(
+    `[generate] base variant: ${override} overridden, ${codemod} converted, ${identical} unchanged (${baseVariant.warnings.length} warnings)`,
+  );
   console.log(`[generate] ${items.length} items + ${skillItems.length} skill items processed`);
 };
 

@@ -8,7 +8,12 @@
     },
     "registry:build": {
       "dependsOn": ["@repo/registry#registry:generate"],
-      "inputs": ["../../packages/registry/registry.json", "../../packages/registry/items/**"],
+      "inputs": [
+        "../../packages/registry/registry.json",
+        "../../packages/registry/registry.base.json",
+        "../../packages/registry/items/**",
+        "../../packages/registry/generated/**"
+      ],
       "outputs": ["public/r/**"]
     },
     "test": {

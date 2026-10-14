@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { rewrittenPathname } from '@repo/registry/rewrite-match';
+import { type StyleRewrite, styleRewrites } from '@repo/registry/style-base';
 
 export interface RegistryServer {
   origin: string;
@@ -18,8 +19,8 @@ const isRewriteSafe = (requested: string, rewritten: string): boolean =>
 
 const isInside = (directory: string, file: string): boolean => file.startsWith(`${directory}${path.sep}`);
 
-/** Serves the built registry (`<publicDir>/r/...`) on loopback with the production style rewrites. */
-export const serveRegistry = (publicDir: string): RegistryServer => {
+/** Serves the built registry (`<publicDir>/r/...`) on loopback with the production style rewrites, unless given others. */
+export const serveRegistry = (publicDir: string, rewrites: StyleRewrite[] = styleRewrites()): RegistryServer => {
   const root = path.resolve(publicDir);
   const servedPaths = new Set<string>();
 
@@ -28,7 +29,7 @@ export const serveRegistry = (publicDir: string): RegistryServer => {
     port: 0,
     fetch: async (request) => {
       const requested = new URL(request.url).pathname;
-      const rewritten = rewrittenPathname(requested);
+      const rewritten = rewrittenPathname(requested, rewrites);
       if (rewritten !== null && !isRewriteSafe(requested, rewritten)) {
         return new Response('Not found', { status: 404 });
       }
