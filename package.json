@@ -22,6 +22,8 @@
     "build:docs": "turbo run build --filter=@repo/docs",
     "registry:generate": "turbo run registry:generate --filter=@repo/registry",
     "registry:build": "turbo run registry:build --filter=@repo/docs",
+    "test": "turbo run test",
+    "smoke": "bun packages/registry/scripts/smoke/run.ts",
     "lint": "biome lint",
     "format": "biome format --write .",
     "check": "biome check --write",

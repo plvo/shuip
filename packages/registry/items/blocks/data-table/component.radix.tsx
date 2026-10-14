@@ -22,7 +22,6 @@ import {
   type ColumnDef,
   type ColumnFiltersState,
   type ColumnPinningState,
-  type FilterFn,
   flexRender,
   getCoreRowModel,
   getFacetedRowModel,
@@ -32,6 +31,7 @@ import {
   getSortedRowModel,
   type OnChangeFn,
   type PaginationState,
+  type Row,
   type RowData,
   type RowSelectionState,
   type SortingState,
@@ -178,7 +178,7 @@ function conditionIsEmpty(condition: FilterCondition): boolean {
   return value == null || value === '' || (Array.isArray(value) && value.length === 0);
 }
 
-export const dataTableFilterFn: FilterFn<unknown> = (row, columnId, filterValue) => {
+export const dataTableFilterFn = <TData,>(row: Row<TData>, columnId: string, filterValue: unknown): boolean => {
   if (Array.isArray(filterValue)) {
     const cell = row.getValue(columnId);
     return filterValue.length === 0 || filterValue.includes(cell);
@@ -284,7 +284,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     right: initialState?.columnPinning?.right ?? [],
   }));
 
-  const table = useReactTable({
+  const table = useReactTable<TData>({
     data,
     columns,
     pageCount: pageCount ?? undefined,

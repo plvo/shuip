@@ -6,6 +6,7 @@
   "exports": {
     "./__index__": "./__index__.ts",
     "./namespace": "./src/namespace.ts",
+    "./rewrite-match": "./src/rewrite-match.ts",
     "./style-base": "./src/style-base.ts",
     "./items/*": "./items/*",
     "./stubs/*": "./stubs/*"
