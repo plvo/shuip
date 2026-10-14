@@ -125,7 +125,7 @@ Shared dependency versions live in `package.json` → `workspaces.catalog` (defa
 
 - **Biome** is the only linter/formatter (no ESLint/Prettier). Config: single quotes, 2-space indent, 120-col, trailing commas. Lint-staged runs `biome check --write --unsafe` on commit via husky.
 - **TypeScript 6**. Project references are declared at root but workspaces are not marked `composite: true` — IDE works, `tsc --build` from root does not. Per-workspace `tsc --noEmit` is fine.
-- **Tests use `bun test`** (bun:test), run from `packages/registry` and `apps/docs`. They are not wired into CI yet.
+- **Tests use `bun test`** (bun:test), run from `packages/registry`, `packages/ui` and `apps/docs` through `bun run test`. CI runs them on every PR.
 - **`next build` is the authoritative type gate** — `apps/docs` `tsc --noEmit` works but emits a harmless `baseUrl` TS5101 deprecation. `bun build:docs` can OOM (exit 137) on low-RAM machines; use `NODE_OPTIONS=--max-old-space-size=6144 bun build:docs`.
 - **shadcn config** is at `packages/ui/components.json` (radix-vega style, RSC enabled).
 

@@ -11,6 +11,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
     name: "🧪 Test & Quality"
@@ -27,8 +31,18 @@ jobs:
         with:
           bun-version: latest
 
+      - name: "🗄️ Cache Bun Packages"
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
       - name: "📦 Install Dependencies"
         run: bun install
+
+      - name: "🧪 Run Tests"
+        run: bun run test
 
       - name: "🔎 Type-check Base UI Primitives"
         run: bun run typecheck:base
@@ -36,9 +50,6 @@ jobs:
       - name: "🏗️ Build Check"
         id: build
         run: bun run build
-
-      - name: "🧪 Run Tests"
-        run: bun run test
 
       - name: "💾 Cache Build Artifacts"
         if: github.ref == 'refs/heads/main'
