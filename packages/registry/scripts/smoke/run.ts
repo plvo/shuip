@@ -8,7 +8,7 @@ import { assertEveryItemServedLocally } from './install-source';
 import { assertNoRadixPackages } from './project-dependencies';
 import { selectItems } from './select-items';
 import { serveRegistry } from './server';
-import { runStep, StepFailure } from './step';
+import { inStep, reportFailure, runStep, StepFailure, settleAll } from './step';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '..', '..', '..', '..');
 const DOCS_PUBLIC = path.join(REPO_ROOT, 'apps', 'docs', 'public');
@@ -66,13 +66,6 @@ const configureNamespace = async (projectDir: string, registryOrigin: string): P
   await fs.writeFile(componentsFile, `${JSON.stringify(components, null, 2)}\n`);
 };
 
-const settleAll = async (...tasks: Promise<unknown>[]): Promise<void> => {
-  const failure = (await Promise.allSettled(tasks)).find((result) => result.status === 'rejected');
-  if (failure) {
-    throw failure.reason;
-  }
-};
-
 const smokeTest = async (
   scaffold: ScaffoldStyle,
   { keep, servesBaseVariant, items }: SmokeOptions,
@@ -86,8 +79,8 @@ const smokeTest = async (
       runStep('scaffold project', ['bunx', 'shadcn@latest', ...initArgs(scaffold)], workDir),
     );
 
-    const names = selectItems(await fetchItemNames(server.origin, scaffold.style), items);
-    await configureNamespace(projectDir, server.origin);
+    const names = selectItems(await inStep('list items', () => fetchItemNames(server.origin, scaffold.style)), items);
+    await inStep('configure registry', () => configureNamespace(projectDir, server.origin));
     await runStep(
       'install items',
       ['bunx', 'shadcn@latest', 'add', ...names.map(shuipItemRef), '-y', '-o'],
@@ -103,30 +96,32 @@ const smokeTest = async (
   } finally {
     server.stop();
     if (!keep) {
-      await fs.rm(workDir, { recursive: true, force: true });
+      // A cleanup error must not replace the failure that ended the run.
+      await fs.rm(workDir, { recursive: true, force: true }).catch((error) => console.warn(`[smoke] ${error}`));
     }
   }
 };
 
 const main = async (): Promise<void> => {
-  const { values, positionals } = parseArgs({
-    args: Bun.argv.slice(2),
-    options: {
-      keep: { type: 'boolean', default: false },
-      'base-variant': { type: 'boolean', default: false },
-      items: { type: 'string' },
-    },
-    allowPositionals: true,
-  });
-  const style = positionals[0] ?? DEFAULT_STYLE;
-  const scaffold = parseScaffoldStyle(style);
-  if (!scaffold) {
-    console.error(`Unsupported style "${style}". Use <base>-<preset> with base or radix, e.g. ${DEFAULT_STYLE}.`);
-    process.exit(2);
-  }
-
   const startedAt = performance.now();
+  let style: string | undefined;
   try {
+    const { values, positionals } = parseArgs({
+      args: Bun.argv.slice(2),
+      options: {
+        keep: { type: 'boolean', default: false },
+        'base-variant': { type: 'boolean', default: false },
+        items: { type: 'string' },
+      },
+      allowPositionals: true,
+    });
+    style = positionals[0] ?? DEFAULT_STYLE;
+    const scaffold = parseScaffoldStyle(style);
+    if (!scaffold) {
+      console.error(`Unsupported style "${style}". Use <base>-<preset> with base or radix, e.g. ${DEFAULT_STYLE}.`);
+      process.exit(2);
+    }
+
     const summary = await smokeTest(scaffold, {
       keep: values.keep,
       servesBaseVariant: values['base-variant'],
@@ -134,11 +129,8 @@ const main = async (): Promise<void> => {
     });
     console.log(`[smoke] ${style}: ${summary} in ${Math.round((performance.now() - startedAt) / 1000)}s`);
   } catch (error) {
-    if (error instanceof StepFailure) {
-      console.error(`[smoke] ${style}: ${error.message}\n\n${error.output}`);
-    } else {
-      console.error(error);
-    }
+    // Awaited so the report reaches the pipe before the process exits.
+    await Bun.write(Bun.stderr, `${reportFailure(error, style)}\n`);
     process.exit(1);
   }
 };
