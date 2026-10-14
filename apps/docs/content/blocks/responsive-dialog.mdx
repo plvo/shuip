@@ -29,6 +29,8 @@ Unlike traditional dialogs that force the same experience across all devices, `R
 
 ### Basic responsive dialog
 
+<BaseOnly base="radix">
+
 ```tsx	
 <ResponsiveDialog>
   <ResponsiveDialogTrigger asChild>
@@ -51,9 +53,35 @@ Unlike traditional dialogs that force the same experience across all devices, `R
 </ResponsiveDialog>
 ```
 
+</BaseOnly>
+
+<BaseOnly base="base">
+
+```tsx	
+<ResponsiveDialog>
+  <ResponsiveDialogTrigger render={<Button />}>Open Dialog</ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Settings</ResponsiveDialogTitle>
+      <ResponsiveDialogDescription>
+        Manage your preferences and account settings.
+      </ResponsiveDialogDescription>
+    </ResponsiveDialogHeader>
+    <ResponsiveDialogFooter>
+      <ResponsiveDialogClose render={<Button variant="outline" />}>Cancel</ResponsiveDialogClose>
+      <Button>Save</Button>
+    </ResponsiveDialogFooter>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>
+```
+
+</BaseOnly>
+
 ### With scrollable content
 
 Use `ResponsiveDialogBody` when the dialog content may overflow. The header and footer stay anchored while the body scrolls — on both desktop and mobile.
+
+<BaseOnly base="radix">
 
 ```tsx
 <ResponsiveDialogContent>
@@ -72,6 +100,27 @@ Use `ResponsiveDialogBody` when the dialog content may overflow. The header and 
 </ResponsiveDialogContent>
 ```
 
+</BaseOnly>
+
+<BaseOnly base="base">
+
+```tsx
+<ResponsiveDialogContent>
+  <ResponsiveDialogHeader>
+    <ResponsiveDialogTitle>Activity Log</ResponsiveDialogTitle>
+    <ResponsiveDialogDescription>Recent actions across your workspace.</ResponsiveDialogDescription>
+  </ResponsiveDialogHeader>
+  <ResponsiveDialogBody>
+    {/* long list, form, or any overflowing content */}
+  </ResponsiveDialogBody>
+  <ResponsiveDialogFooter>
+    <ResponsiveDialogClose render={<Button variant="outline" />}>Close</ResponsiveDialogClose>
+  </ResponsiveDialogFooter>
+</ResponsiveDialogContent>
+```
+
+</BaseOnly>
+
 On mobile, `ResponsiveDialogBody` automatically adds horizontal padding (`px-4 py-3`) to match the drawer's layout. On desktop, padding comes from `SideDialogContent`.
 
 > **Wrapper elements (e.g. `<form>`):** Any element wrapping `Header/Body/Footer` inside `ResponsiveDialogContent` must carry `className="flex flex-col flex-1 min-h-0"` so it participates in the flex layout. Without it the body has no bounded height and cannot scroll.
@@ -89,6 +138,8 @@ On mobile, `ResponsiveDialogBody` automatically adds horizontal padding (`px-4 p
 ### Different positions (desktop only)
 
 Desktop positions are ignored on mobile where the drawer behavior takes precedence:
+
+<BaseOnly base="radix">
 
 ```tsx	
 // Notification from bottom-right
@@ -127,9 +178,50 @@ Desktop positions are ignored on mobile where the drawer behavior takes preceden
 </ResponsiveDialog>
 ```
 
+</BaseOnly>
+
+<BaseOnly base="base">
+
+```tsx	
+// Notification from bottom-right
+<ResponsiveDialog position="bottom-right">
+  <ResponsiveDialogTrigger render={<Button />}>Show Notification</ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Success!</ResponsiveDialogTitle>
+      <ResponsiveDialogDescription>Your changes have been saved.</ResponsiveDialogDescription>
+    </ResponsiveDialogHeader>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>
+
+// User menu from top-right
+<ResponsiveDialog position="top-right" size="sm">
+  <ResponsiveDialogTrigger render={<Button variant="ghost" size="icon" />}>
+    <User className="size-4" />
+  </ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Account</ResponsiveDialogTitle>
+    </ResponsiveDialogHeader>
+    <div className="space-y-2">
+      <Button variant="ghost" className="w-full justify-start">
+        Profile Settings
+      </Button>
+      <Button variant="ghost" className="w-full justify-start">
+        Sign out
+      </Button>
+    </div>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>
+```
+
+</BaseOnly>
+
 ### Custom breakpoints
 
 Control when the dialog switches between desktop and mobile modes:
+
+<BaseOnly base="radix">
 
 ```tsx	
 // Use predefined breakpoints
@@ -163,9 +255,45 @@ Control when the dialog switches between desktop and mobile modes:
 </ResponsiveDialog>
 ```
 
+</BaseOnly>
+
+<BaseOnly base="base">
+
+```tsx	
+// Use predefined breakpoints
+<ResponsiveDialog breakpoint="sm">  {/* Switches at 640px */}
+  <ResponsiveDialogTrigger render={<Button />}>Small Breakpoint</ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Mobile at 640px</ResponsiveDialogTitle>
+      <ResponsiveDialogDescription>
+        This dialog becomes a drawer on screens smaller than 640px.
+      </ResponsiveDialogDescription>
+    </ResponsiveDialogHeader>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>
+
+// Use custom pixel values
+<ResponsiveDialog breakpoint={900}>
+  <ResponsiveDialogTrigger render={<Button />}>Custom Breakpoint</ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Custom at 900px</ResponsiveDialogTitle>
+      <ResponsiveDialogDescription>
+        Switches to mobile mode at exactly 900px and below.
+      </ResponsiveDialogDescription>
+    </ResponsiveDialogHeader>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>
+```
+
+</BaseOnly>
+
 ### Different sizes (desktop only)
 
 Size props affect the desktop side dialog appearance:
+
+<BaseOnly base="radix">
 
 ```tsx	
 // Small dialog for quick actions
@@ -199,9 +327,45 @@ Size props affect the desktop side dialog appearance:
 </ResponsiveDialog>
 ```
 
+</BaseOnly>
+
+<BaseOnly base="base">
+
+```tsx	
+// Small dialog for quick actions
+<ResponsiveDialog size="xs">
+  <ResponsiveDialogTrigger render={<Button variant="outline" />}>Quick Action</ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Confirm</ResponsiveDialogTitle>
+      <ResponsiveDialogDescription>Are you sure?</ResponsiveDialogDescription>
+    </ResponsiveDialogHeader>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>
+
+// Large dialog for complex content
+<ResponsiveDialog position="left" size="lg">
+  <ResponsiveDialogTrigger render={<Button variant="outline" />}>Navigation Menu</ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Navigation</ResponsiveDialogTitle>
+    </ResponsiveDialogHeader>
+    <nav className="space-y-2">
+      <Link href="/dashboard">Dashboard</Link>
+      <Link href="/projects">Projects</Link>
+      <Link href="/settings">Settings</Link>
+    </nav>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>
+```
+
+</BaseOnly>
+
 ## Common use cases
 
 ### Mobile-first navigation
+
+<BaseOnly base="radix">
 
 ```tsx	
 <ResponsiveDialog position="left" size="lg">
@@ -228,6 +392,36 @@ Size props affect the desktop side dialog appearance:
   </ResponsiveDialogContent>
 </ResponsiveDialog>
 ```
+
+</BaseOnly>
+
+<BaseOnly base="base">
+
+```tsx	
+<ResponsiveDialog position="left" size="lg">
+  <ResponsiveDialogTrigger render={<Button variant="outline" size="icon" />}>
+    <Menu className="size-4" />
+  </ResponsiveDialogTrigger>
+  <ResponsiveDialogContent>
+    <ResponsiveDialogHeader>
+      <ResponsiveDialogTitle>Menu</ResponsiveDialogTitle>
+    </ResponsiveDialogHeader>
+    <nav className="space-y-3">
+      <Link href="/home" className="block p-2 hover:bg-muted rounded">
+        Home
+      </Link>
+      <Link href="/about" className="block p-2 hover:bg-muted rounded">
+        About
+      </Link>
+      <Link href="/contact" className="block p-2 hover:bg-muted rounded">
+        Contact
+      </Link>
+    </nav>
+  </ResponsiveDialogContent>
+</ResponsiveDialog>
+```
+
+</BaseOnly>
 
 ## Examples
 
