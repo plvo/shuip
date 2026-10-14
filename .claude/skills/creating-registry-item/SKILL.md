@@ -52,6 +52,10 @@ Create `packages/registry/items/<category>/<name>/`. `<name>` has NO prefix — 
 
 Beyond the default, add `<variant>.example.radix.tsx` showing a meaningful alternate use (e.g. `email.example.radix.tsx`, `validation.example.radix.tsx`, `tooltip.example.radix.tsx`). This keeps documentation richer than a single canonical preview and proves the component is flexible. Variants are keyed as `<prefixed-name>.<variant>.example`. Look at `input-field/` for the multi-example pattern.
 
+### 4b. Check the Base UI variant
+
+The Base UI variant is generated from your Radix source by a codemod (`asChild` becomes `render`). Run `bun registry:generate` and read its warnings: an `asChild` the codemod cannot convert, or a link rendered with `nativeButton={false}`, is reported with the file and line. Where the two APIs genuinely diverge (a Radix-only prop such as `onOpenAutoFocus`, `PopoverAnchor`), add `component.base.tsx` (or `<variant>.example.base.tsx`) next to the canonical file, written exactly as consumers receive it. Then run `bun typecheck:base`. On later runs the generator warns when the canonical file gets commits newer than the override. See "Base UI variant" in CLAUDE.md.
+
 ### 5. Write `index.mdx` — but only for components / RHF / TSF
 
 Frontmatter must include `title`, `description`, and `registryName: <prefixed-name>`. Body uses `<ItemExamples registryName={'<prefixed-name>'} />` to render the previews and `<TypeTable>` for props.
@@ -96,7 +100,7 @@ Model on a sibling item's `index.mdx` for prose style and prop documentation pat
 - `extras/<file>.action.ts` → installed at `./actions/shuip/<file>.ts` on the consumer side.
 - `extras/<file>.<ext>` → installed at `./components/ui/shuip/<file>.<ext>`.
 - `meta.shuip.json` with `{ "dependsOn": ["<other-shuip-item>"] }` for cross-item registry deps that the import scanner cannot detect.
-- If an extras file is referenced from `component.radix.tsx` via a new alias not already mapped (the only precedent is `@/actions/shuip/places`), add the path mapping to **both** `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json`. Forgetting either breaks IDE resolution or the docs build.
+- If an extras file is referenced from `component.radix.tsx` via a new alias not already mapped (the only precedent is `@/actions/shuip/places`), add the path mapping to `apps/docs/tsconfig.json`, `packages/registry/tsconfig.json` and `packages/registry/items/tsconfig.json`, and to `SHARED_FILES` in `packages/registry/scripts/base-variant.ts`. Forgetting one breaks IDE resolution, the docs build or the Base UI copies.
 
 ### 7. Run the generator and verify
 
