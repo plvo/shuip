@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -281,8 +282,10 @@ function ResponsiveDialogFormExample() {
   const [open, setOpen] = React.useState(false);
 
   const form = useForm({
+    defaultValues: { name: '', email: '' },
     resolver: zodResolver(formSchema),
   });
+  const lens = useLens({ control: form.control });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     alert(JSON.stringify(data));
@@ -305,8 +308,8 @@ function ResponsiveDialogFormExample() {
               </ResponsiveDialogDescription>
             </ResponsiveDialogHeader>
             <ResponsiveDialogBody className='space-y-4'>
-              <InputField register={form.register('name')} name='name' label='Name' />
-              <InputField register={form.register('email')} name='email' label='Email' />
+              <InputField lens={lens.focus('name')} label='Name' />
+              <InputField lens={lens.focus('email')} label='Email' />
             </ResponsiveDialogBody>
             <ResponsiveDialogFooter>
               <ResponsiveDialogClose asChild>

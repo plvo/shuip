@@ -10,26 +10,27 @@ import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
 const zodSchema = z.object({
   accountType: z.enum(['personal', 'business']),
-  businessName: z.string().optional(),
-  companySize: z.string().optional(),
+  businessName: z.string(),
+  companySize: z.string(),
 });
 
-type Values = z.infer<typeof zodSchema>;
+type FormValues = { accountType: string; businessName: string; companySize: string };
+type SubmitValues = z.infer<typeof zodSchema>;
 
 export default function RhfSelectFieldConditionalExample() {
-  const form = useForm<Values>({
+  const form = useForm<FormValues, unknown, SubmitValues>({
     defaultValues: {
-      accountType: undefined,
+      accountType: '',
       businessName: '',
       companySize: '',
     },
-    resolver: zodResolver(zodSchema),
+    resolver: zodResolver<FormValues, unknown, SubmitValues>(zodSchema),
   });
   const lens = useLens({ control: form.control });
 
   const accountType = form.watch('accountType');
 
-  async function onSubmit(values: Values) {
+  async function onSubmit(values: SubmitValues) {
     try {
       alert(JSON.stringify(values, null, 2));
     } catch (error) {

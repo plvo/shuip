@@ -26,7 +26,7 @@ type SubmitValues = z.infer<typeof zodSchema>;
 export default function RhfMonthFieldValidationExample() {
   const form = useForm<FormValues, unknown, SubmitValues>({
     defaultValues: { startMonth: undefined },
-    resolver: zodResolver(zodSchema),
+    resolver: zodResolver<FormValues, unknown, SubmitValues>(zodSchema),
   });
   const lens = useLens({ control: form.control });
 

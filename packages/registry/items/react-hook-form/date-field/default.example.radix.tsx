@@ -11,16 +11,17 @@ const zodSchema = z.object({
   dueDate: z.date({ message: 'Pick a due date' }),
 });
 
-type Values = z.infer<typeof zodSchema>;
+type FormValues = { dueDate: Date | undefined };
+type SubmitValues = z.infer<typeof zodSchema>;
 
 export default function RhfDateFieldExample() {
-  const form = useForm<Values>({
-    defaultValues: { dueDate: undefined as unknown as Date },
-    resolver: zodResolver(zodSchema),
+  const form = useForm<FormValues, unknown, SubmitValues>({
+    defaultValues: { dueDate: undefined },
+    resolver: zodResolver<FormValues, unknown, SubmitValues>(zodSchema),
   });
   const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: Values) {
+  async function onSubmit(values: SubmitValues) {
     alert(`Due date: ${values.dueDate.toISOString()}`);
   }
 

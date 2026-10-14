@@ -20,16 +20,17 @@ const zodSchema = z.object({
     .max(oneYearFromNow, 'Appointment must be within a year'),
 });
 
-type Values = z.infer<typeof zodSchema>;
+type FormValues = { appointment: Date | undefined };
+type SubmitValues = z.infer<typeof zodSchema>;
 
 export default function RhfDateFieldValidationExample() {
-  const form = useForm<Values>({
-    defaultValues: { appointment: undefined as unknown as Date },
-    resolver: zodResolver(zodSchema),
+  const form = useForm<FormValues, unknown, SubmitValues>({
+    defaultValues: { appointment: undefined },
+    resolver: zodResolver<FormValues, unknown, SubmitValues>(zodSchema),
   });
   const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: Values) {
+  async function onSubmit(values: SubmitValues) {
     alert(`Appointment: ${values.appointment.toLocaleDateString()}`);
   }
 

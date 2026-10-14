@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -26,8 +27,10 @@ const formSchema = z.object({
 export default function SideDialogSimpleExample() {
   const [open, setOpen] = useState(false);
   const form = useForm({
+    defaultValues: { name: '' },
     resolver: zodResolver(formSchema),
   });
+  const lens = useLens({ control: form.control });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -49,7 +52,7 @@ export default function SideDialogSimpleExample() {
               <SideDialogDescription>This is a form side dialog.</SideDialogDescription>
             </SideDialogHeader>
             <SideDialogBody className='space-y-4'>
-              <InputField register={form.register('name')} label='Name' description='This is a description' />
+              <InputField lens={lens.focus('name')} label='Name' description='This is a description' />
             </SideDialogBody>
             <SideDialogFooter>
               <SideDialogClose asChild>
