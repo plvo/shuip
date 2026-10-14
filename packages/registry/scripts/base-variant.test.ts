@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { readPathAliases, relocate } from './base-variant';
+import { formatWithBiome, readPathAliases, relocate, toDocsSource } from './base-variant';
 import {
   type BaseVariantLayout,
   baseAliasTargets,
@@ -255,6 +255,37 @@ describe('writeBaseVariant', () => {
   });
 });
 
+describe('formatWithBiome', () => {
+  test('returns each code formatted, in the order given, whatever the order of the staged names', () => {
+    // Twelve codes: staged as 0.tsx to 11.tsx, whose alphabetical order differs from the numeric one.
+    const codes = Array.from({ length: 12 }, (_, index) => `const value${index}="text ${index}"\n`);
+
+    expect(formatWithBiome(codes)).toEqual(codes.map((_, index) => `const value${index} = 'text ${index}';\n`));
+  });
+
+  test('returns nothing for nothing', () => {
+    expect(formatWithBiome([])).toEqual([]);
+  });
+});
+
+describe('toDocsSource', () => {
+  const generic = { pattern: '@/components/ui/*', target: '/repo/ui/*' };
+  const specific = { pattern: '@/components/ui/shuip/*', target: '/repo/stubs/*' };
+
+  test.each([
+    ['generic before specific', [generic, specific]],
+    ['specific before generic', [specific, generic]],
+  ])('resolves an alias to the most specific pattern, declared %s', (_, aliases) => {
+    expect(
+      toDocsSource(
+        "import { A } from '@/components/ui/shuip/a';\nimport { B } from '@/components/ui/b';\n",
+        '/repo/docs/file.tsx',
+        { aliases, relocations: [] },
+      ),
+    ).toBe("import { A } from '../stubs/a';\nimport { B } from '../ui/b';\n");
+  });
+});
+
 describe('the Base UI tsconfig of the overrides', () => {
   test('maps every alias of the registry tsconfig, to the Base UI primitives and stubs', () => {
     const { aliases, relocations } = baseAliasTargets(path.join(REGISTRY_ROOT, 'generated', 'base'));
@@ -266,7 +297,7 @@ describe('the Base UI tsconfig of the overrides', () => {
 });
 
 describe('the published registries', () => {
-  const EXTRA_ITEM = { name: 'zeta-skill', type: 'registry:item' as const };
+  const EXTRA_ITEM = { name: 'aaa-skill', type: 'registry:item' as const };
   let root: string;
   let itemsDir: string;
 
@@ -301,8 +332,8 @@ describe('the published registries', () => {
   test('both registries list the same items plus the extra ones, sorted', () => {
     const registries = publish();
 
-    expect(registries.base.items.map((item) => item.name)).toEqual(['alpha', 'beta', 'zeta-skill']);
-    expect(registries.radix.items.map((item) => item.name)).toEqual(['alpha', 'beta', 'zeta-skill']);
+    expect(registries.base.items.map((item) => item.name)).toEqual(['aaa-skill', 'alpha', 'beta']);
+    expect(registries.radix.items.map((item) => item.name)).toEqual(['aaa-skill', 'alpha', 'beta']);
   });
 
   test('rejects an extra item named like an item', () => {

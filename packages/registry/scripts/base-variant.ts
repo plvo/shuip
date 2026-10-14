@@ -8,20 +8,17 @@ const REPO_ROOT = path.resolve(import.meta.dir, '../../..');
 const BIOME_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', 'biome');
 const BIOME_CONFIG = path.join(REPO_ROOT, 'biome.json');
 
-/** Formats the sources of one run together, returning them in order. */
-export type FormatSources = (codes: string[]) => string[];
-
 /**
- * Formats with the formatter settings of the repository's Biome configuration, the way the sources the
- * codes derive from are formatted. One Biome process serves all the codes; they are staged in a temporary
- * folder because the repository configuration excludes the generated folders.
+ * Formats the codes with the repository's Biome configuration, the way the sources they derive from are
+ * formatted, and returns them in the order given. One Biome process serves all the codes; they are staged
+ * in a temporary folder because the repository configuration excludes the generated folders.
  */
-export const formatWithBiome: FormatSources = (codes) => {
+export const formatWithBiome = (codes: string[]): string[] => {
   if (codes.length === 0) return [];
   const stagingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'shuip-format-'));
   try {
-    const { formatter, javascript } = JSON.parse(fs.readFileSync(BIOME_CONFIG, 'utf-8'));
-    fs.writeFileSync(path.join(stagingDir, 'biome.json'), JSON.stringify({ formatter, javascript }));
+    const { files: _files, ...config } = JSON.parse(fs.readFileSync(BIOME_CONFIG, 'utf-8'));
+    fs.writeFileSync(path.join(stagingDir, 'biome.json'), JSON.stringify(config));
     for (const [index, code] of codes.entries()) {
       fs.writeFileSync(path.join(stagingDir, `${index}.tsx`), code);
     }
