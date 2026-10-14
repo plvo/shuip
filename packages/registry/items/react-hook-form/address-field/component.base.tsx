@@ -1,6 +1,5 @@
 'use client';
 
-import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import type { Lens } from '@hookform/lenses';
 import { Loader2, MapPin } from 'lucide-react';
 import * as React from 'react';
@@ -10,7 +9,7 @@ import { getPlaceDetails, getPlacesAutocomplete } from '@/actions/shuip/places';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Popover } from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
 const DEFAULT_COUNTRY = 'US';
@@ -67,7 +66,6 @@ export function AddressField({
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const requestIdRef = React.useRef(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const anchorRef = React.useRef<HTMLDivElement>(null);
   const popoverRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -189,6 +187,10 @@ export function AddressField({
           handleSelectAddress(suggestions[selectedIndex]);
         }
         break;
+      case 'Tab':
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+        break;
       case 'Escape':
         e.preventDefault();
         setShowSuggestions(false);
@@ -231,7 +233,7 @@ export function AddressField({
       </FieldLabel>
       <div className='relative'>
         <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
-          <div ref={anchorRef} className='relative'>
+          <PopoverTrigger render={<div className='relative' />} nativeButton={false} tabIndex={-1}>
             <Input
               ref={inputRef}
               name={fullAddress.field.name}
@@ -257,44 +259,40 @@ export function AddressField({
                 <MapPin className='size-4 text-muted-foreground' />
               )}
             </div>
-          </div>
-          <PopoverPrimitive.Portal>
-            <PopoverPrimitive.Positioner anchor={anchorRef} align='start' sideOffset={4} className='isolate z-50'>
-              <PopoverPrimitive.Popup
-                ref={popoverRef}
-                data-slot='popover-content'
-                initialFocus={false}
-                onMouseDown={(event) => event.preventDefault()}
-                className='z-50 flex origin-(--transform-origin) flex-col rounded-md bg-popover p-0 text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95'
-                style={{ width: 'var(--anchor-width)' }}
-              >
-                <Command className='w-full'>
-                  <CommandList className='max-h-60'>
-                    <CommandEmpty>{isPending ? 'Searching...' : 'No addresses found'}</CommandEmpty>
-                    <CommandGroup>
-                      {suggestions.map((suggestion, index) => (
-                        <CommandItem
-                          key={suggestion.placeId}
-                          value={suggestion.description}
-                          onSelect={() => handleSelectAddress(suggestion)}
-                          className={cn(
-                            'flex items-start space-x-2 p-3 cursor-pointer',
-                            selectedIndex === index && 'bg-accent',
-                          )}
-                        >
-                          <MapPin className='size-4 mt-0.5 text-muted-foreground flex-shrink-0' />
-                          <div className='flex-1 min-w-0'>
-                            <div className='font-medium text-sm'>{suggestion.mainText}</div>
-                            <div className='text-xs text-muted-foreground truncate'>{suggestion.secondaryText}</div>
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverPrimitive.Popup>
-            </PopoverPrimitive.Positioner>
-          </PopoverPrimitive.Portal>
+          </PopoverTrigger>
+          <PopoverContent
+            ref={popoverRef}
+            className='p-0'
+            align='start'
+            initialFocus={false}
+            finalFocus={false}
+            style={{ width: 'var(--anchor-width)' }}
+          >
+            <Command className='w-full'>
+              <CommandList className='max-h-60'>
+                <CommandEmpty>{isPending ? 'Searching...' : 'No addresses found'}</CommandEmpty>
+                <CommandGroup>
+                  {suggestions.map((suggestion, index) => (
+                    <CommandItem
+                      key={suggestion.placeId}
+                      value={suggestion.description}
+                      onSelect={() => handleSelectAddress(suggestion)}
+                      className={cn(
+                        'flex items-start space-x-2 p-3 cursor-pointer',
+                        selectedIndex === index && 'bg-accent',
+                      )}
+                    >
+                      <MapPin className='size-4 mt-0.5 text-muted-foreground flex-shrink-0' />
+                      <div className='flex-1 min-w-0'>
+                        <div className='font-medium text-sm'>{suggestion.mainText}</div>
+                        <div className='text-xs text-muted-foreground truncate'>{suggestion.secondaryText}</div>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
         </Popover>
       </div>
       {description && <p className='text-sm text-muted-foreground'>{description}</p>}
