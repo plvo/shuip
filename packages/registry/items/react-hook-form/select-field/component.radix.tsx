@@ -27,7 +27,8 @@ export function SelectField({ lens, options, label, description, placeholder, ..
       <Select
         name={field.name}
         value={field.value ?? ''}
-        onValueChange={(next: string | null) => field.onChange(next ?? '')}
+        // Spreading props into the generic Base UI Select makes it infer an unknown value, so narrow it here.
+        onValueChange={(next) => field.onChange(typeof next === 'string' ? next : '')}
         {...props}
       >
         <SelectTrigger id={field.name} aria-invalid={fieldState.invalid} className='w-full'>
