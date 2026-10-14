@@ -18,7 +18,8 @@ export interface SelectFieldProps {
 export function SelectField({ options, label, description, placeholder, fieldProps, props }: SelectFieldProps) {
   const field = useFieldContext<string>();
   const { isValid, errors } = field.state.meta;
-  const selectedLabel = Object.entries(options).find(([, value]) => value === field.state.value)?.[0];
+  const selectedLabel =
+    Object.entries(options).find(([, value]) => value === field.state.value)?.[0] ?? (field.state.value || undefined);
 
   return (
     <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>

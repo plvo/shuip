@@ -1070,7 +1070,7 @@ function FieldSelect({
   return (
     <Select value={value} onValueChange={(next: string | null) => next !== null && onChange(next)}>
       <SelectTrigger className='h-8 w-[120px] shrink-0'>
-        <SelectValue>{fields.find((field) => field.id === value)?.label}</SelectValue>
+        <SelectValue>{fields.find((field) => field.id === value)?.label ?? value}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {fields.map((field) => (
@@ -1095,7 +1095,7 @@ function OperatorSelect({
   return (
     <Select value={value} onValueChange={(next: string | null) => next !== null && onChange(next as FilterOperator)}>
       <SelectTrigger className='h-8 w-[136px] shrink-0'>
-        <SelectValue>{OPERATOR_LABELS[value]}</SelectValue>
+        <SelectValue>{OPERATOR_LABELS[value] ?? value}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {OPERATORS_BY_VARIANT[variant].map((operator) => (
@@ -1171,11 +1171,12 @@ function FilterValueControl({
       const selected = Array.isArray(condition.value) ? (condition.value as string[]) : [];
       return <MultiSelectValue options={field.options} selected={selected} onChange={onChange} />;
     }
+    const selectedValue = (condition.value as string) ?? '';
     return (
-      <Select value={(condition.value as string) ?? ''} onValueChange={(next: string | null) => onChange(next ?? '')}>
+      <Select value={selectedValue} onValueChange={(next: string | null) => onChange(next ?? '')}>
         <SelectTrigger className='h-8 flex-1'>
           <SelectValue placeholder='Select…'>
-            {field.options.find((option) => option.value === condition.value)?.label}
+            {field.options.find((option) => option.value === selectedValue)?.label ?? (selectedValue || undefined)}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>

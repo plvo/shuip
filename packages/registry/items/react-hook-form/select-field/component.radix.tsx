@@ -19,7 +19,8 @@ export interface SelectFieldProps
 
 export function SelectField({ lens, options, label, description, placeholder, ...props }: SelectFieldProps) {
   const { field, fieldState } = useController(lens.interop());
-  const selectedLabel = Object.entries(options).find(([, value]) => value === field.value)?.[0];
+  const selectedLabel =
+    Object.entries(options).find(([, value]) => value === field.value)?.[0] ?? (field.value || undefined);
 
   return (
     <Field className='gap-2' data-invalid={fieldState.invalid}>
