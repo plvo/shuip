@@ -8,7 +8,7 @@ export interface ScaffoldStyle {
   preset: string;
 }
 
-// Only `<base>-<preset>` styles can be scaffolded; legacy styles (`new-york-v4`, `default`) have no preset.
+// Only `<base>-<preset>` styles can be scaffolded; unprefixed styles (`new-york-v4`, `default`) have no preset.
 export const parseScaffoldStyle = (style: string): ScaffoldStyle | null => {
   const base = styleToBase(style);
   return base && style.startsWith(`${base}-`) ? { style, base, preset: style.slice(base.length + 1) } : null;

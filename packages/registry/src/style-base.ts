@@ -10,7 +10,7 @@ interface StyleRule {
   stylePatterns: string[];
 }
 
-// Same classification as the shadcn CLI base detection: unprefixed legacy styles are Radix.
+// Same classification as the shadcn CLI base detection: unprefixed styles are Radix.
 const STYLE_RULES: StyleRule[] = [
   { base: 'base', stylePatterns: ['base-[^/]+'] },
   { base: 'radix', stylePatterns: ['radix-[^/]+', 'new-york', 'new-york-v4', 'default'] },
