@@ -1,0 +1,43 @@
+import type * as React from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+
+export interface ConfirmationDialogProps extends React.RefAttributes<HTMLDialogElement> {
+  trigger?: React.ReactElement;
+  title?: string;
+  description?: string;
+  labelConfirmButton?: string;
+  onConfirm?: () => void;
+}
+
+export function ConfirmationDialog({
+  trigger,
+  title,
+  description,
+  labelConfirmButton,
+  onConfirm,
+  ...props
+}: ConfirmationDialogProps) {
+  return (
+    <Dialog {...props}>
+      <DialogTrigger render={trigger} />
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription className='md:text-left'>{description}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button onClick={onConfirm}>{labelConfirmButton}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -10,7 +10,10 @@ const REPO_ROOT = path.resolve(import.meta.dir, '../../..');
 const BLOCK_DOCS_DIR = path.join(REPO_ROOT, 'apps/docs/content/blocks');
 
 /** Sources whose component sets its own `data-state`, so styling on it is not a primitive trigger. */
-const OWN_DATA_STATE = ['packages/registry/items/components/side-dialog/component.radix.tsx'];
+const OWN_DATA_STATE = [
+  'packages/registry/items/components/side-dialog/component.radix.tsx',
+  'packages/registry/items/components/side-dialog/component.base.tsx',
+];
 
 const FORM_PRIMITIVE = /^@\/components\/ui\/form(\/|$)/;
 const PRIMITIVE_STATE_CLASS = /data-\[state=/;
@@ -173,13 +176,16 @@ describe('the Base UI variant stays free of Radix', () => {
       .readdirSync(consumerDir, { recursive: true, encoding: 'utf-8' })
       .filter((entry) => entry.endsWith('.tsx'))
       .flatMap((entry) => asChildSites(entry, fs.readFileSync(path.join(consumerDir, entry), 'utf-8')));
-    expect(remaining.sort()).toEqual([
-      'blocks/responsive-dialog/component.base.tsx <DrawerClose asChild={…}>',
-      'blocks/responsive-dialog/component.base.tsx <DrawerTrigger asChild={…}>',
-      'blocks/responsive-dialog/component.base.tsx <SideDialogClose asChild={…}>',
-      'blocks/responsive-dialog/component.base.tsx <SideDialogTrigger asChild={…}>',
-      'components/confirmation-dialog/component.base.tsx <DialogTrigger asChild>',
-    ]);
+    expect(remaining.sort()).toEqual([]);
+  });
+
+  test.each([
+    'components/side-dialog/component.base.tsx',
+    'components/confirmation-dialog/component.base.tsx',
+    'blocks/responsive-dialog/component.base.tsx',
+  ])('%s composes through render and never mentions asChild', (relativePath) => {
+    const published = fs.readFileSync(path.join(outDir, 'consumer', 'items', relativePath), 'utf-8');
+    expect(published).not.toMatch(/\basChild\b/);
   });
 
   test('every item is published in the Base UI variant, from files that exist', () => {
