@@ -106,13 +106,14 @@ Both variants are published (`apps/docs/public/r/base/` and `radix/`). `styleRew
 - Base UI is the default base. `baseRedirects()` in `apps/docs/src/lib/base-routes.ts` (wired in `next.config.ts`) sends `/components/**`, `/blocks/**` and their `llms.mdx` routes without a base segment to the Base UI page with a permanent redirect. Markdown routes are `/<section>/llms.mdx/<base>/<slug>`.
 - Each base has its own loader over the same collection (`componentsSources`, `blocksSources` in `apps/docs/src/lib/source.ts`), so page addresses and page trees carry the base. The sidebar for a base is built by `buildSidebarTree` (`apps/docs/src/lib/sidebar-tree.ts`), shared by the `/docs` layout (default base) and the `/components/[base]` layout. Order lives in code — fumadocs `...folder` meta extracts *flatten* a folder, so meta can't split a folder's index from its children across sidebar positions.
 - The two primitive libraries never share a React tree: the `[base]` layouts mount the providers of their base (`BaseProviders`) and previews come from per-base client modules (`preview-base-ui.tsx`, `preview-radix.tsx`). Do not mount a primitive provider in `AppProvider`. `@/components/ui-base/*` resolves to the Base UI primitives in `apps/docs/tsconfig.json`.
+- Prose or snippets that only hold for one base go inside `<BaseOnly base="radix">…</BaseOnly>` or `<BaseOnly base="base">…</BaseOnly>` in the MDX (`asChild` on Radix, `render` on Base UI). `apps/docs/scripts/base-prose.test.ts` fails when a Radix-only API appears outside a Radix block, and the markdown routes keep only the block of the page's base.
 - Search and `llms-full.txt` list the pages of the default base only; each page's markdown names its other variants.
 - PageTree node types (`Root`, `Item`, `Separator`, `Node`) import from `fumadocs-core/page-tree` (not `/server`).
 - After changing a collection or content, run `bunx fumadocs-mdx` (in `apps/docs`) to regenerate `.source` types before `tsc`.
 
 ## Path Mappings
 
-Configured identically in `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json`:
+The first six aliases are configured identically in `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json`. `@/components/ui-base/*` is configured in `apps/docs/tsconfig.json` and `packages/registry/items/tsconfig.json` only: the canonical registry sources never import it.
 
 | Alias | Resolves to |
 |-------|-------------|
@@ -120,7 +121,9 @@ Configured identically in `apps/docs/tsconfig.json` and `packages/registry/tscon
 | `@/components/block/shuip/*` | `packages/registry/stubs/blocks/*` |
 | `@/components/ui/*` | `packages/ui/src/components/ui/*` (shadcn primitives) |
 | `@/lib/utils` | `packages/ui/src/lib/utils` |
+| `@/lib/time` | `packages/registry/items/lib/time/time` |
 | `@/actions/shuip/places` | `packages/registry/items/react-hook-form/address-field/extras/places.action` |
+| `@/components/ui-base/*` | `packages/ui/src/components/ui-base/*` (Base UI primitives, which the primitives import each other through) |
 
 `@/*` in `apps/docs` also resolves to `./src/*` for app-internal code.
 

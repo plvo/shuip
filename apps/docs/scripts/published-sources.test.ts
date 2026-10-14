@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { readItemSource } from '@repo/registry/item-source';
 import { PUBLISHED_VARIANTS } from '@repo/registry/style-base';
+import { itemSourcesFor } from '../src/lib/item-sources';
 import { build } from './shadcn-build';
 
 const REGISTRY_ROOT = path.resolve(import.meta.dir, '..', '..', '..', 'packages', 'registry');
@@ -46,5 +47,28 @@ describe('the source shown for a base', () => {
     expect(sideDialog('base')).not.toBe(sideDialog('radix'));
     expect(sideDialog('base')).not.toContain('asChild');
     expect(sideDialog('radix')).toContain('asChild');
+  });
+
+  test.each(PUBLISHED_VARIANTS)('gathers the code of every %s page from the published item', (variant) => {
+    const published = fs
+      .readdirSync(path.join(outputDir, variant))
+      .filter((file) => file !== 'registry.json')
+      .map((file): PublishedItem => JSON.parse(fs.readFileSync(path.join(outputDir, variant, file), 'utf-8')))
+      .filter((item) => item.files?.length);
+
+    for (const item of published) {
+      expect(itemSourcesFor(variant, item.name).code).toBe(item.files?.[0]?.content as string);
+    }
+  });
+
+  test('gathers the examples written for the base of the page', () => {
+    const base = itemSourcesFor('base', 'side-dialog');
+    const radix = itemSourcesFor('radix', 'side-dialog');
+
+    expect(base.examples.map((example) => example.key)).toEqual(radix.examples.map((example) => example.key));
+    expect(base.examples.length).toBeGreaterThan(1);
+    expect(base.examples.map((example) => example.code).join()).toContain('render=');
+    expect(base.examples.map((example) => example.code).join()).not.toContain('asChild');
+    expect(radix.examples.map((example) => example.code).join()).toContain('asChild');
   });
 });

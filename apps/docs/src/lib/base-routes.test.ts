@@ -3,6 +3,8 @@ import { rewrittenPathname } from '@repo/registry/rewrite-match';
 import {
   BASES,
   baseLabel,
+  baseOfPath,
+  baseParams,
   baseRedirects,
   DEFAULT_BASE,
   isBase,
@@ -186,5 +188,23 @@ describe('otherVariantsNote', () => {
 
   test('has nothing to say about a page that has no base', () => {
     expect(otherVariantsNote('/docs/installation')).toBeNull();
+  });
+});
+
+describe('baseOfPath', () => {
+  test('reads the base of a page that has one', () => {
+    expect(baseOfPath('/components/radix/missing-page')).toBe('radix');
+    expect(baseOfPath('/blocks/base')).toBe('base');
+  });
+
+  test('falls back to the default base for any other address', () => {
+    expect(baseOfPath('/docs/installation')).toBe(DEFAULT_BASE);
+    expect(baseOfPath('/components/zzz')).toBe(DEFAULT_BASE);
+  });
+});
+
+describe('baseParams', () => {
+  test('lists one parameter per base for the base segment', () => {
+    expect(baseParams()).toEqual([{ base: 'base' }, { base: 'radix' }]);
   });
 });

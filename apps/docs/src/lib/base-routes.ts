@@ -7,6 +7,9 @@ export type BasedSection = 'components' | 'blocks';
 
 const BASED_SECTIONS: readonly BasedSection[] = ['components', 'blocks'];
 
+/** Every section of the docs, with or without a base. */
+export type Section = 'docs' | BasedSection;
+
 export const BASES: readonly Base[] = PUBLISHED_VARIANTS;
 
 export const DEFAULT_BASE: Base = 'base';
@@ -39,6 +42,12 @@ export const parseBasedPath = (pathname: string): BasedPath | null => {
   if (!isBasedSection(section) || base === undefined || !isBase(base)) return null;
   return { section, base, slugs };
 };
+
+/** The base of the page at `pathname`, or the default base for an address that has none. */
+export const baseOfPath = (pathname: string): Base => parseBasedPath(pathname)?.base ?? DEFAULT_BASE;
+
+/** The `generateStaticParams` of a `[base]` segment. */
+export const baseParams = (): { base: Base }[] => BASES.map((base) => ({ base }));
 
 /** The same page in another base, or null when the pathname is not a page that exists per base. */
 export const siblingUrl = (pathname: string, base: Base): string | null => {
@@ -76,17 +85,17 @@ export interface BaseRedirect {
 
 const LLMS_SEGMENT_PATTERN = 'llms\\.mdx';
 
-const notYetBased = (extra: string[] = []): string => `(?!(?:${[...BASES, ...extra].join('|')})(?:/|$))`;
+const unbasedSegment = (extra: string[] = []): string => `(?!(?:${[...BASES, ...extra].join('|')})(?:/|$))`;
 
-/** Sends every address that predates the base segment to the page of the default base. */
+/** Sends every section address that has no base segment to the page of the default base. */
 export const baseRedirects = (): BaseRedirect[] =>
   BASED_SECTIONS.flatMap((section) => {
     const target = `/${section}/${DEFAULT_BASE}`;
     const markdown = `/${section}/${LLMS_SEGMENT}`;
     return [
       { source: `/${section}`, destination: target },
-      { source: `/${section}/:path(${notYetBased([LLMS_SEGMENT_PATTERN])}.+)`, destination: `${target}/:path` },
+      { source: `/${section}/:path(${unbasedSegment([LLMS_SEGMENT_PATTERN])}.+)`, destination: `${target}/:path` },
       { source: markdown, destination: `${markdown}/${DEFAULT_BASE}` },
-      { source: `${markdown}/:path(${notYetBased()}.+)`, destination: `${markdown}/${DEFAULT_BASE}/:path` },
+      { source: `${markdown}/:path(${unbasedSegment()}.+)`, destination: `${markdown}/${DEFAULT_BASE}/:path` },
     ].map((redirect) => ({ ...redirect, permanent: true as const }));
   });

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { LazyPreview } from '@/components/lazy-preview';
-import { Preview } from '@/components/preview';
+import { Preview } from '@/components/preview/preview';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Base } from '@/lib/base-routes';
 import { blocksSources } from '@/lib/source';

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { DocsPageBase, generateDocsPageMetadata } from '@/components/docs-page-base';
-import { BASES, isBase } from '@/lib/base-routes';
-import { componentsSources } from '@/lib/source';
+import { isBase } from '@/lib/base-routes';
+import { paramsOfSection } from '@/lib/source';
 
 export default async function ComponentsPage(props: PageProps<'/components/[base]/[[...slug]]'>) {
   const { base, slug } = await props.params;
@@ -12,9 +12,7 @@ export default async function ComponentsPage(props: PageProps<'/components/[base
 
 export const dynamicParams = false;
 
-export async function generateStaticParams() {
-  return BASES.flatMap((base) => componentsSources[base].generateParams().map((params) => ({ base, ...params })));
-}
+export const generateStaticParams = () => paramsOfSection('components');
 
 export async function generateMetadata(props: PageProps<'/components/[base]/[[...slug]]'>): Promise<Metadata> {
   const { base, slug } = await props.params;

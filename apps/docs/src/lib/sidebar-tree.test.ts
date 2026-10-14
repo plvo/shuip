@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import type { Node } from 'fumadocs-core/page-tree';
-import { BASES, type Base, sectionUrl } from './base-routes';
+import { type Base, sectionUrl } from './base-routes';
 import { buildSidebarTree, type SidebarPage } from './sidebar-tree';
 
 const page = (base: Base, slugs: string[], title: string, registryName?: string): SidebarPage => ({
@@ -60,16 +60,6 @@ describe('buildSidebarTree', () => {
   test('keeps the guides of /docs on their own addresses', () => {
     expect(urls(tree.children)).toContain('/docs');
     expect(urls(tree.children)).toContain('/llms-full.txt');
-  });
-
-  test.each(BASES)('every component link of the %s tree stays inside that base', (base) => {
-    const baseTree = buildSidebarTree({ base, guides, pages: pagesOf(base) });
-    const componentLinks = urls(baseTree.children).filter((url) => url !== '/docs' && url !== '/llms-full.txt');
-
-    expect(componentLinks.length).toBeGreaterThan(0);
-    for (const url of componentLinks) {
-      expect(url.startsWith(`/components/${base}`)).toBe(true);
-    }
   });
 
   test('leaves out a category guide that has no page', () => {

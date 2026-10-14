@@ -10,30 +10,31 @@ import { type Base, type BasedSection, DEFAULT_BASE, llmsUrl, withBase } from '@
 import { getPageImage, pageSource } from '@/lib/source';
 import { getMDXComponents } from '@/mdx-components';
 
-type Section = 'docs' | BasedSection;
+export type DocsPageProps =
+  | { section: 'docs'; slug?: string[] }
+  | { section: BasedSection; base: Base; slug?: string[] };
 
-export interface DocsPageProps {
-  section: Section;
-  /** The base of the route; pages of `/docs` have none. */
-  base?: Base;
-  slug?: string[];
-}
+const sourceOf = (props: DocsPageProps) =>
+  props.section === 'docs' ? pageSource('docs') : pageSource(props.section, props.base);
 
-export async function DocsPageBase({ section, base, slug }: DocsPageProps) {
-  const source = pageSource(section, base);
-  const page = source.getPage(slug);
+export async function DocsPageBase(props: DocsPageProps) {
+  const source = sourceOf(props);
+  const page = source.getPage(props.slug);
   if (!page) notFound();
 
   const MDX = page.data.body;
+  const base = props.section === 'docs' ? undefined : props.base;
 
   const markdownUrl =
-    section !== 'docs' && base ? llmsUrl(section, base, page.slugs) : `/${section}/llms.mdx/${page.slugs.join('/')}`;
+    props.section === 'docs'
+      ? `/docs/llms.mdx/${page.slugs.join('/')}`
+      : llmsUrl(props.section, props.base, page.slugs);
   const RelativeLink = createRelativeLink(source, page);
 
   return (
     <DocsPage toc={page.data.toc} full={page.data.full} tableOfContent={{ style: 'clerk' }}>
       <div className='mb-4 space-y-4'>
-        <div className='flex items-center gap-2 justify-between'>
+        <div className='flex flex-wrap items-center justify-between gap-x-2 gap-y-3'>
           <DocsTitle className='font-mono text-4xl'>{page.data.title}</DocsTitle>
           <LLMCopyButton markdownUrl={markdownUrl} />
         </div>
@@ -58,13 +59,13 @@ export async function DocsPageBase({ section, base, slug }: DocsPageProps) {
   );
 }
 
-export async function generateDocsPageMetadata({ section, base, slug }: DocsPageProps): Promise<Metadata> {
-  const page = pageSource(section, base).getPage(slug);
+export async function generateDocsPageMetadata(props: DocsPageProps): Promise<Metadata> {
+  const page = sourceOf(props).getPage(props.slug);
   if (!page) notFound();
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://shuip.plvo.dev';
   const pageUrl = `${baseUrl}${page.url}`;
-  const ogImage = getPageImage(page, section).url;
+  const ogImage = getPageImage(page, props.section).url;
 
   return {
     title: page.data.title,

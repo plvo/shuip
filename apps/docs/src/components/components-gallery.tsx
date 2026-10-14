@@ -1,28 +1,17 @@
 import Link from 'next/link';
 import { LazyPreview } from '@/components/lazy-preview';
-import { Preview } from '@/components/preview';
+import { Preview } from '@/components/preview/preview';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { type Base, sectionUrl } from '@/lib/base-routes';
+import { COMPONENT_CATEGORIES, categoryOf } from '@/lib/component-categories';
 import { componentsSources } from '@/lib/source';
-
-const CATEGORY_ORDER = ['components', 'react-hook-form', 'tanstack-form', 'tanstack-query'] as const;
-
-const CATEGORY_LABELS: Record<string, string> = {
-  components: 'Components',
-  'react-hook-form': 'React Hook Form',
-  'tanstack-form': 'TanStack Form',
-  'tanstack-query': 'TanStack Query',
-};
-
-const GUIDED_CATEGORIES = ['react-hook-form', 'tanstack-form', 'tanstack-query'];
 
 export function ComponentsGallery({ base }: { base: Base }) {
   const pages = componentsSources[base].getPages().filter((page) => page.data.registryName);
 
   const byCategory = new Map<string, typeof pages>();
   for (const page of pages) {
-    const category = page.slugs.length === 1 ? 'components' : page.slugs[0];
-    if (!category) continue;
+    const category = categoryOf(page.slugs);
     const list = byCategory.get(category) ?? [];
     list.push(page);
     byCategory.set(category, list);
@@ -30,17 +19,17 @@ export function ComponentsGallery({ base }: { base: Base }) {
 
   return (
     <div className='space-y-12'>
-      {CATEGORY_ORDER.filter((category) => byCategory.has(category)).map((category) => {
-        const guide = GUIDED_CATEGORIES.includes(category) ? sectionUrl('components', base, [category]) : undefined;
+      {COMPONENT_CATEGORIES.filter(({ id }) => byCategory.has(id)).map(({ id: category, label, hasGuide }) => {
+        const guide = hasGuide ? sectionUrl('components', base, [category]) : undefined;
         return (
           <section key={category} className='space-y-6'>
             <h2 className='font-mono text-2xl font-bold'>
               {guide ? (
                 <Link href={guide} className='no-underline'>
-                  {CATEGORY_LABELS[category]}
+                  {label}
                 </Link>
               ) : (
-                CATEGORY_LABELS[category]
+                label
               )}
             </h2>
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>

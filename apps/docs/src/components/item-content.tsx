@@ -1,13 +1,10 @@
-import path from 'node:path';
-import { listItemExamples, readItemSource } from '@repo/registry/item-source';
 import type { Base } from '@/lib/base-routes';
+import { itemSourcesFor } from '@/lib/item-sources';
 import { filenameToTitle } from '@/lib/utils';
 import { useMDXComponents } from '@/mdx-components';
 import { InstallationCmd } from './item-installation';
 import { ItemPreview } from './item-preview';
-import { Preview } from './preview';
-
-const REGISTRY_ROOT = path.resolve(process.cwd(), '../../packages/registry');
+import { Preview } from './preview/preview';
 
 export interface ItemHeaderProps {
   base: Base;
@@ -16,7 +13,7 @@ export interface ItemHeaderProps {
 }
 
 export async function ItemHeader({ base, registryName, text }: ItemHeaderProps) {
-  const code = readItemSource(base, registryName, REGISTRY_ROOT);
+  const { code } = itemSourcesFor(base, registryName);
 
   return (
     <div className='space-y-4'>
@@ -35,17 +32,17 @@ export interface ItemExamplesProps {
 export async function ItemExamples({ base, registryName }: ItemExamplesProps) {
   const { h3: H3 } = useMDXComponents();
 
-  const examples = listItemExamples(base, registryName, REGISTRY_ROOT);
+  const { examples } = itemSourcesFor(base, registryName);
 
   if (!examples.length) {
     return <p className='text-sm text-muted-foreground'>No examples</p>;
   }
 
-  return examples.map((example) => (
-    <div key={example} className='my-6 space-y-4'>
-      <H3>{example === `${registryName}.example` ? 'Default' : filenameToTitle(example.split('.')[1])}</H3>
-      <ItemPreview code={readItemSource(base, example, REGISTRY_ROOT)}>
-        <Preview base={base} registryName={example} />
+  return examples.map(({ key, code }) => (
+    <div key={key} className='my-6 space-y-4'>
+      <H3>{key === `${registryName}.example` ? 'Default' : filenameToTitle(key.split('.')[1])}</H3>
+      <ItemPreview code={code}>
+        <Preview base={base} registryName={key} />
       </ItemPreview>
     </div>
   ));

@@ -1,13 +1,12 @@
 import type { Item, Node, Root, Separator } from 'fumadocs-core/page-tree';
 import { type Base, sectionUrl } from './base-routes';
+import { COMPONENT_CATEGORIES } from './component-categories';
 
 export interface SidebarPage {
   url: string;
   slugs: string[];
   data: { title: string; registryName?: string };
 }
-
-const CATEGORY_GUIDES = ['react-hook-form', 'tanstack-form', 'tanstack-query'];
 
 const byTitle = (a: SidebarPage, b: SidebarPage): number => a.data.title.localeCompare(b.data.title);
 
@@ -38,14 +37,13 @@ export const buildSidebarTree = ({
     const found = pages.find((page) => page.url === url);
     return found ? [pageNode(found)] : [];
   };
-  const fields = (category: string): Node[] =>
+  const itemsOf = (category: string): Node[] =>
     pages
-      .filter((page) => page.slugs[0] === category && page.slugs.length === 2)
-      .sort(byTitle)
-      .map(pageNode);
-  const uiComponents = (): Node[] =>
-    pages
-      .filter((page) => page.slugs.length === 1 && page.data.registryName)
+      .filter((page) =>
+        category === 'components'
+          ? page.slugs.length === 1 && page.data.registryName
+          : page.slugs[0] === category && page.slugs.length === 2,
+      )
       .sort(byTitle)
       .map(pageNode);
 
@@ -55,15 +53,8 @@ export const buildSidebarTree = ({
       ...guides,
       { type: 'page', url: '/llms-full.txt', name: 'llms-full.txt' },
       ...guide([]),
-      ...CATEGORY_GUIDES.flatMap((category) => guide([category])),
-      separator('Components'),
-      ...uiComponents(),
-      separator('React Hook Form'),
-      ...fields('react-hook-form'),
-      separator('TanStack Form'),
-      ...fields('tanstack-form'),
-      separator('TanStack Query'),
-      ...fields('tanstack-query'),
+      ...COMPONENT_CATEGORIES.filter((category) => category.hasGuide).flatMap((category) => guide([category.id])),
+      ...COMPONENT_CATEGORIES.flatMap((category) => [separator(category.label), ...itemsOf(category.id)]),
     ],
   };
 };
