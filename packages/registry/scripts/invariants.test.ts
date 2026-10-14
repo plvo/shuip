@@ -14,7 +14,8 @@ const OWN_DATA_STATE = ['packages/registry/items/components/side-dialog/componen
 
 const FORM_PRIMITIVE = /^@\/components\/ui\/form(\/|$)/;
 const PRIMITIVE_STATE_CLASS = /data-\[state=/;
-const RADIX_ONLY_POPOVER_API = /\b(?:PopoverAnchor|onOpenAutoFocus)\b|--radix-popover/;
+const RADIX_ONLY_POPOVER_API =
+  /\b(?:PopoverAnchor|onOpenAutoFocus|onCloseAutoFocus|onInteractOutside|onPointerDownOutside|onEscapeKeyDown)\b|--radix-/;
 const IMPORT_SPECIFIER = /(?:\bfrom\s+|\bimport\s*\(?\s*|\brequire\(\s*)['"]([^'"]+)['"]/g;
 const FENCED_CODE_BLOCK = /^[ \t]*(`{3,}|~{3,})[^\n]*\n([\s\S]*?)^[ \t]*\1[ \t]*$/gm;
 
@@ -222,6 +223,25 @@ describe('invariant detection', () => {
     ['versioned package', "import { Slot } from 'radix-ui@1.0.0';"],
   ])('flags a Radix %s', (_, content) => {
     expect(paths(findViolations([source('a.tsx', content)]).radixImports)).toEqual(['a.tsx']);
+  });
+
+  test.each([
+    '<PopoverAnchor asChild>',
+    'onOpenAutoFocus={(e) => e.preventDefault()}',
+    'onCloseAutoFocus={(e) => e.preventDefault()}',
+    'onInteractOutside={() => {}}',
+    'onPointerDownOutside={() => {}}',
+    'onEscapeKeyDown={() => {}}',
+    "style={{ width: 'var(--radix-popover-trigger-width)' }}",
+    "style={{ height: 'var(--radix-popper-available-height)' }}",
+  ])('flags the Radix-only Popover API in %s', (content) => {
+    expect(RADIX_ONLY_POPOVER_API.test(content)).toBe(true);
+  });
+
+  test('does not flag the Base UI Popover API', () => {
+    expect(RADIX_ONLY_POPOVER_API.test("<Positioner anchor={ref} /> initialFocus={false} 'var(--anchor-width)'")).toBe(
+      false,
+    );
   });
 
   test('does not flag other imports', () => {
