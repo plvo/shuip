@@ -6,6 +6,12 @@ import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { HOUR_OPTIONS, isHourDisabled, isMinuteDisabled, joinTime, MINUTE_OPTIONS, splitTime } from '@/lib/time';
 
+export function updateTimePart(time: string, part: 'hour' | 'minute', next: string | null): string {
+  if (next === null) return '';
+  const { hour, minute } = splitTime(time);
+  return part === 'hour' ? joinTime(next, minute) : joinTime(hour, next);
+}
+
 export interface TimeFieldProps {
   lens: Lens<string>;
   label?: string;
@@ -26,7 +32,7 @@ export function TimeField({ lens, label, description, min, max, disabled }: Time
       <div className='flex items-center gap-2'>
         <Select
           value={hour}
-          onValueChange={(h: string | null) => field.onChange(joinTime(h ?? '', minute))}
+          onValueChange={(h: string | null) => field.onChange(updateTimePart(field.value ?? '', 'hour', h))}
           disabled={disabled}
         >
           <SelectTrigger id={field.name} aria-invalid={fieldState.invalid} className='w-full'>
@@ -43,7 +49,7 @@ export function TimeField({ lens, label, description, min, max, disabled }: Time
         <span className='text-muted-foreground'>:</span>
         <Select
           value={minute}
-          onValueChange={(m: string | null) => field.onChange(joinTime(hour, m ?? ''))}
+          onValueChange={(m: string | null) => field.onChange(updateTimePart(field.value ?? '', 'minute', m))}
           disabled={disabled}
         >
           <SelectTrigger aria-invalid={fieldState.invalid} className='w-full'>

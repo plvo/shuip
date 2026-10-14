@@ -16,6 +16,12 @@ import {
   type TimeRangeValue,
 } from '@/lib/time';
 
+export function updateTimePart(time: string, part: 'hour' | 'minute', next: string | null): string {
+  if (next === null) return '';
+  const { hour, minute } = splitTime(time);
+  return part === 'hour' ? joinTime(next, minute) : joinTime(hour, next);
+}
+
 interface TimePickerProps {
   id?: string;
   value: string;
@@ -33,7 +39,7 @@ function TimePicker({ id, value, onChange, min, disabled, invalid }: TimePickerP
     <div className='flex items-center gap-2'>
       <Select
         value={hour}
-        onValueChange={(h: string | null) => onChange(joinTime(h ?? '', minute))}
+        onValueChange={(h: string | null) => onChange(updateTimePart(value, 'hour', h))}
         disabled={disabled}
       >
         <SelectTrigger id={id} aria-invalid={invalid} className='w-full'>
@@ -50,7 +56,7 @@ function TimePicker({ id, value, onChange, min, disabled, invalid }: TimePickerP
       <span className='text-muted-foreground'>:</span>
       <Select
         value={minute}
-        onValueChange={(m: string | null) => onChange(joinTime(hour, m ?? ''))}
+        onValueChange={(m: string | null) => onChange(updateTimePart(value, 'minute', m))}
         disabled={disabled}
       >
         <SelectTrigger aria-invalid={invalid} className='w-full'>
