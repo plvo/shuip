@@ -14,6 +14,7 @@ const OWN_DATA_STATE = ['packages/registry/items/components/side-dialog/componen
 
 const FORM_PRIMITIVE = /^@\/components\/ui\/form(\/|$)/;
 const PRIMITIVE_STATE_CLASS = /data-\[state=/;
+const RADIX_ONLY_POPOVER_API = /\b(?:PopoverAnchor|onOpenAutoFocus)\b|--radix-popover/;
 const IMPORT_SPECIFIER = /(?:\bfrom\s+|\bimport\s*\(?\s*|\brequire\(\s*)['"]([^'"]+)['"]/g;
 const FENCED_CODE_BLOCK = /^[ \t]*(`{3,}|~{3,})[^\n]*\n([\s\S]*?)^[ \t]*\1[ \t]*$/gm;
 
@@ -156,6 +157,11 @@ describe('the Base UI variant stays free of Radix', () => {
 
   test('no generated file imports the form primitive', () => {
     expect(paths(findViolations(generatedFiles).formPrimitiveImports)).toEqual([]);
+  });
+
+  test('no generated file uses a Radix-only Popover API', () => {
+    const offenders = generatedFiles.filter((file) => RADIX_ONLY_POPOVER_API.test(file.content));
+    expect(paths(offenders)).toEqual([]);
   });
 
   // A site listed here keeps its Radix `asChild` in the Base UI output until an override or the canonical source
