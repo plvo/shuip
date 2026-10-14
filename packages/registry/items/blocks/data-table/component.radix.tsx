@@ -1070,7 +1070,7 @@ function FieldSelect({
   return (
     <Select value={value} onValueChange={(next: string | null) => next !== null && onChange(next)}>
       <SelectTrigger className='h-8 w-[120px] shrink-0'>
-        <SelectValue />
+        <SelectValue>{fields.find((field) => field.id === value)?.label}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {fields.map((field) => (
@@ -1095,7 +1095,7 @@ function OperatorSelect({
   return (
     <Select value={value} onValueChange={(next: string | null) => next !== null && onChange(next as FilterOperator)}>
       <SelectTrigger className='h-8 w-[136px] shrink-0'>
-        <SelectValue />
+        <SelectValue>{OPERATOR_LABELS[value]}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {OPERATORS_BY_VARIANT[variant].map((operator) => (
@@ -1174,7 +1174,9 @@ function FilterValueControl({
     return (
       <Select value={(condition.value as string) ?? ''} onValueChange={(next: string | null) => onChange(next ?? '')}>
         <SelectTrigger className='h-8 flex-1'>
-          <SelectValue placeholder='Select…' />
+          <SelectValue placeholder='Select…'>
+            {field.options.find((option) => option.value === condition.value)?.label}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {field.options.map((option) => (
@@ -1434,7 +1436,7 @@ function SortBuilder<TData>({ table }: { table: Table<TData> }) {
                     onValueChange={(value: string | null) => value !== null && setDir(sort.id, value === 'desc')}
                   >
                     <SelectTrigger className='h-8 flex-1'>
-                      <SelectValue />
+                      <SelectValue>{sort.desc ? 'Descending' : 'Ascending'}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value='asc'>Ascending</SelectItem>

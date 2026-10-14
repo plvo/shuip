@@ -384,7 +384,7 @@ function CalendarNav({ className }: { className?: string }) {
       {views.length > 1 ? (
         <Select value={view} onValueChange={(v) => setView(v as CalendarView)}>
           <SelectTrigger className='w-32' size='sm'>
-            <SelectValue />
+            <SelectValue>{messages.views[view]}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {views.map((v) => (

@@ -19,13 +19,19 @@ export interface SelectFieldProps
 
 export function SelectField({ lens, options, label, description, placeholder, ...props }: SelectFieldProps) {
   const { field, fieldState } = useController(lens.interop());
+  const selectedLabel = Object.entries(options).find(([, value]) => value === field.value)?.[0];
 
   return (
     <Field className='gap-2' data-invalid={fieldState.invalid}>
       {label && <FieldLabel htmlFor={field.name}>{label}</FieldLabel>}
-      <Select name={field.name} value={field.value ?? ''} onValueChange={field.onChange} {...props}>
+      <Select
+        name={field.name}
+        value={field.value ?? ''}
+        onValueChange={(next: string | null) => field.onChange(next ?? '')}
+        {...props}
+      >
         <SelectTrigger id={field.name} aria-invalid={fieldState.invalid} className='w-full'>
-          <SelectValue placeholder={placeholder} />
+          <SelectValue placeholder={placeholder}>{selectedLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {Object.entries(options).map(([optionLabel, value]) => (
