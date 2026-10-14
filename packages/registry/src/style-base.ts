@@ -18,11 +18,11 @@ const STYLE_RULES: StyleRule[] = [
   { base: 'radix', stylePatterns: ['radix-[^/]+', 'new-york', 'new-york-v4', 'default'] },
 ];
 
-// Variant folders built under `/r/`, whether or not a style is routed to them yet.
+// Variant folders built under `/r/`, each holding every item. Routing is separate: see `VARIANT_FOR_BASE`.
 export const PUBLISHED_VARIANTS: readonly Variant[] = ['base', 'radix'];
 
-// Maps each base to the variant folder that serves it. Base UI styles are still served the Radix variant:
-// the Base UI variant is published but not routed to until it is complete.
+// Maps each base to the variant folder that serves its styles. Base UI styles map to the `radix` folder,
+// so no style reaches the `base` folder.
 const VARIANT_FOR_BASE: VariantForBase = {
   base: 'radix',
   radix: 'radix',

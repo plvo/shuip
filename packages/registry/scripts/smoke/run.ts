@@ -15,7 +15,7 @@ const DOCS_PUBLIC = path.join(REPO_ROOT, 'apps', 'docs', 'public');
 const DEFAULT_STYLE = 'radix-vega';
 const PROJECT_NAME = 'app';
 
-// The Base UI variant is published before production routes any style to it.
+// Routes base-* styles to the base variant, which the production routing does not.
 const BASE_VARIANT_ROUTING: VariantForBase = { base: 'base', radix: 'radix' };
 
 interface SmokeOptions {

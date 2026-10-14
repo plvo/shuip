@@ -179,7 +179,7 @@ To change anything in those, edit the source under `packages/registry/items/<cat
 2. `bun typecheck:base` regenerates, then type-checks every override against Base UI.
 3. `bun smoke base-vega --base-variant --items <name>` installs the item into a real Base UI project and type-checks it.
 
-**Adding a new alias used by extras/:** mirror the path mapping in `apps/docs/tsconfig.json`, `packages/registry/tsconfig.json` and `packages/registry/items/tsconfig.json`, and add it to `SHARED_FILES` in `packages/registry/scripts/base-variant.ts` so the Base UI copies resolve it.
+**Adding a new alias used by extras/:** add the path mapping to `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json`. The generator reads the Base UI copies' aliases from the registry `tsconfig.json`; `packages/registry/items/tsconfig.json` (the Base UI one) must carry the same mapping, with the stubs and primitives pointing to the Base UI ones, and a test fails when it differs.
 
 **Adding a new shared external dep:** add the version to the root `workspaces.catalog` (or appropriate sub-catalog), then reference `"catalog:"`/`"catalog:<name>"` from the consuming workspace.
 

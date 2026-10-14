@@ -100,7 +100,7 @@ Model on a sibling item's `index.mdx` for prose style and prop documentation pat
 - `extras/<file>.action.ts` → installed at `./actions/shuip/<file>.ts` on the consumer side.
 - `extras/<file>.<ext>` → installed at `./components/ui/shuip/<file>.<ext>`.
 - `meta.shuip.json` with `{ "dependsOn": ["<other-shuip-item>"] }` for cross-item registry deps that the import scanner cannot detect.
-- If an extras file is referenced from `component.radix.tsx` via a new alias not already mapped (the only precedent is `@/actions/shuip/places`), add the path mapping to `apps/docs/tsconfig.json`, `packages/registry/tsconfig.json` and `packages/registry/items/tsconfig.json`, and to `SHARED_FILES` in `packages/registry/scripts/base-variant.ts`. Forgetting one breaks IDE resolution, the docs build or the Base UI copies.
+- If an extras file is referenced from `component.radix.tsx` via a new alias not already mapped (the only precedent is `@/actions/shuip/places`), add the path mapping to `apps/docs/tsconfig.json`, `packages/registry/tsconfig.json` and `packages/registry/items/tsconfig.json` (a test checks the last against the second). Forgetting one breaks IDE resolution or the docs build.
 
 ### 7. Run the generator and verify
 
