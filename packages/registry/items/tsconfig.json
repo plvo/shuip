@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+    "paths": {
+      "@/components/ui/shuip/*": ["./generated/base/stubs/*"],
+      "@/components/block/shuip/*": ["./generated/base/stubs/blocks/*"],
+      "@/components/ui/*": ["../ui/src/components/ui-base/*"],
+      "@/lib/utils": ["../ui/src/lib/utils"],
+      "@/lib/time": ["./items/lib/time/time"],
+      "@/actions/shuip/places": ["./items/react-hook-form/address-field/extras/places.action"]
+    }
+  },
+  "include": ["**/*.base.tsx"],
+  "exclude": ["node_modules"]
+}

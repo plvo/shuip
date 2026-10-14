@@ -13,5 +13,5 @@
     }
   },
   "include": ["items/**/*.ts", "items/**/*.tsx", "__index__.ts"],
-  "exclude": ["node_modules", "stubs"]
+  "exclude": ["node_modules", "stubs", "items/**/*.base.tsx"]
 }

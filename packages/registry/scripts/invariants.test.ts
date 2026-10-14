@@ -1,7 +1,9 @@
-import { describe, expect, test } from 'bun:test';
+import { afterAll, describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
-import { buildRegistryJson, readRootCatalog, type ScannedItem, scanItems } from './generate';
+import { buildRegistryJson, readRootCatalog, type ScannedItem, scanItems, writeBaseVariant } from './generate';
+import { RADIX_PACKAGE } from './radix-package';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '../../..');
 const BLOCK_DOCS_DIR = path.join(REPO_ROOT, 'apps/docs/content/blocks');
@@ -9,7 +11,6 @@ const BLOCK_DOCS_DIR = path.join(REPO_ROOT, 'apps/docs/content/blocks');
 /** Sources whose component sets its own `data-state`, so styling on it is not a primitive trigger. */
 const OWN_DATA_STATE = ['packages/registry/items/components/side-dialog/component.radix.tsx'];
 
-const RADIX_PACKAGE = /^(@radix-ui\/|radix-ui(\/|@|$))/;
 const FORM_PRIMITIVE = /^@\/components\/ui\/form(\/|$)/;
 const PRIMITIVE_STATE_CLASS = /data-\[state=/;
 const IMPORT_SPECIFIER = /(?:\bfrom\s+|\bimport\s*\(?\s*|\brequire\(\s*)['"]([^'"]+)['"]/g;
@@ -28,10 +29,16 @@ const readSource = (absPath: string, kind: SourceFile['kind']): SourceFile => ({
   content: fs.readFileSync(absPath, 'utf-8'),
 });
 
+const overridePaths = (item: ScannedItem) => [
+  ...(item.componentOverridePath ? [item.componentOverridePath] : []),
+  ...item.examples.flatMap((example) => (example.overridePath ? [example.overridePath] : [])),
+];
+
 const itemSourcePaths = (item: ScannedItem) => [
   item.componentPath,
   ...item.examples.map((example) => example.absPath),
   ...item.extras.map((extra) => extra.absPath),
+  ...overridePaths(item),
 ];
 
 const itemDocPaths = (item: ScannedItem) => (item.hasMdx ? [path.join(item.itemDir, 'index.mdx')] : []);
@@ -74,9 +81,14 @@ describe('item sources stay base-agnostic', () => {
   test('scans every example and every extra', () => {
     const exampleCount = items.reduce((count, item) => count + item.examples.length, 0);
     const extraCount = items.reduce((count, item) => count + item.extras.length, 0);
+    const overrideCount = items.reduce((count, item) => count + overridePaths(item).length, 0);
     expect(extraCount).toBeGreaterThan(0);
-    expect(sources).toHaveLength(items.length + exampleCount + extraCount);
+    expect(sources).toHaveLength(items.length + exampleCount + extraCount + overrideCount);
     expect(paths(sources)).toContain('packages/registry/items/react-hook-form/address-field/extras/places.action.ts');
+  });
+
+  test('scans the Base UI overrides', () => {
+    expect(paths(sources)).toContain('packages/registry/items/components/search-input/component.base.tsx');
   });
 
   test('scans the doc page of every item and of every block', () => {
@@ -102,6 +114,56 @@ describe('item sources stay base-agnostic', () => {
   test.each(OWN_DATA_STATE)('%s still sets its own data-state', (relativePath) => {
     const own = sources.find((s) => s.relativePath === relativePath);
     expect(own?.content).toMatch(/\bdata-state=\{/);
+  });
+});
+
+describe('the Base UI variant stays free of Radix', () => {
+  const items = scanItems();
+  const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'shuip-base-invariants-'));
+  const build = writeBaseVariant(
+    items,
+    { outDir, itemsDir: path.join(REPO_ROOT, 'packages/registry/items'), primitivesDir: '', utilsFile: '' },
+    (code) => code,
+  );
+  afterAll(() => fs.rmSync(outDir, { recursive: true, force: true }));
+
+  const generatedFiles = fs
+    .readdirSync(outDir, { recursive: true, encoding: 'utf-8' })
+    .filter((entry) => entry.endsWith('.tsx'))
+    .map((entry) => readSource(path.join(outDir, entry), 'source'));
+
+  test('writes the published and the docs copy of every component and example', () => {
+    const exampleCount = items.reduce((count, item) => count + item.examples.length, 0);
+    const variantItems = items.filter((item) => item.category !== 'lib');
+    const copies = generatedFiles.filter((file) => /\/(?:consumer\/)?items\//.test(file.relativePath));
+    expect(copies).toHaveLength(2 * (variantItems.length + exampleCount));
+  });
+
+  test('no generated file imports a Radix package', () => {
+    expect(paths(findViolations(generatedFiles).radixImports)).toEqual([]);
+  });
+
+  test('no generated file imports the form primitive', () => {
+    expect(paths(findViolations(generatedFiles).formPrimitiveImports)).toEqual([]);
+  });
+
+  test('every item is published in the Base UI variant, from files that exist', () => {
+    const radix = buildRegistryJson(items, readRootCatalog());
+    const base = buildRegistryJson(items, readRootCatalog(), build.publishedComponentPath);
+    expect(base.items.map((item) => item.name)).toEqual(radix.items.map((item) => item.name));
+    const missing = base.items.flatMap((item) =>
+      (item.files ?? [])
+        .map((file) => path.resolve(path.join(REPO_ROOT, 'packages/registry'), file.path))
+        .filter((file) => !fs.existsSync(file)),
+    );
+    expect(missing).toEqual([]);
+  });
+
+  test('no published Base UI entry depends on a Radix package', () => {
+    const offenders = buildRegistryJson(items, readRootCatalog(), build.publishedComponentPath).items.flatMap((item) =>
+      (item.dependencies ?? []).filter((dep) => RADIX_PACKAGE.test(dep)).map((dep) => `${item.name} -> ${dep}`),
+    );
+    expect(offenders).toEqual([]);
   });
 });
 

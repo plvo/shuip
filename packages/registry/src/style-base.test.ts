@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { SHUIP_REGISTRY_URL } from './namespace';
 import { rewrittenPathname } from './rewrite-match';
-import { PUBLISHED_VARIANTS, publishedVariants, styleRewrites, styleToBase, type VariantForBase } from './style-base';
+import { PUBLISHED_VARIANTS, routedVariants, styleRewrites, styleToBase, type VariantForBase } from './style-base';
 
 describe('styleToBase', () => {
   test.each(['base-nova', 'base-vega'])('maps %s to base', (style) => {
@@ -18,8 +18,9 @@ describe('styleToBase', () => {
 });
 
 describe('published variants', () => {
-  test('only radix is published for now', () => {
-    expect(PUBLISHED_VARIANTS).toEqual(['radix']);
+  test('both variants are published, although base styles are routed to radix', () => {
+    expect(PUBLISHED_VARIANTS).toEqual(['base', 'radix']);
+    expect(routedVariants()).toEqual(['radix']);
   });
 });
 
@@ -47,8 +48,8 @@ describe('styleRewrites once a base variant is published', () => {
   const dedicatedBase: VariantForBase = { base: 'base', radix: 'radix' };
   const rewrites = styleRewrites(dedicatedBase);
 
-  test('publishes both variants', () => {
-    expect(publishedVariants(dedicatedBase)).toEqual(['base', 'radix']);
+  test('routes to both variants', () => {
+    expect(routedVariants(dedicatedBase)).toEqual(['base', 'radix']);
   });
 
   test('routes base styles to the base variant and radix styles to the radix variant', () => {

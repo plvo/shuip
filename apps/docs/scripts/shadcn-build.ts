@@ -1,5 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { registryFilename } from '@repo/registry/registry-file';
 import { PUBLISHED_VARIANTS } from '@repo/registry/style-base';
 import { z } from 'zod';
 
@@ -7,7 +8,7 @@ const REGISTRY_PKG = path.resolve(import.meta.dir, '..', '..', '..', 'packages',
 
 const buildOptionsSchema = z.object({
   cwd: z.string(),
-  registryFile: z.string(),
+  registryDir: z.string(),
   outputDir: z.string(),
 });
 
@@ -61,33 +62,38 @@ const registrySchema = z.object({
 export const build = async (rawOptions: z.input<typeof buildOptionsSchema>) => {
   const options = buildOptionsSchema.parse(rawOptions);
 
-  const content = await fs.readFile(options.registryFile, 'utf-8');
-  const result = registrySchema.safeParse(JSON.parse(content));
-  if (!result.success) {
-    throw new Error(`Invalid registry file: ${options.registryFile}\n${result.error.message}`);
-  }
+  const registries = await Promise.all(
+    PUBLISHED_VARIANTS.map(async (variant) => {
+      const registryFile = path.resolve(options.registryDir, registryFilename(variant));
+      const result = registrySchema.safeParse(JSON.parse(await fs.readFile(registryFile, 'utf-8')));
+      if (!result.success) {
+        throw new Error(`Invalid registry file: ${registryFile}\n${result.error.message}`);
+      }
+      return { variant, registryFile, items: result.data.items };
+    }),
+  );
 
   await fs.rm(options.outputDir, { recursive: true, force: true });
 
-  for (const variant of PUBLISHED_VARIANTS) {
+  for (const { variant, registryFile, items } of registries) {
     const variantDir = path.resolve(options.outputDir, variant);
     await fs.mkdir(variantDir, { recursive: true });
-    for (const registryItem of result.data.items) {
+    for (const registryItem of items) {
       const item: any = { ...registryItem, $schema: 'https://ui.shadcn.com/schema/registry-item.json' };
       for (const file of item.files ?? []) {
         file.content = await fs.readFile(path.resolve(options.cwd, file.path), 'utf-8');
       }
       await fs.writeFile(path.resolve(variantDir, `${item.name}.json`), `${JSON.stringify(item, null, 2)}\n`);
     }
-    await fs.copyFile(options.registryFile, path.resolve(variantDir, 'registry.json'));
-    console.log(`[shadcn-build] ${result.data.items.length} items written to ${variantDir}`);
+    await fs.copyFile(registryFile, path.resolve(variantDir, 'registry.json'));
+    console.log(`[shadcn-build] ${items.length} items written to ${variantDir}`);
   }
 };
 
 if (import.meta.main) {
   build({
     cwd: REGISTRY_PKG,
-    registryFile: path.resolve(REGISTRY_PKG, 'registry.json'),
+    registryDir: REGISTRY_PKG,
     outputDir: path.resolve(import.meta.dir, '..', 'public', 'r'),
   }).catch((e) => {
     console.error(e);

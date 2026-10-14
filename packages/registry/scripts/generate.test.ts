@@ -85,6 +85,34 @@ describe('scanItems', () => {
     expect(() => scanItems(itemsDir)).toThrow(/typo\.example\.radx\.tsx has no recognised base suffix/);
   });
 
+  test('pairs Base UI overrides with the canonical files they replace', () => {
+    write('components/alpha/component.radix.tsx');
+    write('components/alpha/component.base.tsx');
+    write('components/alpha/default.example.radix.tsx');
+    write('components/alpha/default.example.base.tsx');
+    write('components/alpha/wide.example.radix.tsx');
+
+    const [alpha] = scanItems(itemsDir);
+
+    expect(alpha?.componentOverridePath).toBe(path.join(itemsDir, 'components/alpha/component.base.tsx'));
+    const overrides = Object.fromEntries(
+      (alpha?.examples ?? []).map((e) => [e.filename, e.overridePath && path.basename(e.overridePath)]),
+    );
+    expect(overrides).toEqual({
+      'default.example.radix.tsx': 'default.example.base.tsx',
+      'wide.example.radix.tsx': undefined,
+    });
+  });
+
+  test('fails when an example override has no canonical example', () => {
+    write('components/alpha/component.radix.tsx');
+    write('components/alpha/lonely.example.base.tsx');
+
+    expect(() => scanItems(itemsDir)).toThrow(
+      'components/alpha: lonely.example.base.tsx overrides lonely.example.radix.tsx, which does not exist',
+    );
+  });
+
   test('fails when no items are found', () => {
     expect(() => scanItems(itemsDir)).toThrow('no items found');
   });
