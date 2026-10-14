@@ -233,7 +233,16 @@ export function AddressField({
       </FieldLabel>
       <div className='relative'>
         <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
-          <PopoverTrigger render={<div className='relative' />} nativeButton={false} tabIndex={-1}>
+          {/* Base UI makes a non-native trigger a button; this wrapper only anchors the popup around the input. */}
+          <PopoverTrigger
+            render={<div className='relative' />}
+            nativeButton={false}
+            tabIndex={-1}
+            role='presentation'
+            aria-expanded={undefined}
+            // biome-ignore lint/a11y/useValidAriaValues: undefined removes the attribute Base UI sets on the trigger
+            aria-haspopup={undefined}
+          >
             <Input
               ref={inputRef}
               name={fullAddress.field.name}
@@ -252,7 +261,7 @@ export function AddressField({
               onKeyDown={handleKeyDown}
               aria-invalid={fullAddressInvalid}
             />
-            <div className='absolute inset-y-0 right-0 flex items-center pr-3'>
+            <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3'>
               {isPending ? (
                 <Loader2 className='size-4 animate-spin text-muted-foreground' />
               ) : (
