@@ -37,9 +37,8 @@ jobs:
         id: build
         run: bun run build
 
-      # TODO: Add tests
-      # - name: "🧪 Run Tests"
-      #   run: bun run test 
+      - name: "🧪 Run Tests"
+        run: bun run test
 
       - name: "💾 Cache Build Artifacts"
         if: github.ref == 'refs/heads/main'

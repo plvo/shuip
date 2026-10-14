@@ -1,0 +1,35 @@
+name: Consumer smoke test
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "packages/registry/**"
+      - "packages/ui/**"
+      - "apps/docs/scripts/**"
+      - ".github/workflows/smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  radix:
+    name: "🔌 Install & type-check (radix-vega)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: "📥 Checkout Code"
+        uses: actions/checkout@v4
+
+      - name: "🔧 Setup Bun Runtime"
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: "📦 Install Dependencies"
+        run: bun install
+
+      - name: "🔌 Smoke Test"
+        run: bun run smoke radix-vega
