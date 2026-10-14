@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import type { Node } from 'fumadocs-core/page-tree';
 import { type Base, sectionUrl } from './base-routes';
-import { buildSidebarTree, type SidebarPage } from './sidebar-tree';
+import { buildSidebarTree, type SidebarPage, unbasedSidebarTree } from './sidebar-tree';
 
 const page = (base: Base, slugs: string[], title: string, registryName?: string): SidebarPage => ({
   url: sectionUrl('components', base, slugs),
@@ -68,5 +68,26 @@ describe('buildSidebarTree', () => {
 
     expect(urls(reduced.children)).not.toContain('/components/base/tanstack-query');
     expect(urls(reduced.children)).toContain('/components/base/tanstack-query/query-boundary');
+  });
+});
+
+describe('unbasedSidebarTree', () => {
+  const tree = unbasedSidebarTree(buildSidebarTree({ base: 'base', guides, pages: pagesOf('base') }));
+  const links = urls(tree.children);
+
+  test('links the components section without a base, so the reader lands on the last base they visited', () => {
+    expect(links).toContain('/components');
+    expect(links).toContain('/components/react-hook-form');
+    expect(links).toContain('/components/side-dialog');
+    expect(links).toContain('/components/react-hook-form/input-field');
+    expect(links.filter((url) => /\/(base|radix)(\/|$)/.test(url))).toEqual([]);
+  });
+
+  test('keeps the guides under /docs and keeps the order and the labels', () => {
+    expect(links).toContain('/docs');
+    expect(links).toContain('/llms-full.txt');
+    expect(labels(tree.children)).toEqual(
+      labels(buildSidebarTree({ base: 'base', guides, pages: pagesOf('base') }).children),
+    );
   });
 });

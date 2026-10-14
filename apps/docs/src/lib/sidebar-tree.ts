@@ -1,5 +1,5 @@
 import type { Item, Node, Root, Separator } from 'fumadocs-core/page-tree';
-import { type Base, sectionUrl } from './base-routes';
+import { type Base, sectionUrl, unbasedUrl } from './base-routes';
 import { COMPONENT_CATEGORIES } from './component-categories';
 
 export interface SidebarPage {
@@ -58,3 +58,21 @@ export const buildSidebarTree = ({
     ],
   };
 };
+
+const unbasedNode = (node: Node): Node => {
+  if (node.type === 'page') return { ...node, url: unbasedUrl(node.url) };
+  if (node.type === 'folder') {
+    return {
+      ...node,
+      index: node.index && { ...node.index, url: unbasedUrl(node.index.url) },
+      children: node.children.map(unbasedNode),
+    };
+  }
+  return node;
+};
+
+/**
+ * The sidebar for pages that belong to no base, such as the guides under `/docs`: its component links carry no base
+ * and redirect to the base the reader visited last.
+ */
+export const unbasedSidebarTree = (tree: Root): Root => ({ ...tree, children: tree.children.map(unbasedNode) });

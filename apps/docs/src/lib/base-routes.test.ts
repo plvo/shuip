@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import { rewrittenPathname } from '@repo/registry/rewrite-match';
 import {
+  BASE_COOKIE,
   BASES,
+  baseCookie,
   baseLabel,
-  baseOfPath,
   baseParams,
   baseRedirects,
   DEFAULT_BASE,
@@ -11,9 +12,12 @@ import {
   llmsUrl,
   otherVariantsNote,
   parseBasedPath,
+  sectionEntryUrl,
   sectionUrl,
   siblingUrl,
+  unbasedUrl,
   withBase,
+  writeBaseCookie,
 } from './base-routes';
 
 describe('bases', () => {
@@ -135,11 +139,29 @@ describe('withBase', () => {
 
 describe('baseRedirects', () => {
   const redirects = baseRedirects();
-  const redirected = (pathname: string) => rewrittenPathname(pathname, redirects);
 
-  test('every redirect is permanent', () => {
+  // Next applies a redirect with a cookie condition only when the cookie holds exactly that value.
+  const redirected = (pathname: string, cookie?: string) => {
+    for (const rule of redirects) {
+      if (rule.has && !rule.has.every((condition) => condition.key === BASE_COOKIE && condition.value === cookie))
+        continue;
+      const destination = rewrittenPathname(pathname, [rule]);
+      if (destination) return destination;
+    }
+    return null;
+  };
+
+  test('every redirect is temporary, so a browser does not pin the answer for a reader who switches base', () => {
     expect(redirects.length).toBeGreaterThan(0);
-    expect(redirects.every((redirect) => redirect.permanent)).toBe(true);
+    expect(redirects.every((redirect) => redirect.permanent === false)).toBe(true);
+  });
+
+  test('only the redirects to another base than the default depend on the cookie', () => {
+    const conditional = redirects.filter((redirect) => redirect.has);
+
+    expect(conditional.length).toBeGreaterThan(0);
+    expect(conditional.every((redirect) => redirect.destination.includes('/radix'))).toBe(true);
+    expect(redirects.slice(-1)[0]?.has).toBeUndefined();
   });
 
   test.each([
@@ -155,8 +177,26 @@ describe('baseRedirects', () => {
     ['/components/llms.mdx', '/components/llms.mdx/base'],
     ['/components/llms.mdx/side-dialog', '/components/llms.mdx/base/side-dialog'],
     ['/blocks/llms.mdx/kanban', '/blocks/llms.mdx/base/kanban'],
-  ])('sends %s to %s', (from, to) => {
+  ])('sends %s to %s without a cookie', (from, to) => {
     expect(redirected(from)).toBe(to);
+  });
+
+  test.each([
+    ['/components', '/components/radix'],
+    ['/blocks', '/blocks/radix'],
+    ['/components/side-dialog', '/components/radix/side-dialog'],
+    ['/components/react-hook-form/input-field', '/components/radix/react-hook-form/input-field'],
+    ['/blocks/kanban', '/blocks/radix/kanban'],
+    ['/components/llms.mdx', '/components/llms.mdx/radix'],
+    ['/components/llms.mdx/side-dialog', '/components/llms.mdx/radix/side-dialog'],
+    ['/blocks/llms.mdx/kanban', '/blocks/llms.mdx/radix/kanban'],
+  ])('sends %s to %s for a reader whose last base is Radix', (from, to) => {
+    expect(redirected(from, 'radix')).toBe(to);
+  });
+
+  test.each(['base', 'garbage', 'Radix', 'radixx', ''])('sends a reader with the cookie %p to Base UI', (cookie) => {
+    expect(redirected('/components/side-dialog', cookie)).toBe('/components/base/side-dialog');
+    expect(redirected('/blocks', cookie)).toBe('/blocks/base');
   });
 
   test.each([
@@ -171,8 +211,54 @@ describe('baseRedirects', () => {
     '/docs/llms.mdx/installation',
     '/r/base/side-dialog.json',
     '/',
-  ])('leaves %s where it is', (pathname) => {
+  ])('leaves %s where it is whatever the cookie', (pathname) => {
     expect(redirected(pathname)).toBeNull();
+    expect(redirected(pathname, 'radix')).toBeNull();
+  });
+});
+
+describe('the base cookie', () => {
+  test('keeps the base for a year, for every page of the site', () => {
+    expect(baseCookie('radix')).toBe('shuip-base=radix; path=/; max-age=31536000; SameSite=Lax');
+    expect(baseCookie('base')).toBe('shuip-base=base; path=/; max-age=31536000; SameSite=Lax');
+  });
+
+  test('is written on the document of the reader', () => {
+    const target = { cookie: '' };
+
+    writeBaseCookie('radix', target);
+
+    expect(target.cookie).toBe(baseCookie('radix'));
+  });
+});
+
+describe('sectionEntryUrl', () => {
+  test('points at the section of a base when a base is given', () => {
+    expect(sectionEntryUrl('components', 'radix')).toBe('/components/radix');
+  });
+
+  test('points at the address without a base otherwise, which redirects to the last base of the reader', () => {
+    expect(sectionEntryUrl('blocks')).toBe('/blocks');
+  });
+});
+
+describe('unbasedUrl', () => {
+  test.each([
+    ['/components/base', '/components'],
+    ['/components/base/side-dialog', '/components/side-dialog'],
+    ['/blocks/radix/kanban', '/blocks/kanban'],
+    ['/components/radix/react-hook-form/input-field', '/components/react-hook-form/input-field'],
+  ])('removes the base from %s', (url, expected) => {
+    expect(unbasedUrl(url)).toBe(expected);
+  });
+
+  test.each([
+    '/docs/installation',
+    '/llms-full.txt',
+    '/components/side-dialog',
+    '/components/llms.mdx/base/x',
+  ])('leaves %s alone', (url) => {
+    expect(unbasedUrl(url)).toBe(url);
   });
 });
 
@@ -188,18 +274,6 @@ describe('otherVariantsNote', () => {
 
   test('has nothing to say about a page that has no base', () => {
     expect(otherVariantsNote('/docs/installation')).toBeNull();
-  });
-});
-
-describe('baseOfPath', () => {
-  test('reads the base of a page that has one', () => {
-    expect(baseOfPath('/components/radix/missing-page')).toBe('radix');
-    expect(baseOfPath('/blocks/base')).toBe('base');
-  });
-
-  test('falls back to the default base for any other address', () => {
-    expect(baseOfPath('/docs/installation')).toBe(DEFAULT_BASE);
-    expect(baseOfPath('/components/zzz')).toBe(DEFAULT_BASE);
   });
 });
 

@@ -2,6 +2,7 @@ import { DocsLayout } from 'fumadocs-ui/layouts/notebook';
 import { notFound } from 'next/navigation';
 import type React from 'react';
 import { BaseBadge } from '@/components/base-badge';
+import { BaseCookie } from '@/components/base-cookie';
 import { ProvidersForBase } from '@/components/providers/providers-for-base';
 import { type BasedSection, isBase } from '@/lib/base-routes';
 import { baseOptions } from '@/lib/layout.shared';
@@ -21,6 +22,7 @@ export async function BasedSectionLayout({ section, params, children }: BasedSec
   const options = baseOptions(base);
   return (
     <ProvidersForBase base={base}>
+      <BaseCookie base={base} />
       <DocsLayout
         {...options}
         nav={{ ...options.nav, mode: 'top' }}

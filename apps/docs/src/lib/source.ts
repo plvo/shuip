@@ -10,6 +10,7 @@ import {
   type Section,
 } from './base-routes';
 import { icon, sectionLoaders, sectionParams, sidebarTreeFor } from './section-sources';
+import { unbasedSidebarTree } from './sidebar-tree';
 
 export const docsSource = loader({
   baseUrl: '/docs',
@@ -36,6 +37,9 @@ export const allPages = () => [
   ...blocksSources[DEFAULT_BASE].getPages(),
   ...componentsSources[DEFAULT_BASE].getPages(),
 ];
+
+/** The sidebar of the guides under `/docs`, whose component links follow the base the reader visited last. */
+export const docsSidebarTree = () => unbasedSidebarTree(sidebarTreeOf('components', DEFAULT_BASE));
 
 export const sidebarTreeOf = (section: BasedSection, base: Base) =>
   sidebarTreeFor(section, base, {

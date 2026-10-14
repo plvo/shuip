@@ -8,11 +8,11 @@ describe('next config', () => {
     expect(await nextConfig.rewrites?.()).toEqual(styleRewrites());
   });
 
-  test('redirects the addresses without a base permanently to the default base', async () => {
+  test('redirects the addresses without a base temporarily, following the cookie of the reader', async () => {
     const redirects = (await nextConfig.redirects?.()) ?? [];
 
     expect(redirects).toEqual(baseRedirects());
     expect(redirects.length).toBeGreaterThan(0);
-    expect(redirects.every((redirect) => redirect.permanent)).toBe(true);
+    expect(redirects.every((redirect) => redirect.permanent === false)).toBe(true);
   });
 });

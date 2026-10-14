@@ -1,7 +1,7 @@
 import { DocsPage } from 'fumadocs-ui/page';
-import { SectionLink } from '@/components/section-link';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import type { BasedSection } from '@/lib/base-routes';
+import { type BasedSection, sectionEntryUrl } from '@/lib/base-routes';
 import { firstCharUppercase } from '@/lib/utils';
 
 export function BasedNotFound({ section }: { section: BasedSection }) {
@@ -15,7 +15,7 @@ export function BasedNotFound({ section }: { section: BasedSection }) {
             <p className='text-muted-foreground'>The page you're looking for doesn't exist in the {section} section.</p>
           </div>
           <Button asChild variant='default' size='lg'>
-            <SectionLink section={section}>Go back to {firstCharUppercase(section)}</SectionLink>
+            <Link href={sectionEntryUrl(section)}>Go back to {firstCharUppercase(section)}</Link>
           </Button>
         </div>
       </div>

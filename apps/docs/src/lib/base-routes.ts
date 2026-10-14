@@ -43,8 +43,27 @@ export const parseBasedPath = (pathname: string): BasedPath | null => {
   return { section, base, slugs };
 };
 
-/** The base of the page at `pathname`, or the default base for an address that has none. */
-export const baseOfPath = (pathname: string): Base => parseBasedPath(pathname)?.base ?? DEFAULT_BASE;
+export const BASE_COOKIE = 'shuip-base';
+
+const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
+
+/** The cookie that remembers the base a reader visited last; redirects from addresses without a base follow it. */
+export const baseCookie = (base: Base): string =>
+  `${BASE_COOKIE}=${base}; path=/; max-age=${ONE_YEAR_IN_SECONDS}; SameSite=Lax`;
+
+export const writeBaseCookie = (base: Base, target: { cookie: string }): void => {
+  target.cookie = baseCookie(base);
+};
+
+/** The address of a section: its page in `base`, or, without one, the address that redirects to the reader's base. */
+export const sectionEntryUrl = (section: BasedSection, base?: Base): string =>
+  base ? sectionUrl(section, base) : `/${section}`;
+
+/** The address that redirects to the same page in the base the reader visited last. */
+export const unbasedUrl = (url: string): string => {
+  const parsed = parseBasedPath(url);
+  return parsed ? ['', parsed.section, ...parsed.slugs].join('/') : url;
+};
 
 /** The `generateStaticParams` of a `[base]` segment. */
 export const baseParams = (): { base: Base }[] => BASES.map((base) => ({ base }));
@@ -80,22 +99,34 @@ export const withBase = (href: string, base: Base): string => {
 export interface BaseRedirect {
   source: string;
   destination: string;
-  permanent: true;
+  permanent: false;
+  has?: { type: 'cookie'; key: string; value: string }[];
 }
 
 const LLMS_SEGMENT_PATTERN = 'llms\\.mdx';
 
 const unbasedSegment = (extra: string[] = []): string => `(?!(?:${[...BASES, ...extra].join('|')})(?:/|$))`;
 
-/** Sends every section address that has no base segment to the page of the default base. */
-export const baseRedirects = (): BaseRedirect[] =>
+const redirectsTo = (base: Base): BaseRedirect[] =>
   BASED_SECTIONS.flatMap((section) => {
-    const target = `/${section}/${DEFAULT_BASE}`;
+    const target = `/${section}/${base}`;
     const markdown = `/${section}/${LLMS_SEGMENT}`;
     return [
       { source: `/${section}`, destination: target },
       { source: `/${section}/:path(${unbasedSegment([LLMS_SEGMENT_PATTERN])}.+)`, destination: `${target}/:path` },
-      { source: markdown, destination: `${markdown}/${DEFAULT_BASE}` },
-      { source: `${markdown}/:path(${unbasedSegment()}.+)`, destination: `${markdown}/${DEFAULT_BASE}/:path` },
-    ].map((redirect) => ({ ...redirect, permanent: true as const }));
+      { source: markdown, destination: `${markdown}/${base}` },
+      { source: `${markdown}/:path(${unbasedSegment()}.+)`, destination: `${markdown}/${base}/:path` },
+    ].map((redirect) => ({
+      ...redirect,
+      permanent: false as const,
+      ...(base !== DEFAULT_BASE && { has: [{ type: 'cookie' as const, key: BASE_COOKIE, value: base }] }),
+    }));
   });
+
+/**
+ * Sends every section address that has no base segment to the page of the base the reader visited last, which the
+ * cookie remembers, and to the default base otherwise. The redirects are temporary: a browser keeps a permanent
+ * one per address, whatever the cookie says later.
+ */
+export const baseRedirects = (): BaseRedirect[] =>
+  [...BASES.filter((base) => base !== DEFAULT_BASE), DEFAULT_BASE].flatMap(redirectsTo);
