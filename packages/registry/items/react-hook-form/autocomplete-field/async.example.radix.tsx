@@ -1,9 +1,8 @@
 'use client';
 
 import { useLens } from '@hookform/lenses';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Form } from '@/components/ui/form';
 import { AutocompleteField } from '@/components/ui/shuip/react-hook-form/autocomplete-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
@@ -25,7 +24,7 @@ export default function AutocompleteFieldAsyncExample() {
   const lens = useLens({ control: form.control });
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit((values) => alert(values.fruit))} className='space-y-4'>
         <AutocompleteField
           lens={lens.focus('fruit')}
@@ -36,6 +35,6 @@ export default function AutocompleteFieldAsyncExample() {
         />
         <SubmitButton>Submit</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }

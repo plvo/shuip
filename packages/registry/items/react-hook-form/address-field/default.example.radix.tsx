@@ -2,9 +2,8 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Form } from '@/components/ui/form';
 import { AddressField, addressSchema } from '@/components/ui/shuip/react-hook-form/address-field';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -43,7 +42,7 @@ export default function RhfAddressFieldExample() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 w-full'>
         <InputField lens={lens.focus('name')} label='Name' placeholder='Enter your name' />
 
@@ -62,6 +61,6 @@ export default function RhfAddressFieldExample() {
           <pre>{JSON.stringify(form.watch(), null, 2)}</pre>
         </pre>
       </form>
-    </Form>
+    </FormProvider>
   );
 }

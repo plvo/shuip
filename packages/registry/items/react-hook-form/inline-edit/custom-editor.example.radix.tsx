@@ -1,8 +1,7 @@
 'use client';
 
 import { useLens } from '@hookform/lenses';
-import { useForm } from 'react-hook-form';
-import { Form } from '@/components/ui/form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InlineEditField } from '@/components/ui/shuip/react-hook-form/inline-edit';
 
@@ -13,7 +12,7 @@ export default function RhfInlineEditCustomEditorExample() {
   const lens = useLens({ control: form.control });
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <div className='w-full max-w-sm'>
         <InlineEditField lens={lens.focus('status')} label='Status'>
           {({ value, commit, cancel }) => (
@@ -39,6 +38,6 @@ export default function RhfInlineEditCustomEditorExample() {
           )}
         </InlineEditField>
       </div>
-    </Form>
+    </FormProvider>
   );
 }

@@ -118,53 +118,43 @@ describe('mirrorInstalledFiles', () => {
   afterEach(() => fs.rm(workDir, { recursive: true, force: true }));
 
   test('writes every installed file into an empty target', async () => {
-    expect(await mirrorInstalledFiles(installedDir, target, [])).toEqual({ written: 2, removed: 0 });
+    expect(await mirrorInstalledFiles(installedDir, target)).toEqual({ written: 2, removed: 0 });
     expect(await read(target, 'button.tsx')).toBe('button');
   });
 
   test('a second run on an up-to-date target writes and removes nothing', async () => {
-    await mirrorInstalledFiles(installedDir, target, []);
-    expect(await mirrorInstalledFiles(installedDir, target, [])).toEqual({ written: 0, removed: 0 });
+    await mirrorInstalledFiles(installedDir, target);
+    expect(await mirrorInstalledFiles(installedDir, target)).toEqual({ written: 0, removed: 0 });
   });
 
   test('overwrites a file whose content changed', async () => {
-    await mirrorInstalledFiles(installedDir, target, []);
+    await mirrorInstalledFiles(installedDir, target);
     await write(installedDir, 'button.tsx', 'button v2');
-    expect(await mirrorInstalledFiles(installedDir, target, [])).toEqual({ written: 1, removed: 0 });
+    expect(await mirrorInstalledFiles(installedDir, target)).toEqual({ written: 1, removed: 0 });
     expect(await read(target, 'button.tsx')).toBe('button v2');
   });
 
   test('removes an orphan that is no longer installed', async () => {
     await write(target, 'orphan.tsx', 'orphan');
-    expect(await mirrorInstalledFiles(installedDir, target, [])).toEqual({ written: 2, removed: 1 });
+    expect(await mirrorInstalledFiles(installedDir, target)).toEqual({ written: 2, removed: 1 });
     expect(await exists(target, 'orphan.tsx')).toBe(false);
   });
 
   test('mirrors a nested file into a missing subfolder', async () => {
     await fs.mkdir(path.join(installedDir, 'nested'));
     await write(installedDir, path.join('nested', 'deep.tsx'), 'deep');
-    expect(await mirrorInstalledFiles(installedDir, target, [])).toEqual({ written: 3, removed: 0 });
+    expect(await mirrorInstalledFiles(installedDir, target)).toEqual({ written: 3, removed: 0 });
     expect(await read(target, path.join('nested', 'deep.tsx'))).toBe('deep');
-  });
-
-  test('keeps an unmanaged file untouched', async () => {
-    await write(target, 'form.tsx', 'form');
-    expect(await mirrorInstalledFiles(installedDir, target, ['form.tsx'])).toEqual({ written: 2, removed: 0 });
-    expect(await read(target, 'form.tsx')).toBe('form');
   });
 });
 
 describe('planSet', () => {
-  test('radix-vega mirrors into ui and never touches the hand-kept form primitive', () => {
-    const plan = planSet(setFor('radix-vega'), '/components');
-    expect(plan.target).toBe('/components/ui');
-    expect(plan.unmanaged).toContain('form.tsx');
+  test('radix-vega mirrors into ui', () => {
+    expect(planSet(setFor('radix-vega'), '/components').target).toBe('/components/ui');
   });
 
-  test('base-vega mirrors into ui-base and manages every file', () => {
-    const plan = planSet(setFor('base-vega'), '/components');
-    expect(plan.target).toBe('/components/ui-base');
-    expect(plan.unmanaged).toEqual([]);
+  test('base-vega mirrors into ui-base', () => {
+    expect(planSet(setFor('base-vega'), '/components').target).toBe('/components/ui-base');
   });
 
   test('both sets declare the same primitives', () => {
@@ -209,7 +199,7 @@ describe('applyPlan', () => {
     expect(await fs.readdir(workDir)).toEqual(['installed']);
   });
 
-  test('keeps form.tsx of the radix target while syncing', async () => {
+  test('removes a file of the radix target that is not an installed primitive', async () => {
     await populate(installedDir, declaredFiles(PRIMITIVES));
     const plan = planSet(setFor('radix-vega'), workDir);
     await fs.mkdir(plan.target);
@@ -217,6 +207,6 @@ describe('applyPlan', () => {
 
     await applyPlan(plan, installedDir);
 
-    expect(await fs.readFile(path.join(plan.target, 'form.tsx'), 'utf-8')).toBe('form');
+    expect(await fs.readdir(plan.target)).not.toContain('form.tsx');
   });
 });

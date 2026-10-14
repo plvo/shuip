@@ -21,8 +21,7 @@ For text fields, use [`InputField`](/components/react-hook-form/input-field) ins
 
 ```tsx
 import { useLens } from '@hookform/lenses';
-import { useForm } from 'react-hook-form';
-import { Form } from '@/components/ui/form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { NumberField } from '@/components/ui/shuip/react-hook-form/number-field';
 
 const form = useForm<{ quantity: number; ratio: number }>({
@@ -30,12 +29,12 @@ const form = useForm<{ quantity: number; ratio: number }>({
 });
 const lens = useLens({ control: form.control });
 
-<Form {...form}>
+<FormProvider {...form}>
   <form onSubmit={form.handleSubmit(onSubmit)}>
     <NumberField lens={lens.focus('quantity')} label='Quantity' />
     <NumberField lens={lens.focus('ratio')} type='range' label='Ratio' min={0} max={1} step={0.1} />
   </form>
-</Form>
+</FormProvider>
 ```
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';

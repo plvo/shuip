@@ -3,10 +3,9 @@
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as React from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
 import { InlineEditField } from '@/components/ui/shuip/react-hook-form/inline-edit';
 
@@ -64,7 +63,7 @@ export default function RhfInlineEditProfileExample() {
   }, [form]);
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <Card className='w-full max-w-md'>
         <CardHeader className='flex-row items-center gap-4 space-y-0'>
           <div className='bg-muted flex size-12 items-center justify-center rounded-full text-sm font-medium'>
@@ -90,6 +89,6 @@ export default function RhfInlineEditProfileExample() {
           <InlineEditField lens={lens.focus('bio')} label='Bio' input='textarea' placeholder='Add a short bio' />
         </CardContent>
       </Card>
-    </Form>
+    </FormProvider>
   );
 }

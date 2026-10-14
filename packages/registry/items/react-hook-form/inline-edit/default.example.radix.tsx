@@ -3,9 +3,8 @@
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as React from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Form } from '@/components/ui/form';
 import { InlineEditField } from '@/components/ui/shuip/react-hook-form/inline-edit';
 
 const schema = z.object({
@@ -46,7 +45,7 @@ export default function RhfInlineEditExample() {
   }, [form]);
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <div className='flex w-full max-w-sm flex-col gap-4'>
         <InlineEditField lens={lens.focus('title')} label='Title' description='Shown at the top of the project page.' />
         <InlineEditField lens={lens.focus('owner')} label='Owner' orientation='horizontal' />
@@ -54,6 +53,6 @@ export default function RhfInlineEditExample() {
           Persisted to localStorage: <code className='text-foreground'>{stored}</code>
         </p>
       </div>
-    </Form>
+    </FormProvider>
   );
 }

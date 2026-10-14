@@ -22,14 +22,13 @@ Field components bind via `@hookform/lenses`. Create a lens once per form:
 
 ```tsx
 import { useLens } from '@hookform/lenses';
-import { useForm } from 'react-hook-form';
-import { Form } from '@/components/ui/form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { SelectField } from '@/components/ui/shuip/react-hook-form/select-field';
 
 const form = useForm<MyForm>({ defaultValues: { country: 'us' } });
 const lens = useLens({ control: form.control });
 
-<Form {...form}>
+<FormProvider {...form}>
   <form onSubmit={form.handleSubmit(onSubmit)}>
     <SelectField
       lens={lens.focus('country')}
@@ -37,10 +36,10 @@ const lens = useLens({ control: form.control });
       options={{ 'United States': 'us', Canada: 'ca', France: 'fr' }}
     />
   </form>
-</Form>
+</FormProvider>
 ```
 
-The `<Form>` wrapper is required — it provides shadcn's `FormProvider` which `FormLabel` and `FormMessage` use internally. Default selections belong on `useForm({ defaultValues })`, not on the field component.
+Default selections belong on `useForm({ defaultValues })`, not on the field component.
 
 ## Less boilerplate
 

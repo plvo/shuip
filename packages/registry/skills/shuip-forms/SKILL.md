@@ -41,16 +41,15 @@ Field naming follows the input type: `input-field`, `password-field`, `number-fi
 
 ## react-hook-form pattern
 
-Create one lens per form with `useLens({ control })`, then give each field `lens.focus('fieldName')`. Wrap everything in `<Form {...form}>`.
+Create one lens per form with `useLens({ control })`, then give each field `lens.focus('fieldName')`. Wrap everything in `<FormProvider {...form}>`.
 
 ```tsx
 'use client';
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Form } from '@/components/ui/form';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import { PasswordField } from '@/components/ui/shuip/react-hook-form/password-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -85,14 +84,14 @@ export function SignupForm() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <InputField lens={lens.focus('email')} label="Email" type="email" placeholder="you@example.com" />
         <PasswordField lens={lens.focus('password')} label="Password" />
         <PasswordField lens={lens.focus('confirmPassword')} label="Confirm password" />
         <SubmitButton loading={form.formState.isSubmitting}>Create account</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
@@ -155,7 +154,7 @@ export function SignupForm() {
 }
 ```
 
-- tsf fields take split props: `props` for the native input, `fieldProps` for the field wrapper. There is no lens and no `<Form>` wrapper.
+- tsf fields take split props: `props` for the native input, `fieldProps` for the field wrapper. There is no lens and no `<FormProvider>` wrapper.
 - The tsf `SubmitButton` auto-disables via `form.Subscribe` — render it inside `<form.AppForm>`, no `loading` prop needed.
 
 ## Accessibility & states (both libraries)

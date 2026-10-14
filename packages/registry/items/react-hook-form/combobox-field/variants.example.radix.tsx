@@ -1,8 +1,7 @@
 'use client';
 
 import { useLens } from '@hookform/lenses';
-import { useForm } from 'react-hook-form';
-import { Form } from '@/components/ui/form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { ComboboxField, type ComboboxOption } from '@/components/ui/shuip/react-hook-form/combobox-field';
 
 const FRAMEWORKS: ComboboxOption[] = [
@@ -23,7 +22,7 @@ export default function ComboboxFieldVariantsExample() {
   const lens = useLens({ control: form.control });
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form className='space-y-4'>
         <ComboboxField
           multiple
@@ -47,6 +46,6 @@ export default function ComboboxFieldVariantsExample() {
           ]}
         />
       </form>
-    </Form>
+    </FormProvider>
   );
 }

@@ -1,19 +1,13 @@
 'use client';
 
-import type { VariantProps } from 'class-variance-authority';
 import { Laptop, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import * as React from 'react';
-import { Button, type buttonVariants } from '@/components/ui/button';
-
-type ButtonProps = React.ComponentProps<'button'> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
-  };
+import { Button } from '@/components/ui/button';
 
 type Theme = 'system' | 'light' | 'dark';
 
-export interface ThemeButtonProps extends ButtonProps {
+export interface ThemeButtonProps extends React.ComponentProps<typeof Button> {
   withText?: boolean;
 }
 

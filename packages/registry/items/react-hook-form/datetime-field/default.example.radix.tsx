@@ -2,9 +2,8 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Form } from '@/components/ui/form';
 import { DatetimeField } from '@/components/ui/shuip/react-hook-form/datetime-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
@@ -26,7 +25,7 @@ export default function RhfDatetimeFieldExample() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <DatetimeField
           lens={lens.focus('scheduledAt')}
@@ -35,6 +34,6 @@ export default function RhfDatetimeFieldExample() {
         />
         <SubmitButton>Schedule</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }

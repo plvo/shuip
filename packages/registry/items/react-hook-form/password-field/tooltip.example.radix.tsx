@@ -2,9 +2,8 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Form } from '@/components/ui/form';
 import { PasswordField } from '@/components/ui/shuip/react-hook-form/password-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
@@ -36,7 +35,7 @@ export default function PasswordFieldTooltipExample() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <PasswordField
           lens={lens.focus('password')}
@@ -47,6 +46,6 @@ export default function PasswordFieldTooltipExample() {
         />
         <SubmitButton>Check</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }

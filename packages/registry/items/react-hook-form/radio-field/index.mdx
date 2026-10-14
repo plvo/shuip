@@ -22,21 +22,18 @@ Field components bind via `@hookform/lenses`. Create a lens once per form:
 
 ```tsx
 import { useLens } from '@hookform/lenses';
-import { useForm } from 'react-hook-form';
-import { Form } from '@/components/ui/form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { RadioField } from '@/components/ui/shuip/react-hook-form/radio-field';
 
 const form = useForm<MyForm>({ defaultValues: { plan: 'free' } });
 const lens = useLens({ control: form.control });
 
-<Form {...form}>
+<FormProvider {...form}>
   <form onSubmit={form.handleSubmit(onSubmit)}>
     <RadioField lens={lens.focus('plan')} options={['free', 'pro', 'enterprise']} label='Plan' />
   </form>
-</Form>
+</FormProvider>
 ```
-
-The `<Form>` wrapper is required — it provides shadcn's `FormProvider` which `FormLabel` and `FormMessage` use internally.
 
 ## Less boilerplate
 

@@ -2,10 +2,9 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import {
   SideDialog,
@@ -43,7 +42,7 @@ export default function SideDialogSimpleExample() {
         <Button variant='outline'>Open Form Side Dialog</Button>
       </SideDialogTrigger>
       <SideDialogContent>
-        <Form {...form}>
+        <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <SideDialogHeader>
               <SideDialogTitle>Form Side Dialog</SideDialogTitle>
@@ -59,7 +58,7 @@ export default function SideDialogSimpleExample() {
               <SubmitButton className='w-fit'>Submit</SubmitButton>
             </SideDialogFooter>
           </form>
-        </Form>
+        </FormProvider>
       </SideDialogContent>
     </SideDialog>
   );

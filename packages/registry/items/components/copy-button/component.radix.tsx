@@ -1,18 +1,12 @@
 'use client';
 
-import type { VariantProps } from 'class-variance-authority';
 import { CheckIcon, Copy } from 'lucide-react';
 import * as React from 'react';
-import { Button, type buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 
 const DEFAULT_TIMEOUT = 2000;
 
-type ButtonProps = React.ComponentProps<'button'> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
-  };
-
-export interface CopyButtonProps extends ButtonProps {
+export interface CopyButtonProps extends React.ComponentProps<typeof Button> {
   value: string;
   copiedIcon?: React.ReactNode;
   notCopiedIcon?: React.ReactNode;

@@ -39,13 +39,11 @@ export interface PrimitiveSet {
   style: string;
   /** Folder under `src/components` that receives the set. */
   dir: string;
-  /** Files in `dir` that are not managed by the sync. */
-  unmanaged: string[];
 }
 
 export const SETS: PrimitiveSet[] = [
-  { style: 'radix-vega', dir: 'ui', unmanaged: ['form.tsx'] },
-  { style: 'base-vega', dir: 'ui-base', unmanaged: [] },
+  { style: 'radix-vega', dir: 'ui' },
+  { style: 'base-vega', dir: 'ui-base' },
 ];
 
 interface ComponentsConfig {
@@ -104,9 +102,9 @@ const listFiles = async (dir: string) => {
 
 /**
  * Mirrors the installed files into `target`. Files already identical are left untouched, files in
- * `target` that were not installed are removed, except the `unmanaged` ones.
+ * `target` that were not installed are removed.
  */
-export const mirrorInstalledFiles = async (installedDir: string, target: string, unmanaged: string[]) => {
+export const mirrorInstalledFiles = async (installedDir: string, target: string) => {
   const installed = await listFiles(installedDir);
   await fs.mkdir(target, { recursive: true });
 
@@ -121,7 +119,7 @@ export const mirrorInstalledFiles = async (installedDir: string, target: string,
     }
   }
 
-  const kept = new Set([...installed, ...unmanaged]);
+  const kept = new Set(installed);
   let removed = 0;
   for (const file of await listFiles(target)) {
     if (!kept.has(file)) {
@@ -179,14 +177,12 @@ interface SetPlan {
   style: string;
   declared: string[];
   target: string;
-  unmanaged: string[];
 }
 
 export const planSet = (set: PrimitiveSet, componentsDir = COMPONENTS_DIR): SetPlan => ({
   style: set.style,
   declared: declaredFiles(PRIMITIVES),
   target: path.join(componentsDir, set.dir),
-  unmanaged: set.unmanaged,
 });
 
 /**
@@ -195,7 +191,7 @@ export const planSet = (set: PrimitiveSet, componentsDir = COMPONENTS_DIR): SetP
  */
 export const applyPlan = async (plan: SetPlan, installedDir: string) => {
   assertDeclared(plan.style, await listFiles(installedDir), plan.declared);
-  return mirrorInstalledFiles(installedDir, plan.target, plan.unmanaged);
+  return mirrorInstalledFiles(installedDir, plan.target);
 };
 
 const syncSet = async (set: PrimitiveSet) => {

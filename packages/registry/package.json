@@ -32,8 +32,6 @@
     "@dnd-kit/sortable": "catalog:",
     "@dnd-kit/utilities": "catalog:",
     "lucide-react": "catalog:",
-    "class-variance-authority": "catalog:",
-    "@radix-ui/react-icons": "catalog:radix",
     "@repo/ui": "workspace:*"
   },
   "devDependencies": {

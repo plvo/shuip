@@ -504,7 +504,7 @@ export function DataTableColumnHeader<TData, TValue>({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant='ghost' size='sm' className={cn('-ml-3 h-8 data-[state=open]:bg-accent', className)}>
+        <Button variant='ghost' size='sm' className={cn('-ml-3 h-8', className)}>
           <span>{title}</span>
           {sorted === 'desc' ? (
             <ArrowDown className='ml-2 size-4' />
