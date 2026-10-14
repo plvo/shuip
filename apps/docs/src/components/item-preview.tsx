@@ -1,9 +1,9 @@
 'use client';
 
-import { ReloadIcon } from '@radix-ui/react-icons';
 import { REGISTRY_INDEX } from '@repo/registry/__index__';
 import { CodeBlock } from 'fumadocs-ui/components/codeblock';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Loader2Icon } from 'lucide-react';
 import { Highlight, themes } from 'prism-react-renderer';
 import * as React from 'react';
 
@@ -50,7 +50,7 @@ export function Preview({ registryName }: { registryName: string }) {
       <React.Suspense
         fallback={
           <div className='flex w-full items-center justify-center text-sm text-muted-foreground'>
-            <ReloadIcon className='mr-2 size-4 animate-spin' />
+            <Loader2Icon className='mr-2 size-4 animate-spin' />
             Loading...
           </div>
         }
