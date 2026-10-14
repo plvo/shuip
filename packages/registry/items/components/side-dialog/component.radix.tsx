@@ -57,11 +57,13 @@ const SideDialogContext = React.createContext<{
   onOpenChange: (open: boolean) => void;
   position: SideDialogPosition;
   size: SideDialogSize;
+  openerRef: React.RefObject<HTMLElement | null>;
 }>({
   open: false,
   onOpenChange: () => {},
   position: 'bottom-right',
   size: 'sm',
+  openerRef: { current: null },
 });
 
 export function SideDialog({
@@ -78,12 +80,22 @@ export function SideDialog({
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const onOpenChange = controlledOnOpenChange !== undefined ? controlledOnOpenChange : setInternalOpen;
 
+  // The element to give focus back to on close. A trigger records itself when clicked; otherwise it is the element
+  // focused at the render where `open` turns true, which is before the content commits and focuses its own fields.
+  const openerRef = React.useRef<HTMLElement | null>(null);
+  const wasOpenRef = React.useRef(false);
+  if (open && !wasOpenRef.current && typeof document !== 'undefined') {
+    openerRef.current ??= document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  }
+  wasOpenRef.current = open;
+
   const contextValue = React.useMemo(
     () => ({
       open,
       onOpenChange,
       position,
       size,
+      openerRef,
     }),
     [open, onOpenChange, position, size],
   );
@@ -92,14 +104,15 @@ export function SideDialog({
 }
 
 export function SideDialogTrigger({ asChild, children, onClick, ...props }: SideDialogTriggerProps) {
-  const { onOpenChange } = React.useContext(SideDialogContext);
+  const { onOpenChange, openerRef } = React.useContext(SideDialogContext);
 
   const handleClick = React.useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       onClick?.(e);
+      openerRef.current = e.currentTarget;
       onOpenChange(true);
     },
-    [onClick, onOpenChange],
+    [onClick, onOpenChange, openerRef],
   );
 
   if (asChild) {
@@ -117,23 +130,25 @@ export function SideDialogTrigger({ asChild, children, onClick, ...props }: Side
 }
 
 export function SideDialogContent({ showCloseButton = true, className, children, ...props }: SideDialogContentProps) {
-  const { open, onOpenChange, position, size } = React.useContext(SideDialogContext);
+  const { open, onOpenChange, position, size, openerRef } = React.useContext(SideDialogContext);
   const [mounted, setMounted] = React.useState(false);
-
-  const returnFocusRef = React.useRef<HTMLElement | null>(null);
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Runs once the dialog is gone, on close and when the content unmounts while open. Focus on `body` then means
+  // nothing else took it, so it goes back to the opener; a field focused by an `onOpenChange(false)` handler stays.
   React.useEffect(() => {
-    if (open) {
-      returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      return;
-    }
-    if (returnFocusRef.current?.isConnected) returnFocusRef.current.focus();
-    returnFocusRef.current = null;
-  }, [open]);
+    if (!open) return;
+    return () => {
+      const opener = openerRef.current;
+      openerRef.current = null;
+      if (opener?.isConnected && (!document.activeElement || document.activeElement === document.body)) {
+        opener.focus();
+      }
+    };
+  }, [open, openerRef]);
 
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {

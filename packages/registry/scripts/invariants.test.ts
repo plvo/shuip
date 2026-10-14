@@ -97,12 +97,6 @@ describe('item sources stay base-agnostic', () => {
     expect(paths(sources)).toContain('packages/registry/items/components/search-input/component.base.tsx');
   });
 
-  test('no Base UI override declares or uses asChild', () => {
-    const overrides = items.flatMap(overridePaths).map((absPath) => readSource(absPath, 'source'));
-    expect(overrides.length).toBeGreaterThan(0);
-    expect(paths(overrides.filter((override) => /\basChild\b/.test(override.content)))).toEqual([]);
-  });
-
   test('scans the doc page of every item and of every block', () => {
     const itemDocCount = items.filter((item) => item.hasMdx).length;
     const blockDocs = blockDocPaths();
@@ -136,6 +130,8 @@ const asChildSites = (relativePath: string, content: string): string[] => {
     if (ts.isJsxAttribute(node) && node.name.getText(file) === 'asChild') {
       const tag = (node.parent.parent as ts.JsxOpeningLikeElement).tagName.getText(file);
       sites.push(`${relativePath} <${tag} asChild${node.initializer ? '={…}' : ''}>`);
+    } else if (ts.isIdentifier(node) && node.text === 'asChild' && !ts.isJsxAttribute(node.parent)) {
+      sites.push(`${relativePath} mentions asChild`);
     }
     ts.forEachChild(node, visit);
   };
@@ -176,6 +172,7 @@ describe('the Base UI variant stays free of Radix', () => {
 
   // A site listed here keeps its Radix `asChild` in the Base UI output until an override or the canonical source
   // composes it differently. A new site fails this test: override it, or list it after checking it composes.
+  // Any other mention of `asChild` counts as a site too, so an override cannot declare the prop either.
   test('only the known sites keep asChild in the published Base UI sources', () => {
     const consumerDir = path.join(outDir, 'consumer', 'items');
     const remaining = fs
