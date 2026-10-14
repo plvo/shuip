@@ -15,18 +15,19 @@ const zodSchema = z.object({
   plan: z.enum(PLANS, {
     error: 'Please select a plan',
   }),
-  billingCycle: z.enum(['monthly', 'annual']).default('monthly'),
+  billingCycle: z.enum(['monthly', 'annual']),
 });
 
-type Values = z.infer<typeof zodSchema>;
+type FormValues = { plan: string; billingCycle: string };
+type SubmitValues = z.infer<typeof zodSchema>;
 
 export default function RhfRadioFieldConditionalPricingExample() {
-  const form = useForm<Values>({
+  const form = useForm<FormValues, unknown, SubmitValues>({
     defaultValues: {
       plan: '',
       billingCycle: 'monthly',
     },
-    resolver: zodResolver(zodSchema),
+    resolver: zodResolver<FormValues, unknown, SubmitValues>(zodSchema),
   });
   const lens = useLens({ control: form.control });
 
@@ -37,7 +38,7 @@ export default function RhfRadioFieldConditionalPricingExample() {
   const annualPrice = monthlyPrice * 12 * 0.8; // 20% discount
   const displayPrice = billingCycle === 'annual' ? annualPrice / 12 : monthlyPrice;
 
-  async function onSubmit(values: Values) {
+  async function onSubmit(values: SubmitValues) {
     try {
       alert(JSON.stringify(values, null, 2));
     } catch (error) {

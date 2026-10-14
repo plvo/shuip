@@ -46,7 +46,7 @@ jobs:
         run: bun run smoke radix-vega
 
   base:
-    name: "🔌 Install & type-check (base-vega, search-input)"
+    name: "🔌 Install & type-check (base-vega)"
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -70,4 +70,4 @@ jobs:
         run: bun install
 
       - name: "🔌 Smoke Test"
-        run: bun run smoke base-vega --base-variant --items search-input
+        run: bun run smoke base-vega

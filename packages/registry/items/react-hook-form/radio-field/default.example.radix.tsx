@@ -11,18 +11,19 @@ const zodSchema = z.object({
   selection: z.enum(['Yes', 'No', 'Maybe', 'Not sure']),
 });
 
-type Values = z.infer<typeof zodSchema>;
+type FormValues = { selection: string };
+type SubmitValues = z.infer<typeof zodSchema>;
 
 export default function RadioFieldExample() {
-  const form = useForm<Values>({
+  const form = useForm<FormValues, unknown, SubmitValues>({
     defaultValues: {
       selection: 'Yes',
     },
-    resolver: zodResolver(zodSchema),
+    resolver: zodResolver<FormValues, unknown, SubmitValues>(zodSchema),
   });
   const lens = useLens({ control: form.control });
 
-  async function onSubmit(values: Values) {
+  async function onSubmit(values: SubmitValues) {
     try {
       alert(`Selection: ${values.selection}`);
     } catch (error) {

@@ -12,28 +12,29 @@ const zodSchema = z.object({
   paymentMethod: z.enum(['card', 'paypal', 'bank'], {
     error: 'Please select a payment method',
   }),
-  cardNumber: z.string().optional(),
-  paypalEmail: z.string().optional(),
-  accountNumber: z.string().optional(),
+  cardNumber: z.string(),
+  paypalEmail: z.string(),
+  accountNumber: z.string(),
 });
 
-type Values = z.infer<typeof zodSchema>;
+type FormValues = { paymentMethod: string; cardNumber: string; paypalEmail: string; accountNumber: string };
+type SubmitValues = z.infer<typeof zodSchema>;
 
 export default function RhfRadioFieldPaymentMethodExample() {
-  const form = useForm<Values>({
+  const form = useForm<FormValues, unknown, SubmitValues>({
     defaultValues: {
-      paymentMethod: undefined,
+      paymentMethod: '',
       cardNumber: '',
       paypalEmail: '',
       accountNumber: '',
     },
-    resolver: zodResolver(zodSchema),
+    resolver: zodResolver<FormValues, unknown, SubmitValues>(zodSchema),
   });
   const lens = useLens({ control: form.control });
 
   const paymentMethod = form.watch('paymentMethod');
 
-  async function onSubmit(values: Values) {
+  async function onSubmit(values: SubmitValues) {
     try {
       alert(JSON.stringify(values, null, 2));
     } catch (error) {

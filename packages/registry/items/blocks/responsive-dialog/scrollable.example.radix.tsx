@@ -1,5 +1,6 @@
 'use client';
 
+import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -103,19 +104,21 @@ const longFormSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   email: z.string().email(),
-  phone: z.string().optional(),
-  company: z.string().optional(),
+  phone: z.string(),
+  company: z.string(),
   role: z.string().min(1),
   country: z.string().min(1),
-  bio: z.string().optional(),
+  bio: z.string(),
 });
 
 function LongFormDialog() {
   const [open, setOpen] = React.useState(false);
 
   const form = useForm({
+    defaultValues: { firstName: '', lastName: '', email: '', phone: '', company: '', role: '', country: '', bio: '' },
     resolver: zodResolver(longFormSchema),
   });
+  const lens = useLens({ control: form.control });
 
   const onSubmit = async (data: z.infer<typeof longFormSchema>) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -140,15 +143,14 @@ function LongFormDialog() {
             </ResponsiveDialogHeader>
             <ResponsiveDialogBody className='space-y-4'>
               <div className='grid grid-cols-2 gap-3'>
-                <InputField register={form.register('firstName')} name='firstName' label='First name' />
-                <InputField register={form.register('lastName')} name='lastName' label='Last name' />
+                <InputField lens={lens.focus('firstName')} label='First name' />
+                <InputField lens={lens.focus('lastName')} label='Last name' />
               </div>
-              <InputField register={form.register('email')} name='email' label='Email' type='email' />
-              <InputField register={form.register('phone')} name='phone' label='Phone' type='tel' />
-              <InputField register={form.register('company')} name='company' label='Company' />
+              <InputField lens={lens.focus('email')} label='Email' type='email' />
+              <InputField lens={lens.focus('phone')} label='Phone' type='tel' />
+              <InputField lens={lens.focus('company')} label='Company' />
               <SelectField
-                register={form.register('role')}
-                name='role'
+                lens={lens.focus('role')}
                 label='Role'
                 options={{
                   Admin: 'admin',
@@ -160,8 +162,7 @@ function LongFormDialog() {
               />
 
               <SelectField
-                register={form.register('country')}
-                name='country'
+                lens={lens.focus('country')}
                 label='Country'
                 options={{
                   France: 'fr',
@@ -172,7 +173,7 @@ function LongFormDialog() {
                   Australia: 'au',
                 }}
               />
-              <TextareaField register={form.register('bio')} name='bio' label='Bio' rows={4} />
+              <TextareaField lens={lens.focus('bio')} label='Bio' rows={4} />
             </ResponsiveDialogBody>
             <ResponsiveDialogFooter>
               <ResponsiveDialogClose asChild>

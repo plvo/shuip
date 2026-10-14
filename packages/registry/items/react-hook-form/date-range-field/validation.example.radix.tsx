@@ -10,7 +10,8 @@ import { SubmitButton } from '@/components/ui/shuip/submit-button';
 const zodSchema = z.object({
   range: z
     .object({
-      from: z.date().optional(),
+      // DateRange declares `from` as a required key that may hold undefined.
+      from: z.date().or(z.undefined()),
       to: z.date().optional(),
     })
     .optional()

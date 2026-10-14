@@ -44,7 +44,7 @@ jobs:
       - name: "🧪 Run Tests"
         run: bun run test
 
-      - name: "🔎 Type-check Base UI Primitives"
+      - name: "🔎 Type-check Base UI"
         run: bun run typecheck:base
 
       - name: "🏗️ Build Check"

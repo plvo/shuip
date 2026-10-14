@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { PUBLISHED_VARIANTS, styleRewrites } from '@repo/registry/style-base';
+import { PUBLISHED_VARIANTS } from '@repo/registry/style-base';
 import { type RegistryServer, serveRegistry } from './server';
 
 describe('serveRegistry', () => {
@@ -27,31 +27,23 @@ describe('serveRegistry', () => {
 
   const get = (pathname: string): Promise<Response> => fetch(new URL(pathname, server.origin));
 
-  test('serves the variants the given rewrites route to', async () => {
-    const dedicated = serveRegistry(path.join(workDir, 'public'), styleRewrites({ base: 'base', radix: 'radix' }));
-    try {
-      const fetchVariant = async (style: string) =>
-        (await (await fetch(new URL(`/r/${style}/demo.json`, dedicated.origin))).json()) as { variant: string };
-      expect((await fetchVariant('base-vega')).variant).toBe('base');
-      expect((await fetchVariant('radix-vega')).variant).toBe('radix');
-    } finally {
-      dedicated.stop();
-    }
-  });
-
   test.each([
-    'base-vega',
-    'radix-vega',
-    'new-york-v4',
-    'default',
-  ])('serves a %s consumer the radix variant', async (style) => {
+    ['base-vega', 'base'],
+    ['radix-vega', 'radix'],
+    ['new-york-v4', 'radix'],
+    ['default', 'radix'],
+  ])('serves a %s consumer the %s variant', async (style, variant) => {
     const response = await get(`/r/${style}/demo.json`);
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ name: 'demo', variant: 'radix' });
+    expect(await response.json()).toEqual({ name: 'demo', variant });
   });
 
-  test('serves the variant folder directly, like the static host', async () => {
-    expect((await get('/r/radix/demo.json')).status).toBe(200);
+  test('answers 404 for an unsupported style', async () => {
+    expect((await get('/r/aria-nova/demo.json')).status).toBe(404);
+  });
+
+  test.each(PUBLISHED_VARIANTS)('serves the %s variant folder directly, like the static host', async (variant) => {
+    expect((await get(`/r/${variant}/demo.json`)).status).toBe(200);
   });
 
   test('answers 404 for an unknown item', async () => {
