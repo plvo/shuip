@@ -3,53 +3,27 @@ import os from 'node:os';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { SHUIP_NAMESPACE, shuipItemRef, shuipRegistryUrl } from '@repo/registry/namespace';
-import { type Base, styleRewrites, styleToBase } from '@repo/registry/style-base';
-import { assertEveryItemServedLocally } from './install-source';
-import { assertNoRadixPackages } from './project-dependencies';
+import { styleRewrites } from '@repo/registry/style-base';
+import { removeWorkDir } from './cleanup';
+import { initArgs, PROJECT_NAME, parseScaffoldStyle, type ScaffoldStyle } from './scaffold';
 import { selectItems } from './select-items';
 import { serveRegistry } from './server';
-import { inStep, reportFailure, runStep, StepFailure, settleAll } from './step';
+import { inStep, reportFailure, runStep, settleAll } from './step';
+import { verifyInstall } from './verify-install';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '..', '..', '..', '..');
 const DOCS_PUBLIC = path.join(REPO_ROOT, 'apps', 'docs', 'public');
 const DEFAULT_STYLE = 'radix-vega';
-const PROJECT_NAME = 'app';
 
 interface SmokeOptions {
   keep: boolean;
   items: string[] | undefined;
 }
 
-interface ScaffoldStyle {
-  style: string;
-  base: Base;
-  preset: string;
-}
-
-// Only `<base>-<preset>` styles can be scaffolded; legacy styles (`new-york-v4`, `default`) have no preset.
-const parseScaffoldStyle = (style: string): ScaffoldStyle | null => {
-  const base = styleToBase(style);
-  return base && style.startsWith(`${base}-`) ? { style, base, preset: style.slice(base.length + 1) } : null;
-};
-
-const initArgs = ({ base, preset }: ScaffoldStyle): string[] => [
-  'init',
-  '-t',
-  'next',
-  '-b',
-  base,
-  '-p',
-  preset,
-  '-n',
-  PROJECT_NAME,
-  '--no-monorepo',
-  '-y',
-];
-
 const fetchItemNames = async (registryOrigin: string, style: string): Promise<string[]> => {
   const response = await fetch(`${registryOrigin}/r/${style}/registry.json`);
   if (!response.ok) {
-    throw new StepFailure('list items', `GET ${response.url} answered ${response.status}`);
+    throw new Error(`GET ${response.url} answered ${response.status}`);
   }
   const registry = (await response.json()) as { items: { name: string }[] };
   return registry.items.map((item) => item.name);
@@ -79,20 +53,22 @@ const smokeTest = async (scaffold: ScaffoldStyle, { keep, items }: SmokeOptions)
       ['bunx', 'shadcn@latest', 'add', ...names.map(shuipItemRef), '-y', '-o'],
       projectDir,
     );
-    assertEveryItemServedLocally(server.servedPaths, scaffold.style, names);
-    if (scaffold.base === 'base') {
-      await assertNoRadixPackages(projectDir);
-    }
+    await verifyInstall({ scaffold, projectDir, names, servedPaths: server.servedPaths });
     await runStep('type-check', [path.join(projectDir, 'node_modules', '.bin', 'tsc'), '--noEmit'], projectDir);
 
     return `${names.length} items installed and type-checked${keep ? ` (project kept at ${projectDir})` : ''}`;
   } finally {
     server.stop();
     if (!keep) {
-      // A cleanup error must not replace the failure that ended the run.
-      await fs.rm(workDir, { recursive: true, force: true }).catch((error) => console.warn(`[smoke] ${error}`));
+      await removeWorkDir(workDir);
     }
   }
+};
+
+// Awaited so the report reaches the pipe before the process exits.
+const exitWith = async (report: string, exitCode: number): Promise<never> => {
+  await Bun.write(Bun.stderr, `${report}\n`);
+  process.exit(exitCode);
 };
 
 const main = async (): Promise<void> => {
@@ -110,16 +86,16 @@ const main = async (): Promise<void> => {
     style = positionals[0] ?? DEFAULT_STYLE;
     const scaffold = parseScaffoldStyle(style);
     if (!scaffold) {
-      console.error(`Unsupported style "${style}". Use <base>-<preset> with base or radix, e.g. ${DEFAULT_STYLE}.`);
-      process.exit(2);
+      return await exitWith(
+        `Unsupported style "${style}". Use <base>-<preset> with base or radix, e.g. ${DEFAULT_STYLE}.`,
+        2,
+      );
     }
 
     const summary = await smokeTest(scaffold, { keep: values.keep, items: values.items?.split(',') });
     console.log(`[smoke] ${style}: ${summary} in ${Math.round((performance.now() - startedAt) / 1000)}s`);
   } catch (error) {
-    // Awaited so the report reaches the pipe before the process exits.
-    await Bun.write(Bun.stderr, `${reportFailure(error, style)}\n`);
-    process.exit(1);
+    await exitWith(reportFailure(error, style), 1);
   }
 };
 

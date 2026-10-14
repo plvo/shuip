@@ -9,10 +9,15 @@ const smoke = (...args: string[]) => {
 };
 
 describe('smoke entry point', () => {
-  test('rejects a style that cannot be scaffolded and says why', () => {
-    const { exitCode, stderr } = smoke('aria-nova');
+  test.each([
+    'aria-nova',
+    'default',
+    'new-york-v4',
+    'base',
+  ])('rejects %s, which cannot be scaffolded, and says why', (style) => {
+    const { exitCode, stderr } = smoke(style);
     expect(exitCode).toBe(2);
-    expect(stderr).toContain('Unsupported style "aria-nova"');
+    expect(stderr).toContain(`Unsupported style "${style}"`);
   });
 
   test('reports an unknown option as a failed run instead of exiting without a word', () => {

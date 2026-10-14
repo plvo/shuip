@@ -1,8 +1,8 @@
 /** Primitive family a shadcn style belongs to. */
 export type Base = 'base' | 'radix';
 
-/** Folder of published items under `/r/`. */
-export type Variant = 'base' | 'radix';
+/** Folder of published items under `/r/`, named after the base it serves. */
+export type Variant = Base;
 
 interface StyleRule {
   base: Base;
@@ -16,8 +16,8 @@ const STYLE_RULES: StyleRule[] = [
   { base: 'radix', stylePatterns: ['radix-[^/]+', 'new-york', 'new-york-v4', 'default'] },
 ];
 
-// Variant folders built under `/r/`, each holding every item. A style is served from the folder named after its base.
-export const PUBLISHED_VARIANTS: readonly Variant[] = ['base', 'radix'];
+// Variant folders built under `/r/`, each holding every item.
+export const PUBLISHED_VARIANTS: readonly Variant[] = STYLE_RULES.map((rule) => rule.base);
 
 const ruleMatcher = (rule: StyleRule): RegExp => new RegExp(`^(?:${rule.stylePatterns.join('|')})$`);
 

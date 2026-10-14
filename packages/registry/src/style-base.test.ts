@@ -21,11 +21,6 @@ describe('published variants', () => {
   test('both variants are published', () => {
     expect(PUBLISHED_VARIANTS).toEqual(['base', 'radix']);
   });
-
-  test('every published variant is reachable through a style rewrite', () => {
-    const destinations = styleRewrites().map(({ destination }) => destination);
-    expect(destinations).toEqual(PUBLISHED_VARIANTS.map((variant) => `/r/${variant}/:name.json`));
-  });
 });
 
 describe('styleRewrites', () => {

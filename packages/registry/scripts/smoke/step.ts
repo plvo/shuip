@@ -1,8 +1,8 @@
 export class StepFailure extends Error {
   constructor(
-    readonly step: string,
+    step: string,
     readonly output: string,
-    readonly reason = '',
+    reason = '',
   ) {
     super(`${step} failed${reason ? ` (${reason})` : ''}`);
   }
