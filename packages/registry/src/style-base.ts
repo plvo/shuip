@@ -1,3 +1,5 @@
+import { match } from 'next/dist/compiled/path-to-regexp';
+
 /** Primitive family a shadcn style belongs to. */
 export type Base = 'base' | 'radix';
 
@@ -48,3 +50,15 @@ export const styleRewrites = (variantForBase: VariantForBase = VARIANT_FOR_BASE)
       .join('|')})/:name.json`,
     destination: `/r/${variant}/:name.json`,
   }));
+
+/** Applies the first matching rewrite to a request pathname. Returns null when no rewrite matches. */
+export const rewrittenPathname = (pathname: string, rewrites: StyleRewrite[] = styleRewrites()): string | null => {
+  for (const { source, destination } of rewrites) {
+    const matched = match(source, { decode: decodeURIComponent })(pathname);
+    if (matched) {
+      const params = matched.params as Record<string, string>;
+      return destination.replace(/:(\w+)/g, (_, key: string) => params[key]);
+    }
+  }
+  return null;
+};

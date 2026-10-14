@@ -72,7 +72,7 @@ const smokeTest = async (style: string, keep: boolean): Promise<string> => {
   const workDir = await fs.mkdtemp(path.join(os.tmpdir(), 'shuip-smoke-'));
   const projectDir = path.join(workDir, PROJECT_NAME);
   try {
-    const registryOrigin = server.url.origin;
+    const registryOrigin = server.origin;
     const names = await fetchItemNames(registryOrigin, style);
 
     await runStep('scaffold project', ['bunx', 'shadcn@latest', ...initArgs(style)], workDir);
@@ -86,7 +86,7 @@ const smokeTest = async (style: string, keep: boolean): Promise<string> => {
 
     return `${names.length} items installed and type-checked${keep ? ` (project kept at ${projectDir})` : ''}`;
   } finally {
-    await server.stop(true);
+    server.stop();
     if (!keep) {
       await fs.rm(workDir, { recursive: true, force: true });
     }

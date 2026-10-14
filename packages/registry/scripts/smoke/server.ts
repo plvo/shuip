@@ -1,25 +1,47 @@
 import path from 'node:path';
-import { styleRewrites } from '@repo/registry/style-base';
-import { match } from 'next/dist/compiled/path-to-regexp';
+import { rewrittenPathname } from '@repo/registry/style-base';
 
-const rewrittenPathname = (pathname: string): string => {
-  for (const { source, destination } of styleRewrites()) {
-    const matched = match(source, { decode: decodeURIComponent })(pathname);
-    if (matched) {
-      const params = matched.params as Record<string, string>;
-      return destination.replace(/:(\w+)/g, (_, key: string) => params[key]);
-    }
-  }
-  return pathname;
-};
+export interface RegistryServer {
+  origin: string;
+  /** Request paths answered with a file, as requested by the client. */
+  servedPaths: ReadonlySet<string>;
+  stop: () => void;
+}
 
-/** Serves the built registry (`<publicDir>/r/...`) with the production style rewrites. */
-export const serveRegistry = (publicDir: string): Bun.Server<undefined> => {
-  return Bun.serve({
+const segmentsOf = (pathname: string): string[] => pathname.split('/');
+
+// A rewrite whose decoded `:name` brings in a separator or a dot segment is not an item request.
+const isRewriteSafe = (requested: string, rewritten: string): boolean =>
+  segmentsOf(requested).length === segmentsOf(rewritten).length &&
+  !rewritten.includes('\\') &&
+  !rewritten.includes('..');
+
+const isInside = (directory: string, file: string): boolean => file.startsWith(`${directory}${path.sep}`);
+
+/** Serves the built registry (`<publicDir>/r/...`) on loopback with the production style rewrites. */
+export const serveRegistry = (publicDir: string): RegistryServer => {
+  const root = path.resolve(publicDir);
+  const servedPaths = new Set<string>();
+
+  const server = Bun.serve({
+    hostname: '127.0.0.1',
     port: 0,
     fetch: async (request) => {
-      const file = Bun.file(path.join(publicDir, rewrittenPathname(new URL(request.url).pathname)));
-      return (await file.exists()) ? new Response(file) : new Response('Not found', { status: 404 });
+      const requested = new URL(request.url).pathname;
+      const rewritten = rewrittenPathname(requested);
+      if (rewritten !== null && !isRewriteSafe(requested, rewritten)) {
+        return new Response('Not found', { status: 404 });
+      }
+
+      const target = path.resolve(root, `.${rewritten ?? requested}`);
+      const file = Bun.file(target);
+      if (!isInside(root, target) || !(await file.exists())) {
+        return new Response('Not found', { status: 404 });
+      }
+      servedPaths.add(requested);
+      return new Response(file);
     },
   });
+
+  return { origin: server.url.origin, servedPaths, stop: () => void server.stop(true) };
 };
