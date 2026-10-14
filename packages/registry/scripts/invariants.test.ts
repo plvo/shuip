@@ -170,10 +170,9 @@ describe('the Base UI variant stays free of Radix', () => {
     expect(paths(offenders)).toEqual([]);
   });
 
-  // A site listed here keeps its Radix `asChild` in the Base UI output until an override or the canonical source
-  // composes it differently. A new site fails this test: override it, or list it after checking it composes.
-  // Any other mention of `asChild` counts as a site too, so an override cannot declare the prop either.
-  test('only the known sites keep asChild in the published Base UI sources', () => {
+  // No `asChild` survives in the Base UI output, whether used or declared. A site that does fails this test: give it
+  // an override or a canonical form that composes on both bases, or list it here after checking that it composes.
+  test('no asChild site is left in the published Base UI sources', () => {
     const consumerDir = path.join(outDir, 'consumer', 'items');
     const remaining = fs
       .readdirSync(consumerDir, { recursive: true, encoding: 'utf-8' })
