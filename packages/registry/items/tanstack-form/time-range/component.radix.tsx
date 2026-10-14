@@ -30,7 +30,11 @@ function TimePicker({ id, value, onChange, min, disabled, invalid }: TimePickerP
 
   return (
     <div className='flex items-center gap-2'>
-      <Select value={hour} onValueChange={(h) => onChange(joinTime(h, minute))} disabled={disabled}>
+      <Select
+        value={hour}
+        onValueChange={(h: string | null) => onChange(joinTime(h ?? '', minute))}
+        disabled={disabled}
+      >
         <SelectTrigger id={id} aria-invalid={invalid} className='w-full'>
           <SelectValue placeholder='HH' />
         </SelectTrigger>
@@ -43,7 +47,11 @@ function TimePicker({ id, value, onChange, min, disabled, invalid }: TimePickerP
         </SelectContent>
       </Select>
       <span className='text-muted-foreground'>:</span>
-      <Select value={minute} onValueChange={(m) => onChange(joinTime(hour, m))} disabled={disabled}>
+      <Select
+        value={minute}
+        onValueChange={(m: string | null) => onChange(joinTime(hour, m ?? ''))}
+        disabled={disabled}
+      >
         <SelectTrigger aria-invalid={invalid} className='w-full'>
           <SelectValue placeholder='mm' />
         </SelectTrigger>

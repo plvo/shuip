@@ -19,7 +19,7 @@ export default function RhfInlineEditCustomEditorExample() {
             <Select
               defaultOpen
               value={value}
-              onValueChange={commit}
+              onValueChange={(next: string | null) => next !== null && commit(next)}
               onOpenChange={(open) => {
                 if (!open) cancel();
               }}

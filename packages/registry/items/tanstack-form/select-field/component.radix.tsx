@@ -25,7 +25,7 @@ export function SelectField({ options, label, description, placeholder, fieldPro
       <Select
         name={field.name}
         value={field.state.value}
-        onValueChange={(value) => field.handleChange(value)}
+        onValueChange={(value) => field.handleChange(typeof value === 'string' ? value : '')}
         {...props}
       >
         <SelectTrigger aria-invalid={!isValid}>

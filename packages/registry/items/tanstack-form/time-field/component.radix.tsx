@@ -24,7 +24,11 @@ export function TimeField({ label, description, min, max, disabled, fieldProps }
     <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
       {label && <FieldLabel htmlFor={field.name}>{label}</FieldLabel>}
       <div className='flex items-center gap-2'>
-        <Select value={hour} onValueChange={(h) => field.handleChange(joinTime(h, minute))} disabled={disabled}>
+        <Select
+          value={hour}
+          onValueChange={(h: string | null) => field.handleChange(joinTime(h ?? '', minute))}
+          disabled={disabled}
+        >
           <SelectTrigger id={field.name} aria-invalid={!isValid} className='w-full'>
             <SelectValue placeholder='HH' />
           </SelectTrigger>
@@ -37,7 +41,11 @@ export function TimeField({ label, description, min, max, disabled, fieldProps }
           </SelectContent>
         </Select>
         <span className='text-muted-foreground'>:</span>
-        <Select value={minute} onValueChange={(m) => field.handleChange(joinTime(hour, m))} disabled={disabled}>
+        <Select
+          value={minute}
+          onValueChange={(m: string | null) => field.handleChange(joinTime(hour, m ?? ''))}
+          disabled={disabled}
+        >
           <SelectTrigger aria-invalid={!isValid} className='w-full'>
             <SelectValue placeholder='mm' />
           </SelectTrigger>
