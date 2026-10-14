@@ -4,7 +4,7 @@ import type { Locale } from 'date-fns';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import * as React from 'react';
-import type { DateRange } from 'react-day-picker';
+import type { DateRange, Matcher } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
@@ -45,9 +45,9 @@ export function DateRangeField({
   const value = field.state.value;
   const [open, setOpen] = React.useState(false);
 
-  const disabledMatcher = React.useMemo(() => {
+  const disabledMatcher = React.useMemo<Matcher[] | undefined>(() => {
     if (!minDate && !maxDate) return undefined;
-    return { ...(minDate ? { before: minDate } : {}), ...(maxDate ? { after: maxDate } : {}) };
+    return [...(minDate ? [{ before: minDate }] : []), ...(maxDate ? [{ after: maxDate }] : [])];
   }, [minDate, maxDate]);
 
   const triggerLabel = formatRange(value, locale);

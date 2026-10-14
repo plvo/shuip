@@ -81,7 +81,7 @@ export function ComboboxField(props: ComboboxFieldProps) {
 
   // The discriminated union ties the lens type to `multiple`; values are normalised through
   // `toArray`, so the interop binding is widened to the shared string | string[] shape here.
-  const { field, fieldState } = useController((props.lens as Lens<string | string[]>).interop());
+  const { field, fieldState } = useController((props.lens as unknown as Lens<string | string[]>).interop());
 
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState('');
