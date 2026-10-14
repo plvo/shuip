@@ -15,10 +15,12 @@ import {
   type TimeRangeValue,
 } from '@/lib/time';
 
-export function updateTimePart(time: string, part: 'hour' | 'minute', next: string | null): string {
-  if (next === null) return '';
+export function timePartHandlers(time: string, onChange: (time: string) => void) {
   const { hour, minute } = splitTime(time);
-  return part === 'hour' ? joinTime(next, minute) : joinTime(hour, next);
+  return {
+    onHourChange: (next: string | null) => onChange(next === null ? '' : joinTime(next, minute)),
+    onMinuteChange: (next: string | null) => onChange(next === null ? '' : joinTime(hour, next)),
+  };
 }
 
 interface TimePickerProps {
@@ -32,15 +34,12 @@ interface TimePickerProps {
 
 function TimePicker({ id, value, onChange, min, disabled, invalid }: TimePickerProps) {
   const { hour, minute } = splitTime(value);
+  const { onHourChange, onMinuteChange } = timePartHandlers(value, onChange);
   const bounds = { min };
 
   return (
     <div className='flex items-center gap-2'>
-      <Select
-        value={hour}
-        onValueChange={(h: string | null) => onChange(updateTimePart(value, 'hour', h))}
-        disabled={disabled}
-      >
+      <Select value={hour} onValueChange={onHourChange} disabled={disabled}>
         <SelectTrigger id={id} aria-invalid={invalid} className='w-full'>
           <SelectValue placeholder='HH' />
         </SelectTrigger>
@@ -53,11 +52,7 @@ function TimePicker({ id, value, onChange, min, disabled, invalid }: TimePickerP
         </SelectContent>
       </Select>
       <span className='text-muted-foreground'>:</span>
-      <Select
-        value={minute}
-        onValueChange={(m: string | null) => onChange(updateTimePart(value, 'minute', m))}
-        disabled={disabled}
-      >
+      <Select value={minute} onValueChange={onMinuteChange} disabled={disabled}>
         <SelectTrigger aria-invalid={invalid} className='w-full'>
           <SelectValue placeholder='mm' />
         </SelectTrigger>

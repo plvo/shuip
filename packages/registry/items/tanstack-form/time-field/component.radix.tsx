@@ -5,10 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useFieldContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { HOUR_OPTIONS, isHourDisabled, isMinuteDisabled, joinTime, MINUTE_OPTIONS, splitTime } from '@/lib/time';
 
-export function updateTimePart(time: string, part: 'hour' | 'minute', next: string | null): string {
-  if (next === null) return '';
+export function timePartHandlers(time: string, onChange: (time: string) => void) {
   const { hour, minute } = splitTime(time);
-  return part === 'hour' ? joinTime(next, minute) : joinTime(hour, next);
+  return {
+    onHourChange: (next: string | null) => onChange(next === null ? '' : joinTime(next, minute)),
+    onMinuteChange: (next: string | null) => onChange(next === null ? '' : joinTime(hour, next)),
+  };
 }
 
 export interface TimeFieldProps {
@@ -23,18 +25,16 @@ export interface TimeFieldProps {
 export function TimeField({ label, description, min, max, disabled, fieldProps }: TimeFieldProps) {
   const field = useFieldContext<string>();
   const { isValid, errors } = field.state.meta;
-  const { hour, minute } = splitTime(field.state.value ?? '');
+  const time = field.state.value ?? '';
+  const { hour, minute } = splitTime(time);
+  const { onHourChange, onMinuteChange } = timePartHandlers(time, field.handleChange);
   const bounds = { min, max };
 
   return (
     <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
       {label && <FieldLabel htmlFor={field.name}>{label}</FieldLabel>}
       <div className='flex items-center gap-2'>
-        <Select
-          value={hour}
-          onValueChange={(h: string | null) => field.handleChange(updateTimePart(field.state.value ?? '', 'hour', h))}
-          disabled={disabled}
-        >
+        <Select value={hour} onValueChange={onHourChange} disabled={disabled}>
           <SelectTrigger id={field.name} aria-invalid={!isValid} className='w-full'>
             <SelectValue placeholder='HH' />
           </SelectTrigger>
@@ -47,11 +47,7 @@ export function TimeField({ label, description, min, max, disabled, fieldProps }
           </SelectContent>
         </Select>
         <span className='text-muted-foreground'>:</span>
-        <Select
-          value={minute}
-          onValueChange={(m: string | null) => field.handleChange(updateTimePart(field.state.value ?? '', 'minute', m))}
-          disabled={disabled}
-        >
+        <Select value={minute} onValueChange={onMinuteChange} disabled={disabled}>
           <SelectTrigger aria-invalid={!isValid} className='w-full'>
             <SelectValue placeholder='mm' />
           </SelectTrigger>
