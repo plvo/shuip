@@ -94,6 +94,7 @@ An override is written exactly as consumers receive it, with the standard `@/com
 **Outputs** (all generated, git-ignored, never edited by hand):
 - `packages/registry/generated/base/consumer/items/**`: the consumer form, original aliases. This is what `registry.base.json` points to and what `/r/base/<name>.json` publishes.
 - `packages/registry/generated/base/items/**` and `generated/base/stubs/**`: the copies the docs compile, with every alias rewritten to explicit paths (Base UI primitives, Base UI stubs, shared files).
+- `packages/registry/generated/base/__index__.ts` (`@repo/registry/__index__.base`): the lazy component index of those copies, the Base UI counterpart of `__index__.ts`. Neither index carries sources: the docs read them on the server with `readItemSource` (`@repo/registry/item-source`), from the files each registry publishes.
 
 Both variants are published (`apps/docs/public/r/base/` and `radix/`). `styleRewrites()` in `packages/registry/src/style-base.ts` routes `/r/base-<preset>/<name>.json` to `base`, and `radix-<preset>`, `new-york`, `new-york-v4` and `default` to `radix`; any other style, such as `aria-*`, is not routed and answers 404.
 
@@ -101,8 +102,11 @@ Both variants are published (`apps/docs/public/r/base/` and `radix/`). `styleRew
 
 ## Docs Routing & Sidebar
 
-- Routes: `/docs` (guides only) · `/components` (all registry items) · `/blocks`. UI `components` items are flat at `/components/<name>`; other categories keep `/components/<cat>/<name>` (via `componentsDocsDir` in `generate.ts`).
-- The sidebar is one custom merged `PageTree` built in `apps/docs/src/lib/source.ts` (`sidebarTree`), shared by the `/docs` and `/components` layouts. Order lives in code — fumadocs `...folder` meta extracts *flatten* a folder, so meta can't split a folder's index from its children across sidebar positions.
+- Routes: `/docs` (guides only, no base) · `/components/{base,radix}/...` (all registry items) · `/blocks/{base,radix}/...`. UI `components` items are flat at `/components/<base>/<name>`; other categories keep `/components/<base>/<cat>/<name>` (via `componentsDocsDir` in `generate.ts`). One MDX per item; the base comes from the route segment and reaches the item blocks (`ItemHeader`, `ItemExamples`, the gallery) through `getMDXComponents(components, base)`.
+- Base UI is the default base. `baseRedirects()` in `apps/docs/src/lib/base-routes.ts` (wired in `next.config.ts`) sends `/components/**`, `/blocks/**` and their `llms.mdx` routes without a base segment to the Base UI page with a permanent redirect. Markdown routes are `/<section>/llms.mdx/<base>/<slug>`.
+- Each base has its own loader over the same collection (`componentsSources`, `blocksSources` in `apps/docs/src/lib/source.ts`), so page addresses and page trees carry the base. The sidebar for a base is built by `buildSidebarTree` (`apps/docs/src/lib/sidebar-tree.ts`), shared by the `/docs` layout (default base) and the `/components/[base]` layout. Order lives in code — fumadocs `...folder` meta extracts *flatten* a folder, so meta can't split a folder's index from its children across sidebar positions.
+- The two primitive libraries never share a React tree: the `[base]` layouts mount the providers of their base (`BaseProviders`) and previews come from per-base client modules (`preview-base-ui.tsx`, `preview-radix.tsx`). Do not mount a primitive provider in `AppProvider`. `@/components/ui-base/*` resolves to the Base UI primitives in `apps/docs/tsconfig.json`.
+- Search and `llms-full.txt` list the pages of the default base only; each page's markdown names its other variants.
 - PageTree node types (`Root`, `Item`, `Separator`, `Node`) import from `fumadocs-core/page-tree` (not `/server`).
 - After changing a collection or content, run `bunx fumadocs-mdx` (in `apps/docs`) to regenerate `.source` types before `tsc`.
 
