@@ -58,14 +58,12 @@ const SideDialogContext = React.createContext<{
   position: SideDialogPosition;
   size: SideDialogSize;
   openerRef: React.RefObject<HTMLElement | null>;
-  recordOpener: (opener: HTMLElement) => void;
 }>({
   open: false,
   onOpenChange: () => {},
   position: 'bottom-right',
   size: 'sm',
   openerRef: { current: null },
-  recordOpener: () => {},
 });
 
 const getFocusedElement = () => {
@@ -91,24 +89,13 @@ export function SideDialog({
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const onOpenChange = controlledOnOpenChange !== undefined ? controlledOnOpenChange : setInternalOpen;
 
-  // The element to give focus back to on close. It is captured in an insertion effect, which runs before the content
-  // mounts and focuses its own fields: a trigger that was just clicked, else the focused element.
+  // The element to give focus back to on close. An insertion effect runs before the layout phase, where the content's
+  // `autoFocus` fields take focus, so it still sees the focused element of the opener (a layout effect would not).
   const openerRef = React.useRef<HTMLElement | null>(null);
-  const pendingOpenerRef = React.useRef<HTMLElement | null>(null);
 
   React.useInsertionEffect(() => {
-    if (open) openerRef.current = pendingOpenerRef.current ?? getFocusedElement();
-    pendingOpenerRef.current = null;
+    if (open) openerRef.current = getFocusedElement();
   }, [open]);
-
-  // A trigger applies to the open it triggers: it is dropped once the click has been handled, even if the dialog
-  // stayed closed.
-  const recordOpener = React.useCallback((opener: HTMLElement) => {
-    pendingOpenerRef.current = opener;
-    setTimeout(() => {
-      pendingOpenerRef.current = null;
-    });
-  }, []);
 
   const contextValue = React.useMemo(
     () => ({
@@ -117,24 +104,23 @@ export function SideDialog({
       position,
       size,
       openerRef,
-      recordOpener,
     }),
-    [open, onOpenChange, position, size, recordOpener],
+    [open, onOpenChange, position, size],
   );
 
   return <SideDialogContext.Provider value={contextValue}>{children}</SideDialogContext.Provider>;
 }
 
 export function SideDialogTrigger({ asChild, children, onClick, ...props }: SideDialogTriggerProps) {
-  const { onOpenChange, recordOpener } = React.useContext(SideDialogContext);
+  const { onOpenChange } = React.useContext(SideDialogContext);
 
   const handleClick = React.useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       onClick?.(e);
-      recordOpener(e.currentTarget);
+      e.currentTarget.focus();
       onOpenChange(true);
     },
-    [onClick, onOpenChange, recordOpener],
+    [onClick, onOpenChange],
   );
 
   if (asChild) {
@@ -165,7 +151,7 @@ export function SideDialogContent({ showCloseButton = true, className, children,
     if (!open) return;
     return () => {
       const opener = openerRef.current;
-      if (opener?.isConnected && (!document.activeElement || document.activeElement === document.body)) {
+      if (opener?.isConnected && getFocusedElement() === null) {
         opener.focus();
       }
     };
