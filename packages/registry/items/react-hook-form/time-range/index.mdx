@@ -17,8 +17,7 @@ registryName: rhf-time-range
 
 ```tsx
 import { useLens } from '@hookform/lenses';
-import { useForm } from 'react-hook-form';
-import { Form } from '@/components/ui/form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { TimeRangeField } from '@/components/ui/shuip/react-hook-form/time-range';
 
 type MyForm = { slot: { start: string; end: string } };
@@ -26,11 +25,11 @@ type MyForm = { slot: { start: string; end: string } };
 const form = useForm<MyForm>({ defaultValues: { slot: { start: '', end: '' } } });
 const lens = useLens({ control: form.control });
 
-<Form {...form}>
+<FormProvider {...form}>
   <form onSubmit={form.handleSubmit(onSubmit)}>
     <TimeRangeField lens={lens.focus('slot')} label='Meeting slot' />
   </form>
-</Form>
+</FormProvider>
 ```
 
 The value is `{ start: string; end: string }`, each a `HH:mm` string (empty when unset). Changing the start always resets the end to one hour after the new start.

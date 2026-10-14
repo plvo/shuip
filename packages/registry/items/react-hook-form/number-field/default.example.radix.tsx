@@ -2,9 +2,8 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Form } from '@/components/ui/form';
 import { NumberField } from '@/components/ui/shuip/react-hook-form/number-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
@@ -31,7 +30,7 @@ export default function RhfNumberFieldExample() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <NumberField lens={lens.focus('quantity')} label='Quantity' description='Integer quantity' placeholder='1' />
 
@@ -47,6 +46,6 @@ export default function RhfNumberFieldExample() {
 
         <SubmitButton>Submit</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }

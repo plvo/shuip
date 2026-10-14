@@ -1,8 +1,7 @@
 'use client';
 
 import { useLens } from '@hookform/lenses';
-import { useForm } from 'react-hook-form';
-import { Form } from '@/components/ui/form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { ComboboxField, type ComboboxOption } from '@/components/ui/shuip/react-hook-form/combobox-field';
 
 const COUNTRIES: ComboboxOption[] = [
@@ -24,7 +23,7 @@ export default function ComboboxFieldSizesExample() {
   const lens = useLens({ control: form.control });
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form className='space-y-4'>
         <ComboboxField
           size='sm'
@@ -43,6 +42,6 @@ export default function ComboboxFieldSizesExample() {
           defaultSelected={PRESET}
         />
       </form>
-    </Form>
+    </FormProvider>
   );
 }

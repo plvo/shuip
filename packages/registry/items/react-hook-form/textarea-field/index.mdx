@@ -22,21 +22,20 @@ Field components bind via `@hookform/lenses`. Create a lens once per form:
 
 ```tsx
 import { useLens } from '@hookform/lenses';
-import { useForm } from 'react-hook-form';
-import { Form } from '@/components/ui/form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { TextareaField } from '@/components/ui/shuip/react-hook-form/textarea-field';
 
 const form = useForm<MyForm>({ defaultValues: { bio: '' } });
 const lens = useLens({ control: form.control });
 
-<Form {...form}>
+<FormProvider {...form}>
   <form onSubmit={form.handleSubmit(onSubmit)}>
     <TextareaField lens={lens.focus('bio')} label='Bio' />
   </form>
-</Form>
+</FormProvider>
 ```
 
-The `<Form>` wrapper is required — it provides shadcn's `FormProvider` which `FormLabel` and `FormMessage` use internally.
+The `<FormProvider>` wrapper is required — it provides React Hook Form's `FormProvider` context.
 
 ## Less boilerplate
 

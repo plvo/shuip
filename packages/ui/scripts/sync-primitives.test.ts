@@ -155,16 +155,18 @@ describe('mirrorInstalledFiles', () => {
 });
 
 describe('planSet', () => {
-  test('radix-vega mirrors into ui and never touches the hand-kept form primitive', () => {
-    const plan = planSet(setFor('radix-vega'), '/components');
-    expect(plan.target).toBe('/components/ui');
-    expect(plan.unmanaged).toContain('form.tsx');
+  test('radix-vega mirrors into ui', () => {
+    expect(planSet(setFor('radix-vega'), '/components').target).toBe('/components/ui');
   });
 
-  test('base-vega mirrors into ui-base and manages every file', () => {
-    const plan = planSet(setFor('base-vega'), '/components');
-    expect(plan.target).toBe('/components/ui-base');
-    expect(plan.unmanaged).toEqual([]);
+  test('base-vega mirrors into ui-base', () => {
+    expect(planSet(setFor('base-vega'), '/components').target).toBe('/components/ui-base');
+  });
+
+  test('every set manages every file of its folder', () => {
+    for (const set of SETS) {
+      expect(planSet(set, '/components').unmanaged).toEqual([]);
+    }
   });
 
   test('both sets declare the same primitives', () => {
@@ -209,7 +211,7 @@ describe('applyPlan', () => {
     expect(await fs.readdir(workDir)).toEqual(['installed']);
   });
 
-  test('keeps form.tsx of the radix target while syncing', async () => {
+  test('removes a file of the radix target that is not an installed primitive', async () => {
     await populate(installedDir, declaredFiles(PRIMITIVES));
     const plan = planSet(setFor('radix-vega'), workDir);
     await fs.mkdir(plan.target);
@@ -217,6 +219,6 @@ describe('applyPlan', () => {
 
     await applyPlan(plan, installedDir);
 
-    expect(await fs.readFile(path.join(plan.target, 'form.tsx'), 'utf-8')).toBe('form');
+    expect(await fs.readdir(plan.target)).not.toContain('form.tsx');
   });
 });

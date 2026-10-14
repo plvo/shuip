@@ -19,7 +19,7 @@ apps/docs/                     Next.js site (registry endpoints, MDX content, st
   content/blocks/                fumadocs `blocks` collection (real MDX files, hand-written)
 
 packages/ui/                   Vendored shadcn primitives + base.css (cross-package @source rules)
-  src/components/ui/             radix-vega set (synced, never hand-edited; form.tsx is the only local file)
+  src/components/ui/             radix-vega set (synced, never hand-edited)
   src/components/ui-base/        base-vega set (synced, Base UI; `bun run --filter @repo/ui typecheck:base`)
   scripts/sync-primitives.ts     Declares the primitive list and refreshes both sets via the shadcn CLI
 packages/registry/             SOURCE OF TRUTH for published items

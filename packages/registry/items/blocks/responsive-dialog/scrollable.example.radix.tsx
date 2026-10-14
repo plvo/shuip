@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import z from 'zod';
 import {
   ResponsiveDialog,
@@ -16,7 +16,6 @@ import {
   ResponsiveDialogTrigger,
 } from '@/components/block/shuip/responsive-dialog';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import { SelectField } from '@/components/ui/shuip/react-hook-form/select-field';
@@ -131,7 +130,7 @@ function LongFormDialog() {
         <Button variant='outline'>Long Form</Button>
       </ResponsiveDialogTrigger>
       <ResponsiveDialogContent>
-        <Form {...form}>
+        <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col flex-1 min-h-0'>
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>Create Profile</ResponsiveDialogTitle>
@@ -184,7 +183,7 @@ function LongFormDialog() {
               <SubmitButton className='max-md:w-full'>Create Profile</SubmitButton>
             </ResponsiveDialogFooter>
           </form>
-        </Form>
+        </FormProvider>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

@@ -3,9 +3,8 @@
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as React from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Form } from '@/components/ui/form';
 import { type AddressData, AddressField, addressSchema } from '@/components/ui/shuip/react-hook-form/address-field';
 import { CheckboxField } from '@/components/ui/shuip/react-hook-form/checkbox-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -62,7 +61,7 @@ export default function RhfAddressFieldShippingBillingExample() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6 w-full'>
         <div className='space-y-4'>
           <h3 className='text-lg font-semibold'>Billing Address</h3>
@@ -90,6 +89,6 @@ export default function RhfAddressFieldShippingBillingExample() {
 
         <SubmitButton>Save Addresses</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }

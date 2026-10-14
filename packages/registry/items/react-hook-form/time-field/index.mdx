@@ -21,18 +21,17 @@ Field components bind via `@hookform/lenses`. Create a lens once per form:
 
 ```tsx
 import { useLens } from '@hookform/lenses';
-import { useForm } from 'react-hook-form';
-import { Form } from '@/components/ui/form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { TimeField } from '@/components/ui/shuip/react-hook-form/time-field';
 
 const form = useForm<MyForm>({ defaultValues: { meetingTime: '' } });
 const lens = useLens({ control: form.control });
 
-<Form {...form}>
+<FormProvider {...form}>
   <form onSubmit={form.handleSubmit(onSubmit)}>
     <TimeField lens={lens.focus('meetingTime')} label='Meeting time' />
   </form>
-</Form>
+</FormProvider>
 ```
 
 The value is a `string` in `HH:mm` format (or empty string when unset). Picking only the hour or only the minute defaults the other part to `00`.

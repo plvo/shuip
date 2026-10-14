@@ -2,9 +2,8 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Form } from '@/components/ui/form';
 import { TimeField } from '@/components/ui/shuip/react-hook-form/time-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
@@ -30,11 +29,11 @@ export default function RhfTimeFieldExample() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <TimeField lens={lens.focus('meetingTime')} label='Meeting time' description='Pick a time' />
         <SubmitButton>Save</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }

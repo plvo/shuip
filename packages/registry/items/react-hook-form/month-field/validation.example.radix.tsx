@@ -2,9 +2,8 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Form } from '@/components/ui/form';
 import { MonthField } from '@/components/ui/shuip/react-hook-form/month-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
@@ -39,7 +38,7 @@ export default function RhfMonthFieldValidationExample() {
   tenYearsFromNow.setFullYear(tenYearsFromNow.getFullYear() + 10);
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <MonthField
           lens={lens.focus('startMonth')}
@@ -50,6 +49,6 @@ export default function RhfMonthFieldValidationExample() {
         />
         <SubmitButton>Start subscription</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }

@@ -2,9 +2,8 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Form } from '@/components/ui/form';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import { RadioField } from '@/components/ui/shuip/react-hook-form/radio-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -43,7 +42,7 @@ export default function RhfRadioFieldPaymentMethodExample() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
         <RadioField
           lens={lens.focus('paymentMethod')}
@@ -82,6 +81,6 @@ export default function RhfRadioFieldPaymentMethodExample() {
 
         <SubmitButton>Process Payment</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }

@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import z from 'zod';
 import {
   ResponsiveDialog,
@@ -16,7 +16,6 @@ import {
   ResponsiveDialogTrigger,
 } from '@/components/block/shuip/responsive-dialog';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
 
@@ -297,7 +296,7 @@ function ResponsiveDialogFormExample() {
         <Button variant='outline'>Open Dialog</Button>
       </ResponsiveDialogTrigger>
       <ResponsiveDialogContent>
-        <Form {...form}>
+        <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <ResponsiveDialogHeader>
               <ResponsiveDialogTitle>Responsive Dialog</ResponsiveDialogTitle>
@@ -316,7 +315,7 @@ function ResponsiveDialogFormExample() {
               <SubmitButton className='max-md:w-full'>Submit</SubmitButton>
             </ResponsiveDialogFooter>
           </form>
-        </Form>
+        </FormProvider>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

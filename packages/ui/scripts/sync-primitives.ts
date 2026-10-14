@@ -44,7 +44,7 @@ export interface PrimitiveSet {
 }
 
 export const SETS: PrimitiveSet[] = [
-  { style: 'radix-vega', dir: 'ui', unmanaged: ['form.tsx'] },
+  { style: 'radix-vega', dir: 'ui', unmanaged: [] },
   { style: 'base-vega', dir: 'ui-base', unmanaged: [] },
 ];
 
