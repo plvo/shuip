@@ -716,7 +716,7 @@ export function DataBoardToolbar({
       {showPageSize ? (
         <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
           <SelectTrigger size='sm' className='ml-auto w-36' aria-label={labels.pageSizeLabel}>
-            <SelectValue />
+            <SelectValue>{labels.pageSizeOption(pageSize)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {options.map((option) => (

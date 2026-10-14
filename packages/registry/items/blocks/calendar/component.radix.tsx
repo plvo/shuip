@@ -41,6 +41,7 @@ export type CalendarMessages = {
   today: string;
   previous: string;
   next: string;
+  viewLabel: string;
   allDay: string;
   noEvents: string;
   more: (count: number) => string;
@@ -55,6 +56,7 @@ const defaultMessages: CalendarMessages = {
   today: 'Today',
   previous: 'Previous',
   next: 'Next',
+  viewLabel: 'Calendar view',
   allDay: 'all-day',
   noEvents: 'No upcoming events',
   more: (count) => `+${count} more`,
@@ -383,8 +385,8 @@ function CalendarNav({ className }: { className?: string }) {
       </div>
       {views.length > 1 ? (
         <Select value={view} onValueChange={(v) => setView(v as CalendarView)}>
-          <SelectTrigger className='w-32' size='sm'>
-            <SelectValue />
+          <SelectTrigger className='w-32' size='sm' aria-label={messages.viewLabel}>
+            <SelectValue>{messages.views[view] ?? view}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {views.map((v) => (

@@ -825,7 +825,10 @@ export function DataTablePagination<TData>({
       <div className='flex flex-wrap items-center gap-4 lg:gap-6'>
         <div className='flex items-center gap-2'>
           <p className='font-medium text-sm'>Rows per page</p>
-          <Select value={`${pageSize}`} onValueChange={(value) => table.setPageSize(Number(value))}>
+          <Select
+            value={`${pageSize}`}
+            onValueChange={(value: string | null) => value !== null && table.setPageSize(Number(value))}
+          >
             <SelectTrigger className='h-8 w-[72px]'>
               <SelectValue placeholder={pageSize} />
             </SelectTrigger>
@@ -1065,9 +1068,9 @@ function FieldSelect({
   onChange: (value: string) => void;
 }) {
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={(next: string | null) => next !== null && onChange(next)}>
       <SelectTrigger className='h-8 w-[120px] shrink-0'>
-        <SelectValue />
+        <SelectValue>{fields.find((field) => field.id === value)?.label ?? value}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {fields.map((field) => (
@@ -1090,9 +1093,9 @@ function OperatorSelect({
   onChange: (value: FilterOperator) => void;
 }) {
   return (
-    <Select value={value} onValueChange={(next) => onChange(next as FilterOperator)}>
+    <Select value={value} onValueChange={(next: string | null) => next !== null && onChange(next as FilterOperator)}>
       <SelectTrigger className='h-8 w-[136px] shrink-0'>
-        <SelectValue />
+        <SelectValue>{OPERATOR_LABELS[value] ?? value}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {OPERATORS_BY_VARIANT[variant].map((operator) => (
@@ -1168,10 +1171,13 @@ function FilterValueControl({
       const selected = Array.isArray(condition.value) ? (condition.value as string[]) : [];
       return <MultiSelectValue options={field.options} selected={selected} onChange={onChange} />;
     }
+    const selectedValue = (condition.value as string) ?? '';
     return (
-      <Select value={(condition.value as string) ?? ''} onValueChange={onChange}>
+      <Select value={selectedValue} onValueChange={(next: string | null) => onChange(next ?? '')}>
         <SelectTrigger className='h-8 flex-1'>
-          <SelectValue placeholder='Select…' />
+          <SelectValue placeholder='Select…'>
+            {field.options.find((option) => option.value === selectedValue)?.label ?? (selectedValue || undefined)}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {field.options.map((option) => (
@@ -1328,20 +1334,29 @@ export type DataTableFilterMenuProps<TData> = {
   variant?: 'popover' | 'dialog';
 };
 
-export function DataTableFilterMenu<TData>({ table, variant = 'popover' }: DataTableFilterMenuProps<TData>) {
-  const count = table.getState().columnFilters.length;
-  const trigger = (
-    <Button variant='outline' size='sm' className='h-8 border-dashed'>
+function FilterMenuButton({
+  count,
+  showChevron = false,
+  ...props
+}: React.ComponentProps<typeof Button> & { count: number; showChevron?: boolean }) {
+  return (
+    <Button variant='outline' size='sm' className='h-8 border-dashed' {...props}>
       <ListFilter className='mr-2 size-4' /> Filter
       {count > 0 && <span className='ml-2 rounded-sm bg-secondary px-1.5 font-normal text-xs'>{count}</span>}
-      {variant === 'popover' && <ChevronDown className='ml-1 size-3.5 text-muted-foreground' />}
+      {showChevron && <ChevronDown className='ml-1 size-3.5 text-muted-foreground' />}
     </Button>
   );
+}
+
+export function DataTableFilterMenu<TData>({ table, variant = 'popover' }: DataTableFilterMenuProps<TData>) {
+  const count = table.getState().columnFilters.length;
 
   if (variant === 'dialog') {
     return (
       <Dialog>
-        <DialogTrigger asChild>{trigger}</DialogTrigger>
+        <DialogTrigger asChild>
+          <FilterMenuButton count={count} />
+        </DialogTrigger>
         <DialogContent className='max-w-2xl'>
           <DialogHeader>
             <DialogTitle>Filters</DialogTitle>
@@ -1360,7 +1375,9 @@ export function DataTableFilterMenu<TData>({ table, variant = 'popover' }: DataT
 
   return (
     <Popover>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverTrigger asChild>
+        <FilterMenuButton count={count} showChevron />
+      </PopoverTrigger>
       <PopoverContent align='start' className='w-[560px] p-2'>
         <FilterBuilder table={table} />
       </PopoverContent>
@@ -1417,10 +1434,10 @@ function SortBuilder<TData>({ table }: { table: Table<TData> }) {
                   <FieldSelect fields={fields} value={sort.id} onChange={(value) => changeField(sort.id, value)} />
                   <Select
                     value={sort.desc ? 'desc' : 'asc'}
-                    onValueChange={(value) => setDir(sort.id, value === 'desc')}
+                    onValueChange={(value: string | null) => value !== null && setDir(sort.id, value === 'desc')}
                   >
                     <SelectTrigger className='h-8 flex-1'>
-                      <SelectValue />
+                      <SelectValue>{sort.desc ? 'Descending' : 'Ascending'}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value='asc'>Ascending</SelectItem>
