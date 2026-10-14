@@ -10,7 +10,10 @@ const REPO_ROOT = path.resolve(import.meta.dir, '../../..');
 const BLOCK_DOCS_DIR = path.join(REPO_ROOT, 'apps/docs/content/blocks');
 
 /** Sources whose component sets its own `data-state`, so styling on it is not a primitive trigger. */
-const OWN_DATA_STATE = ['packages/registry/items/components/side-dialog/component.radix.tsx'];
+const OWN_DATA_STATE = [
+  'packages/registry/items/components/side-dialog/component.radix.tsx',
+  'packages/registry/items/components/side-dialog/component.base.tsx',
+];
 
 const FORM_PRIMITIVE = /^@\/components\/ui\/form(\/|$)/;
 const PRIMITIVE_STATE_CLASS = /data-\[state=/;
@@ -127,6 +130,8 @@ const asChildSites = (relativePath: string, content: string): string[] => {
     if (ts.isJsxAttribute(node) && node.name.getText(file) === 'asChild') {
       const tag = (node.parent.parent as ts.JsxOpeningLikeElement).tagName.getText(file);
       sites.push(`${relativePath} <${tag} asChild${node.initializer ? '={…}' : ''}>`);
+    } else if (ts.isIdentifier(node) && node.text === 'asChild' && !ts.isJsxAttribute(node.parent)) {
+      sites.push(`${relativePath} mentions asChild`);
     }
     ts.forEachChild(node, visit);
   };
@@ -165,21 +170,15 @@ describe('the Base UI variant stays free of Radix', () => {
     expect(paths(offenders)).toEqual([]);
   });
 
-  // A site listed here keeps its Radix `asChild` in the Base UI output until an override or the canonical source
-  // composes it differently. A new site fails this test: override it, or list it after checking it composes.
-  test('only the known sites keep asChild in the published Base UI sources', () => {
+  // No `asChild` survives in the Base UI output, whether used or declared. A site that does fails this test: give it
+  // an override or a canonical form that composes on both bases, or list it here after checking that it composes.
+  test('no asChild site is left in the published Base UI sources', () => {
     const consumerDir = path.join(outDir, 'consumer', 'items');
     const remaining = fs
       .readdirSync(consumerDir, { recursive: true, encoding: 'utf-8' })
       .filter((entry) => entry.endsWith('.tsx'))
       .flatMap((entry) => asChildSites(entry, fs.readFileSync(path.join(consumerDir, entry), 'utf-8')));
-    expect(remaining.sort()).toEqual([
-      'blocks/responsive-dialog/component.base.tsx <DrawerClose asChild={…}>',
-      'blocks/responsive-dialog/component.base.tsx <DrawerTrigger asChild={…}>',
-      'blocks/responsive-dialog/component.base.tsx <SideDialogClose asChild={…}>',
-      'blocks/responsive-dialog/component.base.tsx <SideDialogTrigger asChild={…}>',
-      'components/confirmation-dialog/component.base.tsx <DialogTrigger asChild>',
-    ]);
+    expect(remaining.sort()).toEqual([]);
   });
 
   test('every item is published in the Base UI variant, from files that exist', () => {

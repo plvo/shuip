@@ -11,6 +11,7 @@ import {
   findStaleOverrides,
   formatWithBiome,
   type OverridePair,
+  type Relocation,
   readPathAliases,
   resolveBaseSource,
   toDocsSource,
@@ -426,12 +427,14 @@ const DEFAULT_BASE_VARIANT_LAYOUT: BaseVariantLayout = { outDir: GENERATED_BASE_
 const baseStubsDir = (outDir: string): string => path.join(outDir, 'stubs');
 
 /** The aliases of the canonical sources, where the Base UI copies of the stubs and the primitives replace the Radix ones. */
+export const PRIMITIVES_RELOCATION: Relocation = {
+  from: path.join(UI_PACKAGE_DIR, 'components', 'ui'),
+  to: path.join(UI_PACKAGE_DIR, 'components', 'ui-base'),
+};
+
 export const baseAliasTargets = (outDir: string): AliasTargets => ({
   aliases: readPathAliases(CANONICAL_TSCONFIG),
-  relocations: [
-    { from: STUBS_DIR, to: baseStubsDir(outDir) },
-    { from: path.join(UI_PACKAGE_DIR, 'components', 'ui'), to: path.join(UI_PACKAGE_DIR, 'components', 'ui-base') },
-  ],
+  relocations: [{ from: STUBS_DIR, to: baseStubsDir(outDir) }, PRIMITIVES_RELOCATION],
 });
 
 export interface BaseVariantBuild {
