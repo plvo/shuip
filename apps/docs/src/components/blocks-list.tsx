@@ -9,7 +9,7 @@ export function BlocksList() {
   return (
     <div className='flex flex-col gap-6'>
       {blocksPages.map((page) => (
-        <Card key={page.url} className='gap-0 overflow-hidden py-0 transition-all hover:shadow-2xl'>
+        <Card key={page.url} className='gap-0 overflow-hidden py-0 transition-shadow hover:shadow-2xl'>
           <Link href={page.url} className='no-underline'>
             <CardHeader className='py-(--card-spacing)'>
               <CardTitle>{page.data.title}</CardTitle>

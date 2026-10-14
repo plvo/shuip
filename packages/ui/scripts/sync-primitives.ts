@@ -73,10 +73,14 @@ export const buildComponentsConfig = (base: ComponentsConfig, { style, dir }: Pr
 
 export const declaredFiles = (primitives: string[]) => primitives.map((name) => `${name}.tsx`);
 
-export const diffDeclared = (installed: string[], expected: string[]) => ({
-  missing: expected.filter((file) => !installed.includes(file)),
-  undeclared: installed.filter((file) => !expected.includes(file)),
-});
+export const diffDeclared = (installed: string[], expected: string[]) => {
+  const installedFiles = new Set(installed);
+  const expectedFiles = new Set(expected);
+  return {
+    missing: expected.filter((file) => !installedFiles.has(file)),
+    undeclared: installed.filter((file) => !expectedFiles.has(file)),
+  };
+};
 
 export const assertDeclared = (style: string, installed: string[], expected: string[]) => {
   const { missing, undeclared } = diffDeclared(installed, expected);
@@ -117,9 +121,10 @@ export const mirrorInstalledFiles = async (installedDir: string, target: string,
     }
   }
 
+  const kept = new Set([...installed, ...unmanaged]);
   let removed = 0;
   for (const file of await listFiles(target)) {
-    if (!installed.includes(file) && !unmanaged.includes(file)) {
+    if (!kept.has(file)) {
       await fs.rm(path.join(target, file));
       removed++;
     }

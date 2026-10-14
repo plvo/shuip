@@ -47,7 +47,7 @@ export function ComponentsGallery() {
             </h2>
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
               {byCategory.get(category)?.map((page) => (
-                <Card key={page.url} className='gap-0 overflow-hidden py-0 transition-all hover:shadow-2xl'>
+                <Card key={page.url} className='gap-0 overflow-hidden py-0 transition-shadow hover:shadow-2xl'>
                   <div className='flex h-40 items-center justify-center overflow-hidden border-b border-border'>
                     <LazyPreview registryName={`${page.data.registryName}.example`} className='w-full' />
                   </div>
