@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { shuipItemRef } from '../src/namespace';
 import type { RegistryItem } from './generate';
 
 export function parseSkillFrontmatter(source: string): { name: string; description: string } {
@@ -69,7 +70,6 @@ export interface EmitSkillsOptions {
   generatedDir: string;
   registryRoot: string;
   catalog: string;
-  registryBaseUrl: string;
   bundleName: string;
 }
 
@@ -79,7 +79,7 @@ export interface EmitSkillsResult {
 }
 
 export function emitSkills(opts: EmitSkillsOptions): EmitSkillsResult {
-  const { skillsDir, generatedDir, registryRoot, catalog, registryBaseUrl, bundleName } = opts;
+  const { skillsDir, generatedDir, registryRoot, catalog, bundleName } = opts;
   fs.rmSync(generatedDir, { recursive: true, force: true });
   if (!fs.existsSync(skillsDir)) return { items: [], sources: new Map() };
 
@@ -118,7 +118,7 @@ export function emitSkills(opts: EmitSkillsOptions): EmitSkillsResult {
     items.push({
       name: bundleName,
       type: 'registry:item',
-      registryDependencies: skillNames.map((n) => `${registryBaseUrl}/${n}`),
+      registryDependencies: skillNames.map(shuipItemRef),
     });
   }
 

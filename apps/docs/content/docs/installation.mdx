@@ -17,11 +17,28 @@ Before installing shuip, make sure you have:
 
 ### Method 1: Install via CLI
 
-Use the shadcn/ui CLI to add the shuip components you want to your project:
+shuip is served as a shadcn registry namespace. Declare it once in your project's `components.json`:
+
+```json title="components.json"
+{
+  "registries": {
+    "@shuip": "https://shuip.plvo.dev/r/{style}/{name}.json"
+  }
+}
+```
+
+The CLI replaces `{style}` with the `style` already set in your `components.json` (for example `radix-vega` or `base-nova`) and `{name}` with the item you ask for. shuip resolves every shadcn style, so you never need to edit that part.
+
+Then add any shuip item with the shadcn/ui CLI:
 
 ```npm
-npx shadcn@latest add https://shuip.plvo.dev/r/input-field
+npx shadcn@latest add @shuip/input-field
 ```
+
+<Callout type="warn">
+  Earlier versions of this page used plain URLs such as `https://shuip.plvo.dev/r/input-field`. Those URLs are no
+  longer served. Add the namespace above and replace the URL with `@shuip/<name>`.
+</Callout>
 
 ### Method 2: Manual Copy-Paste
 

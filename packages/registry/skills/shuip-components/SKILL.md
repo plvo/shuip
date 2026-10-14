@@ -7,7 +7,7 @@ description: Use when choosing which shuip item fits a need, or composing shuip 
 
 ## Conventions
 
-- Install: `npx shadcn@latest add "https://shuip.plvo.dev/r/<item-name>"`.
+- Install: `npx shadcn@latest add @shuip/<item-name>` (requires the `@shuip` namespace in `components.json`, see **shuip-overview**).
 - Import paths by category:
   - components → `@/components/ui/shuip/<name>`
   - blocks → `@/components/block/shuip/<name>`

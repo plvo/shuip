@@ -5,6 +5,8 @@
   "type": "module",
   "exports": {
     "./__index__": "./__index__.ts",
+    "./namespace": "./src/namespace.ts",
+    "./style-base": "./src/style-base.ts",
     "./items/*": "./items/*",
     "./stubs/*": "./stubs/*"
   },
@@ -39,6 +41,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "gray-matter": "catalog:fumadocs",
+    "next": "catalog:",
     "typescript": "catalog:"
   }
 }

@@ -1,6 +1,6 @@
 ---
 name: shuip-overview
-description: Use when working in a project that uses shuip and you need to know what shuip provides, how to install items from its registry, or which shuip skill/category to reach for. Triggers on shuip imports (@/components/ui/shuip/...) or a shuip registry URL (shuip.plvo.dev/r/...).
+description: Use when working in a project that uses shuip and you need to know what shuip provides, how to install items from its registry, or which shuip skill/category to reach for. Triggers on shuip imports (@/components/ui/shuip/...) or a shuip registry reference (@shuip/<name>).
 ---
 
 # shuip
@@ -11,8 +11,16 @@ shuip is a component library built on shadcn/ui for Next.js + React. You install
 
 ## Install any item
 
+Declare the namespace once in the project's `components.json`:
+
+```json
+{ "registries": { "@shuip": "https://shuip.plvo.dev/r/{style}/{name}.json" } }
+```
+
+Then install by name:
+
 ```bash
-npx shadcn@latest add "https://shuip.plvo.dev/r/<item-name>"
+npx shadcn@latest add @shuip/<item-name>
 ```
 
 Items install under `@/components/ui/shuip/...` (or `@/components/block/shuip/...` for blocks) and pull their shadcn primitives and npm dependencies automatically. **Exported symbols are unprefixed** — the item `rhf-input-field` exports `InputField`; the `rhf-`/`tsf-`/`tsq-` prefix is only the registry name.
