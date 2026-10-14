@@ -67,6 +67,15 @@ describe('toBaseVariant', () => {
     expect(toBaseVariant(input).code).not.toContain('nativeButton');
   });
 
+  test.each([
+    ['ButtonGroup', '<ButtonGroup>Hi</ButtonGroup>'],
+    ['ButtonLink', '<ButtonLink href="/x">Hi</ButtonLink>'],
+  ])('adds nativeButton={false} for %s, whose name only contains Button', (_, child) => {
+    const input = lines('<PopoverTrigger asChild>', `  ${child}`, '</PopoverTrigger>');
+
+    expect(toBaseVariant(input).code).toContain(' nativeButton={false}');
+  });
+
   test('does not put nativeButton on triggers that do not take it', () => {
     const input = lines('<TooltipTrigger asChild>', '  <span>Hi</span>', '</TooltipTrigger>');
 
@@ -130,6 +139,64 @@ describe('toBaseVariant', () => {
 
     expect(code).toBe(input);
     expect(warnings).toEqual(['line 1: asChild on <DialogTrigger> is left as is, its child is not a single element']);
+  });
+
+  test.each([
+    ['text', 'Or type it'],
+    ['an element', '<Icon />'],
+  ])('warns, and leaves the file as it is, when the single element has %s next to it', (_, sibling) => {
+    const input = lines('<DialogTrigger asChild>', '  <Button>Open</Button>', `  ${sibling}`, '</DialogTrigger>');
+
+    const { code, warnings } = toBaseVariant(input);
+
+    expect(code).toBe(input);
+    expect(warnings).toEqual(['line 1: asChild on <DialogTrigger> is left as is, its child is not a single element']);
+  });
+
+  test('reports the line of an unconverted asChild that is not on the first line', () => {
+    const input = lines(
+      'const a = 1;',
+      '',
+      'const b = (',
+      '  <DialogTrigger asChild>',
+      '    {trigger}',
+      '  </DialogTrigger>',
+      ');',
+    );
+
+    expect(toBaseVariant(input).warnings).toEqual([
+      'line 4: asChild on <DialogTrigger> is left as is, its child is not a single element',
+    ]);
+  });
+
+  test('reports the line of a link that is not on the first line', () => {
+    const input = lines('const a = 1;', '<PopoverTrigger asChild>', '  <a href="/x">Go</a>', '</PopoverTrigger>');
+
+    expect(toBaseVariant(input).warnings).toEqual([
+      'line 2: <PopoverTrigger> renders <a> with nativeButton={false}, which Base UI discourages for links; use buttonVariants on a plain anchor',
+    ]);
+  });
+
+  test.each([
+    [
+      'closes itself',
+      lines('const a = (', '  // closes', '  <DialogClose asChild>', '    <Button />', '  </DialogClose>', ');'),
+      lines('const a = (', '  // closes', '  <DialogClose render={<Button />} />', ');'),
+    ],
+    [
+      'has children',
+      lines(
+        'const a = (',
+        '  // wraps',
+        '  <DialogTrigger asChild>',
+        '    <Button>Open</Button>',
+        '  </DialogTrigger>',
+        ');',
+      ),
+      lines('const a = (', '  // wraps', '  <DialogTrigger render={<Button />}>Open</DialogTrigger>', ');'),
+    ],
+  ])('keeps the comment and indentation before a converted element that %s', (_, input, expected) => {
+    expect(toBaseVariant(input).code).toBe(expected);
   });
 
   test.each([
