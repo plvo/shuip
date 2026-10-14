@@ -39,7 +39,7 @@ const lens = useLens({ control: form.control });
 </FormProvider>
 ```
 
-The `<FormProvider>` wrapper is required — it provides React Hook Form's `FormProvider` context. Default selections belong on `useForm({ defaultValues })`, not on the field component.
+Each field binds to the form through its `lens`, created with `useLens({ control: form.control })`. Default selections belong on `useForm({ defaultValues })`, not on the field component.
 
 ## Less boilerplate
 
