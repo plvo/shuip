@@ -289,10 +289,13 @@ describe('toDocsSource', () => {
 describe('the Base UI tsconfig of the overrides', () => {
   test('maps every alias of the registry tsconfig, to the Base UI primitives and stubs', () => {
     const { aliases, relocations } = baseAliasTargets(path.join(REGISTRY_ROOT, 'generated', 'base'));
+    const primitivesDir = path.resolve(REGISTRY_ROOT, '../ui/src/components/ui-base');
 
-    expect(readPathAliases(path.join(REGISTRY_ROOT, 'items', 'tsconfig.json'))).toEqual(
-      aliases.map(({ pattern, target }) => ({ pattern, target: relocate(target, relocations) })),
-    );
+    expect(readPathAliases(path.join(REGISTRY_ROOT, 'items', 'tsconfig.json'))).toEqual([
+      ...aliases.map(({ pattern, target }) => ({ pattern, target: relocate(target, relocations) })),
+      // The Base UI primitives import their siblings through this alias, which no registry source uses.
+      { pattern: '@/components/ui-base/*', target: path.join(primitivesDir, '*') },
+    ]);
   });
 });
 

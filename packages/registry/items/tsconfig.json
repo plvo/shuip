@@ -8,7 +8,8 @@
       "@/components/ui/*": ["../ui/src/components/ui-base/*"],
       "@/lib/utils": ["../ui/src/lib/utils"],
       "@/lib/time": ["./items/lib/time/time"],
-      "@/actions/shuip/places": ["./items/react-hook-form/address-field/extras/places.action"]
+      "@/actions/shuip/places": ["./items/react-hook-form/address-field/extras/places.action"],
+      "@/components/ui-base/*": ["../ui/src/components/ui-base/*"]
     }
   },
   "include": ["**/*.base.tsx"],

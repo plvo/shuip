@@ -179,6 +179,8 @@ To change anything in those, edit the source under `packages/registry/items/<cat
 2. `bun typecheck:base` regenerates, then type-checks every override against Base UI.
 3. `bun smoke base-vega --base-variant --items <name>` installs the item into a real Base UI project and type-checks it.
 
+The vendored Base UI `PopoverContent` does not expose the Positioner's `anchor` prop. An item that anchors a popover to an element other than its trigger (the autocomplete fields) composes `Popover as PopoverPrimitive` from `@base-ui/react/popover` (`Portal`, `Positioner anchor={ref}`, `Popup`) next to the vendored `Popover` root, and sizes the popup with `var(--anchor-width)`.
+
 **Adding a new alias used by extras/:** add the path mapping to `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json`. The generator reads the Base UI copies' aliases from the registry `tsconfig.json`; `packages/registry/items/tsconfig.json` (the Base UI one) must carry the same mapping, with the stubs and primitives pointing to the Base UI ones, and a test fails when it differs.
 
 **Adding a new shared external dep:** add the version to the root `workspaces.catalog` (or appropriate sub-catalog), then reference `"catalog:"`/`"catalog:<name>"` from the consuming workspace.
