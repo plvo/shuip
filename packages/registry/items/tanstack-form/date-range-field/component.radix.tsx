@@ -23,6 +23,11 @@ export interface DateRangeFieldProps {
   triggerProps?: React.ComponentProps<typeof Button>;
 }
 
+export function dateBoundsMatcher(minDate?: Date, maxDate?: Date): Matcher[] | undefined {
+  if (!minDate && !maxDate) return undefined;
+  return [...(minDate ? [{ before: minDate }] : []), ...(maxDate ? [{ after: maxDate }] : [])];
+}
+
 function formatRange(value: DateRange | undefined, locale: Locale | undefined): string | null {
   if (!value?.from) return null;
   const fromLabel = format(value.from, 'PPP', { locale });
@@ -45,10 +50,7 @@ export function DateRangeField({
   const value = field.state.value;
   const [open, setOpen] = React.useState(false);
 
-  const disabledMatcher = React.useMemo<Matcher[] | undefined>(() => {
-    if (!minDate && !maxDate) return undefined;
-    return [...(minDate ? [{ before: minDate }] : []), ...(maxDate ? [{ after: maxDate }] : [])];
-  }, [minDate, maxDate]);
+  const disabledMatcher = React.useMemo(() => dateBoundsMatcher(minDate, maxDate), [minDate, maxDate]);
 
   const triggerLabel = formatRange(value, locale);
 
