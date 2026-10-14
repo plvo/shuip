@@ -129,7 +129,7 @@ export function ResponsiveDialog({
   return (
     <ResponsiveDialogContext.Provider value={{ isMobile }}>
       {isMobile ? (
-        <Drawer open={open} onOpenChange={onOpenChange}>
+        <Drawer open={open} onOpenChange={onOpenChange} showSwipeHandle>
           {children}
         </Drawer>
       ) : (

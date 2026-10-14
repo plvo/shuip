@@ -12,6 +12,7 @@ import {
 
 export interface ConfirmationDialogProps extends React.RefAttributes<HTMLDialogElement> {
   trigger?: React.ReactElement;
+  nativeButton?: boolean;
   title?: string;
   description?: string;
   labelConfirmButton?: string;
@@ -20,6 +21,7 @@ export interface ConfirmationDialogProps extends React.RefAttributes<HTMLDialogE
 
 export function ConfirmationDialog({
   trigger,
+  nativeButton,
   title,
   description,
   labelConfirmButton,
@@ -28,7 +30,7 @@ export function ConfirmationDialog({
 }: ConfirmationDialogProps) {
   return (
     <Dialog {...props}>
-      <DialogTrigger render={trigger} />
+      {trigger && <DialogTrigger render={trigger} nativeButton={nativeButton} />}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

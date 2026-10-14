@@ -97,6 +97,12 @@ describe('item sources stay base-agnostic', () => {
     expect(paths(sources)).toContain('packages/registry/items/components/search-input/component.base.tsx');
   });
 
+  test('no Base UI override declares or uses asChild', () => {
+    const overrides = items.flatMap(overridePaths).map((absPath) => readSource(absPath, 'source'));
+    expect(overrides.length).toBeGreaterThan(0);
+    expect(paths(overrides.filter((override) => /\basChild\b/.test(override.content)))).toEqual([]);
+  });
+
   test('scans the doc page of every item and of every block', () => {
     const itemDocCount = items.filter((item) => item.hasMdx).length;
     const blockDocs = blockDocPaths();
@@ -177,15 +183,6 @@ describe('the Base UI variant stays free of Radix', () => {
       .filter((entry) => entry.endsWith('.tsx'))
       .flatMap((entry) => asChildSites(entry, fs.readFileSync(path.join(consumerDir, entry), 'utf-8')));
     expect(remaining.sort()).toEqual([]);
-  });
-
-  test.each([
-    'components/side-dialog/component.base.tsx',
-    'components/confirmation-dialog/component.base.tsx',
-    'blocks/responsive-dialog/component.base.tsx',
-  ])('%s composes through render and never mentions asChild', (relativePath) => {
-    const published = fs.readFileSync(path.join(outDir, 'consumer', 'items', relativePath), 'utf-8');
-    expect(published).not.toMatch(/\basChild\b/);
   });
 
   test('every item is published in the Base UI variant, from files that exist', () => {

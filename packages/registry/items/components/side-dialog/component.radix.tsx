@@ -120,9 +120,20 @@ export function SideDialogContent({ showCloseButton = true, className, children,
   const { open, onOpenChange, position, size } = React.useContext(SideDialogContext);
   const [mounted, setMounted] = React.useState(false);
 
+  const returnFocusRef = React.useRef<HTMLElement | null>(null);
+
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  React.useEffect(() => {
+    if (open) {
+      returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      return;
+    }
+    if (returnFocusRef.current?.isConnected) returnFocusRef.current.focus();
+    returnFocusRef.current = null;
+  }, [open]);
 
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {

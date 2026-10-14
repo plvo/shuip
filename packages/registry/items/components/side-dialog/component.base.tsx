@@ -1,7 +1,6 @@
 'use client';
 
-import { mergeProps } from '@base-ui/react/merge-props';
-import { useRender } from '@base-ui/react/use-render';
+import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { XIcon } from 'lucide-react';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
@@ -18,9 +17,7 @@ export interface SideDialogProps {
   children?: React.ReactNode;
 }
 
-export interface SideDialogTriggerProps extends useRender.ComponentProps<'button'> {
-  nativeButton?: boolean;
-}
+export interface SideDialogTriggerProps extends ButtonPrimitive.Props {}
 
 export interface SideDialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
   showCloseButton?: boolean;
@@ -43,9 +40,7 @@ export interface SideDialogFooterProps extends React.HTMLAttributes<HTMLDivEleme
   children: React.ReactNode;
 }
 
-export interface SideDialogCloseProps extends useRender.ComponentProps<'button'> {
-  nativeButton?: boolean;
-}
+export interface SideDialogCloseProps extends ButtonPrimitive.Props {}
 
 export interface SideDialogBodyProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -57,13 +52,11 @@ const SideDialogContext = React.createContext<{
   onOpenChange: (open: boolean) => void;
   position: SideDialogPosition;
   size: SideDialogSize;
-  triggerRef: React.RefObject<HTMLButtonElement | null>;
 }>({
   open: false,
   onOpenChange: () => {},
   position: 'bottom-right',
   size: 'sm',
-  triggerRef: { current: null },
 });
 
 export function SideDialog({
@@ -75,7 +68,6 @@ export function SideDialog({
 }: SideDialogProps) {
   // Internal state for uncontrolled mode
   const [internalOpen, setInternalOpen] = React.useState(false);
-  const triggerRef = React.useRef<HTMLButtonElement | null>(null);
 
   // Use controlled props if provided, otherwise use internal state
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
@@ -87,7 +79,6 @@ export function SideDialog({
       onOpenChange,
       position,
       size,
-      triggerRef,
     }),
     [open, onOpenChange, position, size],
   );
@@ -95,70 +86,39 @@ export function SideDialog({
   return <SideDialogContext.Provider value={contextValue}>{children}</SideDialogContext.Provider>;
 }
 
-interface SideDialogButtonOptions extends SideDialogTriggerProps {
-  slot: string;
-  onActivate: () => void;
-  extraRef?: React.Ref<HTMLButtonElement>;
-}
+export function SideDialogTrigger({ onClick, ...props }: SideDialogTriggerProps) {
+  const { onOpenChange } = React.useContext(SideDialogContext);
 
-function useSideDialogButton({
-  slot,
-  onActivate,
-  extraRef,
-  render,
-  nativeButton = true,
-  ref,
-  ...props
-}: SideDialogButtonOptions) {
-  return useRender({
-    defaultTagName: 'button',
-    render,
-    ref: [ref ?? null, extraRef ?? null],
-    state: { slot },
-    props: mergeProps<'button'>(
-      {
-        onClick: onActivate,
-        ...(nativeButton
-          ? { type: 'button' }
-          : {
-              role: 'button',
-              tabIndex: 0,
-              onKeyDown(event) {
-                if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
-                  event.preventDefault();
-                  onActivate();
-                }
-              },
-            }),
-      },
-      props,
-    ),
-  });
-}
-
-export function SideDialogTrigger(props: SideDialogTriggerProps) {
-  const { onOpenChange, triggerRef } = React.useContext(SideDialogContext);
-
-  return useSideDialogButton({
-    ...props,
-    slot: 'side-dialog-trigger',
-    onActivate: () => onOpenChange(true),
-    extraRef: triggerRef,
-  });
+  return (
+    <ButtonPrimitive
+      data-slot='side-dialog-trigger'
+      onClick={(e) => {
+        onClick?.(e);
+        onOpenChange(true);
+      }}
+      {...props}
+    />
+  );
 }
 
 export function SideDialogContent({ showCloseButton = true, className, children, ...props }: SideDialogContentProps) {
-  const { open, onOpenChange, position, size, triggerRef } = React.useContext(SideDialogContext);
+  const { open, onOpenChange, position, size } = React.useContext(SideDialogContext);
   const [mounted, setMounted] = React.useState(false);
+
+  const returnFocusRef = React.useRef<HTMLElement | null>(null);
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
   React.useEffect(() => {
-    if (!open) return;
-    return () => triggerRef.current?.focus();
-  }, [open, triggerRef]);
+    if (open) {
+      returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      return;
+    }
+    if (returnFocusRef.current?.isConnected) returnFocusRef.current.focus();
+    returnFocusRef.current = null;
+  }, [open]);
 
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -345,12 +305,17 @@ export function SideDialogBody({ className, children, ...props }: SideDialogBody
   );
 }
 
-export function SideDialogClose(props: SideDialogCloseProps) {
+export function SideDialogClose({ onClick, ...props }: SideDialogCloseProps) {
   const { onOpenChange } = React.useContext(SideDialogContext);
 
-  return useSideDialogButton({
-    ...props,
-    slot: 'side-dialog-close',
-    onActivate: () => onOpenChange(false),
-  });
+  return (
+    <ButtonPrimitive
+      data-slot='side-dialog-close'
+      onClick={(e) => {
+        onClick?.(e);
+        onOpenChange(false);
+      }}
+      {...props}
+    />
+  );
 }
