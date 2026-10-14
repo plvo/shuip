@@ -5,7 +5,7 @@ export type { Base };
 /** Sections of the docs that exist once per base. Guides under `/docs` do not. */
 export type BasedSection = 'components' | 'blocks';
 
-export const BASED_SECTIONS: readonly BasedSection[] = ['components', 'blocks'];
+const BASED_SECTIONS: readonly BasedSection[] = ['components', 'blocks'];
 
 export const BASES: readonly Base[] = PUBLISHED_VARIANTS;
 

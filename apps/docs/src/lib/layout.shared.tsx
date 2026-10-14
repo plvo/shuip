@@ -1,6 +1,7 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
+import { type Base, DEFAULT_BASE, sectionUrl } from './base-routes';
 
-export function baseOptions(): BaseLayoutProps {
+export function baseOptions(base: Base = DEFAULT_BASE): BaseLayoutProps {
   return {
     nav: {
       enabled: true,
@@ -29,12 +30,12 @@ export function baseOptions(): BaseLayoutProps {
       },
       {
         text: 'Components',
-        url: '/components',
+        url: sectionUrl('components', base),
         on: 'nav',
       },
       {
         text: 'Blocks',
-        url: '/blocks',
+        url: sectionUrl('blocks', base),
         on: 'nav',
       },
       {

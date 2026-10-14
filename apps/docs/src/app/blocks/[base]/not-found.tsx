@@ -1,6 +1,7 @@
 import { DocsPage } from 'fumadocs-ui/page';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { DEFAULT_BASE, sectionUrl } from '@/lib/base-routes';
 
 export default function NotFound() {
   return (
@@ -13,7 +14,7 @@ export default function NotFound() {
             <p className='text-muted-foreground'>The page you're looking for doesn't exist in the blocks section.</p>
           </div>
           <Button asChild variant='default' size='lg'>
-            <Link href='/blocks'>Go back to Blocks</Link>
+            <Link href={sectionUrl('blocks', DEFAULT_BASE)}>Go back to Blocks</Link>
           </Button>
         </div>
       </div>

@@ -1,11 +1,15 @@
 import { notFound } from 'next/navigation';
-import { componentsSource, getLLMText } from '@/lib/source';
+import { BASES, isBase } from '@/lib/base-routes';
+import { componentsSources, getLLMText } from '@/lib/source';
 
 export const revalidate = false;
 
-export async function GET(_req: Request, { params }: RouteContext<'/components/llms.mdx/[[...slug]]'>) {
-  const { slug } = await params;
-  const page = componentsSource.getPage(slug);
+export const dynamicParams = false;
+
+export async function GET(_req: Request, { params }: RouteContext<'/components/llms.mdx/[base]/[[...slug]]'>) {
+  const { base, slug } = await params;
+  if (!isBase(base)) notFound();
+  const page = componentsSources[base].getPage(slug);
   if (!page) notFound();
 
   return new Response(await getLLMText(page), {
@@ -16,5 +20,5 @@ export async function GET(_req: Request, { params }: RouteContext<'/components/l
 }
 
 export async function generateStaticParams() {
-  return componentsSource.generateParams();
+  return BASES.flatMap((base) => componentsSources[base].generateParams().map((params) => ({ base, ...params })));
 }

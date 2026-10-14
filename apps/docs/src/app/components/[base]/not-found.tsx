@@ -1,6 +1,7 @@
 import { DocsPage } from 'fumadocs-ui/page';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { DEFAULT_BASE, sectionUrl } from '@/lib/base-routes';
 
 export default function NotFound() {
   return (
@@ -15,7 +16,7 @@ export default function NotFound() {
             </p>
           </div>
           <Button asChild variant='default' size='lg'>
-            <Link href='/components'>Go back to Components</Link>
+            <Link href={sectionUrl('components', DEFAULT_BASE)}>Go back to Components</Link>
           </Button>
         </div>
       </div>

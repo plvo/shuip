@@ -3,6 +3,7 @@
 
 @source "../components/**/*.{ts,tsx}";
 @source "../../../registry/items/**/*.{ts,tsx}";
+@source "../../../registry/generated/base/items/**/*.{ts,tsx}";
 @source "../../../../apps/docs/src/**/*.{ts,tsx}";
 
 @custom-variant dark (&:is(.dark *));

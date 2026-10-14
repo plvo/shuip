@@ -3,7 +3,11 @@
 import { generate as DefaultImage } from 'fumadocs-ui/og';
 import { notFound } from 'next/navigation';
 import { ImageResponse } from 'next/og';
-import { blocksSource, getPageImage } from '@/lib/source';
+import { DEFAULT_BASE } from '@/lib/base-routes';
+import { blocksSources, getPageImage } from '@/lib/source';
+
+// Both bases share one image: the title and the description do not depend on the base.
+const blocksSource = blocksSources[DEFAULT_BASE];
 
 export const revalidate = false;
 

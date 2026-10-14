@@ -1,12 +1,26 @@
 import { DocsLayout } from 'fumadocs-ui/layouts/notebook';
+import { notFound } from 'next/navigation';
+import { BaseProviders } from '@/components/base-providers';
+import { BASES, isBase } from '@/lib/base-routes';
 import { baseOptions } from '@/lib/layout.shared';
-import { sidebarTree } from '@/lib/source';
+import { sidebarTrees } from '@/lib/source';
 
-export default function Layout({ children }: LayoutProps<'/components'>) {
-  const base = baseOptions();
+export default async function Layout({ children, params }: LayoutProps<'/components/[base]'>) {
+  const { base } = await params;
+  if (!isBase(base)) notFound();
+
+  const options = baseOptions(base);
   return (
-    <DocsLayout {...base} nav={{ ...base.nav, mode: 'top' }} tree={sidebarTree}>
-      {children}
-    </DocsLayout>
+    <BaseProviders base={base}>
+      <DocsLayout {...options} nav={{ ...options.nav, mode: 'top' }} tree={sidebarTrees[base]}>
+        {children}
+      </DocsLayout>
+    </BaseProviders>
   );
+}
+
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return BASES.map((base) => ({ base }));
 }

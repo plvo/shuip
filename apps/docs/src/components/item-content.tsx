@@ -1,46 +1,52 @@
-import { REGISTRY_INDEX } from '@repo/registry/__index__';
+import path from 'node:path';
+import { listItemExamples, readItemSource } from '@repo/registry/item-source';
+import type { Base } from '@/lib/base-routes';
 import { filenameToTitle } from '@/lib/utils';
 import { useMDXComponents } from '@/mdx-components';
 import { InstallationCmd } from './item-installation';
-import { ItemPreview, Preview } from './item-preview';
+import { ItemPreview } from './item-preview';
+import { Preview } from './preview';
+
+const REGISTRY_ROOT = path.resolve(process.cwd(), '../../packages/registry');
 
 export interface ItemHeaderProps {
+  base: Base;
   registryName: string;
   text?: string;
 }
 
-export async function ItemHeader({ registryName, text }: ItemHeaderProps) {
-  const code = REGISTRY_INDEX[registryName]?.code;
+export async function ItemHeader({ base, registryName, text }: ItemHeaderProps) {
+  const code = readItemSource(base, registryName, REGISTRY_ROOT);
 
   return (
     <div className='space-y-4'>
       {text && <p>{text}</p>}
       <InstallationCmd itemName={registryName} manualCode={code} />
-      <Preview registryName={`${registryName}.example`} />
+      <Preview base={base} registryName={`${registryName}.example`} />
     </div>
   );
 }
 
 export interface ItemExamplesProps {
+  base: Base;
   registryName: string;
 }
 
-export async function ItemExamples({ registryName }: ItemExamplesProps) {
+export async function ItemExamples({ base, registryName }: ItemExamplesProps) {
   const { h3: H3 } = useMDXComponents();
 
-  const examples = Object.keys(REGISTRY_INDEX).filter((example) => {
-    const splitted = example.split('.');
-    return splitted.shift() === registryName && splitted.pop() === 'example';
-  });
+  const examples = listItemExamples(base, registryName, REGISTRY_ROOT);
 
   if (!examples.length) {
     return <p className='text-sm text-muted-foreground'>No examples</p>;
   }
 
-  return examples.sort().map((example) => (
+  return examples.map((example) => (
     <div key={example} className='my-6 space-y-4'>
       <H3>{example === `${registryName}.example` ? 'Default' : filenameToTitle(example.split('.')[1])}</H3>
-      <ItemPreview registryName={example} />
+      <ItemPreview code={readItemSource(base, example, REGISTRY_ROOT)}>
+        <Preview base={base} registryName={example} />
+      </ItemPreview>
     </div>
   ));
 }

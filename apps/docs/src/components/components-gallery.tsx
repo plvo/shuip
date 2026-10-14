@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { LazyPreview } from '@/components/lazy-preview';
+import { Preview } from '@/components/preview';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { componentsSource } from '@/lib/source';
+import { type Base, sectionUrl } from '@/lib/base-routes';
+import { componentsSources } from '@/lib/source';
 
 const CATEGORY_ORDER = ['components', 'react-hook-form', 'tanstack-form', 'tanstack-query'] as const;
 
@@ -12,14 +14,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   'tanstack-query': 'TanStack Query',
 };
 
-const CATEGORY_GUIDES: Record<string, string | undefined> = {
-  'react-hook-form': '/components/react-hook-form',
-  'tanstack-form': '/components/tanstack-form',
-  'tanstack-query': '/components/tanstack-query',
-};
+const GUIDED_CATEGORIES = ['react-hook-form', 'tanstack-form', 'tanstack-query'];
 
-export function ComponentsGallery() {
-  const pages = componentsSource.getPages().filter((page) => page.data.registryName);
+export function ComponentsGallery({ base }: { base: Base }) {
+  const pages = componentsSources[base].getPages().filter((page) => page.data.registryName);
 
   const byCategory = new Map<string, typeof pages>();
   for (const page of pages) {
@@ -33,7 +31,7 @@ export function ComponentsGallery() {
   return (
     <div className='space-y-12'>
       {CATEGORY_ORDER.filter((category) => byCategory.has(category)).map((category) => {
-        const guide = CATEGORY_GUIDES[category];
+        const guide = GUIDED_CATEGORIES.includes(category) ? sectionUrl('components', base, [category]) : undefined;
         return (
           <section key={category} className='space-y-6'>
             <h2 className='font-mono text-2xl font-bold'>
@@ -49,7 +47,9 @@ export function ComponentsGallery() {
               {byCategory.get(category)?.map((page) => (
                 <Card key={page.url} className='gap-0 overflow-hidden py-0 transition-shadow hover:shadow-2xl'>
                   <div className='flex h-40 items-center justify-center overflow-hidden border-b border-border'>
-                    <LazyPreview registryName={`${page.data.registryName}.example`} className='w-full' />
+                    <LazyPreview className='w-full'>
+                      <Preview base={base} registryName={`${page.data.registryName}.example`} />
+                    </LazyPreview>
                   </div>
                   <Link href={page.url} className='no-underline'>
                     <CardHeader className='py-(--card-spacing)'>
