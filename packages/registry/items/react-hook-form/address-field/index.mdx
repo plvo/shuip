@@ -59,8 +59,6 @@ const lens = useLens({ control: form.control });
 </FormProvider>
 ```
 
-Each field binds to the form through its `lens`, created with `useLens({ control: form.control })`.
-
 ## Compound field
 
 Unlike a single-input field, `AddressField` writes to every sub-field of the `AddressData` sub-tree when the user picks a place suggestion. Internally, it derives one controller per sub-field from the lens:

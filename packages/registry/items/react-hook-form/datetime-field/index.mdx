@@ -37,8 +37,6 @@ const lens = useLens({ control: form.control });
 </FormProvider>
 ```
 
-Each field binds to the form through its `lens`, created with `useLens({ control: form.control })`.
-
 ## Behavior
 
 - **First date pick:** when the field is empty and the user picks a day, hours and minutes default to `00:00`. When the field already has a value, the existing hours/minutes are preserved.
