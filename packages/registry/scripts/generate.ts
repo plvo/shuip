@@ -2,6 +2,7 @@
 /** biome-ignore-all lint/suspicious/noAssignInExpressions: script */
 import fs from 'node:fs';
 import path from 'node:path';
+import { SHUIP_ORIGIN } from '../src/namespace';
 import { buildRegistryDependencies, type Catalog, flattenCatalogs, pinDependencies } from './dependencies';
 import { applySkillSourcesToDocs, assertUniqueNames, emitSkills, resolveCatalog } from './skills';
 
@@ -294,7 +295,7 @@ export const buildRegistryJson = (
     out.push(entry);
   }
   out.sort((a, b) => a.name.localeCompare(b.name));
-  return { name: 'shuip', homepage: 'https://shuip.plvo.dev', items: out };
+  return { name: 'shuip', homepage: SHUIP_ORIGIN, items: out };
 };
 
 export const buildIndexTs = (items: ScannedItem[]): string => {
