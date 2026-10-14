@@ -17,9 +17,9 @@ export function BaseSwitcher({ base, url }: BaseSwitcherProps) {
           href={siblingUrl(url, candidate) ?? url}
           aria-current={candidate === base ? 'page' : undefined}
           className={cn(
-            '-mb-px border-b-2 px-3 py-2 text-sm font-medium no-underline transition-colors',
+            '-mb-px inline-flex min-h-11 items-center rounded-t-md border-b-2 px-3 text-sm font-medium no-underline transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring',
             candidate === base
-              ? 'border-fd-primary text-fd-primary'
+              ? 'border-fd-primary text-fd-foreground'
               : 'border-transparent text-fd-muted-foreground hover:text-fd-foreground',
           )}
         >

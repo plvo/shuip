@@ -51,6 +51,10 @@ export function InstallationCmd({ itemName, manualCode, ...props }: Installation
           </Link>
           .
         </p>
+        <p>
+          The command is the same for Base UI and Radix: the CLI reads the style in your <code>components.json</code>{' '}
+          and installs the matching variant.
+        </p>
         <div className='**:data-code:px-4'>
           <CodeBlock keepBackground data-code>
             <Pre>{`"registries": { "${SHUIP_NAMESPACE}": "${SHUIP_REGISTRY_URL}" }`}</Pre>
