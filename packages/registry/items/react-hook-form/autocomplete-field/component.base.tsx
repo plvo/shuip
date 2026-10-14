@@ -50,7 +50,6 @@ export function AutocompleteField({
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   const requestIdRef = React.useRef(0);
   const anchorRef = React.useRef<HTMLDivElement>(null);
-  const popoverRef = React.useRef<HTMLDivElement>(null);
 
   const query = field.value ?? '';
 
@@ -112,6 +111,12 @@ export function AutocompleteField({
       return;
     }
 
+    if (e.key === 'Tab') {
+      setOpen(false);
+      setSelectedIndex(-1);
+      return;
+    }
+
     if (items.length === 0) return;
 
     switch (e.key) {
@@ -132,11 +137,7 @@ export function AutocompleteField({
     }
   };
 
-  const handleBlur = (e: React.FocusEvent) => {
-    const relatedTarget = e.relatedTarget as HTMLElement;
-    if (popoverRef.current?.contains(relatedTarget)) {
-      return;
-    }
+  const handleBlur = () => {
     field.onBlur();
     setTimeout(() => {
       setOpen(false);
@@ -164,6 +165,7 @@ export function AutocompleteField({
               setSelectedIndex(-1);
             }}
             onFocus={() => setOpen(true)}
+            onClick={() => setOpen(true)}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             aria-invalid={fieldState.invalid}
@@ -177,11 +179,13 @@ export function AutocompleteField({
         <PopoverPrimitive.Portal>
           <PopoverPrimitive.Positioner anchor={anchorRef} align='start' sideOffset={4} className='isolate z-50'>
             <PopoverPrimitive.Popup
-              ref={popoverRef}
               data-slot='popover-content'
               initialFocus={false}
               onMouseDown={(event) => event.preventDefault()}
-              className='z-50 flex origin-(--transform-origin) flex-col rounded-md bg-popover p-0 text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95'
+              className={cn(
+                'z-50 flex w-72 origin-(--transform-origin) flex-col gap-4 rounded-md bg-popover p-4 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
+                'p-0',
+              )}
               style={{ width: 'var(--anchor-width)' }}
             >
               <Command shouldFilter={false} className='w-full'>
