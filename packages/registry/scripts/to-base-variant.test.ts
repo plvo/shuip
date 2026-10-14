@@ -76,6 +76,27 @@ describe('toBaseVariant', () => {
     expect(toBaseVariant(input).code).toContain(' nativeButton={false}');
   });
 
+  test('renders a custom component whose name ends in Button with its props and without nativeButton', () => {
+    const input = lines(
+      '<DialogTrigger asChild>',
+      "  <FilterMenuButton label='x' count={count} />",
+      '</DialogTrigger>',
+    );
+
+    const { code, warnings } = toBaseVariant(input);
+
+    expect(code).toBe("<DialogTrigger render={<FilterMenuButton label='x' count={count} />} />\n");
+    expect(warnings).toEqual([]);
+  });
+
+  test('adds nativeButton={false} to a custom component whose name does not end in Button', () => {
+    const input = lines('<DialogTrigger asChild>', "  <FilterMenuChip label='x' />", '</DialogTrigger>');
+
+    expect(toBaseVariant(input).code).toBe(
+      "<DialogTrigger render={<FilterMenuChip label='x' />} nativeButton={false} />\n",
+    );
+  });
+
   test('does not put nativeButton on triggers that do not take it', () => {
     const input = lines('<TooltipTrigger asChild>', '  <span>Hi</span>', '</TooltipTrigger>');
 
