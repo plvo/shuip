@@ -1,18 +1,12 @@
 'use client';
 
-import type { VariantProps } from 'class-variance-authority';
 import { Loader2Icon } from 'lucide-react';
-import { Button, type buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { useFormContext } from '@/components/ui/shuip/tanstack-form/form-context';
-
-type ButtonProps = React.ComponentProps<'button'> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
-  };
 
 export interface SubmitButtonProps {
   children?: React.ReactNode;
-  props?: ButtonProps;
+  props?: React.ComponentProps<typeof Button>;
 }
 
 export function SubmitButton({ children = 'Submit', props }: SubmitButtonProps) {
