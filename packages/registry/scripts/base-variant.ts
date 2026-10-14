@@ -1,22 +1,38 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
+import ts from 'typescript';
 import { toBaseVariant } from './to-base-variant';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '../../..');
 const BIOME_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', 'biome');
+const BIOME_CONFIG = path.join(REPO_ROOT, 'biome.json');
 
-export type FormatSource = (code: string, filePath: string) => string;
+/** Formats the sources of one run together, returning them in order. */
+export type FormatSources = (codes: string[]) => string[];
 
-/** Formats with the repository's Biome configuration, the way the sources it derives from are formatted. */
-export const formatWithBiome: FormatSource = (code, filePath) => {
-  const result = Bun.spawnSync([BIOME_BIN, 'format', `--stdin-file-path=${filePath}`], {
-    cwd: REPO_ROOT,
-    stdin: Buffer.from(code),
-  });
-  if (result.exitCode !== 0) {
-    throw new Error(`[generate] biome could not format ${filePath}:\n${result.stderr.toString()}`);
+/**
+ * Formats with the formatter settings of the repository's Biome configuration, the way the sources the
+ * codes derive from are formatted. One Biome process serves all the codes; they are staged in a temporary
+ * folder because the repository configuration excludes the generated folders.
+ */
+export const formatWithBiome: FormatSources = (codes) => {
+  if (codes.length === 0) return [];
+  const stagingDir = fs.mkdtempSync(path.join(os.tmpdir(), 'shuip-format-'));
+  try {
+    const { formatter, javascript } = JSON.parse(fs.readFileSync(BIOME_CONFIG, 'utf-8'));
+    fs.writeFileSync(path.join(stagingDir, 'biome.json'), JSON.stringify({ formatter, javascript }));
+    for (const [index, code] of codes.entries()) {
+      fs.writeFileSync(path.join(stagingDir, `${index}.tsx`), code);
+    }
+    const result = Bun.spawnSync([BIOME_BIN, 'format', '--write', '.'], { cwd: stagingDir });
+    if (result.exitCode !== 0) {
+      throw new Error(`[generate] biome could not format the Base UI copies:\n${result.stderr.toString()}`);
+    }
+    return codes.map((_, index) => fs.readFileSync(path.join(stagingDir, `${index}.tsx`), 'utf-8'));
+  } finally {
+    fs.rmSync(stagingDir, { recursive: true, force: true });
   }
-  return result.stdout.toString();
 };
 
 export interface BaseSource {
@@ -27,34 +43,57 @@ export interface BaseSource {
 }
 
 /** An override wins over the codemod; a canonical file the codemod leaves alone is `identical`. */
-export const resolveBaseSource = (
-  canonicalPath: string,
-  overridePath: string | undefined,
-  format: FormatSource,
-): BaseSource => {
+export const resolveBaseSource = (canonicalPath: string, overridePath: string | undefined): BaseSource => {
   if (overridePath) {
     return { code: fs.readFileSync(overridePath, 'utf-8'), origin: 'override', warnings: [] };
   }
   const canonical = fs.readFileSync(canonicalPath, 'utf-8');
   const { code, warnings } = toBaseVariant(canonical);
-  if (code === canonical) return { code, origin: 'identical', warnings };
-  return { code: format(code, canonicalPath), origin: 'codemod', warnings };
+  return { code, origin: code === canonical ? 'identical' : 'codemod', warnings };
 };
 
-export interface AliasTargets {
-  /** Directory of the stubs that re-export the Base UI copies of the items. */
-  stubsDir: string;
-  /** Directory of the canonical items, for the shared files that have no Base UI copy. */
-  itemsDir: string;
-  /** Directory of the Base UI primitives. */
-  primitivesDir: string;
-  /** The `cn` helper. */
-  utilsFile: string;
+export interface PathAlias {
+  /** A `paths` key of a tsconfig: an exact module specifier, or a prefix followed by `*`. */
+  pattern: string;
+  /** The absolute target, with the same `*` as the pattern. */
+  target: string;
 }
 
-const SHARED_FILES: Record<string, string> = {
-  '@/lib/time': 'lib/time/time',
-  '@/actions/shuip/places': 'react-hook-form/address-field/extras/places.action',
+/** The `compilerOptions.paths` of a tsconfig, with absolute targets, as TypeScript resolves them through `extends`. */
+export const readPathAliases = (tsconfigPath: string): PathAlias[] => {
+  const parsed = ts.getParsedCommandLineOfConfigFile(
+    tsconfigPath,
+    {},
+    {
+      ...ts.sys,
+      onUnRecoverableConfigFileDiagnostic: (diagnostic) => {
+        throw new Error(ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
+      },
+    },
+  );
+  const { baseUrl, pathsBasePath, paths = {} } = parsed?.options ?? {};
+  const baseDir = baseUrl ?? (pathsBasePath as string);
+  return Object.entries(paths).map(([pattern, [target]]) => ({
+    pattern,
+    target: path.resolve(baseDir, target as string),
+  }));
+};
+
+export interface Relocation {
+  from: string;
+  to: string;
+}
+
+export interface AliasTargets {
+  /** The aliases of the canonical sources. */
+  aliases: PathAlias[];
+  /** Moves the targets that differ for the Base UI copies, such as the primitives and the stubs. */
+  relocations: Relocation[];
+}
+
+export const relocate = (target: string, relocations: Relocation[]): string => {
+  const relocation = relocations.find(({ from }) => target === from || target.startsWith(`${from}${path.sep}`));
+  return relocation ? `${relocation.to}${target.slice(relocation.from.length)}` : target;
 };
 
 const MODULE_SPECIFIER = /(\bfrom\s+|\bimport\s*\(?\s*)(['"])(@\/[^'"]+)\2/g;
@@ -64,19 +103,25 @@ const importPath = (fromFile: string, target: string): string => {
   return relative.startsWith('.') ? relative : `./${relative}`;
 };
 
-const aliasTarget = (specifier: string, targets: AliasTargets): string | undefined => {
-  const shuipUi = specifier.match(/^@\/components\/ui\/shuip\/(.+)$/)?.[1];
-  if (shuipUi) return path.join(targets.stubsDir, shuipUi);
-  const shuipBlock = specifier.match(/^@\/components\/block\/shuip\/(.+)$/)?.[1];
-  if (shuipBlock) return path.join(targets.stubsDir, 'blocks', shuipBlock);
-  const primitive = specifier.match(/^@\/components\/ui\/(.+)$/)?.[1];
-  if (primitive) return path.join(targets.primitivesDir, primitive);
-  if (specifier === '@/lib/utils') return targets.utilsFile;
-  const shared = SHARED_FILES[specifier];
-  return shared ? path.join(targets.itemsDir, shared) : undefined;
+// The most specific alias wins, like the module resolution of TypeScript.
+const aliasTarget = (specifier: string, { aliases, relocations }: AliasTargets): string | undefined => {
+  let best: { target: string; specificity: number } | undefined;
+  for (const { pattern, target } of aliases) {
+    const star = pattern.indexOf('*');
+    const prefix = star < 0 ? pattern : pattern.slice(0, star);
+    const suffix = star < 0 ? '' : pattern.slice(star + 1);
+    const matches =
+      star < 0
+        ? specifier === pattern
+        : specifier.length >= pattern.length - 1 && specifier.startsWith(prefix) && specifier.endsWith(suffix);
+    if (!matches || (best && best.specificity >= prefix.length)) continue;
+    const captured = specifier.slice(prefix.length, specifier.length - suffix.length);
+    best = { target: target.replace('*', captured), specificity: prefix.length };
+  }
+  return best && relocate(best.target, relocations);
 };
 
-/** The copy the docs compile: every alias resolves to a Base UI primitive, a Base UI stub or a shared file. */
+/** The copy the docs compile: every alias resolves to an explicit path, to a Base UI primitive or stub where it differs. */
 export const toDocsSource = (code: string, filePath: string, targets: AliasTargets): string =>
   code.replace(MODULE_SPECIFIER, (match, lead: string, quote: string, specifier: string) => {
     const target = aliasTarget(specifier, targets);

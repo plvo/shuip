@@ -2,6 +2,7 @@ import { afterAll, describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import ts from 'typescript';
 import { buildRegistryJson, readRootCatalog, type ScannedItem, scanItems, writeBaseVariant } from './generate';
 import { RADIX_PACKAGE } from './radix-package';
 
@@ -117,14 +118,24 @@ describe('item sources stay base-agnostic', () => {
   });
 });
 
+const asChildSites = (relativePath: string, content: string): string[] => {
+  const file = ts.createSourceFile(relativePath, content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const sites: string[] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isJsxAttribute(node) && node.name.getText(file) === 'asChild') {
+      const tag = (node.parent.parent as ts.JsxOpeningLikeElement).tagName.getText(file);
+      sites.push(`${relativePath} <${tag} asChild${node.initializer ? '={…}' : ''}>`);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(file);
+  return sites;
+};
+
 describe('the Base UI variant stays free of Radix', () => {
   const items = scanItems();
   const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'shuip-base-invariants-'));
-  const build = writeBaseVariant(
-    items,
-    { outDir, itemsDir: path.join(REPO_ROOT, 'packages/registry/items'), primitivesDir: '', utilsFile: '' },
-    (code) => code,
-  );
+  const build = writeBaseVariant(items, { outDir, itemsDir: path.join(REPO_ROOT, 'packages/registry/items') });
   afterAll(() => fs.rmSync(outDir, { recursive: true, force: true }));
 
   const generatedFiles = fs
@@ -145,6 +156,25 @@ describe('the Base UI variant stays free of Radix', () => {
 
   test('no generated file imports the form primitive', () => {
     expect(paths(findViolations(generatedFiles).formPrimitiveImports)).toEqual([]);
+  });
+
+  // A site listed here keeps its Radix `asChild` in the Base UI output until an override or the canonical source
+  // composes it differently. A new site fails this test: override it, or list it after checking it composes.
+  test('only the known sites keep asChild in the published Base UI sources', () => {
+    const consumerDir = path.join(outDir, 'consumer', 'items');
+    const remaining = fs
+      .readdirSync(consumerDir, { recursive: true, encoding: 'utf-8' })
+      .filter((entry) => entry.endsWith('.tsx'))
+      .flatMap((entry) => asChildSites(entry, fs.readFileSync(path.join(consumerDir, entry), 'utf-8')));
+    expect(remaining.sort()).toEqual([
+      'blocks/data-table/component.base.tsx <DialogTrigger asChild>',
+      'blocks/data-table/component.base.tsx <PopoverTrigger asChild>',
+      'blocks/responsive-dialog/component.base.tsx <DrawerClose asChild={…}>',
+      'blocks/responsive-dialog/component.base.tsx <DrawerTrigger asChild={…}>',
+      'blocks/responsive-dialog/component.base.tsx <SideDialogClose asChild={…}>',
+      'blocks/responsive-dialog/component.base.tsx <SideDialogTrigger asChild={…}>',
+      'components/confirmation-dialog/component.base.tsx <DialogTrigger asChild>',
+    ]);
   });
 
   test('every item is published in the Base UI variant, from files that exist', () => {

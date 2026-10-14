@@ -2,7 +2,19 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { type BaseVariantLayout, type ScannedItem, scanItems, writeBaseVariant } from './generate';
+import { readPathAliases, relocate } from './base-variant';
+import {
+  type BaseVariantLayout,
+  baseAliasTargets,
+  buildRegistries,
+  type ScannedItem,
+  scanItems,
+  writeBaseVariant,
+  writeRegistries,
+} from './generate';
+
+const REGISTRY_ROOT = path.resolve(import.meta.dir, '..');
+const UI_SRC = path.resolve(REGISTRY_ROOT, '../ui/src');
 
 const CANONICAL = [
   "import { Button } from '@/components/ui/button';",
@@ -44,17 +56,12 @@ describe('writeBaseVariant', () => {
   beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'shuip-base-'));
     itemsDir = path.join(root, 'items');
-    layout = {
-      outDir: path.join(root, 'generated', 'base'),
-      itemsDir,
-      primitivesDir: path.join(root, 'ui', 'ui-base'),
-      utilsFile: path.join(root, 'ui', 'utils'),
-    };
+    layout = { outDir: path.join(root, 'generated', 'base'), itemsDir };
   });
   afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
 
   test('converts a canonical file without an override and formats the result', () => {
-    write('components/alpha/component.radix.tsx', CANONICAL);
+    write('components/alpha/component.radix.tsx', CANONICAL.replace("variant='outline'", 'variant="outline"'));
     const alpha = scanOne();
 
     const build = writeBaseVariant([alpha], layout);
@@ -119,13 +126,38 @@ describe('writeBaseVariant', () => {
       path.join(layout.outDir, 'stubs', 'alpha'),
       path.join(layout.outDir, 'stubs', 'blocks', 'table'),
       path.join(layout.outDir, 'stubs', 'react-hook-form', 'field'),
-      path.join(itemsDir, 'lib', 'time', 'time'),
-      path.join(layout.primitivesDir, 'input'),
-      layout.utilsFile,
+      path.join(REGISTRY_ROOT, 'items', 'lib', 'time', 'time'),
+      path.join(UI_SRC, 'components', 'ui-base', 'input'),
+      path.join(UI_SRC, 'lib', 'utils'),
     ]);
     expect(read('consumer', 'items', 'components', 'alpha', 'default.example.base.tsx')).toContain(
       "from '@/components/ui/shuip/alpha'",
     );
+  });
+
+  test('rewrites a dynamic import and an export from in the docs copy', () => {
+    write('components/alpha/component.radix.tsx', CANONICAL);
+    write(
+      'components/alpha/default.example.radix.tsx',
+      [
+        "const Lazy = React.lazy(() => import('@/components/ui/input'));",
+        "export { Button } from '@/components/ui/button';",
+        "import('./local');",
+        '',
+      ].join('\n'),
+    );
+
+    writeBaseVariant([scanOne()], layout);
+
+    const docsDir = path.join(layout.outDir, 'items', 'components', 'alpha');
+    const specifiers = [
+      ...read('items', 'components', 'alpha', 'default.example.base.tsx').matchAll(/(?:from |import\()'([^']+)'/g),
+    ].map((m) => m[1] as string);
+    expect(specifiers.map((specifier) => path.resolve(docsDir, specifier))).toEqual([
+      path.join(UI_SRC, 'components', 'ui-base', 'input'),
+      path.join(UI_SRC, 'components', 'ui-base', 'button'),
+      path.join(docsDir, 'local'),
+    ]);
   });
 
   test('stubs re-export the Base UI copy of each item, and lib items get none', () => {
@@ -149,6 +181,13 @@ describe('writeBaseVariant', () => {
     expect(warnings).toEqual([
       'components/alpha/component.radix.tsx: line 1: <PopoverTrigger> renders <a> with nativeButton={false}, which Base UI discourages for links; use buttonVariants on a plain anchor',
     ]);
+  });
+
+  test('raises no drift warning outside a repository with history', () => {
+    write('components/alpha/component.radix.tsx', CANONICAL);
+    write('components/alpha/component.base.tsx', OVERRIDE);
+
+    expect(writeBaseVariant(scanItems(itemsDir), layout).warnings).toEqual([]);
   });
 
   describe('drift guard', () => {
@@ -194,6 +233,16 @@ describe('writeBaseVariant', () => {
       expect(warningsOf()).toEqual([]);
     });
 
+    test('stays quiet for an override that is not committed yet, whatever the canonical history', () => {
+      write('components/beta/component.radix.tsx', CANONICAL);
+      commit('add beta');
+      write('components/beta/component.radix.tsx', `${CANONICAL}// changed\n`);
+      commit('change beta');
+      write('components/beta/component.base.tsx', OVERRIDE);
+
+      expect(warningsOf()).toEqual([]);
+    });
+
     test('warns for an example override as well', () => {
       write('components/alpha/wide.example.radix.tsx', CANONICAL);
       write('components/alpha/wide.example.base.tsx', OVERRIDE);
@@ -203,5 +252,71 @@ describe('writeBaseVariant', () => {
 
       expect(warningsOf()).toEqual([stale('wide.example.base.tsx', 'wide.example.radix.tsx')]);
     });
+  });
+});
+
+describe('the Base UI tsconfig of the overrides', () => {
+  test('maps every alias of the registry tsconfig, to the Base UI primitives and stubs', () => {
+    const { aliases, relocations } = baseAliasTargets(path.join(REGISTRY_ROOT, 'generated', 'base'));
+
+    expect(readPathAliases(path.join(REGISTRY_ROOT, 'items', 'tsconfig.json'))).toEqual(
+      aliases.map(({ pattern, target }) => ({ pattern, target: relocate(target, relocations) })),
+    );
+  });
+});
+
+describe('the published registries', () => {
+  const EXTRA_ITEM = { name: 'zeta-skill', type: 'registry:item' as const };
+  let root: string;
+  let itemsDir: string;
+
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'shuip-registries-'));
+    itemsDir = path.join(root, 'items');
+    for (const name of ['alpha', 'beta']) {
+      fs.mkdirSync(path.join(itemsDir, 'components', name), { recursive: true });
+      fs.writeFileSync(path.join(itemsDir, 'components', name, 'component.radix.tsx'), CANONICAL);
+    }
+    fs.writeFileSync(path.join(itemsDir, 'components', 'alpha', 'component.base.tsx'), OVERRIDE);
+  });
+  afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  const publish = (extraItems = [EXTRA_ITEM]) => {
+    const items = scanItems(itemsDir);
+    const build = writeBaseVariant(items, { outDir: path.join(root, 'generated', 'base'), itemsDir });
+    return buildRegistries({ items, catalog: {}, publishedComponentPath: build.publishedComponentPath, extraItems });
+  };
+  const fileOf = (registry: { items: { name: string; files?: { path: string }[] }[] }, name: string) =>
+    path.resolve(REGISTRY_ROOT, registry.items.find((item) => item.name === name)?.files?.[0]?.path ?? '');
+
+  test('the radix registry points at the canonical files and the base one at the Base UI files', () => {
+    const registries = publish();
+
+    expect(fileOf(registries.radix, 'alpha')).toBe(path.join(itemsDir, 'components/alpha/component.radix.tsx'));
+    expect(fs.readFileSync(fileOf(registries.base, 'alpha'), 'utf-8')).toBe(OVERRIDE);
+    expect(fs.readFileSync(fileOf(registries.base, 'beta'), 'utf-8')).toContain('render={<Button');
+    expect(fs.readFileSync(fileOf(registries.radix, 'beta'), 'utf-8')).toContain('asChild');
+  });
+
+  test('both registries list the same items plus the extra ones, sorted', () => {
+    const registries = publish();
+
+    expect(registries.base.items.map((item) => item.name)).toEqual(['alpha', 'beta', 'zeta-skill']);
+    expect(registries.radix.items.map((item) => item.name)).toEqual(['alpha', 'beta', 'zeta-skill']);
+  });
+
+  test('rejects an extra item named like an item', () => {
+    expect(() => publish([{ name: 'alpha', type: 'registry:item' }])).toThrow();
+  });
+
+  test('writes each registry to the file of its variant', () => {
+    const registries = publish();
+
+    writeRegistries(root, registries);
+
+    const written = (file: string) => JSON.parse(fs.readFileSync(path.join(root, file), 'utf-8'));
+    expect(written('registry.json')).toEqual(registries.radix);
+    expect(written('registry.base.json')).toEqual(registries.base);
+    expect(written('registry.base.json')).not.toEqual(written('registry.json'));
   });
 });
