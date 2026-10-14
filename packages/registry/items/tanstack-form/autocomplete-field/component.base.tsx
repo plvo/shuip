@@ -151,7 +151,13 @@ export function AutocompleteField({
   return (
     <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
       {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(nextOpen, { reason, event }) => {
+          if (reason === 'outside-press' && anchorRef.current?.contains(event.target as Node)) return;
+          setOpen(nextOpen);
+        }}
+      >
         <div ref={anchorRef} className='relative'>
           <Input
             name={field.name}
