@@ -14,7 +14,7 @@
   },
   "scripts": {
     "registry:generate": "bun run scripts/generate.ts",
-    "typecheck:base": "bun run scripts/generate.ts && tsc --noEmit -p items && tsc --noEmit -p items/tsconfig.generated.json",
+    "typecheck:base": "bun run scripts/generate.ts && tsc --noEmit -p items",
     "test": "bun test"
   },
   "dependencies": {

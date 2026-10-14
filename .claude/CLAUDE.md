@@ -24,8 +24,7 @@ packages/ui/                   Vendored shadcn primitives + base.css (cross-pack
   scripts/sync-primitives.ts     Declares the primitive list and refreshes both sets via the shadcn CLI
 packages/registry/             SOURCE OF TRUTH for published items
   items/<cat>/<name>/            See "Registry items" below
-  items/tsconfig.json            Type-checks the Base UI overrides (`*.base.tsx`) against the Base UI primitives
-  items/tsconfig.generated.json  Same aliases; type-checks the generated Base UI copies of every item and example
+  items/tsconfig.json            Type-checks the Base UI overrides (`*.base.tsx`) and the generated Base UI copies of every item and example against the Base UI primitives
   scripts/generate.ts            Scans items/, produces all downstream artifacts
   scripts/to-base-variant.ts     Codemod: Radix `asChild` composition to Base UI `render` composition
   generated/base/                Generated, git-ignored Base UI copies of every item (see "Base UI variant")
@@ -88,7 +87,7 @@ Radix is the canonical source; the Base UI variant of every item is generated fr
 - **No override:** the codemod `toBaseVariant` (`scripts/to-base-variant.ts`) converts `<X asChild><Child …/></X>` to `<X render={<Child …/>}>…</X>` and adds `nativeButton={false}` when the rendered element is not a button (not for `TooltipTrigger` and `HoverCardTrigger`, which have no such prop). `asChild={expr}` pass-throughs are left untouched, and so is an `asChild` that wraps something other than one element; the generator warns about the latter. A link (`a`, `Link`) rendered with `nativeButton={false}` also warns, because Base UI discourages it: use `buttonVariants` on a plain anchor instead. The output is formatted with Biome.
 - **Override:** an item may ship `component.base.tsx` and/or `<variant>.example.base.tsx` next to the canonical file. It wins over the codemod and is used verbatim. Add one only where the two APIs genuinely diverge (for example `PopoverAnchor` and `onOpenAutoFocus` have no Base UI equivalent).
 
-An override is written exactly as consumers receive it, with the standard `@/components/ui/*` aliases. `packages/registry/items/tsconfig.json` resolves those aliases to the Base UI primitives (`packages/ui/src/components/ui-base/`), so the editor and `bun typecheck:base` check overrides against Base UI. The registry `tsconfig.json` excludes `*.base.tsx`, so an override is never checked against Radix. `items/tsconfig.generated.json` extends it and covers `generated/base/items/**`, so the codemod output of every item and example is checked against Base UI too, without waiting for the smoke test.
+An override is written exactly as consumers receive it, with the standard `@/components/ui/*` aliases. `packages/registry/items/tsconfig.json` resolves those aliases to the Base UI primitives (`packages/ui/src/components/ui-base/`), so the editor and `bun typecheck:base` check overrides against Base UI. The registry `tsconfig.json` excludes `*.base.tsx`, so an override is never checked against Radix. The same project also includes `generated/base/items/**`, so the codemod output of every item and example is checked against Base UI too, without waiting for the smoke test.
 
 **Drift warning:** on every `registry:generate` run, the generator warns about each override whose canonical file has commits newer than the override's last commit (`<override> predates the latest commits of <canonical>`). It is a warning, not a failure: update the override to follow the canonical change, or commit it unchanged once you have checked it still holds. An override that is not committed yet, and a checkout without commit history, raise nothing.
 

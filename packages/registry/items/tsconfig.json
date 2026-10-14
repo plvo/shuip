@@ -12,6 +12,6 @@
       "@/components/ui-base/*": ["../ui/src/components/ui-base/*"]
     }
   },
-  "include": ["**/*.base.tsx"],
+  "include": ["**/*.base.tsx", "../generated/base/items/**/*.ts", "../generated/base/items/**/*.tsx"],
   "exclude": ["node_modules"]
 }
