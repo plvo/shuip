@@ -174,8 +174,6 @@ describe('the Base UI variant stays free of Radix', () => {
       .filter((entry) => entry.endsWith('.tsx'))
       .flatMap((entry) => asChildSites(entry, fs.readFileSync(path.join(consumerDir, entry), 'utf-8')));
     expect(remaining.sort()).toEqual([
-      'blocks/data-table/component.base.tsx <DialogTrigger asChild>',
-      'blocks/data-table/component.base.tsx <PopoverTrigger asChild>',
       'blocks/responsive-dialog/component.base.tsx <DrawerClose asChild={…}>',
       'blocks/responsive-dialog/component.base.tsx <DrawerTrigger asChild={…}>',
       'blocks/responsive-dialog/component.base.tsx <SideDialogClose asChild={…}>',
