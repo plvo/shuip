@@ -11,6 +11,7 @@
       "inputs": ["../../packages/registry/registry.json", "../../packages/registry/items/**"],
       "outputs": ["public/r/**"]
     },
+    "test": {},
     "build": {
       "dependsOn": ["^build", "registry:generate", "registry:build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],

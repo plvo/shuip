@@ -42,6 +42,8 @@ bun format             # Biome format
 bun lint               # Biome lint
 bun primitives:sync    # Refresh both vendored primitive sets from ui.shadcn.com (needs network)
 bun check:unused       # knip
+bun run test           # Unit tests of every workspace that has some (turbo)
+bun smoke [style]      # Consumer smoke test: install every @shuip item in a fresh shadcn project (default radix-vega), then tsc. --keep leaves the project in /tmp
 bun clean              # Wipe node_modules, .next, .turbo, .source, bun.lock
 ```
 
