@@ -11,7 +11,7 @@ export function SubmitButton({
   children,
   disabled,
   loading,
-  icon = <Loader2Icon className='mr-2 size-4 animate-spin' aria-label='Loading' />,
+  icon = <Loader2Icon className='size-4 animate-spin' aria-label='Loading' />,
   ...props
 }: SubmitButtonProps) {
   return (
