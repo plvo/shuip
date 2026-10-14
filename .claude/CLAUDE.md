@@ -25,6 +25,7 @@ packages/ui/                   Vendored shadcn primitives + base.css (cross-pack
 packages/registry/             SOURCE OF TRUTH for published items
   items/<cat>/<name>/            See "Registry items" below
   items/tsconfig.json            Type-checks the Base UI overrides (`*.base.tsx`) against the Base UI primitives
+  items/tsconfig.generated.json  Same aliases; type-checks the generated Base UI copies of every item and example
   scripts/generate.ts            Scans items/, produces all downstream artifacts
   scripts/to-base-variant.ts     Codemod: Radix `asChild` composition to Base UI `render` composition
   generated/base/                Generated, git-ignored Base UI copies of every item (see "Base UI variant")
@@ -47,9 +48,9 @@ bun primitives:sync    # Refresh both vendored primitive sets from ui.shadcn.com
 bun check:unused       # knip
 bun run test           # Unit tests of every workspace that has some (turbo)
 bun smoke [style]      # Consumer smoke test: install every @shuip item in a fresh shadcn project (default radix-vega), then tsc. --keep leaves the project in /tmp
-                       #   --items a,b restricts the installed items; --base-variant routes base-* styles to the base variant
-                       #   (production still routes them to radix), e.g. bun smoke base-vega --base-variant --items search-input
-bun typecheck:base     # Type-check the Base UI primitives and the Base UI overrides of the items
+                       #   --items a,b restricts the installed items, e.g. bun smoke base-vega --items search-input
+                       #   base-* styles are served the Base UI variant, and the smoke test then fails on any Radix package
+bun typecheck:base     # Type-check the Base UI primitives, the Base UI overrides and the generated Base UI copies of every item
 bun clean              # Wipe node_modules, .next, .turbo, .source, bun.lock
 ```
 
@@ -87,7 +88,7 @@ Radix is the canonical source; the Base UI variant of every item is generated fr
 - **No override:** the codemod `toBaseVariant` (`scripts/to-base-variant.ts`) converts `<X asChild><Child …/></X>` to `<X render={<Child …/>}>…</X>` and adds `nativeButton={false}` when the rendered element is not a button (not for `TooltipTrigger` and `HoverCardTrigger`, which have no such prop). `asChild={expr}` pass-throughs are left untouched, and so is an `asChild` that wraps something other than one element; the generator warns about the latter. A link (`a`, `Link`) rendered with `nativeButton={false}` also warns, because Base UI discourages it: use `buttonVariants` on a plain anchor instead. The output is formatted with Biome.
 - **Override:** an item may ship `component.base.tsx` and/or `<variant>.example.base.tsx` next to the canonical file. It wins over the codemod and is used verbatim. Add one only where the two APIs genuinely diverge (for example `PopoverAnchor` and `onOpenAutoFocus` have no Base UI equivalent).
 
-An override is written exactly as consumers receive it, with the standard `@/components/ui/*` aliases. `packages/registry/items/tsconfig.json` resolves those aliases to the Base UI primitives (`packages/ui/src/components/ui-base/`), so the editor and `bun typecheck:base` check overrides against Base UI. The registry `tsconfig.json` excludes `*.base.tsx`, so an override is never checked against Radix.
+An override is written exactly as consumers receive it, with the standard `@/components/ui/*` aliases. `packages/registry/items/tsconfig.json` resolves those aliases to the Base UI primitives (`packages/ui/src/components/ui-base/`), so the editor and `bun typecheck:base` check overrides against Base UI. The registry `tsconfig.json` excludes `*.base.tsx`, so an override is never checked against Radix. `items/tsconfig.generated.json` extends it and covers `generated/base/items/**`, so the codemod output of every item and example is checked against Base UI too, without waiting for the smoke test.
 
 **Drift warning:** on every `registry:generate` run, the generator warns about each override whose canonical file has commits newer than the override's last commit (`<override> predates the latest commits of <canonical>`). It is a warning, not a failure: update the override to follow the canonical change, or commit it unchanged once you have checked it still holds. An override that is not committed yet, and a checkout without commit history, raise nothing.
 
@@ -95,7 +96,7 @@ An override is written exactly as consumers receive it, with the standard `@/com
 - `packages/registry/generated/base/consumer/items/**`: the consumer form, original aliases. This is what `registry.base.json` points to and what `/r/base/<name>.json` publishes.
 - `packages/registry/generated/base/items/**` and `generated/base/stubs/**`: the copies the docs compile, with every alias rewritten to explicit paths (Base UI primitives, Base UI stubs, shared files).
 
-Both variants are published (`apps/docs/public/r/base/` and `radix/`), but production still routes `base-*` styles to `radix`: `VARIANT_FOR_BASE` in `packages/registry/src/style-base.ts` decides.
+Both variants are published (`apps/docs/public/r/base/` and `radix/`). `styleRewrites()` in `packages/registry/src/style-base.ts` routes `/r/base-<preset>/<name>.json` to `base`, and `radix-<preset>`, `new-york`, `new-york-v4` and `default` to `radix`; any other style, such as `aria-*`, is not routed and answers 404.
 
 **Blocks doc flow:** Block items must not contain `index.mdx`. Their docs live as real MDX files at `apps/docs/content/blocks/<name>.mdx` (a separate fumadocs collection defined in `apps/docs/source.config.ts`). If you put `index.mdx` in `items/blocks/<name>/`, the generator will create a symlink in `apps/docs/content/components/blocks/`, which no collection reads — the doc will silently not appear.
 
@@ -176,8 +177,8 @@ To change anything in those, edit the source under `packages/registry/items/<cat
 
 **Adding a Base UI override:**
 1. Copy `component.radix.tsx` (or `<variant>.example.radix.tsx`) to `component.base.tsx` (or `<variant>.example.base.tsx`) in the same folder and change only what diverges.
-2. `bun typecheck:base` regenerates, then type-checks every override against Base UI.
-3. `bun smoke base-vega --base-variant --items <name>` installs the item into a real Base UI project and type-checks it.
+2. `bun typecheck:base` regenerates, then type-checks every override and every generated copy against Base UI.
+3. `bun smoke base-vega --items <name>` installs the item into a real Base UI project and type-checks it.
 
 The vendored Base UI `PopoverContent` does not expose the Positioner's `anchor` prop. An item that anchors a popover to an element other than its trigger (the autocomplete fields) composes `Popover as PopoverPrimitive` from `@base-ui/react/popover` (`Portal`, `Positioner anchor={ref}`, `Popup`) next to the vendored `Popover` root, and sizes the popup with `var(--anchor-width)`.
 

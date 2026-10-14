@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { SHUIP_REGISTRY_URL } from './namespace';
 import { rewrittenPathname } from './rewrite-match';
-import { PUBLISHED_VARIANTS, routedVariants, styleRewrites, styleToBase, type VariantForBase } from './style-base';
+import { PUBLISHED_VARIANTS, styleRewrites, styleToBase } from './style-base';
 
 describe('styleToBase', () => {
   test.each(['base-nova', 'base-vega'])('maps %s to base', (style) => {
@@ -18,50 +18,36 @@ describe('styleToBase', () => {
 });
 
 describe('published variants', () => {
-  test('both variants are published, although base styles are routed to radix', () => {
+  test('both variants are published', () => {
     expect(PUBLISHED_VARIANTS).toEqual(['base', 'radix']);
-    expect(routedVariants()).toEqual(['radix']);
+  });
+
+  test('every published variant is reachable through a style rewrite', () => {
+    const destinations = styleRewrites().map(({ destination }) => destination);
+    expect(destinations).toEqual(PUBLISHED_VARIANTS.map((variant) => `/r/${variant}/:name.json`));
   });
 });
 
-describe('styleRewrites with the shipped mapping', () => {
+describe('styleRewrites', () => {
   const rewrites = styleRewrites();
 
   test.each([
-    'base-nova',
-    'radix-vega',
-    'new-york',
-    'new-york-v4',
-    'default',
-  ])('routes /r/%s/x.json to the radix variant', (style) => {
-    expect(rewrittenPathname(`/r/${style}/x.json`, rewrites)).toBe('/r/radix/x.json');
+    ['base-vega', 'base'],
+    ['base-nova', 'base'],
+    ['radix-vega', 'radix'],
+    ['radix-nova', 'radix'],
+    ['new-york', 'radix'],
+    ['new-york-v4', 'radix'],
+    ['default', 'radix'],
+  ])('routes /r/%s/x.json to the %s variant', (style, variant) => {
+    expect(rewrittenPathname(`/r/${style}/x.json`, rewrites)).toBe(`/r/${variant}/x.json`);
   });
 
-  test('leaves unsupported styles, the variant folder and flat urls unrouted', () => {
-    expect(rewrittenPathname('/r/aria-nova/x.json', rewrites)).toBeNull();
-    expect(rewrittenPathname('/r/radix/x.json', rewrites)).toBeNull();
-    expect(rewrittenPathname('/r/x.json', rewrites)).toBeNull();
-  });
-});
-
-describe('styleRewrites once a base variant is published', () => {
-  const dedicatedBase: VariantForBase = { base: 'base', radix: 'radix' };
-  const rewrites = styleRewrites(dedicatedBase);
-
-  test('routes to both variants', () => {
-    expect(routedVariants(dedicatedBase)).toEqual(['base', 'radix']);
-  });
-
-  test('routes base styles to the base variant and radix styles to the radix variant', () => {
-    expect(rewrittenPathname('/r/base-nova/x.json', rewrites)).toBe('/r/base/x.json');
-    expect(rewrittenPathname('/r/radix-vega/x.json', rewrites)).toBe('/r/radix/x.json');
-    expect(rewrittenPathname('/r/new-york-v4/x.json', rewrites)).toBe('/r/radix/x.json');
-  });
-
-  test('still leaves unsupported styles and the variant folders unrouted', () => {
+  test('leaves unsupported styles, the variant folders and flat urls unrouted', () => {
     expect(rewrittenPathname('/r/aria-nova/x.json', rewrites)).toBeNull();
     expect(rewrittenPathname('/r/base/x.json', rewrites)).toBeNull();
     expect(rewrittenPathname('/r/radix/x.json', rewrites)).toBeNull();
+    expect(rewrittenPathname('/r/x.json', rewrites)).toBeNull();
   });
 });
 
@@ -70,13 +56,13 @@ describe('SHUIP_REGISTRY_URL', () => {
     new URL(SHUIP_REGISTRY_URL.replace('{style}', style).replace('{name}', name)).pathname;
 
   test.each([
-    'base-nova',
-    'radix-vega',
-    'new-york-v4',
-    'default',
-  ])('a consumer on %s is routed to the published radix item', (style) => {
+    ['base-nova', 'base'],
+    ['radix-vega', 'radix'],
+    ['new-york-v4', 'radix'],
+    ['default', 'radix'],
+  ])('a consumer on %s is routed to the published %s item', (style, variant) => {
     expect(rewrittenPathname(requestPath(style, 'tsf-input-field'), styleRewrites())).toBe(
-      '/r/radix/tsf-input-field.json',
+      `/r/${variant}/tsf-input-field.json`,
     );
   });
 

@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { SHUIP_NAMESPACE, shuipItemRef, shuipRegistryUrl } from '@repo/registry/namespace';
-import { type Base, styleRewrites, styleToBase, type VariantForBase } from '@repo/registry/style-base';
+import { type Base, styleRewrites, styleToBase } from '@repo/registry/style-base';
 import { assertEveryItemServedLocally } from './install-source';
 import { assertNoRadixPackages } from './project-dependencies';
 import { selectItems } from './select-items';
@@ -15,12 +15,8 @@ const DOCS_PUBLIC = path.join(REPO_ROOT, 'apps', 'docs', 'public');
 const DEFAULT_STYLE = 'radix-vega';
 const PROJECT_NAME = 'app';
 
-// Routes base-* styles to the base variant, which the production routing does not.
-const BASE_VARIANT_ROUTING: VariantForBase = { base: 'base', radix: 'radix' };
-
 interface SmokeOptions {
   keep: boolean;
-  servesBaseVariant: boolean;
   items: string[] | undefined;
 }
 
@@ -66,11 +62,8 @@ const configureNamespace = async (projectDir: string, registryOrigin: string): P
   await fs.writeFile(componentsFile, `${JSON.stringify(components, null, 2)}\n`);
 };
 
-const smokeTest = async (
-  scaffold: ScaffoldStyle,
-  { keep, servesBaseVariant, items }: SmokeOptions,
-): Promise<string> => {
-  const server = serveRegistry(DOCS_PUBLIC, styleRewrites(servesBaseVariant ? BASE_VARIANT_ROUTING : undefined));
+const smokeTest = async (scaffold: ScaffoldStyle, { keep, items }: SmokeOptions): Promise<string> => {
+  const server = serveRegistry(DOCS_PUBLIC, styleRewrites());
   const workDir = await fs.mkdtemp(path.join(os.tmpdir(), 'shuip-smoke-'));
   const projectDir = path.join(workDir, PROJECT_NAME);
   try {
@@ -87,7 +80,7 @@ const smokeTest = async (
       projectDir,
     );
     assertEveryItemServedLocally(server.servedPaths, scaffold.style, names);
-    if (servesBaseVariant && scaffold.base === 'base') {
+    if (scaffold.base === 'base') {
       await assertNoRadixPackages(projectDir);
     }
     await runStep('type-check', [path.join(projectDir, 'node_modules', '.bin', 'tsc'), '--noEmit'], projectDir);
@@ -110,7 +103,6 @@ const main = async (): Promise<void> => {
       args: Bun.argv.slice(2),
       options: {
         keep: { type: 'boolean', default: false },
-        'base-variant': { type: 'boolean', default: false },
         items: { type: 'string' },
       },
       allowPositionals: true,
@@ -122,11 +114,7 @@ const main = async (): Promise<void> => {
       process.exit(2);
     }
 
-    const summary = await smokeTest(scaffold, {
-      keep: values.keep,
-      servesBaseVariant: values['base-variant'],
-      items: values.items?.split(','),
-    });
+    const summary = await smokeTest(scaffold, { keep: values.keep, items: values.items?.split(',') });
     console.log(`[smoke] ${style}: ${summary} in ${Math.round((performance.now() - startedAt) / 1000)}s`);
   } catch (error) {
     // Awaited so the report reaches the pipe before the process exits.
