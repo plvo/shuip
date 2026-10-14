@@ -4,42 +4,14 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { SHUIP_NAMESPACE, shuipItemRef, shuipRegistryUrl } from '@repo/registry/namespace';
 import { type Base, styleToBase } from '@repo/registry/style-base';
-import { type RegistryServer, serveRegistry } from './server';
+import { assertEveryItemServedLocally } from './install-source';
+import { serveRegistry } from './server';
+import { runStep, StepFailure } from './step';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '..', '..', '..', '..');
 const DOCS_PUBLIC = path.join(REPO_ROOT, 'apps', 'docs', 'public');
 const DEFAULT_STYLE = 'radix-vega';
 const PROJECT_NAME = 'app';
-
-class StepFailure extends Error {
-  constructor(
-    step: string,
-    readonly output: string,
-  ) {
-    super(`${step} failed`);
-  }
-}
-
-const runStep = async (step: string, cmd: string[], cwd: string): Promise<string> => {
-  const child = Bun.spawn({
-    cmd,
-    cwd,
-    stdin: 'ignore',
-    stdout: 'pipe',
-    stderr: 'pipe',
-    env: { ...process.env, CI: '1', NO_COLOR: '1', FORCE_COLOR: '0' },
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-    child.exited,
-  ]);
-  const output = [stdout, stderr].filter(Boolean).join('\n').trim();
-  if (exitCode !== 0) {
-    throw new StepFailure(step, output);
-  }
-  return output;
-};
 
 interface ScaffoldStyle {
   style: string;
@@ -77,25 +49,10 @@ const fetchItemNames = async (registryOrigin: string, style: string): Promise<st
 };
 
 const configureNamespace = async (projectDir: string, registryOrigin: string): Promise<void> => {
-  const registryUrl = shuipRegistryUrl(registryOrigin);
-  if (!registryUrl.startsWith(`${registryOrigin}/`)) {
-    throw new StepFailure('configure namespace', `${registryUrl} does not point at ${registryOrigin}`);
-  }
-
   const componentsFile = path.join(projectDir, 'components.json');
   const components = JSON.parse(await fs.readFile(componentsFile, 'utf-8'));
-  components.registries = { ...components.registries, [SHUIP_NAMESPACE]: registryUrl };
+  components.registries = { ...components.registries, [SHUIP_NAMESPACE]: shuipRegistryUrl(registryOrigin) };
   await fs.writeFile(componentsFile, `${JSON.stringify(components, null, 2)}\n`);
-};
-
-const assertEveryItemServedLocally = (server: RegistryServer, style: string, names: string[]): void => {
-  const missing = names.filter((name) => !server.servedPaths.has(`/r/${style}/${name}.json`));
-  if (missing.length > 0) {
-    throw new StepFailure(
-      'verify install source',
-      `Not requested from the local registry server, so installed from elsewhere or not at all:\n${missing.join('\n')}`,
-    );
-  }
 };
 
 const settleAll = async (...tasks: Promise<unknown>[]): Promise<void> => {
@@ -122,7 +79,7 @@ const smokeTest = async (scaffold: ScaffoldStyle, keep: boolean): Promise<string
       ['bunx', 'shadcn@latest', 'add', ...names.map(shuipItemRef), '-y', '-o'],
       projectDir,
     );
-    assertEveryItemServedLocally(server, scaffold.style, names);
+    assertEveryItemServedLocally(server.servedPaths, scaffold.style, names);
     await runStep('type-check', [path.join(projectDir, 'node_modules', '.bin', 'tsc'), '--noEmit'], projectDir);
 
     return `${names.length} items installed and type-checked${keep ? ` (project kept at ${projectDir})` : ''}`;

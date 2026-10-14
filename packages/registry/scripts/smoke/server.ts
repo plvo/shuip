@@ -41,6 +41,8 @@ export const serveRegistry = (publicDir: string): RegistryServer => {
       servedPaths.add(requested);
       return new Response(file);
     },
+    // Malformed escapes and unreadable paths are not items; never leak the error page.
+    error: () => new Response('Not found', { status: 404 }),
   });
 
   return { origin: server.url.origin, servedPaths, stop: () => void server.stop(true) };

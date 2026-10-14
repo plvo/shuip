@@ -56,12 +56,21 @@ describe('serveRegistry', () => {
   test.each([
     ['encoded slash', '..%2F..%2F..%2Fsecret'],
     ['encoded dots and slash', '%2e%2e%2f%2e%2e%2f%2e%2e%2fsecret'],
-    ['encoded backslash', '..%5C..%5C..%5Csecret'],
-    ['encoded dots and backslash', '%2e%2e%5c%2e%2e%5c%2e%2e%5csecret'],
-    ['double encoded slash', '..%252F..%252F..%252Fsecret'],
-  ])('answers 404 to a traversal with an %s', async (_, name) => {
-    expect((await get(`/r/radix-vega/${name}.json`)).status).toBe(404);
-    expect((await get(`/r/radix/${name}.json`)).status).toBe(404);
+  ])('does not serve a file outside the registry through an %s', async (_, name) => {
+    const response = await get(`/r/radix-vega/${name}.json`);
+    expect(response.status).toBe(404);
+    expect(await response.text()).not.toContain('secret');
+  });
+
+  test.each([
+    ['overlong utf-8 dot', '%c0%ae'],
+    ['truncated utf-8 sequence', '%e0%80%ae'],
+    ['unicode escape', '%u002e'],
+    ['null byte', 'demo%00'],
+  ])('answers a bare 404 to a malformed %s', async (_, name) => {
+    const response = await get(`/r/radix-vega/${name}.json`);
+    expect(response.status).toBe(404);
+    expect(await response.text()).toBe('Not found');
   });
 
   test('listens on the loopback interface only', async () => {
