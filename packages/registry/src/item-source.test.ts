@@ -114,3 +114,23 @@ describe('listItemExamples', () => {
     expect(() => listItemExamples('radix', 'missing', root)).toThrow('missing is not published in the radix registry');
   });
 });
+
+describe('the registry root', () => {
+  const registryFolder = path.resolve(import.meta.dir, '..');
+
+  const publishedPath = (variant: 'base' | 'radix') => {
+    const registry = JSON.parse(
+      fs.readFileSync(path.join(registryFolder, variant === 'radix' ? 'registry.json' : 'registry.base.json'), 'utf-8'),
+    );
+    return registry.items.find((item: { name: string }) => item.name === 'side-dialog').files[0].path;
+  };
+
+  test('defaults to the package that holds the registry files', () => {
+    for (const variant of ['radix', 'base'] as const) {
+      expect(readItemSource(variant, 'side-dialog')).toBe(
+        fs.readFileSync(path.join(registryFolder, publishedPath(variant)), 'utf-8'),
+      );
+    }
+    expect(listItemExamples('base', 'side-dialog')).toContain('side-dialog.example');
+  });
+});

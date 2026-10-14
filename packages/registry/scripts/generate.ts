@@ -2,6 +2,7 @@
 /** biome-ignore-all lint/suspicious/noAssignInExpressions: script */
 import fs from 'node:fs';
 import path from 'node:path';
+import { exampleKey } from '../src/example-key';
 import { SHUIP_ORIGIN } from '../src/namespace';
 import { registryFilename } from '../src/registry-file';
 import type { Variant } from '../src/style-base';
@@ -386,7 +387,7 @@ export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
   },`;
     for (const ex of examples) {
       const exImport = `${itemImportPath}/${ex.variant}.example.${variant}`;
-      const exKey = ex.variant === 'default' ? `${itemName}.example` : `${itemName}.${ex.variant}.example`;
+      const exKey = exampleKey(itemName, ex.variant);
       body += `
   '${exKey}': {
     path: '${exImport}',
@@ -591,7 +592,6 @@ const writeComponentSymlinks = (items: ScannedItem[]): void => {
 const main = () => {
   const items = scanItems();
   const baseVariant = writeBaseVariant(items);
-  fs.writeFileSync(path.join(GENERATED_BASE_DIR, '__index__.ts'), buildIndexTs(items, BASE_UI_VARIANT));
   for (const warning of baseVariant.warnings) console.warn(`[generate] warning: ${warning}`);
 
   const catalogItems = items.map((i) => ({
@@ -615,6 +615,7 @@ const main = () => {
     }),
   );
   fs.writeFileSync(path.join(ROOT, '__index__.ts'), buildIndexTs(items));
+  fs.writeFileSync(path.join(GENERATED_BASE_DIR, '__index__.ts'), buildIndexTs(items, BASE_UI_VARIANT));
   writeStubs(items, STUBS_DIR, CANONICAL_VARIANT);
   writeComponentSymlinks(items);
 

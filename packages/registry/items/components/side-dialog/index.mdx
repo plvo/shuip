@@ -68,6 +68,8 @@ All predefined sizes automatically include responsive constraints using CSS `min
 
 Use `SideDialogBody` when the dialog content may overflow. The header and footer stay anchored while the body scrolls independently.
 
+<BaseOnly base="radix">
+
 ```tsx
 <SideDialogContent>
   <SideDialogHeader>
@@ -85,11 +87,34 @@ Use `SideDialogBody` when the dialog content may overflow. The header and footer
 </SideDialogContent>
 ```
 
+</BaseOnly>
+
+<BaseOnly base="base">
+
+```tsx
+<SideDialogContent>
+  <SideDialogHeader>
+    <SideDialogTitle>Activity Log</SideDialogTitle>
+    <SideDialogDescription>Recent actions across your workspace.</SideDialogDescription>
+  </SideDialogHeader>
+  <SideDialogBody>
+    {/* long list or form content */}
+  </SideDialogBody>
+  <SideDialogFooter>
+    <SideDialogClose render={<Button variant="outline" />}>Close</SideDialogClose>
+  </SideDialogFooter>
+</SideDialogContent>
+```
+
+</BaseOnly>
+
 Without `SideDialogBody`, content simply stacks inside the dialog — fine for short dialogs. Add it as soon as the content might exceed the viewport height.
 
 ## Common use cases
 
 ### Notifications and alerts
+
+<BaseOnly base="radix">
 
 ```tsx
 // Success notification - top right
@@ -115,6 +140,35 @@ Without `SideDialogBody`, content simply stacks inside the dialog — fine for s
   </SideDialogContent>
 </SideDialog>
 ```
+
+</BaseOnly>
+
+<BaseOnly base="base">
+
+```tsx
+// Success notification - top right
+<SideDialog position="top-right">
+  <SideDialogTrigger render={<Button onClick={handleSave} />}>Save Changes</SideDialogTrigger>
+  <SideDialogContent>
+    <SideDialogHeader>
+      <SideDialogTitle className="text-green-600">Success!</SideDialogTitle>
+      <SideDialogDescription>Your changes have been saved.</SideDialogDescription>
+    </SideDialogHeader>
+  </SideDialogContent>
+</SideDialog>
+
+// Error notification - top left  
+<SideDialog position="top-left">
+  <SideDialogContent>
+    <SideDialogHeader>
+      <SideDialogTitle className="text-red-600">Error</SideDialogTitle>
+      <SideDialogDescription>Something went wrong. Please try again.</SideDialogDescription>
+    </SideDialogHeader>
+  </SideDialogContent>
+</SideDialog>
+```
+
+</BaseOnly>
 
 ### Different sizes for different content
 
@@ -169,6 +223,8 @@ Without `SideDialogBody`, content simply stacks inside the dialog — fine for s
 
 ### Help and information
 
+<BaseOnly base="radix">
+
 ```tsx
 // Help panel - bottom left
 <SideDialog position="bottom-left">
@@ -198,10 +254,45 @@ Without `SideDialogBody`, content simply stacks inside the dialog — fine for s
 </SideDialog>
 ```
 
+</BaseOnly>
+
+<BaseOnly base="base">
+
+```tsx
+// Help panel - bottom left
+<SideDialog position="bottom-left">
+  <SideDialogTrigger render={<Button variant="outline" size="icon" />}>
+    <HelpCircle className="size-4" />
+  </SideDialogTrigger>
+  <SideDialogContent>
+    <SideDialogHeader>
+      <SideDialogTitle>Need Help?</SideDialogTitle>
+      <SideDialogDescription>
+        Find answers to common questions or contact support.
+      </SideDialogDescription>
+    </SideDialogHeader>
+    <div className="space-y-3">
+      <Button variant="outline" className="w-full">
+        <Book className="mr-2 size-4" />
+        Documentation
+      </Button>
+      <Button variant="outline" className="w-full">
+        <MessageCircle className="mr-2 size-4" />
+        Contact Support
+      </Button>
+    </div>
+  </SideDialogContent>
+</SideDialog>
+```
+
+</BaseOnly>
+
 
 ## State management
 
 The component supports both controlled and uncontrolled modes, automatically detecting which mode to use based on the props provided:
+
+<BaseOnly base="radix">
 
 ```tsx
 // Uncontrolled: Component manages its own state
@@ -230,10 +321,41 @@ const [open, setOpen] = useState(false);
 </SideDialog>
 ```
 
+</BaseOnly>
+
+<BaseOnly base="base">
+
+```tsx
+// Uncontrolled: Component manages its own state
+<SideDialog position="top-right">
+  <SideDialogTrigger render={<Button />}>Open</SideDialogTrigger>
+  <SideDialogContent>
+    <SideDialogHeader>
+      <SideDialogTitle>Self-managed State</SideDialogTitle>
+    </SideDialogHeader>
+  </SideDialogContent>
+</SideDialog>
+
+// Controlled: You manage the state
+const [open, setOpen] = useState(false);
+<SideDialog open={open} onOpenChange={setOpen} position="top-right">
+  <SideDialogTrigger render={<Button />}>Open</SideDialogTrigger>
+  <SideDialogContent>
+    <SideDialogHeader>
+      <SideDialogTitle>Controlled State</SideDialogTitle>
+    </SideDialogHeader>
+  </SideDialogContent>
+</SideDialog>
+```
+
+</BaseOnly>
+
 
 ## Advanced customization
 
 ### Custom close behavior
+
+<BaseOnly base="radix">
 
 ```tsx
 // Disable the default close button
@@ -251,6 +373,25 @@ const [open, setOpen] = useState(false);
   </SideDialogFooter>
 </SideDialogContent>
 ```
+
+</BaseOnly>
+
+<BaseOnly base="base">
+
+```tsx
+// Disable the default close button
+<SideDialogContent showCloseButton={false}>
+  <SideDialogHeader>
+    <SideDialogTitle>Custom Controls</SideDialogTitle>
+  </SideDialogHeader>
+  <SideDialogFooter>
+    <SideDialogClose render={<Button variant="destructive" />}>Cancel</SideDialogClose>
+    <SideDialogClose render={<Button />}>Confirm</SideDialogClose>
+  </SideDialogFooter>
+</SideDialogContent>
+```
+
+</BaseOnly>
 
 
 ### Custom styling
@@ -334,6 +475,8 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 ## SideDialogTrigger Props
 
+<BaseOnly base="radix">
+
 <TypeTable
   type={{
     asChild: {
@@ -350,3 +493,31 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
     },
   }}
 />
+
+</BaseOnly>
+
+<BaseOnly base="base">
+
+<TypeTable
+  type={{
+    render: {
+      description: 'Element to render as the trigger, for example <Button />',
+      type: 'React.ReactElement?',
+    },
+    nativeButton: {
+      description: 'Set to false when render targets an element that is not a button',
+      type: 'boolean?',
+      default: 'true',
+    },
+    children: {
+      description: 'Trigger content',
+      type: 'React.ReactNode',
+    },
+    "...props": {
+      description: 'All Base UI button props',
+      type: 'ButtonPrimitive.Props',
+    },
+  }}
+/>
+
+</BaseOnly>
