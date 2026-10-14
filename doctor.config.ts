@@ -2,6 +2,8 @@ import { defineConfig } from 'react-doctor';
 
 export default defineConfig({
   ignore: {
+    // Primitives synced unmodified from the official shadcn registry (see packages/ui/scripts/sync-primitives.ts).
+    files: ['**/src/components/ui/**', '**/src/components/ui-base/**'],
     overrides: [
       {
         // Registry items ship as a single component.radix.tsx per the one-file-per-block
