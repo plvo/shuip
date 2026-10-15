@@ -5,6 +5,9 @@
   "type": "module",
   "exports": {
     "./__index__": "./__index__.ts",
+    "./__index__.base": "./generated/base/__index__.ts",
+    "./example-key": "./src/example-key.ts",
+    "./item-source": "./src/item-source.ts",
     "./namespace": "./src/namespace.ts",
     "./registry-file": "./src/registry-file.ts",
     "./rewrite-match": "./src/rewrite-match.ts",

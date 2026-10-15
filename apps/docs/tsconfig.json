@@ -7,6 +7,7 @@
       "@/components/ui/shuip/*": ["../../packages/registry/stubs/*"],
       "@/components/block/shuip/*": ["../../packages/registry/stubs/blocks/*"],
       "@/components/ui/*": ["../../packages/ui/src/components/ui/*"],
+      "@/components/ui-base/*": ["../../packages/ui/src/components/ui-base/*"],
       "@/lib/utils": ["../../packages/ui/src/lib/utils"],
       "@/lib/time": ["../../packages/registry/items/lib/time/time"],
       "@/actions/shuip/places": ["../../packages/registry/items/react-hook-form/address-field/extras/places.action"],
@@ -14,5 +15,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],
-  "exclude": ["node_modules", "scripts"]
+  "exclude": ["node_modules", "scripts", "src/**/*.test.ts", "src/**/*.test.tsx"]
 }

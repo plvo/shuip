@@ -1,6 +1,7 @@
 import { styleRewrites } from '@repo/registry/style-base';
 import { createMDX } from 'fumadocs-mdx/next';
 import type { NextConfig } from 'next';
+import { baseRedirects } from './src/lib/base-routes';
 
 const withMDX = createMDX();
 
@@ -22,6 +23,8 @@ const nextConfig: NextConfig = {
   },
 
   rewrites: async () => styleRewrites(),
+
+  redirects: async () => baseRedirects(),
 
   images: {
     remotePatterns: [{ protocol: 'https', hostname: '*' }],

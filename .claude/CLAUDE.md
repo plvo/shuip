@@ -94,6 +94,7 @@ An override is written exactly as consumers receive it, with the standard `@/com
 **Outputs** (all generated, git-ignored, never edited by hand):
 - `packages/registry/generated/base/consumer/items/**`: the consumer form, original aliases. This is what `registry.base.json` points to and what `/r/base/<name>.json` publishes.
 - `packages/registry/generated/base/items/**` and `generated/base/stubs/**`: the copies the docs compile, with every alias rewritten to explicit paths (Base UI primitives, Base UI stubs, shared files).
+- `packages/registry/generated/base/__index__.ts` (`@repo/registry/__index__.base`): the lazy component index of those copies, the Base UI counterpart of `__index__.ts`. Neither index carries sources: the docs read them on the server with `readItemSource` (`@repo/registry/item-source`), from the files each registry publishes.
 
 Both variants are published (`apps/docs/public/r/base/` and `radix/`). `styleRewrites()` in `packages/registry/src/style-base.ts` routes `/r/base-<preset>/<name>.json` to `base`, and `radix-<preset>`, `new-york`, `new-york-v4` and `default` to `radix`; any other style, such as `aria-*`, is not routed and answers 404.
 
@@ -101,14 +102,18 @@ Both variants are published (`apps/docs/public/r/base/` and `radix/`). `styleRew
 
 ## Docs Routing & Sidebar
 
-- Routes: `/docs` (guides only) · `/components` (all registry items) · `/blocks`. UI `components` items are flat at `/components/<name>`; other categories keep `/components/<cat>/<name>` (via `componentsDocsDir` in `generate.ts`).
-- The sidebar is one custom merged `PageTree` built in `apps/docs/src/lib/source.ts` (`sidebarTree`), shared by the `/docs` and `/components` layouts. Order lives in code — fumadocs `...folder` meta extracts *flatten* a folder, so meta can't split a folder's index from its children across sidebar positions.
+- Routes: `/docs` (guides only, no base) · `/components/{base,radix}/...` (all registry items) · `/blocks/{base,radix}/...`. UI `components` items are flat at `/components/<base>/<name>`; other categories keep `/components/<base>/<cat>/<name>` (via `componentsDocsDir` in `generate.ts`). One MDX per item; the base comes from the route segment and reaches the item blocks (`ItemHeader`, `ItemExamples`, the gallery) through `getMDXComponents(components, base)`.
+- Base UI is the default base, and the reader's last base is remembered. Visiting a `/components/<base>/…` or `/blocks/<base>/…` page writes the `shuip-base` cookie from the browser (`BaseCookie`, mounted by the shared `[base]` layout); pages never read it, so they stay static. `baseRedirects()` in `apps/docs/src/lib/base-routes.ts` (wired in `next.config.ts`) sends `/components/**`, `/blocks/**` and their `llms.mdx` routes without a base segment to the page of the cookie's base through `has` cookie rules, then to Base UI. These redirects are temporary (307) on purpose: a browser keeps a permanent redirect per address whatever the cookie says later. Links from places that belong to no base (`/docs` sidebar, home page, not-found) use the unbased address so the redirect picks the base. Markdown routes are `/<section>/llms.mdx/<base>/<slug>`.
+- Each base has its own loader over the same collection (`componentsSources`, `blocksSources` in `apps/docs/src/lib/source.ts`, built by `sectionLoaders` in `section-sources.ts`), so page addresses and page trees carry the base. `sidebarTreeFor(section, base, sidebarSources)` returns the sidebar of a based page: the components sidebar comes from `buildSidebarTree` (`sidebar-tree.ts`) and the blocks one from the blocks loader's page tree. The `/docs` layout uses `docsSidebarTree()`, the default-base components tree with its links unbased (`unbasedSidebarTree`). `SiteDocsLayout` is the one `DocsLayout` setup behind both. Order lives in code — fumadocs `...folder` meta extracts *flatten* a folder, so meta can't split a folder's index from its children across sidebar positions.
+- The two primitive libraries never share a React tree: the `[base]` layouts mount the providers of their base (`ProvidersForBase`) and previews come from per-base client modules (`components/preview/base-ui-preview.tsx`, `components/preview/radix-preview.tsx`; providers live in `components/providers/`). Do not mount a primitive provider in `AppProvider`. `apps/docs/scripts/base-isolation.test.ts` follows the imports of those modules and fails when a module a base reaches imports the other base's primitives. `@/components/ui-base/*` resolves to the Base UI primitives in `apps/docs/tsconfig.json`.
+- Prose or snippets that only hold for one base go inside `<BaseOnly base="radix">…</BaseOnly>` or `<BaseOnly base="base">…</BaseOnly>` in the MDX (`asChild` on Radix, `render` on Base UI). `apps/docs/scripts/base-prose.test.ts` fails when a Radix-only API appears outside a Radix block, and the markdown routes keep only the block of the page's base (`llmsText` in `apps/docs/src/lib/llms-text.ts`).
+- Search and `llms-full.txt` list the pages of the default base only; each page's markdown names its other variants.
 - PageTree node types (`Root`, `Item`, `Separator`, `Node`) import from `fumadocs-core/page-tree` (not `/server`).
 - After changing a collection or content, run `bunx fumadocs-mdx` (in `apps/docs`) to regenerate `.source` types before `tsc`.
 
 ## Path Mappings
 
-Configured identically in `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json`:
+The first six aliases are configured identically in `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json`. `@/components/ui-base/*` is configured in `apps/docs/tsconfig.json` and `packages/registry/items/tsconfig.json` only: the canonical registry sources never import it.
 
 | Alias | Resolves to |
 |-------|-------------|
@@ -116,7 +121,9 @@ Configured identically in `apps/docs/tsconfig.json` and `packages/registry/tscon
 | `@/components/block/shuip/*` | `packages/registry/stubs/blocks/*` |
 | `@/components/ui/*` | `packages/ui/src/components/ui/*` (shadcn primitives) |
 | `@/lib/utils` | `packages/ui/src/lib/utils` |
+| `@/lib/time` | `packages/registry/items/lib/time/time` |
 | `@/actions/shuip/places` | `packages/registry/items/react-hook-form/address-field/extras/places.action` |
+| `@/components/ui-base/*` | `packages/ui/src/components/ui-base/*` (Base UI primitives, which the primitives import each other through) |
 
 `@/*` in `apps/docs` also resolves to `./src/*` for app-internal code.
 

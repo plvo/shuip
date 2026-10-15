@@ -1,15 +1,10 @@
 import { blocks, components, docs } from 'fumadocs-mdx:collections/server';
-import type { Item, Node, Root, Separator } from 'fumadocs-core/page-tree';
 import { type InferPageType, loader } from 'fumadocs-core/source';
-import { icons } from 'lucide-react';
-import React from 'react';
-
-const icon = (icon?: string) => {
-  if (!icon) {
-    return null;
-  }
-  if (icon in icons) return React.createElement(icons[icon as keyof typeof icons]);
-};
+import { type Base, DEFAULT_BASE, type Section } from './base-routes';
+import { llmsText } from './llms-text';
+import { icon } from './page-icon';
+import { type SidebarSources, sectionLoaders, sidebarTreeFor } from './section-sources';
+import { unbasedSidebarTree } from './sidebar-tree';
 
 export const docsSource = loader({
   baseUrl: '/docs',
@@ -17,84 +12,46 @@ export const docsSource = loader({
   icon,
 });
 
-export const blocksSource = loader({
-  baseUrl: '/blocks',
-  source: blocks.toFumadocsSource(),
-  icon,
-});
+export const blocksSources = sectionLoaders('blocks', blocks.toFumadocsSource());
 
-export const componentsSource = loader({
-  baseUrl: '/components',
-  source: components.toFumadocsSource(),
-  icon,
-});
+export const componentsSources = sectionLoaders('components', components.toFumadocsSource());
 
-export const allPages = () => [...docsSource.getPages(), ...blocksSource.getPages(), ...componentsSource.getPages()];
+type AnyPage = InferPageType<typeof docsSource | (typeof blocksSources)[Base] | (typeof componentsSources)[Base]>;
 
-function buildSidebarTree(): Root {
-  const pages = componentsSource.getPages();
-  const pageNode = (page: { url: string; data: { title: string } }): Item => ({
-    type: 'page',
-    name: page.data.title,
-    url: page.url,
-  });
-  const separator = (name: string): Separator => ({ type: 'separator', name });
-  const guide = (url: string): Node[] => {
-    const page = pages.find((p) => p.url === url);
-    return page ? [pageNode(page)] : [];
-  };
-  const fields = (category: string): Node[] =>
-    pages
-      .filter((page) => page.slugs[0] === category && page.slugs.length === 2)
-      .sort((a, b) => a.data.title.localeCompare(b.data.title))
-      .map(pageNode);
-  const uiComponents = (): Node[] =>
-    pages
-      .filter((page) => page.slugs.length === 1 && page.data.registryName)
-      .sort((a, b) => a.data.title.localeCompare(b.data.title))
-      .map(pageNode);
+export const pageSource = (section: Section, base: Base = DEFAULT_BASE) =>
+  ({ docs: docsSource, blocks: blocksSources[base], components: componentsSources[base] })[section];
 
-  return {
-    name: 'Documentation',
-    children: [
-      ...docsSource.pageTree.children,
-      { type: 'page', url: '/llms-full.txt', name: 'llms-full.txt' },
-      ...guide('/components'),
-      ...guide('/components/react-hook-form'),
-      ...guide('/components/tanstack-form'),
-      ...guide('/components/tanstack-query'),
-      separator('Components'),
-      ...uiComponents(),
-      separator('React Hook Form'),
-      ...fields('react-hook-form'),
-      separator('TanStack Form'),
-      ...fields('tanstack-form'),
-      separator('TanStack Query'),
-      ...fields('tanstack-query'),
-    ],
-  };
-}
+// Search and llms-full.txt list the pages of the default base only; each page points at its other variants.
+export const allPages = () => [
+  ...docsSource.getPages(),
+  ...blocksSources[DEFAULT_BASE].getPages(),
+  ...componentsSources[DEFAULT_BASE].getPages(),
+];
 
-export const sidebarTree = buildSidebarTree();
+/** What the sidebars of every section are built from. */
+export const sidebarSources: SidebarSources = {
+  components: componentsSources,
+  blocks: blocksSources,
+  guides: docsSource.pageTree.children,
+};
 
-export function getPageImage(
-  page: InferPageType<typeof docsSource | typeof blocksSource | typeof componentsSource>,
-  docsType: 'docs' | 'blocks' | 'components',
-) {
+/** The sidebar of the guides under `/docs`, whose component links follow the base the reader visited last. */
+export const docsSidebarTree = () => unbasedSidebarTree(sidebarTreeFor('components', DEFAULT_BASE, sidebarSources));
+
+export function getPageImage(page: AnyPage, section: Section) {
   const segments = [...page.slugs, 'image.png'];
 
   return {
     segments,
-    url: `${process.env.NEXT_PUBLIC_APP_URL}/og/${docsType}/${segments.join('/')}`,
+    url: `${process.env.NEXT_PUBLIC_APP_URL}/og/${section}/${segments.join('/')}`,
   };
 }
 
-export async function getLLMText(
-  page: InferPageType<typeof docsSource | typeof blocksSource | typeof componentsSource>,
-) {
-  const processed = await page.data.getText('processed');
+export interface LlmsSourcePage {
+  url: string;
+  data: { title: string; getText(type: 'processed'): Promise<string> };
+}
 
-  return `# ${page.data.title} (${page.url})
-
-${processed}`;
+export async function getLLMText(page: LlmsSourcePage) {
+  return llmsText({ title: page.data.title, url: page.url, processed: await page.data.getText('processed') });
 }

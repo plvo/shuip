@@ -2,6 +2,7 @@
 /** biome-ignore-all lint/suspicious/noAssignInExpressions: script */
 import fs from 'node:fs';
 import path from 'node:path';
+import { exampleKey } from '../src/example-key';
 import { SHUIP_ORIGIN } from '../src/namespace';
 import { registryFilename } from '../src/registry-file';
 import type { Variant } from '../src/style-base';
@@ -350,7 +351,14 @@ export const buildRegistryJson = (
   return { name: 'shuip', homepage: SHUIP_ORIGIN, items: out };
 };
 
-export const buildIndexTs = (items: ScannedItem[]): string => {
+/** Where the lazy imports of an index point: the canonical sources, or the Base UI copies next to the index. */
+const indexImportRoot = (variant: Variant): string => (variant === BASE_UI_VARIANT ? '.' : '@repo/registry');
+
+/**
+ * The lazy components the docs render, one index per variant. It carries no source: the docs read what a
+ * consumer receives from the published files, on the server, so a client bundle never ships the sources.
+ */
+export const buildIndexTs = (items: ScannedItem[], variant: Variant = CANONICAL_VARIANT): string => {
   let body = `// @ts-nocheck
 
 /**
@@ -361,7 +369,6 @@ import * as React from 'react';
 
 interface RegistryComponent {
   path: string;
-  code: string;
   component: any;
 }
 
@@ -369,24 +376,21 @@ export const REGISTRY_INDEX: Record<string, RegistryComponent> = {`;
 
   for (const item of items) {
     if (item.category === 'lib') continue;
-    const { category, folderName, componentPath, examples } = item;
+    const { category, folderName, examples } = item;
     const itemName = namePrefix(category, folderName);
-    const importPath = `@repo/registry/items/${category}/${folderName}/${COMPONENT_BASENAME}`;
-    const code = fs.readFileSync(componentPath, 'utf-8');
+    const itemImportPath = `${indexImportRoot(variant)}/items/${category}/${folderName}`;
+    const importPath = `${itemImportPath}/component.${variant}`;
     body += `
   '${itemName}': {
     path: '${importPath}',
-    code: ${JSON.stringify(code)},
     component: React.lazy(() => import('${importPath}')),
   },`;
     for (const ex of examples) {
-      const exImport = `@repo/registry/items/${category}/${folderName}/${ex.filename.replace(/\.tsx$/, '')}`;
-      const exCode = fs.readFileSync(ex.absPath, 'utf-8');
-      const exKey = ex.variant === 'default' ? `${itemName}.example` : `${itemName}.${ex.variant}.example`;
+      const exImport = `${itemImportPath}/${ex.variant}.example.${variant}`;
+      const exKey = exampleKey(itemName, ex.variant);
       body += `
   '${exKey}': {
     path: '${exImport}',
-    code: ${JSON.stringify(exCode)},
     component: React.lazy(() => import('${exImport}')),
   },`;
     }
@@ -611,6 +615,7 @@ const main = () => {
     }),
   );
   fs.writeFileSync(path.join(ROOT, '__index__.ts'), buildIndexTs(items));
+  fs.writeFileSync(path.join(GENERATED_BASE_DIR, '__index__.ts'), buildIndexTs(items, BASE_UI_VARIANT));
   writeStubs(items, STUBS_DIR, CANONICAL_VARIANT);
   writeComponentSymlinks(items);
 

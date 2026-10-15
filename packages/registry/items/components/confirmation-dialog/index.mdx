@@ -6,6 +6,8 @@ registryName: confirmation-dialog
 
 ## Simple integration
 
+<BaseOnly base="radix">
+
 ```tsx	
 <Dialog>
   <DialogTrigger asChild>
@@ -25,6 +27,30 @@ registryName: confirmation-dialog
   </DialogContent>
 </Dialog>
 ```
+
+</BaseOnly>
+
+<BaseOnly base="base">
+
+```tsx	
+<Dialog>
+  <DialogTrigger render={<Button variant="destructive" />}>Delete</DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Are you sure?</DialogTitle>
+      <DialogDescription>
+        This action cannot be undone. This will permanently delete the item.
+      </DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+      <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+```
+
+</BaseOnly>
 
 With `ConfirmationDialog`, the same result in a clean, reusable component:
 
@@ -88,6 +114,8 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 ## Props
 
+<BaseOnly base="radix">
+
 <TypeTable
   type={{
     trigger: {
@@ -116,3 +144,42 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
     },
   }}
 />
+
+</BaseOnly>
+
+<BaseOnly base="base">
+
+<TypeTable
+  type={{
+    trigger: {
+      description: 'The element to open the dialog with, rendered through the Base UI trigger',
+      type: 'React.ReactElement',
+    },
+    nativeButton: {
+      description: 'Set to false when the trigger is not a button',
+      type: 'boolean?',
+    },
+    title: {
+      description: 'The title of the dialog',
+      type: 'string',
+    },
+    description: {
+      description: 'The description of the dialog',
+      type: 'string',
+    },
+    labelConfirmButton: {
+      description: 'The label of the confirmation button',
+      type: 'string',
+    },
+    onConfirm: {
+      description: 'The function to call when the confirmation button is clicked',
+      type: '() => void',
+    },
+    "...props": {
+      description: 'All props to apply to the dialog',
+      type: 'React.RefAttributes<HTMLDialogElement>',
+    },
+  }}
+/>
+
+</BaseOnly>

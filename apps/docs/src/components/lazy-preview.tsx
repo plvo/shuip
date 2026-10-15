@@ -1,14 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import { Preview } from '@/components/item-preview';
-
 export interface LazyPreviewProps {
-  registryName: string;
   className?: string;
+  children: React.ReactNode;
 }
 
-export function LazyPreview({ registryName, className }: LazyPreviewProps) {
+export function LazyPreview({ className, children }: LazyPreviewProps) {
   const ref = React.useRef<HTMLDivElement>(null);
   const [visible, setVisible] = React.useState(false);
 
@@ -30,7 +28,7 @@ export function LazyPreview({ registryName, className }: LazyPreviewProps) {
 
   return (
     <div ref={ref} className={className}>
-      {visible ? <Preview registryName={registryName} /> : null}
+      {visible ? children : null}
     </div>
   );
 }

@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { LazyPreview } from '@/components/lazy-preview';
+import { Preview } from '@/components/preview/preview';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { blocksSource } from '@/lib/source';
+import type { Base } from '@/lib/base-routes';
+import { blocksSources } from '@/lib/source';
 
-export function BlocksList() {
-  const blocksPages = blocksSource.getPages().filter((page) => page.data.registryName);
+export function BlocksList({ base }: { base: Base }) {
+  const blocksPages = blocksSources[base].getPages().filter((page) => page.data.registryName);
 
   return (
     <div className='flex flex-col gap-6'>
@@ -17,7 +19,9 @@ export function BlocksList() {
             </CardHeader>
           </Link>
           <div className='h-80 overflow-hidden border-t border-border'>
-            <LazyPreview registryName={`${page.data.registryName}.example`} className='h-full' />
+            <LazyPreview className='h-full'>
+              <Preview base={base} registryName={`${page.data.registryName}.example`} />
+            </LazyPreview>
           </div>
         </Card>
       ))}

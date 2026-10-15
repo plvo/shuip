@@ -152,6 +152,30 @@ describe('generated paths for the registry items', () => {
       expect(fs.existsSync(path.join(REGISTRY_ROOT, `${specifier.replace('@repo/registry/', '')}.tsx`))).toBe(true);
     }
   });
+
+  test('the Base UI index lazily imports the generated copy of every component and example', () => {
+    const index = buildIndexTs(items, 'base');
+    const pathSpecifiers = [...index.matchAll(/path: '([^']+)'/g)].map((m) => m[1] as string);
+    const importSpecifiers = [...index.matchAll(/import\('([^']+)'\)/g)].map((m) => m[1] as string);
+    const expectedCount = nonLib.length + nonLib.reduce((n, i) => n + i.examples.length, 0);
+
+    expect(pathSpecifiers).toHaveLength(expectedCount);
+    expect(importSpecifiers).toEqual(pathSpecifiers);
+    for (const specifier of importSpecifiers) {
+      expect(specifier).toMatch(/^\.\/items\/.+\.base$/);
+      expect(fs.existsSync(path.join(REGISTRY_ROOT, 'generated', 'base', `${specifier}.tsx`))).toBe(true);
+    }
+  });
+
+  test('both indexes expose the same keys', () => {
+    const keysOf = (index: string) => [...index.matchAll(/^ {2}'([^']+)': \{/gm)].map((m) => m[1]);
+
+    expect(keysOf(buildIndexTs(items, 'base'))).toEqual(keysOf(buildIndexTs(items)));
+  });
+
+  test.each(['radix', 'base'] as const)('the %s index leaves the sources to the server', (variant) => {
+    expect(buildIndexTs(items, variant)).not.toContain('code:');
+  });
 });
 
 const PRIMITIVES_DIR = path.resolve(import.meta.dir, '../../ui/src/components/ui');

@@ -2,63 +2,70 @@ import { createRelativeLink } from 'fumadocs-ui/mdx';
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/page';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import type { ComponentProps } from 'react';
+import { BaseSwitcher } from '@/components/base-switcher';
 import { ItemHeader } from '@/components/item-content';
 import { LLMCopyButton } from '@/components/llm-copy-button';
-import { blocksSource, componentsSource, docsSource, getPageImage } from '@/lib/source';
+import { type Base, type BasedSection, DEFAULT_BASE, llmsUrl, withBase } from '@/lib/base-routes';
+import { getPageImage, pageSource } from '@/lib/source';
 import { getMDXComponents } from '@/mdx-components';
 
-type DocsPageType = 'docs' | 'blocks' | 'components';
+export type DocsPageProps =
+  | { section: 'docs'; slug?: string[] }
+  | { section: BasedSection; base: Base; slug?: string[] };
 
-export async function DocsPageBase<T extends DocsPageType>({
-  docsType,
-  props,
-}: {
-  docsType: T;
-  props: PageProps<`/${T}/[[...slug]]`>;
-}) {
-  const params = await props.params;
-  const source = { docs: docsSource, blocks: blocksSource, components: componentsSource }[docsType];
-  const page = source.getPage(params.slug);
+const sourceOf = (props: DocsPageProps) =>
+  props.section === 'docs' ? pageSource('docs') : pageSource(props.section, props.base);
+
+export async function DocsPageBase(props: DocsPageProps) {
+  const source = sourceOf(props);
+  const page = source.getPage(props.slug);
   if (!page) notFound();
 
   const MDX = page.data.body;
+  const base = props.section === 'docs' ? undefined : props.base;
 
-  const markdownUrl = `/${docsType}/llms.mdx/${page.slugs.join('/')}`;
+  const markdownUrl =
+    props.section === 'docs'
+      ? `/docs/llms.mdx/${page.slugs.join('/')}`
+      : llmsUrl(props.section, props.base, page.slugs);
+  const RelativeLink = createRelativeLink(source, page);
 
   return (
     <DocsPage toc={page.data.toc} full={page.data.full} tableOfContent={{ style: 'clerk' }}>
       <div className='mb-4 space-y-4'>
-        <div className='flex items-center gap-2 justify-between'>
+        <div className='flex flex-wrap items-center justify-between gap-x-2 gap-y-3'>
           <DocsTitle className='font-mono text-4xl'>{page.data.title}</DocsTitle>
           <LLMCopyButton markdownUrl={markdownUrl} />
         </div>
         <DocsDescription className='mb-0'>{page.data.description}</DocsDescription>
+        {base && <BaseSwitcher base={base} url={page.url} />}
       </div>
       <DocsBody>
-        {page.data.registryName && <ItemHeader registryName={page.data.registryName} />}
+        {base && page.data.registryName && <ItemHeader base={base} registryName={page.data.registryName} />}
         <MDX
-          components={getMDXComponents({
-            // this allows you to link to other pages with relative file paths
-            a: createRelativeLink(source, page),
-          })}
+          components={getMDXComponents(
+            {
+              // this allows you to link to other pages with relative file paths
+              a: (props: ComponentProps<'a'>) => (
+                <RelativeLink {...props} href={base && props.href ? withBase(props.href, base) : props.href} />
+              ),
+            },
+            base ?? DEFAULT_BASE,
+          )}
         />
       </DocsBody>
     </DocsPage>
   );
 }
 
-export async function generateDocsPageMetadata<T extends DocsPageType>(
-  docsType: T,
-  props: PageProps<`/${T}/[[...slug]]`>,
-): Promise<Metadata> {
-  const params = await props.params;
-  const source = { docs: docsSource, blocks: blocksSource, components: componentsSource }[docsType];
-  const page = source.getPage(params.slug);
+export async function generateDocsPageMetadata(props: DocsPageProps): Promise<Metadata> {
+  const page = sourceOf(props).getPage(props.slug);
   if (!page) notFound();
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://shuip.plvo.dev';
-  const pageUrl = `${baseUrl}/${docsType}/${page.slugs.join('/')}`;
-  const ogImage = getPageImage(page, docsType).url;
+  const pageUrl = `${baseUrl}${page.url}`;
+  const ogImage = getPageImage(page, props.section).url;
 
   return {
     title: page.data.title,

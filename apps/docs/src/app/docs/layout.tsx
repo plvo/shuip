@@ -1,12 +1,6 @@
-import { DocsLayout } from 'fumadocs-ui/layouts/notebook';
-import { baseOptions } from '@/lib/layout.shared';
-import { sidebarTree } from '@/lib/source';
+import { SiteDocsLayout } from '@/components/site-docs-layout';
+import { docsSidebarTree } from '@/lib/source';
 
 export default function Layout({ children }: LayoutProps<'/docs'>) {
-  const base = baseOptions();
-  return (
-    <DocsLayout {...base} nav={{ ...base.nav, mode: 'top' }} tree={sidebarTree}>
-      {children}
-    </DocsLayout>
-  );
+  return <SiteDocsLayout tree={docsSidebarTree()}>{children}</SiteDocsLayout>;
 }
