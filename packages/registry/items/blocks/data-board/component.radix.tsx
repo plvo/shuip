@@ -1195,7 +1195,11 @@ export function DataBoard<T extends object>({
     height == null ? {} : { height: typeof height === 'number' ? `${height}px` : height };
 
   return (
-    <div data-slot='data-board' style={rootStyle} className={cn('flex min-h-0 flex-col gap-3', className)}>
+    <div
+      data-slot='data-board'
+      style={rootStyle}
+      className={cn('flex w-full min-w-0 min-h-0 flex-col gap-3', className)}
+    >
       <DataBoardToolbar
         query={query}
         onQueryChange={setQuery}
