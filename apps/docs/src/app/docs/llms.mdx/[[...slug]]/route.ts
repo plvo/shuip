@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
-import { docsSource, getLLMText } from '@/lib/source';
+import { pageLlmsText } from '@/lib/llms-text';
+import { docsSource } from '@/lib/source';
 
 export const revalidate = false;
 
@@ -8,7 +9,7 @@ export async function GET(_req: Request, { params }: RouteContext<'/docs/llms.md
   const page = docsSource.getPage(slug);
   if (!page) notFound();
 
-  return new Response(await getLLMText(page), {
+  return new Response(await pageLlmsText(page), {
     headers: {
       'Content-Type': 'text/markdown',
     },

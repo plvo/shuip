@@ -107,7 +107,7 @@ Both variants are published (`apps/docs/public/r/base/` and `radix/`). `styleRew
 - Each base has its own loader over the same collection (`componentsSources`, `blocksSources` in `apps/docs/src/lib/source.ts`, built by `sectionLoaders` in `section-sources.ts`), so page addresses and page trees carry the base. `sidebarTreeFor(section, base, sidebarSources)` returns the sidebar of a based page: the components sidebar comes from `buildSidebarTree` (`sidebar-tree.ts`) and the blocks one from the blocks loader's page tree. The `/docs` layout uses `docsSidebarTree()`, the default-base components tree with its links unbased (`unbasedSidebarTree`). `SiteDocsLayout` is the one `DocsLayout` setup behind both. Order lives in code — fumadocs `...folder` meta extracts *flatten* a folder, so meta can't split a folder's index from its children across sidebar positions.
 - The two primitive libraries never share a React tree: the `[base]` layouts mount the providers of their base (`ProvidersForBase`) and previews come from per-base client modules (`components/preview/base-ui-preview.tsx`, `components/preview/radix-preview.tsx`; providers live in `components/providers/`). Do not mount a primitive provider in `AppProvider`. `apps/docs/scripts/base-isolation.test.ts` follows the imports of those modules and fails when a module a base reaches imports the other base's primitives. `@/components/ui-base/*` resolves to the Base UI primitives in `apps/docs/tsconfig.json`.
 - Prose or snippets that only hold for one base go inside `<BaseOnly base="radix">…</BaseOnly>` or `<BaseOnly base="base">…</BaseOnly>` in the MDX (`asChild` on Radix, `render` on Base UI). `apps/docs/scripts/base-prose.test.ts` fails when a Radix-only API appears outside a Radix block, and the markdown routes keep only the block of the page's base (`llmsText` in `apps/docs/src/lib/llms-text.ts`).
-- Search and `llms-full.txt` list the pages of the default base only; each page's markdown names its other variants.
+- Search and `llms-full.txt` list the pages of the default base only; each page's markdown names its other variants, and `llms-full.txt` opens with a pointer to the Radix pages and their `llms.mdx` markdown (`llmsFullText` in `apps/docs/src/lib/llms-text.ts`).
 - PageTree node types (`Root`, `Item`, `Separator`, `Node`) import from `fumadocs-core/page-tree` (not `/server`).
 - After changing a collection or content, run `bunx fumadocs-mdx` (in `apps/docs`) to regenerate `.source` types before `tsc`.
 
@@ -184,7 +184,7 @@ To change anything in those, edit the source under `packages/registry/items/<cat
 **Adding a Base UI override:**
 1. Copy `component.radix.tsx` (or `<variant>.example.radix.tsx`) to `component.base.tsx` (or `<variant>.example.base.tsx`) in the same folder and change only what diverges.
 2. `bun typecheck:base` regenerates, then type-checks every override and every generated copy against Base UI.
-3. `bun smoke base-vega --items <name>` installs the item into a real Base UI project and type-checks it.
+3. `bun smoke base-vega --items <prefixed-name>` installs the item into a real Base UI project and type-checks it.
 
 The vendored Base UI `PopoverContent` does not expose the Positioner's `anchor` prop. An item that anchors a popover to an element other than its trigger (the autocomplete fields) composes `Popover as PopoverPrimitive` from `@base-ui/react/popover` (`Portal`, `Positioner anchor={ref}`, `Popup`) next to the vendored `Popover` root, and sizes the popup with `var(--anchor-width)`.
 

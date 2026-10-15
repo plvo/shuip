@@ -187,3 +187,48 @@ describe('emitSkills', () => {
     );
   });
 });
+
+const BASE_WITH_RENDER = /`base-\*`(?:(?!`asChild`)[^\n])*`render`/;
+const RADIX_WITH_ASCHILD = /Radix(?:(?!`render`)[^\n])*`asChild`/;
+const BASE_WITH_ASCHILD = /`base-\*`(?:(?!`render`)[^\n])*`asChild`/;
+const RADIX_WITH_RENDER = /Radix(?:(?!`asChild`)[^\n])*`render`/;
+
+const pairsBaseWithRenderAndRadixWithAsChild = (text: string): boolean =>
+  BASE_WITH_RENDER.test(text) &&
+  RADIX_WITH_ASCHILD.test(text) &&
+  !BASE_WITH_ASCHILD.test(text) &&
+  !RADIX_WITH_RENDER.test(text);
+
+describe('pairsBaseWithRenderAndRadixWithAsChild', () => {
+  test('accepts the rule written either way round', () => {
+    expect(
+      pairsBaseWithRenderAndRadixWithAsChild('In `base-*` projects use `render`; in Radix projects use `asChild`.'),
+    ).toBe(true);
+    expect(
+      pairsBaseWithRenderAndRadixWithAsChild('Radix projects take `asChild`, `base-*` projects take `render`.'),
+    ).toBe(true);
+  });
+
+  test('rejects the swapped rule', () => {
+    expect(
+      pairsBaseWithRenderAndRadixWithAsChild('In `base-*` projects use `asChild`; in Radix projects use `render`.'),
+    ).toBe(false);
+  });
+});
+
+describe('the published skills', () => {
+  const skillsDir = path.resolve(import.meta.dir, '..', 'skills');
+  const skills = fs
+    .readdirSync(skillsDir)
+    .sort()
+    .filter((entry) => fs.existsSync(path.join(skillsDir, entry, 'SKILL.md')))
+    .map((entry) => [entry, fs.readFileSync(path.join(skillsDir, entry, 'SKILL.md'), 'utf-8')] as const);
+
+  test('are the three skills of the bundle', () => {
+    expect(skills.map(([name]) => name)).toEqual(['shuip-components', 'shuip-forms', 'shuip-overview']);
+  });
+
+  test.each(skills)('%s pairs base-* with render and Radix with asChild', (_name, text) => {
+    expect(pairsBaseWithRenderAndRadixWithAsChild(text)).toBe(true);
+  });
+});

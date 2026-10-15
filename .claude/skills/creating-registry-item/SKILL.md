@@ -1,15 +1,15 @@
 ---
 name: creating-registry-item
-description: Use when adding a new shuip item (component, block, react-hook-form field, tanstack-form field) under packages/registry/items/, or when investigating why a newly added item is missing from registry.json or the docs site.
+description: Use when adding a new shuip item (component, block, react-hook-form field, tanstack-form field, tanstack-query item) under packages/registry/items/, or when investigating why a newly added item is missing from registry.json or the docs site.
 ---
 
 # Creating a Registry Item
 
 ## Overview
 
-shuip items live at `packages/registry/items/<category>/<name>/`. `packages/registry/scripts/generate.ts` scans them and emits every artifact (registry.json, __index__.ts, stubs, MDX symlinks, public/r/*.json). Get the folder right, run the generator, the rest cascades. CLAUDE.md has the layout & path-mapping reference — this skill is the procedure.
+shuip items live at `packages/registry/items/<category>/<name>/`. `packages/registry/scripts/generate.ts` scans them and emits every artifact (registry.json, registry.base.json, __index__.ts, stubs, MDX symlinks, the Base UI copies under generated/base/, public/r/<variant>/*.json). Get the folder right, run the generator, the rest cascades. CLAUDE.md has the layout & path-mapping reference — this skill is the procedure.
 
-**Categories & prefixes:** declared in the `CATEGORIES` map at the top of `packages/registry/scripts/generate.ts`. Currently: `components` · `blocks` (registry:block) · `react-hook-form` (prefix `rhf-`) · `tanstack-form` (prefix `tsf-`) · `tanstack-query` (prefix `tsq-`). The folder name is **unprefixed**; the script adds the prefix. Adding a new category = one entry in `CATEGORIES`.
+**Categories & prefixes:** declared in the `CATEGORIES` map at the top of `packages/registry/scripts/generate.ts`. The categories are `components` · `blocks` (registry:block) · `react-hook-form` (prefix `rhf-`) · `tanstack-form` (prefix `tsf-`) · `tanstack-query` (prefix `tsq-`). The folder name is **unprefixed**; the script adds the prefix. Adding a new category = one entry in `CATEGORIES`.
 
 ## When to Use
 
@@ -30,6 +30,7 @@ Create `packages/registry/items/<category>/<name>/`. `<name>` has NO prefix — 
 - Import shadcn primitives via `@/components/ui/<name>`. These become `registryDependencies` (the consumer's shadcn CLI will install them).
 - Generally avoid importing `@/components/ui/shuip/*` from a `component.radix.tsx`. The one legitimate case is a **block or composite item that consumes another shuip item** — `blocks/responsive-dialog/component.radix.tsx` imports `@/components/ui/shuip/side-dialog` and ships a `meta.shuip.json` with `dependsOn: ["side-dialog"]`, which adds `side-dialog` to `registryDependencies` so the consumer's shadcn install resolves the import. Without that `dependsOn`, the dep is silently dropped (the regex in `parseRegistryDeps` excludes `shuip` paths). If you need a cross-item shuip dep: import via the stub alias AND declare it in `meta.shuip.json`.
 - For RHF / TSF items, use the `register: UseFormRegisterReturn<FieldPath<T>>` prop signature as in `input-field/component.radix.tsx`. **The transferable pattern is the RHF integration (register prop + `FormField` + render-props plumbing), not the underlying primitive.** Which shadcn primitive you wrap is a separate decision driven by the task — `input-field`/`password-field` wrap `InputGroupInput` for addon slots; `address-field` wraps bare `Input`. If the task spec names a specific primitive, follow the spec.
+- **Derive props from the primitive** you forward them to (`React.ComponentProps<typeof Button>`, `extends React.ComponentProps<typeof Input>`) and declare only what the item adds. A re-declared copy of the primitive's props matches one base and drifts on the other, while a derived type follows whichever primitive `@/components/ui/<name>` resolves to.
 - Add `'use client'` at the top only when the component uses client-only React features (state, refs, effects, browser APIs). Half the existing RHF components have it for that reason; the other half (purely presentational wrappers over `FormField`) correctly do not. Don't cargo-cult it.
 - **Schemas / types may be exported** when the item describes a domain shape — see `address-field/component.radix.tsx` which exports `addressSchema` and `AddressData`. For format-only validation (E.164, URL, etc.), exporting a regex or zod schema next to the component is fine; consumers can opt in.
 
@@ -54,9 +55,11 @@ Beyond the default, add `<variant>.example.radix.tsx` showing a meaningful alter
 
 ### 4b. Check the Base UI variant
 
-The Base UI variant is generated from your Radix source by a codemod (`asChild` becomes `render`). Run `bun registry:generate` and read its warnings: an `asChild` the codemod cannot convert, or a link rendered with `nativeButton={false}`, is reported with the file and line. Where the two APIs genuinely diverge (a Radix-only prop such as `onOpenAutoFocus`, `PopoverAnchor`), add `component.base.tsx` (or `<variant>.example.base.tsx`) next to the canonical file, written exactly as consumers receive it. Then run `bun typecheck:base`. On later runs the generator warns when the canonical file gets commits newer than the override. See "Base UI variant" in CLAUDE.md.
+`component.radix.tsx` and `<variant>.example.radix.tsx` are the canonical sources; the Base UI variant is generated from them by a codemod (`asChild` becomes `render`). Run `bun registry:generate` and read its warnings: an `asChild` the codemod cannot convert, or a link rendered with `nativeButton={false}`, is reported with the file and line.
 
-### 5. Write `index.mdx` — but only for components / RHF / TSF
+**Write an override only where the two APIs genuinely diverge** (a Radix-only prop such as `onOpenAutoFocus`, `PopoverAnchor`). If the codemod output is correct, add nothing: an override is a second file to keep in step. To write one, follow "Adding a Base UI override" in CLAUDE.md: copy the canonical file, change only what diverges, run `bun typecheck:base`. When `registry:generate` later warns that an override predates its canonical file, update the override, or commit it unchanged once you have checked it still holds.
+
+### 5. Write `index.mdx` — but only for components / RHF / TSF / TSQ
 
 Frontmatter must include `title`, `description`, and `registryName: <prefixed-name>`. Body uses `<ItemExamples registryName={'<prefixed-name>'} />` to render the previews and `<TypeTable>` for props.
 
@@ -93,7 +96,9 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 Model on a sibling item's `index.mdx` for prose style and prop documentation patterns.
 
-**Blocks are different:** do NOT put `index.mdx` in `items/blocks/<name>/`. Block docs are real MDX files in `apps/docs/content/blocks/<name>.mdx` (a separate fumadocs collection). Putting `index.mdx` in a block's item folder makes the generator create a dead symlink under `content/docs/blocks/` that no collection reads — the page silently doesn't appear.
+**Base-specific prose:** the same MDX renders on the Base UI and the Radix page of the item. Prose or a snippet that only holds for one base (an `asChild` composition, a Radix-only prop) goes inside `<BaseOnly base="radix">…</BaseOnly>`, with the Base UI counterpart in `<BaseOnly base="base">…</BaseOnly>`; leave a blank line after the opening tag and before the closing one (see `side-dialog/index.mdx`). `apps/docs/scripts/base-prose.test.ts` fails when a Radix-only API appears outside a Radix block. Do not write `<BaseOnly>` without its `base` attribute: the same test counts blocks and rejects it.
+
+**Blocks are different:** do NOT put `index.mdx` in `items/blocks/<name>/`. Block docs are real MDX files in `apps/docs/content/blocks/<name>.mdx` (a separate fumadocs collection). Putting `index.mdx` in a block's item folder makes the generator create a dead symlink under `content/components/blocks/` that no collection reads — the page silently doesn't appear.
 
 ### 6. Optional: extras and meta
 
@@ -115,7 +120,8 @@ Confirm in the output:
 Then sanity-check the produced artifacts:
 - New entry in `packages/registry/registry.json` (correct prefixed name, expected `registryDependencies` and `dependencies`)
 - Stub at `packages/registry/stubs/<cat-subdir>/<name>.tsx` (for blocks: `packages/registry/stubs/blocks/<name>.tsx`)
-- Symlink at `apps/docs/content/docs/<cat>/<name>.mdx` (only for components / RHF / TSF — blocks won't have one)
+- Symlink at `apps/docs/content/components/<name>.mdx` for `components` items, or `apps/docs/content/components/<cat>/<name>.mdx` for the other categories (blocks have none)
+- Base UI copy at `packages/registry/generated/base/items/<cat>/<name>/`
 
 ### 8. End-to-end build
 
@@ -123,11 +129,22 @@ Then sanity-check the produced artifacts:
 bun build:docs
 ```
 
-This chains `registry:generate` → `registry:build` (apps/docs/public/r/*.json) → `next build`. If it succeeds, the item is installable.
+This chains `registry:generate` → `registry:build` (`apps/docs/public/r/<variant>/*.json`, one folder per base) → `next build`. If it succeeds, the item is installable.
+
+### 9. Smoke-test both bases
+
+`bun smoke` installs items through the `@shuip` namespace into a fresh shadcn project and type-checks them. Run it once per base for the item you touched:
+
+```bash
+bun smoke radix-vega --items <prefixed-name>
+bun smoke base-vega --items <prefixed-name>
+```
+
+A `base-*` style is served the Base UI variant, and the run fails on any Radix package. Drop `--items` to install every item before a larger change.
 
 ## Generated Artifacts — Don't Edit
 
-`registry.json`, `__index__.ts`, `stubs/**`, `apps/docs/public/r/**`, `apps/docs/content/docs/<cat>/<name>.mdx` (symlinks), and `apps/docs/content/docs/<cat>/.gitignore` are all regenerated. Edits are clobbered. Always edit the source under `items/`.
+`registry.json`, `registry.base.json`, `__index__.ts`, `stubs/**`, `generated/**`, `apps/docs/public/r/<variant>/**`, the MDX symlinks under `apps/docs/content/components/` and the `.gitignore` files listing them are all regenerated. Edits are clobbered. Always edit the source under `items/`.
 
 ## Common Mistakes
 
@@ -137,19 +154,25 @@ This chains `registry:generate` → `registry:build` (apps/docs/public/r/*.json)
 | `component.radix.tsx` missing or misnamed | `[generate] skipping ...` warning; item invisible | Filename must be exactly `component.radix.tsx` |
 | Example imports `./component.radix` | Preview works locally; the actual install path is unverified | Use `@/components/ui/shuip/<cat-subdir>/<name>` |
 | `component.radix.tsx` imports `@/components/ui/shuip/*` without a matching `meta.shuip.json` `dependsOn` | Dep silently dropped from `registryDependencies`; consumer install missing the referenced item | Either declare the dep in `meta.shuip.json` (legitimate composite-item case, see `responsive-dialog`), or import shadcn primitives via `@/components/ui/<name>` instead |
-| Block has `index.mdx` in its item folder | Symlink lands in `content/docs/blocks/`, fumadocs doesn't read it, page absent | Move the MDX to `apps/docs/content/blocks/<name>.mdx`; remove the symlink |
-| Edits write to the MDX symlink in `content/docs/` | Edit succeeds (writes through the symlink) but the source-of-truth confusion is real | Edit `items/<cat>/<name>/index.mdx` |
+| Block has `index.mdx` in its item folder | Symlink lands in `content/components/blocks/`, fumadocs doesn't read it, page absent | Move the MDX to `apps/docs/content/blocks/<name>.mdx`; remove the symlink |
+| Edits write to the MDX symlink in `content/components/` | Edit succeeds (writes through the symlink) but the source-of-truth confusion is real | Edit `items/<cat>/<name>/index.mdx` |
 | Skipping `registry:generate` after adding files | New item never appears | Always run it; `bun build:docs` chains it for you |
 | `bun add` for a shared dep | Catalog drift between workspaces | Add via the root `workspaces.catalog` (or sub-catalog), reference as `"catalog:"` |
-| Aliased extras with mapping in only one tsconfig | IDE or build breaks | Mirror in both `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json` |
+| Aliased extras with a mapping missing from one of the three tsconfigs | IDE or build breaks | Mirror in `apps/docs/tsconfig.json`, `packages/registry/tsconfig.json` and `packages/registry/items/tsconfig.json` |
+| Re-declaring a primitive's props by hand (`asChild?: boolean`, `onClick`, `disabled`, …) | Matches one base only; the other base's primitive disagrees | Extend `React.ComponentProps<typeof X>` and declare only the props the item adds |
+| Writing a `component.base.tsx` the codemod would have produced | A second file that drifts from the canonical one | Delete it, run `registry:generate`, and keep an override only for real API divergence |
+| Radix-only prose (`asChild`, `onOpenAutoFocus`) outside `<BaseOnly base="radix">` | `base-prose.test.ts` fails, and the Base UI page documents an API it lacks | Wrap it in a Radix block and add the Base UI counterpart |
 | Skipping the variant example | Doc page shows only one preview, looks thin | Add at least one `<variant>.example.radix.tsx` showing an alternate prop usage |
 
 ## Red Flags — STOP
 
-- About to write to `stubs/`, `__index__.ts`, `registry.json`, `apps/docs/public/r/`, or a `content/docs/<cat>/<name>.mdx` symlink
+- About to write to `stubs/`, `__index__.ts`, `registry.json`, `registry.base.json`, `generated/`, `apps/docs/public/r/`, or a `content/components/` symlink
 - Folder name starts with `rhf-`, `tsf-`, or `tsq-`
 - An `.example.radix.tsx` has `from './component.radix'` (relative)
 - A `component.radix.tsx` has `from '@/components/ui/shuip/` without a matching `meta.shuip.json` `dependsOn`
 - Putting an `index.mdx` in `items/blocks/<name>/`
 - `[generate] N items processed` with N unchanged after you added the item
-- Adding a path mapping in only one tsconfig
+- Adding a path mapping in fewer than the three tsconfigs
+- A `component.base.tsx` with no API divergence from `component.radix.tsx`
+- An override committed without running `bun typecheck:base`
+- Shipping an item after smoke-testing only one base

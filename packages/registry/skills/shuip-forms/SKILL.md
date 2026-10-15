@@ -157,6 +157,13 @@ export function SignupForm() {
 - tsf fields take split props: `props` for the native input, `fieldProps` for the field wrapper. There is no lens and no `<FormProvider>` wrapper.
 - The tsf `SubmitButton` auto-disables via `form.Subscribe` — render it inside `<form.AppForm>`, no `loading` prop needed.
 
+## Composition follows the project's base
+
+The field components work the same on Base UI and on Radix. The triggers around a form do not: when you open a form from a dialog or popover trigger, read `style` in `components.json` and compose accordingly (see **shuip-overview**).
+
+- In `base-*` projects, compose with `render`: `<SideDialogTrigger render={<Button />}>Open</SideDialogTrigger>`.
+- In Radix projects, compose with `asChild`: `<SideDialogTrigger asChild><Button>Open</Button></SideDialogTrigger>`.
+
 ## Accessibility & states (both libraries)
 
 The field components already render `aria-invalid`, associate the error message, and show validation errors — you get accessible errors for free. For a form-level server error, render a `role="alert"` region yourself. Loading/disabled on submit is handled by `SubmitButton` as shown above.

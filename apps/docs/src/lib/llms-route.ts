@@ -1,8 +1,7 @@
 import { notFound } from 'next/navigation';
 import { type Base, isBase } from './base-routes';
+import { type LlmsSourcePage, pageLlmsText } from './llms-text';
 import { sectionParams } from './section-sources';
-import type { LlmsSourcePage } from './source';
-import { getLLMText } from './source';
 
 interface LlmsRouteContext {
   params: Promise<{ base: string; slug?: string[] }>;
@@ -21,7 +20,7 @@ export const llmsRoute = (loaders: Record<Base, SectionLoaders>) => ({
     const page = loaders[base].getPage(slug);
     if (!page) notFound();
 
-    return new Response(await getLLMText(page), {
+    return new Response(await pageLlmsText(page), {
       headers: {
         'Content-Type': 'text/markdown',
       },

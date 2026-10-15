@@ -1,7 +1,6 @@
 import { blocks, components, docs } from 'fumadocs-mdx:collections/server';
 import { type InferPageType, loader } from 'fumadocs-core/source';
 import { type Base, DEFAULT_BASE, type Section } from './base-routes';
-import { llmsText } from './llms-text';
 import { icon } from './page-icon';
 import { type SidebarSources, sectionLoaders, sidebarTreeFor } from './section-sources';
 import { unbasedSidebarTree } from './sidebar-tree';
@@ -45,13 +44,4 @@ export function getPageImage(page: AnyPage, section: Section) {
     segments,
     url: `${process.env.NEXT_PUBLIC_APP_URL}/og/${section}/${segments.join('/')}`,
   };
-}
-
-export interface LlmsSourcePage {
-  url: string;
-  data: { title: string; getText(type: 'processed'): Promise<string> };
-}
-
-export async function getLLMText(page: LlmsSourcePage) {
-  return llmsText({ title: page.data.title, url: page.url, processed: await page.data.getText('processed') });
 }

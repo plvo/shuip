@@ -22,7 +22,17 @@ Then use the shadcn/ui CLI to add shuip components to your project:
 npx shadcn@latest add @shuip/submit-button
 ```
 
-More informations on the [documentation](https://shuip.plvo.dev/docs/installation)
+The command is the same for both bases: the `style` in your `components.json` picks the variant.
+
+| `style` | Variant |
+| ------- | ------- |
+| `base-*` | Base UI |
+| `radix-*`, `new-york`, `new-york-v4`, `default` | Radix |
+| `aria-*` | Not supported (React Aria) |
+
+Triggers compose with `render` in `base-*` projects and with `asChild` in Radix projects.
+
+More information in the [documentation](https://shuip.plvo.dev/docs/installation#picking-the-base).
 
 ## Usage Example
 
