@@ -2,16 +2,10 @@ import { describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
+import { filesUnder } from './documents';
 
 const SRC_DIR = path.resolve(import.meta.dir, '..', 'src');
 const FUMADOCS_TABS = 'fumadocs-ui/components/tabs';
-
-const sourcesIn = (folder: string): string[] =>
-  fs.readdirSync(folder, { withFileTypes: true }).flatMap((entry) => {
-    const file = path.join(folder, entry.name);
-    if (entry.isDirectory()) return sourcesIn(file);
-    return /\.tsx$/.test(entry.name) && !entry.name.includes('.test.') ? [file] : [];
-  });
 
 const parse = (file: string) =>
   ts.createSourceFile(file, fs.readFileSync(file, 'utf-8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
@@ -44,7 +38,9 @@ const tabsElements = (source: ts.SourceFile): string[][] => {
   return found;
 };
 
-const files = sourcesIn(SRC_DIR).filter((file) => importsTabs(parse(file)));
+const files = filesUnder(SRC_DIR, ['.tsx'])
+  .filter((file) => !file.includes('.test.'))
+  .filter((file) => importsTabs(parse(file)));
 
 // A group of tabs that does not persist sends the reader back to its default tab on every page.
 describe('the fumadocs Tabs of the docs', () => {
