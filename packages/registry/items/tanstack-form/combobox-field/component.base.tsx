@@ -109,7 +109,9 @@ export function ComboboxField({
 
   // Held in a ref so an inline `onSearch` prop doesn't re-trigger the search effect every render.
   const onSearchRef = React.useRef(onSearch);
-  onSearchRef.current = onSearch;
+  React.useEffect(() => {
+    onSearchRef.current = onSearch;
+  });
   const hasSearch = Boolean(onSearch);
 
   const runSearch = React.useCallback((search: string) => {
