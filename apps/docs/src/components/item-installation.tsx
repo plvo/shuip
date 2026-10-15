@@ -58,8 +58,8 @@ export function InstallationCmd({ itemName, manualCode, ...props }: Installation
       </p>
       <Accordion type='single' collapsible className='overflow-visible rounded-none border-0 bg-transparent'>
         <AccordionItem value='namespace'>
-          <AccordionHeader asChild>
-            <div className='font-normal! text-fd-muted-foreground! text-sm'>
+          <AccordionHeader asChild className='font-normal text-fd-muted-foreground text-sm'>
+            <div>
               <AccordionTrigger className='px-0 py-1.5'>
                 Command fails? Add the {SHUIP_NAMESPACE} namespace first
               </AccordionTrigger>

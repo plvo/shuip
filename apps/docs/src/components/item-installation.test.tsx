@@ -22,6 +22,14 @@ describe('InstallationCmd', () => {
     expect(markup).not.toContain('registries');
   });
 
+  test('mutes the setup row instead of keeping the accordion defaults next to the overrides', () => {
+    const row = render().match(/<div[^>]*class="[^"]*"[^>]*><button[^>]*aria-expanded/)?.[0] ?? '';
+
+    expect(row).toContain('text-fd-muted-foreground');
+    expect(row).not.toContain('text-fd-card-foreground');
+    expect(row).not.toContain('font-medium');
+  });
+
   test('adds no heading to the outline of the page', () => {
     expect(render()).not.toMatch(/<h[1-6][\s>]/);
   });
