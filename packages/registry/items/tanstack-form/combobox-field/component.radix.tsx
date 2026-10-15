@@ -12,6 +12,9 @@ import { cn } from '@/lib/utils';
 
 const DEBOUNCE_TIME = 300;
 
+// The popover gives its content role="dialog"; the combobox exposes the listbox inside it instead.
+const NO_POPUP_ROLE = { role: undefined };
+
 export interface ComboboxOption {
   value: string;
   label: string;
@@ -281,6 +284,8 @@ export function ComboboxField({
           </PopoverAnchor>
           <PopoverContent
             align='start'
+            sideOffset={8}
+            {...NO_POPUP_ROLE}
             className='overflow-hidden p-0'
             onOpenAutoFocus={(e) => e.preventDefault()}
             onMouseDown={(e) => e.preventDefault()}

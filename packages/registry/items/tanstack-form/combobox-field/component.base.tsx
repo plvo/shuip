@@ -13,6 +13,9 @@ import { cn } from '@/lib/utils';
 
 const DEBOUNCE_TIME = 300;
 
+// The popover gives its content role="dialog"; the combobox exposes the listbox inside it instead.
+const NO_POPUP_ROLE = { role: undefined };
+
 export interface ComboboxOption {
   value: string;
   label: string;
@@ -279,9 +282,10 @@ export function ComboboxField({
             {isPending && <Loader2 className={cn('shrink-0 animate-spin text-muted-foreground', iconSize)} />}
           </div>
           <PopoverPrimitive.Portal>
-            <PopoverPrimitive.Positioner anchor={containerRef} align='start' sideOffset={4} className='isolate z-50'>
+            <PopoverPrimitive.Positioner anchor={containerRef} align='start' sideOffset={8} className='isolate z-50'>
               <PopoverPrimitive.Popup
                 data-slot='popover-content'
+                {...NO_POPUP_ROLE}
                 initialFocus={false}
                 finalFocus={false}
                 onMouseDown={(e) => e.preventDefault()}
