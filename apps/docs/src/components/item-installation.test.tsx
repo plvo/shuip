@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'bun:test';
+import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { TAB_GROUPS } from '@/lib/tab-groups';
 import { InstallationCmd } from './item-installation';
 
 const render = () => renderToStaticMarkup(<InstallationCmd itemName='side-dialog' />);
@@ -32,5 +34,18 @@ describe('InstallationCmd', () => {
 
   test('adds no heading to the outline of the page', () => {
     expect(render()).not.toMatch(/<h[1-6][\s>]/);
+  });
+});
+
+describe('InstallationCmd tabs', () => {
+  const [tabs] = (InstallationCmd({ itemName: 'side-dialog' }) as ReactElement<{ children: ReactElement[] }>).props
+    .children as ReactElement<Record<string, unknown>>[];
+
+  test('keep the package manager across items and bases, in the group the whole site shares', () => {
+    expect(tabs?.props.groupId).toBe(TAB_GROUPS.packageManager);
+  });
+
+  test('remember the package manager beyond the session', () => {
+    expect(tabs?.props.persist).toBe(true);
   });
 });

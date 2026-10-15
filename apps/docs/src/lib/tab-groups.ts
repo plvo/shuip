@@ -4,5 +4,7 @@
  */
 export const TAB_GROUPS = {
   packageManager: 'shuip-tabs-package-manager',
-  previewMode: 'shuip-tabs-preview-mode',
 } as const;
+
+/** The group of the Preview / Code tabs of an example; its key does not name a base, so a base switch keeps the tab. */
+export const previewGroupId = (exampleKey: string): string => `shuip-tabs-preview-mode:${exampleKey}`;
