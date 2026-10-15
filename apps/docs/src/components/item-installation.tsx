@@ -1,11 +1,14 @@
 'use client';
 
 import { SHUIP_NAMESPACE, SHUIP_REGISTRY_URL, shuipItemRef } from '@repo/registry/namespace';
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import Link from 'next/link';
 import type React from 'react';
 import { CodeHighlight } from './item-preview';
+
+const registriesSnippet = JSON.stringify({ registries: { [SHUIP_NAMESPACE]: SHUIP_REGISTRY_URL } }, null, 2);
 
 export interface InstallationCmdProps extends React.RefAttributes<HTMLDivElement> {
   itemName: string;
@@ -43,24 +46,26 @@ export function InstallationCmd({ itemName, manualCode, ...props }: Installation
           </Tab>
         )}
       </Tabs>
-      <div className='space-y-2 text-sm text-fd-muted-foreground'>
-        <p>
-          Requires the <code>{SHUIP_NAMESPACE}</code> namespace in <code>components.json</code>. See the{' '}
-          <Link href='/docs/installation' className='underline underline-offset-4'>
-            installation guide
-          </Link>
-          .
-        </p>
-        <div className='**:data-code:px-4'>
-          <CodeBlock keepBackground data-code>
-            <Pre>{`"registries": { "${SHUIP_NAMESPACE}": "${SHUIP_REGISTRY_URL}" }`}</Pre>
-          </CodeBlock>
-        </div>
-        <p>
-          The command is the same for Base UI and Radix: the CLI reads the style in your <code>components.json</code>{' '}
-          and installs the matching variant.
-        </p>
-      </div>
+      <p className='text-sm text-fd-muted-foreground'>
+        The command is the same for Base UI and Radix: the CLI reads the style in your <code>components.json</code> and
+        installs the matching variant.
+      </p>
+      <Accordions type='single' className='text-sm'>
+        <Accordion title={`One-time setup: add the ${SHUIP_NAMESPACE} namespace`}>
+          <p>
+            Add the namespace to your <code>components.json</code> once per project. See the{' '}
+            <Link href='/docs/installation' className='underline underline-offset-4'>
+              installation guide
+            </Link>{' '}
+            for how the style picks the base.
+          </p>
+          <div className='**:data-code:px-4'>
+            <CodeBlock keepBackground data-code>
+              <Pre>{registriesSnippet}</Pre>
+            </CodeBlock>
+          </div>
+        </Accordion>
+      </Accordions>
     </>
   );
 }
