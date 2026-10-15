@@ -45,6 +45,7 @@
     "@types/react-dom": "catalog:",
     "@biomejs/biome": "^2.4.14",
     "@tailwindcss/postcss": "catalog:",
+    "sharp": "catalog:",
     "tailwindcss": "catalog:",
     "tw-animate-css": "catalog:",
     "postcss": "^8.5.15",

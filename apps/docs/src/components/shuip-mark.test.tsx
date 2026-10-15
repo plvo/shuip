@@ -1,10 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import fs from 'node:fs';
-import path from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { SHUIP_MARK } from '@/lib/shuip-mark';
 import { ShuipMark } from './shuip-mark';
-
-const pathData = (markup: string): string[] => [...markup.matchAll(/ d="([^"]+)"/g)].map(([, d]) => d);
 
 describe('ShuipMark', () => {
   const markup = renderToStaticMarkup(<ShuipMark />);
@@ -14,10 +11,19 @@ describe('ShuipMark', () => {
     expect(markup).not.toContain('<title');
   });
 
-  test('draws the same arcs as the source mark', () => {
-    const source = fs.readFileSync(path.join(import.meta.dir, '..', 'assets', 'shuip-mark.svg'), 'utf-8');
-
-    expect(pathData(markup)).toEqual(pathData(source));
+  test('draws the geometry of the mark', () => {
+    expect(markup).toContain(`viewBox="${SHUIP_MARK.viewBox}"`);
+    expect(markup.match(/<path /g)).toHaveLength(SHUIP_MARK.arcs.length);
+    expect(markup.match(new RegExp(`stroke-width="${SHUIP_MARK.strokeWidth}"`, 'g'))).toHaveLength(
+      SHUIP_MARK.arcs.length,
+    );
+    expect(markup.match(new RegExp(`stroke-linecap="${SHUIP_MARK.strokeLinecap}"`, 'g'))).toHaveLength(
+      SHUIP_MARK.arcs.length,
+    );
+    for (const { d, opacity } of SHUIP_MARK.arcs) {
+      expect(markup).toContain(`d="${d}"`);
+      if (opacity !== undefined) expect(markup).toContain(`opacity="${opacity}"`);
+    }
   });
 
   test('follows the text colour', () => {
@@ -25,6 +31,6 @@ describe('ShuipMark', () => {
   });
 
   test('takes a class name to size it', () => {
-    expect(renderToStaticMarkup(<ShuipMark className='size-6' />)).toContain('class="size-6"');
+    expect(renderToStaticMarkup(<ShuipMark className='h-5' />)).toContain('class="h-5"');
   });
 });

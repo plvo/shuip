@@ -1,41 +1,33 @@
 import { describe, expect, test } from 'bun:test';
-import { buildIco, ICON_COLORS, readMarkSource, themedMarkSvg, tileSvg } from './icons';
+import fs from 'node:fs';
+import path from 'node:path';
+import { SHUIP_MARK } from '../src/lib/shuip-mark';
+import { APPLE_ICON, buildIco, FAVICON_TILES, ICON_COLORS, siteIconSvg, tileSvg } from './icons';
 
-const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47];
+const APP_DIRECTORY = path.resolve(import.meta.dir, '..', 'src', 'app');
+const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
 const fakePng = (size: number): { size: number; data: Uint8Array } => ({
   size,
   data: Uint8Array.from([...PNG_SIGNATURE, size]),
 });
 
-describe('readMarkSource', () => {
-  test('reads the mark with strokes that follow the text colour', () => {
-    const source = readMarkSource();
+const readCommitted = (name: string): Uint8Array => new Uint8Array(fs.readFileSync(path.join(APP_DIRECTORY, name)));
 
-    expect(source).toContain('viewBox="0 0 32 32"');
-    expect(source).toContain('stroke="currentColor"');
-  });
-});
+const hasPngSignature = (bytes: Uint8Array, offset = 0): boolean =>
+  PNG_SIGNATURE.every((byte, index) => bytes[offset + index] === byte);
 
-describe('themedMarkSvg', () => {
-  const source = readMarkSource();
-  const svg = themedMarkSvg(source);
+const dataView = (bytes: Uint8Array): DataView => new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 
-  test('draws dark strokes by default and light strokes in a dark colour scheme', () => {
-    expect(svg).toContain(`color:${ICON_COLORS.ink}`);
-    expect(svg).toMatch(new RegExp(`@media \\(prefers-color-scheme: ?dark\\)\\{svg\\{color:${ICON_COLORS.paper}\\}`));
-  });
-
-  test('keeps the mark itself untouched', () => {
-    expect(svg.replace(/<style>.*<\/style>/, '')).toBe(source.trim());
-  });
-});
+/** The width and height written in the IHDR chunk of the PNG starting at `offset`. */
+const pngDimensions = (bytes: Uint8Array, offset = 0): { width: number; height: number } => {
+  const view = dataView(bytes);
+  return { width: view.getUint32(offset + 16), height: view.getUint32(offset + 20) };
+};
 
 describe('tileSvg', () => {
-  const source = readMarkSource();
-
   test('renders at the requested pixel size on a solid background', () => {
-    const svg = tileSvg(source, { size: 180, inset: 0.2, radius: 0 });
+    const svg = tileSvg({ size: 180, inset: 0.2, radius: 0 });
 
     expect(svg).toContain('width="180"');
     expect(svg).toContain('height="180"');
@@ -43,7 +35,7 @@ describe('tileSvg', () => {
   });
 
   test('draws the mark in the light colour, inside the padding', () => {
-    const svg = tileSvg(source, { size: 100, inset: 0.2, radius: 0 });
+    const svg = tileSvg({ size: 100, inset: 0.2, radius: 0 });
 
     expect(svg).toContain(`color="${ICON_COLORS.paper}"`);
     expect(svg).toContain('x="20"');
@@ -51,15 +43,83 @@ describe('tileSvg', () => {
     expect(svg).toContain('width="60"');
   });
 
+  test('snaps the padding to whole pixels', () => {
+    expect(tileSvg({ size: 16, inset: 0.06, radius: 0 })).toContain('x="1"');
+    expect(tileSvg({ size: 32, inset: 0.06, radius: 0 })).toContain('x="2"');
+  });
+
   test('rounds the corners when asked to', () => {
-    expect(tileSvg(source, { size: 48, inset: 0.1, radius: 0.2 })).toContain('rx="9.6"');
+    expect(tileSvg({ size: 48, inset: 0.1, radius: 0.2 })).toContain('rx="9.6"');
+  });
+
+  test('draws the geometry of the mark', () => {
+    const svg = tileSvg({ size: 64, inset: 0.1, radius: 0 });
+    const { viewBox, strokeWidth, strokeLinecap, arcs } = SHUIP_MARK;
+
+    expect(svg).toContain(`viewBox="${viewBox}"`);
+    expect(svg).toContain(`stroke-width="${strokeWidth}"`);
+    expect(svg).toContain(`stroke-linecap="${strokeLinecap}"`);
+    for (const { d, opacity } of arcs) {
+      expect(svg).toContain(`d="${d}"`);
+      if (opacity !== undefined) expect(svg).toContain(`opacity="${opacity}"`);
+    }
+  });
+});
+
+describe('siteIconSvg', () => {
+  test('is the same tile as the favicon, whatever the colour scheme', () => {
+    const svg = siteIconSvg();
+
+    expect(svg).toContain(`fill="${ICON_COLORS.tile}"`);
+    expect(svg).not.toContain('prefers-color-scheme');
+  });
+});
+
+describe('committed icons', () => {
+  test('icon.svg is what the generator writes', () => {
+    expect(fs.readFileSync(path.join(APP_DIRECTORY, 'icon.svg'), 'utf-8')).toBe(`${siteIconSvg()}\n`);
+  });
+
+  test('apple-icon.png is a PNG of the requested size', () => {
+    const png = readCommitted('apple-icon.png');
+
+    expect(hasPngSignature(png)).toBe(true);
+    expect(pngDimensions(png)).toEqual({ width: APPLE_ICON.size, height: APPLE_ICON.size });
+  });
+
+  test('favicon.ico holds a valid 32-bit PNG for each favicon size', () => {
+    const ico = readCommitted('favicon.ico');
+    const view = dataView(ico);
+    const count = view.getUint16(4, true);
+    const entries = Array.from({ length: count }, (_, index) => {
+      const entry = 6 + index * 16;
+      const offset = view.getUint32(entry + 12, true);
+      return {
+        width: view.getUint8(entry),
+        height: view.getUint8(entry + 1),
+        planes: view.getUint16(entry + 4, true),
+        bitCount: view.getUint16(entry + 6, true),
+        offset,
+        png: hasPngSignature(ico, offset),
+        dimensions: pngDimensions(ico, offset),
+      };
+    });
+
+    expect(entries.map(({ width }) => width)).toEqual(FAVICON_TILES.map(({ size }) => size));
+    for (const { width, height, planes, bitCount, png, dimensions } of entries) {
+      expect(height).toBe(width);
+      expect(planes).toBe(1);
+      expect(bitCount).toBe(32);
+      expect(png).toBe(true);
+      expect(dimensions).toEqual({ width, height });
+    }
   });
 });
 
 describe('buildIco', () => {
   const pngs = [fakePng(16), fakePng(32), fakePng(48)];
   const ico = buildIco(pngs);
-  const view = new DataView(ico.buffer, ico.byteOffset, ico.byteLength);
+  const view = dataView(ico);
 
   test('starts with an icon directory listing every image', () => {
     expect(view.getUint16(0, true)).toBe(0);
