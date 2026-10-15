@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/assets/shuip-mark.svg" width="96" alt="shuip"></p>
+
 # shuip
 
 [**shuip**](https://shuip.plvo.dev) _(ship + ui)_ is an open-source React component library designed to **accelerate the development** of your Next.js applications. Built on top of [shadcn/ui](https://ui.shadcn.com), shuip provides ready-to-use, business-focused components that help you **ship** faster.

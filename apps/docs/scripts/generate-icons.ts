@@ -3,15 +3,17 @@
  *   icon.svg        the mark on a dark rounded tile
  *   apple-icon.png  180x180 tile for the iOS home screen
  *   favicon.ico     16, 32 and 48 pixel tiles for browsers without SVG favicons
+ * and `.github/assets/shuip-mark.svg`, the white-on-black mark shown at the top of the README.
  *
  * Run it with `bun run icons:generate` from `apps/docs` after changing the mark, and commit the outputs.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { APPLE_ICON, buildIco, FAVICON_TILES, siteIconSvg, type TileOptions, tileSvg } from './icons';
+import { APPLE_ICON, buildIco, FAVICON_TILES, readmeMarkSvg, siteIconSvg, type TileOptions, tileSvg } from './icons';
 
 const APP_DIRECTORY = path.resolve(import.meta.dir, '..', 'src', 'app');
+const README_MARK_PATH = path.resolve(import.meta.dir, '..', '..', '..', '.github', 'assets', 'shuip-mark.svg');
 
 const rasterise = async (tile: TileOptions): Promise<Uint8Array> =>
   new Uint8Array(
@@ -22,6 +24,8 @@ const rasterise = async (tile: TileOptions): Promise<Uint8Array> =>
 
 const generate = async (): Promise<void> => {
   fs.writeFileSync(path.join(APP_DIRECTORY, 'icon.svg'), `${siteIconSvg()}\n`);
+  fs.mkdirSync(path.dirname(README_MARK_PATH), { recursive: true });
+  fs.writeFileSync(README_MARK_PATH, `${readmeMarkSvg()}\n`);
   fs.writeFileSync(path.join(APP_DIRECTORY, 'apple-icon.png'), await rasterise(APPLE_ICON));
 
   const images = await Promise.all(

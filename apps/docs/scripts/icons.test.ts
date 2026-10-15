@@ -2,9 +2,10 @@ import { describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { SHUIP_MARK } from '../src/lib/shuip-mark';
-import { APPLE_ICON, buildIco, FAVICON_TILES, ICON_COLORS, siteIconSvg, tileSvg } from './icons';
+import { APPLE_ICON, buildIco, FAVICON_TILES, ICON_COLORS, readmeMarkSvg, siteIconSvg, tileSvg } from './icons';
 
 const APP_DIRECTORY = path.resolve(import.meta.dir, '..', 'src', 'app');
+const README_MARK_PATH = path.resolve(import.meta.dir, '..', '..', '..', '.github', 'assets', 'shuip-mark.svg');
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
 const fakePng = (size: number): { size: number; data: Uint8Array } => ({
@@ -37,7 +38,7 @@ describe('tileSvg', () => {
   test('draws the mark in the light colour, inside the padding', () => {
     const svg = tileSvg({ size: 100, inset: 0.2, radius: 0 });
 
-    expect(svg).toContain(`color="${ICON_COLORS.paper}"`);
+    expect(svg).toContain(`stroke="${ICON_COLORS.paper}"`);
     expect(svg).toContain('x="20"');
     expect(svg).toContain('y="20"');
     expect(svg).toContain('width="60"');
@@ -75,9 +76,24 @@ describe('siteIconSvg', () => {
   });
 });
 
+describe('readmeMarkSvg', () => {
+  test('is the mark in white on a black rounded tile', () => {
+    const svg = readmeMarkSvg();
+
+    expect(svg).toContain('fill="#000"');
+    expect(svg).toContain('stroke="#fff"');
+    expect(svg).toContain('opacity="0.45"');
+    expect(svg).not.toContain('href=');
+  });
+});
+
 describe('committed icons', () => {
   test('icon.svg is what the generator writes', () => {
     expect(fs.readFileSync(path.join(APP_DIRECTORY, 'icon.svg'), 'utf-8')).toBe(`${siteIconSvg()}\n`);
+  });
+
+  test('the README mark is what the generator writes', () => {
+    expect(fs.readFileSync(README_MARK_PATH, 'utf-8')).toBe(`${readmeMarkSvg()}\n`);
   });
 
   test('apple-icon.png is a PNG of the requested size', () => {

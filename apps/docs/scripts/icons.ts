@@ -6,6 +6,13 @@ export const ICON_COLORS = {
   tile: '#0f0d0a',
 } as const;
 
+export interface TileColors {
+  /** The colour of the mark. */
+  paper: string;
+  /** The colour of the square behind it. */
+  tile: string;
+}
+
 export interface TileOptions {
   /** The edge of the square image, in pixels. */
   size: number;
@@ -26,32 +33,32 @@ export const APPLE_ICON: TileOptions = { size: 180, inset: 0.2, radius: 0 };
 
 const FAVICON_TILE = { inset: 0.06, radius: 0.22 } as const;
 
-export const SITE_ICON: TileOptions = { size: 32, ...FAVICON_TILE };
+const SITE_ICON: TileOptions = { size: 32, ...FAVICON_TILE };
 
 export const FAVICON_TILES: readonly TileOptions[] = [16, 32, 48].map((size) => ({ size, ...FAVICON_TILE }));
 
 const round = (value: number): number => Number(value.toFixed(2));
 
-const arcsSvg = (): string => {
+const arcsSvg = (stroke: string): string => {
   const { strokeWidth, strokeLinecap, arcs } = SHUIP_MARK;
   return arcs
     .map(({ d, ...arc }) => {
       const opacity = 'opacity' in arc ? ` opacity="${arc.opacity}"` : '';
-      return `<path d="${d}" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="${strokeLinecap}"${opacity}/>`;
+      return `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linecap="${strokeLinecap}"${opacity}/>`;
     })
     .join('');
 };
 
-/** The mark in the light colour, centred on a solid dark square, drawn at `size` pixels. */
-export const tileSvg = ({ size, inset, radius }: TileOptions): string => {
+/** The mark centred on a solid square, light on dark unless `colors` say otherwise, drawn at `size` pixels. */
+export const tileSvg = ({ size, inset, radius }: TileOptions, colors: TileColors = ICON_COLORS): string => {
   const margin = Math.round(size * inset);
   const markSize = size - margin * 2;
   const corner = round(size * radius);
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">`,
-    `<rect width="${size}" height="${size}" rx="${corner}" fill="${ICON_COLORS.tile}"/>`,
-    `<svg x="${margin}" y="${margin}" width="${markSize}" height="${markSize}" viewBox="${SHUIP_MARK.viewBox}" color="${ICON_COLORS.paper}">`,
-    arcsSvg(),
+    `<rect width="${size}" height="${size}" rx="${corner}" fill="${colors.tile}"/>`,
+    `<svg x="${margin}" y="${margin}" width="${markSize}" height="${markSize}" viewBox="${SHUIP_MARK.viewBox}">`,
+    arcsSvg(colors.paper),
     '</svg>',
     '</svg>',
   ].join('');
@@ -59,6 +66,11 @@ export const tileSvg = ({ size, inset, radius }: TileOptions): string => {
 
 /** The SVG favicon: the same tile as the ICO, so every browser shows one identity. */
 export const siteIconSvg = (): string => tileSvg(SITE_ICON);
+
+const README_MARK: TileOptions = { size: 96, inset: 0.2, radius: 0.22 };
+
+/** The mark in white on a black rounded tile, for the README, which has no theme to follow. */
+export const readmeMarkSvg = (): string => tileSvg(README_MARK, { paper: '#fff', tile: '#000' });
 
 const ICO_HEADER_BYTES = 6;
 const ICO_ENTRY_BYTES = 16;
