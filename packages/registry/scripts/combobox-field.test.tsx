@@ -1,22 +1,8 @@
-import { afterEach, describe, expect, test } from 'bun:test';
-import { act, type ComponentType, createElement } from 'react';
-import { createRoot } from 'react-dom/client';
-import { ComboboxField as ReactHookFormBase } from '../generated/base/items/react-hook-form/combobox-field/component.base';
-import { ComboboxField as TanstackFormBase } from '../generated/base/items/tanstack-form/combobox-field/component.base';
-import {
-  fieldContext as tanstackFieldContextBase,
-  formContext as tanstackFormContextBase,
-} from '../generated/base/items/tanstack-form/form-context/component.base';
-import { ComboboxField as ReactHookFormRadix } from '../items/react-hook-form/combobox-field/component.radix';
-import { ComboboxField as TanstackFormRadix } from '../items/tanstack-form/combobox-field/component.radix';
-import { fieldContext, formContext } from '../items/tanstack-form/form-context/component.radix';
-import {
-  type ComboboxFieldComponent,
-  type HarnessProps,
-  type Option,
-  reactHookFormHarness,
-  tanstackFormHarness,
-} from './combobox-field-harness';
+import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test';
+import type { ComponentType } from 'react';
+import type { Root } from 'react-dom/client';
+import type { HarnessProps, Option } from './combobox-field-harness';
+import { installDom, resolveCanonicalAliases } from './dom-environment';
 
 const COUNTRIES: Option[] = [
   { value: 'fr', label: 'France' },
@@ -24,34 +10,64 @@ const COUNTRIES: Option[] = [
   { value: 'es', label: 'Spain' },
 ];
 
-const variants: [string, ComponentType<HarnessProps>][] = [
-  ['react-hook-form on Radix', reactHookFormHarness(ReactHookFormRadix as unknown as ComboboxFieldComponent)],
-  ['react-hook-form on Base UI', reactHookFormHarness(ReactHookFormBase as unknown as ComboboxFieldComponent)],
-  [
-    'tanstack-form on Radix',
-    tanstackFormHarness(TanstackFormRadix as unknown as ComboboxFieldComponent, { fieldContext, formContext }),
-  ],
-  [
-    'tanstack-form on Base UI',
-    tanstackFormHarness(TanstackFormBase as unknown as ComboboxFieldComponent, {
-      fieldContext: tanstackFieldContextBase,
-      formContext: tanstackFormContextBase,
-    }),
-  ],
-];
+const VARIANTS = [
+  'react-hook-form on Radix',
+  'react-hook-form on Base UI',
+  'tanstack-form on Radix',
+  'tanstack-form on Base UI',
+] as const;
 
-const settle = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
+type Variant = (typeof VARIANTS)[number];
 
-afterEach(() => {
+const harnesses = {} as Record<Variant, ComponentType<HarnessProps>>;
+const roots: Root[] = [];
+let uninstallDom: () => Promise<void>;
+let act: typeof import('react').act;
+let createElement: typeof import('react').createElement;
+let createRoot: typeof import('react-dom/client').createRoot;
+
+// The browser and the components are loaded here, not at the top of the file, so that no other test file sees them.
+beforeAll(async () => {
+  uninstallDom = installDom();
+  resolveCanonicalAliases(/combobox-field\/component\.radix\.tsx$/);
+  ({ act, createElement } = await import('react'));
+  ({ createRoot } = await import('react-dom/client'));
+  const { reactHookFormHarness, tanstackFormHarness } = await import('./combobox-field-harness');
+
+  const rhfRadix = await import('../items/react-hook-form/combobox-field/component.radix');
+  const rhfBase = await import('../generated/base/items/react-hook-form/combobox-field/component.base');
+  const tsfRadix = await import('../items/tanstack-form/combobox-field/component.radix');
+  const tsfBase = await import('../generated/base/items/tanstack-form/combobox-field/component.base');
+  const radixContexts = await import('../items/tanstack-form/form-context/component.radix');
+  const baseContexts = await import('../generated/base/items/tanstack-form/form-context/component.base');
+
+  harnesses['react-hook-form on Radix'] = reactHookFormHarness(rhfRadix.ComboboxField);
+  harnesses['react-hook-form on Base UI'] = reactHookFormHarness(rhfBase.ComboboxField);
+  harnesses['tanstack-form on Radix'] = tanstackFormHarness(tsfRadix.ComboboxField, radixContexts);
+  harnesses['tanstack-form on Base UI'] = tanstackFormHarness(tsfBase.ComboboxField, baseContexts);
+});
+
+afterAll(async () => {
+  await uninstallDom();
+});
+
+afterEach(async () => {
+  await act(async () => {
+    for (const root of roots.splice(0)) root.unmount();
+  });
   document.body.innerHTML = '';
 });
+
+const settle = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function mount(Harness: ComponentType<HarnessProps>, props: HarnessProps = {}) {
   const card = document.createElement('div');
   card.style.overflowX = 'auto';
   document.body.append(card);
+  const root = createRoot(card);
+  roots.push(root);
   await act(async () => {
-    createRoot(card).render(createElement(Harness, props));
+    root.render(createElement(Harness, props));
   });
   const input = card.querySelector('input') as HTMLInputElement;
   return { card, input };
@@ -72,6 +88,13 @@ async function focus(input: HTMLInputElement) {
   });
 }
 
+async function blur(input: HTMLInputElement) {
+  await act(async () => {
+    input.blur();
+    await settle();
+  });
+}
+
 async function type(input: HTMLInputElement, text: string) {
   await act(async () => {
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, text);
@@ -87,24 +110,42 @@ async function press(input: HTMLInputElement, key: string) {
   });
 }
 
-async function click(element: HTMLElement) {
+async function pressMouse(element: HTMLElement) {
+  const mousedown = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
   await act(async () => {
-    element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    element.dispatchEvent(mousedown);
+    await settle();
+  });
+  return mousedown;
+}
+
+async function click(element: HTMLElement) {
+  await pressMouse(element);
+  await act(async () => {
     element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     await settle();
   });
 }
 
-describe.each(variants)('ComboboxField, %s', (_, Harness) => {
+describe.each(VARIANTS)('ComboboxField, %s', (variant) => {
+  const mountField = (props: HarnessProps = {}) => mount(harnesses[variant], props);
+
   test('opens its list outside a scrolling card so the card never clips it', async () => {
-    const { card, input } = await mount(Harness, { options: COUNTRIES });
+    const { card, input } = await mountField({ options: COUNTRIES });
     await focus(input);
     expect(isOpen()).toBe(true);
     expect(card.contains(listbox())).toBe(false);
   });
 
+  test('exposes the listbox to assistive technology, not an unnamed dialog around it', async () => {
+    const { input } = await mountField({ options: COUNTRIES });
+    await focus(input);
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    expect(listbox()).not.toBeNull();
+  });
+
   test('lists every option on focus and filters them as the user types', async () => {
-    const { input } = await mount(Harness, { options: COUNTRIES });
+    const { input } = await mountField({ options: COUNTRIES });
     await focus(input);
     expect(optionLabels()).toEqual(['France', 'Germany', 'Spain']);
     await type(input, 'ger');
@@ -112,15 +153,24 @@ describe.each(variants)('ComboboxField, %s', (_, Harness) => {
   });
 
   test('selects an option by click and shows its label in the input', async () => {
-    const { input } = await mount(Harness, { options: COUNTRIES });
+    const { input } = await mountField({ options: COUNTRIES });
     await focus(input);
     await click(optionNamed('Spain'));
     expect(isOpen()).toBe(false);
     expect(input.value).toBe('Spain');
   });
 
+  test('pressing an option does not take focus from the input, which would close the list before the click', async () => {
+    const { input } = await mountField({ options: COUNTRIES });
+    await focus(input);
+    const mousedown = await pressMouse(optionNamed('Spain'));
+    expect(mousedown.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(input);
+    expect(isOpen()).toBe(true);
+  });
+
   test('selects the highlighted option with the keyboard', async () => {
-    const { input } = await mount(Harness, { options: COUNTRIES });
+    const { input } = await mountField({ options: COUNTRIES });
     await focus(input);
     await press(input, 'ArrowDown');
     await press(input, 'Enter');
@@ -128,21 +178,28 @@ describe.each(variants)('ComboboxField, %s', (_, Harness) => {
   });
 
   test('keeps focus in the input while the list is open', async () => {
-    const { input } = await mount(Harness, { options: COUNTRIES });
+    const { input } = await mountField({ options: COUNTRIES });
     await focus(input);
     expect(isOpen()).toBe(true);
     expect(document.activeElement).toBe(input);
   });
 
   test('closes the list on Escape', async () => {
-    const { input } = await mount(Harness, { options: COUNTRIES });
+    const { input } = await mountField({ options: COUNTRIES });
     await focus(input);
     await press(input, 'Escape');
     expect(isOpen()).toBe(false);
   });
 
+  test('closes the list when the input loses focus, as an outside click makes it', async () => {
+    const { input } = await mountField({ options: COUNTRIES });
+    await focus(input);
+    await blur(input);
+    expect(isOpen()).toBe(false);
+  });
+
   test('in multiple mode keeps the list open and shows each pick as a removable chip', async () => {
-    const { card, input } = await mount(Harness, { multiple: true, options: COUNTRIES });
+    const { card, input } = await mountField({ multiple: true, options: COUNTRIES });
     await focus(input);
     await click(optionNamed('France'));
     await click(optionNamed('Spain'));
@@ -155,7 +212,7 @@ describe.each(variants)('ComboboxField, %s', (_, Harness) => {
   test('says it is searching, then lists what an async search returns', async () => {
     let finishSearch: (found: Option[]) => void = () => {};
     const onSearch = () => new Promise<Option[]>((resolve) => (finishSearch = resolve));
-    const { input } = await mount(Harness, { onSearch });
+    const { input } = await mountField({ onSearch });
     await focus(input);
     expect(listbox()?.textContent?.includes('Searching')).toBe(true);
     await act(async () => {

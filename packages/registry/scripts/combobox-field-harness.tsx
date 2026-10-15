@@ -2,6 +2,9 @@ import { useLens } from '@hookform/lenses';
 import { createFormHook } from '@tanstack/react-form';
 import type { ComponentType } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
+import type { ComboboxField as ReactHookFormComboboxField } from '../items/react-hook-form/combobox-field/component.radix';
+import type { ComboboxField as TanstackFormComboboxField } from '../items/tanstack-form/combobox-field/component.radix';
+import type { fieldContext, formContext } from '../items/tanstack-form/form-context/component.radix';
 
 export interface Option {
   value: string;
@@ -14,27 +17,36 @@ export interface HarnessProps {
   onSearch?: (query: string) => Promise<Option[]>;
 }
 
-export type ComboboxFieldComponent = ComponentType<Record<string, unknown>>;
-
-export function reactHookFormHarness(ComboboxField: ComboboxFieldComponent): ComponentType<HarnessProps> {
-  return function Harness({ multiple, options, onSearch }) {
-    const form = useForm<{ countries: string | string[] }>({ defaultValues: { countries: multiple ? [] : '' } });
-    const lens = useLens({ control: form.control }).focus('countries');
-
+export function reactHookFormHarness(ComboboxField: typeof ReactHookFormComboboxField): ComponentType<HarnessProps> {
+  function SingleHarness({ options, onSearch }: HarnessProps) {
+    const form = useForm<{ country: string }>({ defaultValues: { country: '' } });
+    const lens = useLens({ control: form.control }).focus('country');
     return (
       <FormProvider {...form}>
-        <ComboboxField lens={lens} multiple={multiple} label='Country' options={options} onSearch={onSearch} />
+        <ComboboxField lens={lens} label='Country' options={options} onSearch={onSearch} />
       </FormProvider>
     );
-  };
+  }
+
+  function MultipleHarness({ options, onSearch }: HarnessProps) {
+    const form = useForm<{ countries: string[] }>({ defaultValues: { countries: [] } });
+    const lens = useLens({ control: form.control }).focus('countries');
+    return (
+      <FormProvider {...form}>
+        <ComboboxField multiple lens={lens} label='Country' options={options} onSearch={onSearch} />
+      </FormProvider>
+    );
+  }
+
+  return (props) => (props.multiple ? <MultipleHarness {...props} /> : <SingleHarness {...props} />);
 }
 
 export function tanstackFormHarness(
-  ComboboxField: ComboboxFieldComponent,
-  contexts: { fieldContext: unknown; formContext: unknown },
+  ComboboxField: typeof TanstackFormComboboxField,
+  contexts: { fieldContext: typeof fieldContext; formContext: typeof formContext },
 ): ComponentType<HarnessProps> {
   const { useAppForm } = createFormHook({
-    ...(contexts as { fieldContext: never; formContext: never }),
+    ...contexts,
     fieldComponents: { ComboboxField },
     formComponents: {},
   });
