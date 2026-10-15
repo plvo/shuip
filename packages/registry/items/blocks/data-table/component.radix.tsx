@@ -954,7 +954,12 @@ export function DataTableLoadMore({
 }: DataTableLoadMoreProps) {
   const sentinelRef = React.useRef<HTMLDivElement>(null);
   const onLoadMoreRef = React.useRef(onLoadMore);
-  onLoadMoreRef.current = onLoadMore;
+
+  // Resynchronised on commit, never during render: a discarded render must not
+  // leave its callback where the observer can call it.
+  React.useEffect(() => {
+    onLoadMoreRef.current = onLoadMore;
+  });
 
   React.useEffect(() => {
     if (mode !== 'infinite' || !hasMore || isLoading) return;
