@@ -50,10 +50,10 @@ export interface LlmsSourcePage {
   data: { title: string; getText(type: 'processed'): Promise<string> };
 }
 
-export async function getLLMText(page: LlmsSourcePage): Promise<string> {
+export async function pageLlmsText(page: LlmsSourcePage): Promise<string> {
   return llmsText({ title: page.data.title, url: page.url, processed: await page.data.getText('processed') });
 }
 
 /** What `llms-full.txt` serves for `pages`. */
 export const llmsFullDocument = async (pages: readonly LlmsSourcePage[]): Promise<string> =>
-  llmsFullText(await Promise.all(pages.map(getLLMText)));
+  llmsFullText(await Promise.all(pages.map(pageLlmsText)));

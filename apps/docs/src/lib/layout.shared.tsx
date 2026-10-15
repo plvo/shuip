@@ -1,5 +1,5 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
-import { type Base, sectionEntryUrl } from './base-routes';
+import { type Base, sectionEntryUrl, sectionLabel } from './base-routes';
 
 /** The layout options; pages that belong to a base link the sections inside it, the others through the redirect. */
 export function baseOptions(base?: Base): BaseLayoutProps {
@@ -30,12 +30,12 @@ export function baseOptions(base?: Base): BaseLayoutProps {
         on: 'nav',
       },
       {
-        text: 'Components',
+        text: sectionLabel('components'),
         url: sectionEntryUrl('components', base),
         on: 'nav',
       },
       {
-        text: 'Blocks',
+        text: sectionLabel('blocks'),
         url: sectionEntryUrl('blocks', base),
         on: 'nav',
       },
