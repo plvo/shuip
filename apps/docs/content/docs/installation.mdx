@@ -35,7 +35,7 @@ Then add any shuip item with the shadcn/ui CLI:
 npx shadcn@latest add @shuip/input-field
 ```
 
-The command is the same for Base UI and Radix. Items are served through the `@shuip` namespace only: a plain item URL without the namespace is not served.
+The command is the same for Base UI and Radix. The `@shuip` namespace is the supported way to install: a URL of the form `/r/<name>.json`, without a style, answers `404`.
 
 ### Method 2: Manual Copy-Paste
 
@@ -45,19 +45,19 @@ You can also copy and paste the code directly from each component’s documentat
 
 shuip ships every item for two bases: Base UI and Radix. You do not choose one in shuip. The `style` in your `components.json` picks it, because the CLI puts that value into the registry URL and the registry answers with the matching variant.
 
-| `style` in `components.json` | Variant you get |
-| ---------------------------- | --------------- |
-| `base-*` (for example `base-vega`, `base-nova`) | Base UI |
-| `radix-*` (for example `radix-vega`, `radix-nova`) | Radix |
-| `new-york`, `new-york-v4`, `default` | Radix |
-| `aria-*` (React Aria) | Not supported |
+| `style` in `components.json` | Examples | Variant you get |
+| ---------------------------- | -------- | --------------- |
+| `base-*` | `base-vega`, `base-nova` | Base UI |
+| `radix-*` | `radix-vega`, `radix-nova` | Radix |
+| `new-york`, `new-york-v4`, `default` | The styles without a prefix | Radix |
+| `aria-*` | `aria-nova` | Not supported (React Aria) |
 
 A project on an `aria-*` style cannot install shuip items: the registry answers `404` for them, so the install fails.
 
 The documentation follows the same split. Every component and block page exists once per base, and a switcher at the top of the page moves between them. The site remembers your last choice in a cookie and opens on Base UI the first time.
 
-- Components: [Base UI](/components/base) · [Radix](/components/radix)
-- Blocks: [Base UI](/blocks/base) · [Radix](/blocks/radix)
+- Base UI: [components](/components/base) and [blocks](/blocks/base)
+- Radix: [components](/components/radix) and [blocks](/blocks/radix)
 
 ## File Structure
 

@@ -51,7 +51,7 @@ packages/registry/                # SOURCE OF TRUTH for published items
 packages/config/                  # Shared tsconfig presets
 ```
 
-The generator emits `registry.json`, `__index__.ts`, stubs, MDX symlinks, and `public/r/*.json` — **never edit those by hand**; they're regenerated from `items/`.
+The generator emits `registry.json`, `registry.base.json`, `__index__.ts`, the stubs, the MDX symlinks, the Base UI copies of every item under `packages/registry/generated/base/`, and `apps/docs/public/r/<variant>/*.json` (one folder per base: `radix/` and `base/`). These files are git-ignored and **never edited by hand**; they are regenerated from `items/`.
 
 ## Add an item
 
@@ -228,11 +228,11 @@ export interface MyButtonProps extends React.ComponentProps<typeof Button> {
 The smoke test installs items into a fresh shadcn project and type-checks the result, so it checks what a consumer receives:
 
 ```bash
-bun smoke radix-vega
-bun smoke base-vega --items <name>
+bun smoke radix-vega --items <prefixed-name>
+bun smoke base-vega --items <prefixed-name>
 ```
 
-A `base-*` style is served the Base UI variant, and the test then fails on any Radix package. Run it for the items you touched on both bases, and without `--items` before a larger change.
+`<prefixed-name>` is the published name of the item: the folder name with its category prefix (`rhf-`, `tsf-` or `tsq-`; `components` and `blocks` have none), for example `rhf-input-field`. A `base-*` style is served the Base UI variant, and the test then fails on any Radix package. Run it for the items you touched on both bases, and without `--items` before a larger change.
 
 ### Base-specific prose
 
@@ -258,7 +258,9 @@ A doc page exists once per base, but both render the same MDX. Wrap prose or sni
 </BaseOnly>
 ````
 
-A test fails when a Radix-only API such as `asChild` appears outside a Radix block, and the markdown served for models keeps only the block of the page's base. `.claude/CLAUDE.md` in the repository describes the full variant model: the codemod, the override rules, the outputs and the docs routing.
+A test fails when a Radix-only API such as `asChild` appears outside a Radix block, and the markdown served for models keeps only the block of the page's base.
+
+In short, the model has three parts: the canonical Radix file is the source, the codemod produces the Base UI copy of it, and an override replaces that copy for one file. The copies under `packages/registry/generated/base/` are build output, so a change to a Base UI variant is always made in the canonical file or in its override.
 
 ## Coding conventions
 
@@ -269,8 +271,10 @@ A test fails when a Radix-only API such as `asChild` appears outside a Radix blo
 
 ## Submit your contribution
 
+Stage the item folder, and for a block its page at `apps/docs/content/blocks/<name>.mdx`. The generated files are git-ignored.
+
 ```bash
-git add .
+git add packages/registry/items/<category>/<name>
 git commit -m "feat(registry): add my-component"
 git push origin feat/my-component
 ```
