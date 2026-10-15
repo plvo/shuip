@@ -7,7 +7,7 @@ import { BaseSwitcher } from '@/components/base-switcher';
 import { ItemHeader } from '@/components/item-content';
 import { LLMCopyButton } from '@/components/llm-copy-button';
 import { type Base, type BasedSection, DEFAULT_BASE, llmsUrl, withBase } from '@/lib/base-routes';
-import { getPageImage, pageSource } from '@/lib/source';
+import { basedPageUrls, getPageImage, pageSource } from '@/lib/source';
 import { getMDXComponents } from '@/mdx-components';
 
 export type DocsPageProps =
@@ -39,7 +39,9 @@ export async function DocsPageBase(props: DocsPageProps) {
           <LLMCopyButton markdownUrl={markdownUrl} />
         </div>
         <DocsDescription className='mb-0'>{page.data.description}</DocsDescription>
-        {base && <BaseSwitcher base={base} url={page.url} />}
+        {props.section !== 'docs' && (
+          <BaseSwitcher base={props.base} url={page.url} pages={basedPageUrls(props.section)} />
+        )}
       </div>
       <DocsBody>
         {base && page.data.registryName && <ItemHeader base={base} registryName={page.data.registryName} />}
