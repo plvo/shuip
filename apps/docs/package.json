@@ -25,7 +25,6 @@
     "fumadocs-ui": "catalog:fumadocs",
     "next-mdx-remote": "catalog:fumadocs",
     "next-themes": "catalog:",
-    "radix-ui": "catalog:radix",
     "gray-matter": "catalog:fumadocs",
     "prism-react-renderer": "catalog:fumadocs",
     "lucide-react": "catalog:",
