@@ -45,3 +45,7 @@ export function getPageImage(page: AnyPage, section: Section) {
     url: `${process.env.NEXT_PUBLIC_APP_URL}/og/${section}/${segments.join('/')}`,
   };
 }
+
+/** The page-slug portion of an OG route's catch-all: the segments without the trailing `image.png`. */
+export const pageSlugFromImageSegments = (segments: string[]) =>
+  segments.at(-1) === 'image.png' ? segments.slice(0, -1) : segments;

@@ -4,7 +4,8 @@ import { generate as DefaultImage } from 'fumadocs-ui/og';
 import { notFound } from 'next/navigation';
 import { ImageResponse } from 'next/og';
 import { DEFAULT_BASE } from '@/lib/base-routes';
-import { componentsSources, getPageImage } from '@/lib/source';
+import { ogMark } from '@/lib/og-mark';
+import { componentsSources, getPageImage, pageSlugFromImageSegments } from '@/lib/source';
 
 // Both bases share one image: the title and the description do not depend on the base.
 const componentsSource = componentsSources[DEFAULT_BASE];
@@ -13,7 +14,7 @@ export const revalidate = false;
 
 export async function GET(_req: Request, { params }: RouteContext<'/og/components/[...slug]'>) {
   const { slug } = await params;
-  const page = componentsSource.getPage(slug);
+  const page = componentsSource.getPage(pageSlugFromImageSegments(slug));
   if (!page) notFound();
 
   const { title, description } = page.data;
@@ -26,7 +27,7 @@ export async function GET(_req: Request, { params }: RouteContext<'/og/component
       site='shuip'
       title={<span style={{ color: 'rgb(5, 105, 255)' }}>{title}</span>}
       description={truncatedDescription}
-      icon={<img src={getPageImage(page, 'components').url} alt={title} width={64} height={64} />}
+      icon={ogMark}
       primaryColor='rgba(5, 105, 255, 0.15)'
       primaryTextColor='white'
     />,

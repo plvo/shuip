@@ -3,13 +3,14 @@
 import { generate as DefaultImage } from 'fumadocs-ui/og';
 import { notFound } from 'next/navigation';
 import { ImageResponse } from 'next/og';
-import { docsSource, getPageImage } from '@/lib/source';
+import { ogMark } from '@/lib/og-mark';
+import { docsSource, getPageImage, pageSlugFromImageSegments } from '@/lib/source';
 
 export const revalidate = false;
 
 export async function GET(_req: Request, { params }: RouteContext<'/og/docs/[...slug]'>) {
   const { slug } = await params;
-  const page = docsSource.getPage(slug);
+  const page = docsSource.getPage(pageSlugFromImageSegments(slug));
   if (!page) notFound();
 
   const { title, description } = page.data;
@@ -22,7 +23,7 @@ export async function GET(_req: Request, { params }: RouteContext<'/og/docs/[...
       site='shuip'
       title={<span style={{ color: 'rgb(5, 105, 255)' }}>{title}</span>}
       description={truncatedDescription}
-      icon={<img src={getPageImage(page, 'docs').url} alt={title} width={64} height={64} />}
+      icon={ogMark}
       primaryColor='rgba(5, 105, 255, 0.15)'
       primaryTextColor='white'
     />,
