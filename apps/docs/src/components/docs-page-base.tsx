@@ -8,7 +8,7 @@ import { ItemHeader } from '@/components/item-content';
 import { LLMCopyButton } from '@/components/llm-copy-button';
 import { type Base, type BasedSection, DEFAULT_BASE, llmsUrl, withBase } from '@/lib/base-routes';
 import { sectionPageUrls } from '@/lib/section-sources';
-import { getPageImage, pageSource, sidebarSources } from '@/lib/source';
+import { getPageImage, pageSource, sectionSources } from '@/lib/source';
 import { getMDXComponents } from '@/mdx-components';
 
 export type DocsPageProps =
@@ -41,7 +41,7 @@ export async function DocsPageBase(props: DocsPageProps) {
         </div>
         <DocsDescription className='mb-0'>{page.data.description}</DocsDescription>
         {based && (
-          <BaseSwitcher base={based.base} url={page.url} pages={sectionPageUrls(based.section, sidebarSources)} />
+          <BaseSwitcher base={based.base} url={page.url} pages={sectionPageUrls(based.section, sectionSources)} />
         )}
       </div>
       <DocsBody>

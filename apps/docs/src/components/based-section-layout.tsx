@@ -6,7 +6,7 @@ import { ProvidersForBase } from '@/components/providers/providers-for-base';
 import { SiteDocsLayout } from '@/components/site-docs-layout';
 import { type BasedSection, isBase } from '@/lib/base-routes';
 import { sectionPageUrls, sidebarTreeFor } from '@/lib/section-sources';
-import { sidebarSources } from '@/lib/source';
+import { sectionSources } from '@/lib/source';
 
 export interface BasedSectionLayoutProps {
   section: BasedSection;
@@ -24,8 +24,8 @@ export async function BasedSectionLayout({ section, params, children }: BasedSec
       <BaseCookie base={base} />
       <SiteDocsLayout
         base={base}
-        tree={sidebarTreeFor(section, base, sidebarSources)}
-        banner={<BaseDropdown base={base} pages={sectionPageUrls(section, sidebarSources)} />}
+        tree={sidebarTreeFor(section, base, sectionSources)}
+        banner={<BaseDropdown base={base} pages={sectionPageUrls(section, sectionSources)} />}
       >
         {children}
       </SiteDocsLayout>

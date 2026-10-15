@@ -2,7 +2,7 @@ import { blocks, components, docs } from 'fumadocs-mdx:collections/server';
 import { type InferPageType, loader } from 'fumadocs-core/source';
 import { type Base, DEFAULT_BASE, type Section } from './base-routes';
 import { icon } from './page-icon';
-import { type SidebarSources, sectionLoaders, sidebarTreeFor } from './section-sources';
+import { type SectionSources, sectionLoaders, sidebarTreeFor } from './section-sources';
 import { unbasedSidebarTree } from './sidebar-tree';
 
 export const docsSource = loader({
@@ -27,15 +27,15 @@ export const allPages = () => [
   ...componentsSources[DEFAULT_BASE].getPages(),
 ];
 
-/** What the sidebars of every section are built from. */
-export const sidebarSources: SidebarSources = {
+/** What the sidebars and the page lists of every section are built from. */
+export const sectionSources: SectionSources = {
   components: componentsSources,
   blocks: blocksSources,
   guides: docsSource.pageTree.children,
 };
 
 /** The sidebar of the guides under `/docs`, whose component links follow the base the reader visited last. */
-export const docsSidebarTree = () => unbasedSidebarTree(sidebarTreeFor('components', DEFAULT_BASE, sidebarSources));
+export const docsSidebarTree = () => unbasedSidebarTree(sidebarTreeFor('components', DEFAULT_BASE, sectionSources));
 
 export function getPageImage(page: AnyPage, section: Section) {
   const segments = [...page.slugs, 'image.png'];
