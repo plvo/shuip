@@ -10,9 +10,10 @@ export interface BaseSwitcherProps {
   pages: BasedPages;
 }
 
+/** Hidden from `md` up, the width at which fumadocs shows the sidebar with its dropdown instead of the drawer. */
 export function BaseSwitcher({ base, url, pages }: BaseSwitcherProps) {
   return (
-    <nav aria-label='Primitive library' className='flex gap-1 border-b border-fd-border'>
+    <nav aria-label='Primitive library' className='flex gap-1 border-b border-fd-border md:hidden'>
       {baseChoices(url, base, pages).map((choice) => (
         <Link
           key={choice.base}
