@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { BASE_ONLY_BLOCK } from '../src/lib/base-only';
 import { BASES } from '../src/lib/base-routes';
 
 const REPOSITORY_ROOT = path.resolve(import.meta.dir, '..', '..', '..');
@@ -11,8 +12,6 @@ const MDX_ROOTS = [
 
 // Written for Radix only. A page of either base renders its prose, so these belong inside a Radix `<BaseOnly>`.
 const RADIX_ONLY_API = /asChild|onOpenAutoFocus|onCloseAutoFocus|PopoverAnchor|checked=["']indeterminate["']|radix-ui/;
-
-const BASE_ONLY_BLOCK = /<BaseOnly base="(\w+)">([\s\S]*?)<\/BaseOnly>/g;
 
 const mdxFiles = (root: string): string[] =>
   fs.readdirSync(root, { recursive: true, withFileTypes: true }).flatMap((entry) => {

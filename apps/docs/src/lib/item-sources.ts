@@ -8,7 +8,10 @@ export interface ItemSources {
 }
 
 /** The code a docs page shows for an item on a base: the installed source and each example, in display order. */
-export const itemSourcesFor = (base: Base, name: string): ItemSources => ({
-  code: readItemSource(base, name),
-  examples: listItemExamples(base, name).map((key) => ({ key, code: readItemSource(base, key) })),
+export const itemSourcesFor = (base: Base, name: string, registryRoot?: string): ItemSources => ({
+  code: readItemSource(base, name, registryRoot),
+  examples: listItemExamples(base, name, registryRoot).map((key) => ({
+    key,
+    code: readItemSource(base, key, registryRoot),
+  })),
 });
