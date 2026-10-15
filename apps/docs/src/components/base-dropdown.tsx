@@ -3,7 +3,7 @@
 import { SidebarTabsDropdown } from 'fumadocs-ui/components/sidebar/tabs/dropdown';
 import type { LayoutTab } from 'fumadocs-ui/layouts/shared';
 import { usePathname } from 'next/navigation';
-import { type Base, type BaseChoice, type BasedPages, baseChoices } from '@/lib/base-routes';
+import { type Base, type BaseChoice, type BasedPages, baseChoices, baseLabel } from '@/lib/base-routes';
 
 /** The options of the dropdown, one per base; the base of `pathname` is the one the dropdown shows as selected. */
 export const baseDropdownOptions = (choices: BaseChoice[], pathname: string): LayoutTab[] =>
@@ -28,7 +28,7 @@ export function BaseDropdown({ base, pages }: BaseDropdownProps) {
   return (
     <SidebarTabsDropdown
       options={baseDropdownOptions(choices, pathname)}
-      aria-label={`Primitive library: ${choices.find((choice) => choice.active)?.label}`}
+      aria-label={`Primitive library: ${baseLabel(base)}`}
     />
   );
 }
