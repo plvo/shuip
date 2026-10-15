@@ -45,12 +45,14 @@ You can also copy and paste the code directly from each component’s documentat
 
 shuip ships every item for two bases: Base UI and Radix. You do not choose one in shuip. The `style` in your `components.json` picks it, because the CLI puts that value into the registry URL and the registry answers with the matching variant.
 
-| `style` in `components.json` | Examples | Variant you get |
-| ---------------------------- | -------- | --------------- |
-| `base-*` | `base-vega`, `base-nova` | Base UI |
-| `radix-*` | `radix-vega`, `radix-nova` | Radix |
-| `new-york`, `new-york-v4`, `default` | The styles without a prefix | Radix |
-| `aria-*` | `aria-nova` | Not supported (React Aria) |
+| `style` in `components.json` | Variant you get |
+| ---------------------------- | --------------- |
+| `base-*` | Base UI |
+| `radix-*` | Radix |
+| `new-york`, `new-york-v4`, `default` | Radix |
+| `aria-*` | Not supported (React Aria) |
+
+The `*` stands for a preset name: `base-vega` and `base-nova` are Base UI styles, `radix-vega` and `radix-nova` are Radix styles.
 
 A project on an `aria-*` style cannot install shuip items: the registry answers `404` for them, so the install fails.
 
