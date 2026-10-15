@@ -10,6 +10,7 @@
     "build": "next build",
     "start": "next start",
     "registry:build": "bun run scripts/shadcn-build.ts",
+    "icons:generate": "bun run scripts/generate-icons.ts",
     "test": "bun test",
     "postinstall": "fumadocs-mdx"
   },
