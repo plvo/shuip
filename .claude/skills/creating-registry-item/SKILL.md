@@ -30,6 +30,7 @@ Create `packages/registry/items/<category>/<name>/`. `<name>` has NO prefix — 
 - Import shadcn primitives via `@/components/ui/<name>`. These become `registryDependencies` (the consumer's shadcn CLI will install them).
 - Generally avoid importing `@/components/ui/shuip/*` from a `component.radix.tsx`. The one legitimate case is a **block or composite item that consumes another shuip item** — `blocks/responsive-dialog/component.radix.tsx` imports `@/components/ui/shuip/side-dialog` and ships a `meta.shuip.json` with `dependsOn: ["side-dialog"]`, which adds `side-dialog` to `registryDependencies` so the consumer's shadcn install resolves the import. Without that `dependsOn`, the dep is silently dropped (the regex in `parseRegistryDeps` excludes `shuip` paths). If you need a cross-item shuip dep: import via the stub alias AND declare it in `meta.shuip.json`.
 - For RHF / TSF items, use the `register: UseFormRegisterReturn<FieldPath<T>>` prop signature as in `input-field/component.radix.tsx`. **The transferable pattern is the RHF integration (register prop + `FormField` + render-props plumbing), not the underlying primitive.** Which shadcn primitive you wrap is a separate decision driven by the task — `input-field`/`password-field` wrap `InputGroupInput` for addon slots; `address-field` wraps bare `Input`. If the task spec names a specific primitive, follow the spec.
+- **Derive props from the primitive** you forward them to (`React.ComponentProps<typeof Button>`, `extends React.ComponentProps<typeof Input>`) and declare only what the item adds. A re-declared copy of the primitive's props matches one base and drifts on the other, while a derived type follows whichever primitive `@/components/ui/<name>` resolves to.
 - Add `'use client'` at the top only when the component uses client-only React features (state, refs, effects, browser APIs). Half the existing RHF components have it for that reason; the other half (purely presentational wrappers over `FormField`) correctly do not. Don't cargo-cult it.
 - **Schemas / types may be exported** when the item describes a domain shape — see `address-field/component.radix.tsx` which exports `addressSchema` and `AddressData`. For format-only validation (E.164, URL, etc.), exporting a regex or zod schema next to the component is fine; consumers can opt in.
 
@@ -54,7 +55,16 @@ Beyond the default, add `<variant>.example.radix.tsx` showing a meaningful alter
 
 ### 4b. Check the Base UI variant
 
-The Base UI variant is generated from your Radix source by a codemod (`asChild` becomes `render`). Run `bun registry:generate` and read its warnings: an `asChild` the codemod cannot convert, or a link rendered with `nativeButton={false}`, is reported with the file and line. Where the two APIs genuinely diverge (a Radix-only prop such as `onOpenAutoFocus`, `PopoverAnchor`), add `component.base.tsx` (or `<variant>.example.base.tsx`) next to the canonical file, written exactly as consumers receive it. Then run `bun typecheck:base`. On later runs the generator warns when the canonical file gets commits newer than the override. See "Base UI variant" in CLAUDE.md.
+`component.radix.tsx` and `<variant>.example.radix.tsx` are the canonical sources; the Base UI variant is generated from them by a codemod (`asChild` becomes `render`). Run `bun registry:generate` and read its warnings: an `asChild` the codemod cannot convert, or a link rendered with `nativeButton={false}`, is reported with the file and line.
+
+**Write an override only where the two APIs genuinely diverge** (a Radix-only prop such as `onOpenAutoFocus`, `PopoverAnchor`). If the codemod output is correct, add nothing: an override is a second file to keep in step.
+
+To write one:
+1. Copy `component.radix.tsx` to `component.base.tsx` (or `<variant>.example.radix.tsx` to `<variant>.example.base.tsx`) next to it and change only what diverges. Keep it exactly as consumers receive it, with the standard `@/components/ui/*` aliases.
+2. Run `bun typecheck:base`: it regenerates, then type-checks every override and every generated Base UI copy against the Base UI primitives.
+3. On later `registry:generate` runs the generator warns `<override> predates the latest commits of <canonical>` when the canonical file moved on. Update the override, or commit it unchanged once you have checked it still holds.
+
+See "Base UI variant" in CLAUDE.md for the full rules.
 
 ### 5. Write `index.mdx` — but only for components / RHF / TSF
 
@@ -93,6 +103,8 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 Model on a sibling item's `index.mdx` for prose style and prop documentation patterns.
 
+**Base-specific prose:** the same MDX renders on the Base UI and the Radix page of the item. Prose or a snippet that only holds for one base (an `asChild` composition, a Radix-only prop) goes inside `<BaseOnly base="radix">…</BaseOnly>`, with the Base UI counterpart in `<BaseOnly base="base">…</BaseOnly>`; leave a blank line after the opening tag and before the closing one (see `side-dialog/index.mdx`). `apps/docs/scripts/base-prose.test.ts` fails when a Radix-only API appears outside a Radix block. Do not write `<BaseOnly>` without its `base` attribute: the same test counts blocks and rejects it.
+
 **Blocks are different:** do NOT put `index.mdx` in `items/blocks/<name>/`. Block docs are real MDX files in `apps/docs/content/blocks/<name>.mdx` (a separate fumadocs collection). Putting `index.mdx` in a block's item folder makes the generator create a dead symlink under `content/docs/blocks/` that no collection reads — the page silently doesn't appear.
 
 ### 6. Optional: extras and meta
@@ -125,6 +137,17 @@ bun build:docs
 
 This chains `registry:generate` → `registry:build` (apps/docs/public/r/*.json) → `next build`. If it succeeds, the item is installable.
 
+### 9. Smoke-test both bases
+
+`bun smoke` installs items through the `@shuip` namespace into a fresh shadcn project and type-checks them. Run it once per base for the item you touched:
+
+```bash
+bun smoke radix-vega --items <prefixed-name>
+bun smoke base-vega --items <prefixed-name>
+```
+
+A `base-*` style is served the Base UI variant, and the run fails on any Radix package. Drop `--items` to install every item before a larger change.
+
 ## Generated Artifacts — Don't Edit
 
 `registry.json`, `__index__.ts`, `stubs/**`, `apps/docs/public/r/**`, `apps/docs/content/docs/<cat>/<name>.mdx` (symlinks), and `apps/docs/content/docs/<cat>/.gitignore` are all regenerated. Edits are clobbered. Always edit the source under `items/`.
@@ -142,6 +165,9 @@ This chains `registry:generate` → `registry:build` (apps/docs/public/r/*.json)
 | Skipping `registry:generate` after adding files | New item never appears | Always run it; `bun build:docs` chains it for you |
 | `bun add` for a shared dep | Catalog drift between workspaces | Add via the root `workspaces.catalog` (or sub-catalog), reference as `"catalog:"` |
 | Aliased extras with mapping in only one tsconfig | IDE or build breaks | Mirror in both `apps/docs/tsconfig.json` and `packages/registry/tsconfig.json` |
+| Re-declaring a primitive's props by hand (`asChild?: boolean`, `onClick`, `disabled`, …) | Matches one base only; the other base's primitive disagrees | Extend `React.ComponentProps<typeof X>` and declare only the props the item adds |
+| Writing a `component.base.tsx` the codemod would have produced | A second file that drifts from the canonical one | Delete it, run `registry:generate`, and keep an override only for real API divergence |
+| Radix-only prose (`asChild`, `onOpenAutoFocus`) outside `<BaseOnly base="radix">` | `base-prose.test.ts` fails, and the Base UI page documents an API it lacks | Wrap it in a Radix block and add the Base UI counterpart |
 | Skipping the variant example | Doc page shows only one preview, looks thin | Add at least one `<variant>.example.radix.tsx` showing an alternate prop usage |
 
 ## Red Flags — STOP
@@ -153,3 +179,6 @@ This chains `registry:generate` → `registry:build` (apps/docs/public/r/*.json)
 - Putting an `index.mdx` in `items/blocks/<name>/`
 - `[generate] N items processed` with N unchanged after you added the item
 - Adding a path mapping in only one tsconfig
+- A `component.base.tsx` with no API divergence from `component.radix.tsx`
+- An override committed without running `bun typecheck:base`
+- Shipping an item after smoke-testing only one base
