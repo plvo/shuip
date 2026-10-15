@@ -74,8 +74,10 @@ The folder name is **unprefixed** — the generator adds the prefix from the `CA
 ```bash
 packages/registry/items/<category>/<name>/
 ├── component.radix.tsx          # REQUIRED, exact filename. The canonical (Radix) published source.
+├── component.base.tsx           # Optional Base UI override of component.radix.tsx — see "Base UI and Radix"
 ├── default.example.radix.tsx    # Primary preview (recommended)
 ├── <variant>.example.radix.tsx  # Additional previews (recommended: at least one)
+├── <variant>.example.base.tsx   # Optional Base UI override of <variant>.example.radix.tsx
 ├── index.mdx                    # Doc page (skip for blocks — see below)
 ├── extras/                      # Optional. Files copied alongside on install:
 │   ├── <file>.action.ts         # → installs at ./actions/shuip/<file>.ts
@@ -163,6 +165,10 @@ Confirm the output shows `[generate] N items processed` with N incremented by on
 </Step>
 
 <Step>
+Check the Base UI variant. The generator derives it from your Radix source, so read its warnings and follow [Base UI and Radix](#base-ui-and-radix) below.
+</Step>
+
+<Step>
 End-to-end check:
 
 ```bash
@@ -172,6 +178,87 @@ bun build:docs
 This chains `registry:generate` → `registry:build` → `next build`. If it passes, the item is installable via `npx shadcn@latest add @shuip/<prefixed-name>` (with the `@shuip` namespace configured, see [Installation](/docs/installation)).
 </Step>
 </Steps>
+
+## Base UI and Radix
+
+Every item is published for two bases. A consumer gets the variant that matches the `style` in their `components.json` (see [Installation](/docs/installation#picking-the-base)). You write the item once, for Radix, and the generator derives the Base UI variant.
+
+### Canonical naming
+
+`component.radix.tsx` and `<variant>.example.radix.tsx` are the canonical sources, written for Radix. The `.radix` suffix is part of the contract: a file named `component.tsx`, or an example without a recognised base suffix, makes the generator fail.
+
+For each canonical file the generator produces the Base UI copy with a codemod. It turns `<X asChild><Child /></X>` into `<X render={<Child />}>…</X>` and adds `nativeButton={false}` when the rendered element is not a button. Run `bun registry:generate` and read its warnings: it reports an `asChild` it cannot convert (for example one that wraps more than a single element) and a link rendered with `nativeButton={false}`.
+
+### When to write a `.base.tsx` override
+
+Write an override only where the two APIs genuinely diverge and the codemod cannot bridge them. Radix-only props such as `onOpenAutoFocus` or `PopoverAnchor` are the typical case. If the codemod output is correct, leave it alone: every override is a second file to keep in step with the canonical one.
+
+To write one:
+
+<Steps>
+<Step>
+Copy `component.radix.tsx` to `component.base.tsx` in the same folder (or `<variant>.example.radix.tsx` to `<variant>.example.base.tsx`) and change only what diverges.
+</Step>
+
+<Step>
+Write it exactly as consumers receive it, with the standard `@/components/ui/*` aliases. For the override, those aliases resolve to the Base UI primitives.
+</Step>
+
+<Step>
+Run `bun typecheck:base`. It regenerates, then type-checks every override and every generated Base UI copy against the Base UI primitives.
+</Step>
+</Steps>
+
+An override wins over the codemod and is published verbatim. On every `bun registry:generate`, the generator warns about each override whose canonical file has newer commits (`<override> predates the latest commits of <canonical>`). The warning does not fail the build: update the override to follow the canonical change, or commit it unchanged once you have checked that it still holds.
+
+### Derive props from the primitives
+
+Type a prop from the primitive it is forwarded to instead of re-declaring it:
+
+```tsx
+export interface MyButtonProps extends React.ComponentProps<typeof Button> {
+  loading?: boolean;
+}
+```
+
+`React.ComponentProps<typeof X>` follows whichever primitive `@/components/ui/x` resolves to, so the same source type-checks against the Radix primitive and against the Base UI one. A hand-written copy of the primitive's props, such as an `asChild?: boolean` you re-declare, only matches one of them. Declare only the props your item adds.
+
+### Run the smoke test for both bases
+
+The smoke test installs items into a fresh shadcn project and type-checks the result, so it checks what a consumer receives:
+
+```bash
+bun smoke radix-vega
+bun smoke base-vega --items <name>
+```
+
+A `base-*` style is served the Base UI variant, and the test then fails on any Radix package. Run it for the items you touched on both bases, and without `--items` before a larger change.
+
+### Base-specific prose
+
+A doc page exists once per base, but both render the same MDX. Wrap prose or snippets that only hold for one base in a `BaseOnly` block, with a blank line after the opening tag and before the closing one:
+
+````mdx
+<BaseOnly base="radix">
+
+```tsx
+<SideDialogTrigger asChild>
+  <Button>Open</Button>
+</SideDialogTrigger>
+```
+
+</BaseOnly>
+
+<BaseOnly base="base">
+
+```tsx
+<SideDialogTrigger render={<Button />}>Open</SideDialogTrigger>
+```
+
+</BaseOnly>
+````
+
+A test fails when a Radix-only API such as `asChild` appears outside a Radix block, and the markdown served for models keeps only the block of the page's base. `.claude/CLAUDE.md` in the repository describes the full variant model: the codemod, the override rules, the outputs and the docs routing.
 
 ## Coding conventions
 
