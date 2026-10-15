@@ -15,7 +15,6 @@ import {
   parseBasedPath,
   sectionEntryUrl,
   sectionUrl,
-  siblingUrl,
   switchBaseUrl,
   unbasedUrl,
   withBase,
@@ -84,28 +83,6 @@ describe('parseBasedPath', () => {
   });
 });
 
-describe('siblingUrl', () => {
-  test('links the same item in the other base', () => {
-    expect(siblingUrl('/components/base/side-dialog', 'radix')).toBe('/components/radix/side-dialog');
-    expect(siblingUrl('/components/radix/tanstack-form/input-field', 'base')).toBe(
-      '/components/base/tanstack-form/input-field',
-    );
-    expect(siblingUrl('/blocks/base/kanban', 'radix')).toBe('/blocks/radix/kanban');
-  });
-
-  test('links the index of the section in the other base', () => {
-    expect(siblingUrl('/components/base', 'radix')).toBe('/components/radix');
-  });
-
-  test('is the identity on the current base', () => {
-    expect(siblingUrl('/components/radix/side-dialog', 'radix')).toBe('/components/radix/side-dialog');
-  });
-
-  test('has no sibling for a page that has no base', () => {
-    expect(siblingUrl('/docs/installation', 'radix')).toBeNull();
-  });
-});
-
 const PAGES = {
   base: ['/components/base', '/components/base/side-dialog', '/components/base/popover-anchor'],
   radix: ['/components/radix', '/components/radix/side-dialog'],
@@ -115,6 +92,22 @@ describe('switchBaseUrl', () => {
   test('goes to the same page in the other base when it exists there', () => {
     expect(switchBaseUrl('/components/base/side-dialog', 'radix', PAGES)).toBe('/components/radix/side-dialog');
     expect(switchBaseUrl('/components/radix/side-dialog', 'base', PAGES)).toBe('/components/base/side-dialog');
+  });
+
+  test('keeps the nested path of a page and the section of a block', () => {
+    const pages = {
+      base: ['/components/base/tanstack-form/input-field', '/blocks/base/kanban'],
+      radix: ['/components/radix/tanstack-form/input-field', '/blocks/radix/kanban'],
+    };
+
+    expect(switchBaseUrl('/components/radix/tanstack-form/input-field', 'base', pages)).toBe(
+      '/components/base/tanstack-form/input-field',
+    );
+    expect(switchBaseUrl('/blocks/base/kanban', 'radix', pages)).toBe('/blocks/radix/kanban');
+  });
+
+  test('goes to the index of the section from the index of the section', () => {
+    expect(switchBaseUrl('/components/base', 'radix', PAGES)).toBe('/components/radix');
   });
 
   test('goes to the index of the section when the page does not exist in the other base', () => {
@@ -146,10 +139,7 @@ describe('baseChoices', () => {
   });
 
   test('tells the bases apart by how their primitives compose', () => {
-    expect(choices.map((choice) => choice.description)).toEqual([
-      'Base UI primitives, render composition',
-      'Radix primitives, asChild composition',
-    ]);
+    expect(choices.map((choice) => choice.description)).toEqual(['Render composition', 'asChild composition']);
   });
 
   test('marks only the active base', () => {

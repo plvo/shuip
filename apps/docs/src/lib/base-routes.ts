@@ -21,8 +21,8 @@ export const DEFAULT_BASE: Base = 'base';
 const BASE_LABELS: Record<Base, string> = { base: 'Base UI', radix: 'Radix' };
 
 const BASE_DESCRIPTIONS: Record<Base, string> = {
-  base: 'Base UI primitives, render composition',
-  radix: 'Radix primitives, asChild composition',
+  base: 'Render composition',
+  radix: 'asChild composition',
 };
 
 const LLMS_SEGMENT = 'llms.mdx';
@@ -73,12 +73,6 @@ export const unbasedUrl = (url: string): string => {
 /** The `generateStaticParams` of a `[base]` segment. */
 export const baseParams = (): { base: Base }[] => BASES.map((base) => ({ base }));
 
-/** The same page in another base, or null when the pathname is not a page that exists per base. */
-export const siblingUrl = (pathname: string, base: Base): string | null => {
-  const parsed = parseBasedPath(pathname);
-  return parsed && sectionUrl(parsed.section, base, parsed.slugs);
-};
-
 /** The addresses of the pages of a section that exist in each base. */
 export type BasedPages = Record<Base, readonly string[]>;
 
@@ -88,8 +82,8 @@ export type BasedPages = Record<Base, readonly string[]>;
  */
 export const switchBaseUrl = (pathname: string, base: Base, pages: BasedPages): string | null => {
   const parsed = parseBasedPath(pathname);
-  const sibling = siblingUrl(pathname, base);
-  if (!parsed || sibling === null) return null;
+  if (!parsed) return null;
+  const sibling = sectionUrl(parsed.section, base, parsed.slugs);
   return pages[base].includes(sibling) ? sibling : sectionUrl(parsed.section, base);
 };
 
