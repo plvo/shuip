@@ -1,6 +1,9 @@
+import { ShuipMark } from '@/components/shuip-mark';
+
 export default function HomePage() {
   return (
     <main className='flex flex-col items-center justify-center h-screen gap-8'>
+      <ShuipMark className='h-20 w-auto' />
       <h1 className='text-4xl hover:text-amber-400'>
         <b>
           sh<span className='text-amber-400 hover:text-foreground'>ui</span>p

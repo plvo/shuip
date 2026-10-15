@@ -1,4 +1,5 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
+import { ShuipMark } from '@/components/shuip-mark';
 import { type Base, sectionEntryUrl, sectionLabel } from './base-routes';
 
 /** The layout options; pages that belong to a base link the sections inside it, the others through the redirect. */
@@ -8,9 +9,8 @@ export function baseOptions(base?: Base): BaseLayoutProps {
       enabled: true,
       transparentMode: 'top',
       title: (
-        <div className='flex items-center gap-0.5'>
-          {/* <Image src='/shuip-light.png' alt='sh(ui)p' width={64} height={64} className='size-7 dark:hidden' />
-          <Image src='/shuip-dark.png' alt='sh(ui)p' width={64} height={64} className='size-7 hidden dark:block' /> */}
+        <div className='flex items-center gap-2'>
+          <ShuipMark className='h-5 w-auto shrink-0' />
           <p className='font-bold whitespace-nowrap font-mono'>shuip</p>
         </div>
       ),
