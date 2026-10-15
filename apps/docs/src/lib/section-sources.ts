@@ -1,6 +1,6 @@
 import type { Node, Root } from 'fumadocs-core/page-tree';
 import { loader } from 'fumadocs-core/source';
-import { BASES, type Base, type BasedSection, sectionUrl } from './base-routes';
+import { BASES, type Base, type BasedPages, type BasedSection, sectionUrl } from './base-routes';
 import { icon } from './page-icon';
 import { buildSidebarTree, type SidebarPage } from './sidebar-tree';
 
@@ -24,9 +24,10 @@ export const sectionParams = (
 ): { base: Base; slug?: string[] }[] =>
   BASES.flatMap((base) => loaders[base].generateParams().map((params) => ({ base, ...params })));
 
-export interface SidebarSources {
+/** The pages of the docs, per section and base, from which the sidebars and the page lists of the switchers come. */
+export interface SectionSources {
   components: Record<Base, { getPages(): SidebarPage[] }>;
-  blocks: Record<Base, { pageTree: Root }>;
+  blocks: Record<Base, { pageTree: Root; getPages(): { url: string }[] }>;
   /** The pages under `/docs`, which have no base. */
   guides: Node[];
 }
@@ -35,8 +36,12 @@ export interface SidebarSources {
 export const sidebarTreeFor = (
   section: BasedSection,
   base: Base,
-  { components, blocks, guides }: SidebarSources,
+  { components, blocks, guides }: SectionSources,
 ): Root =>
   section === 'components'
     ? buildSidebarTree({ base, guides, pages: components[base].getPages() })
     : blocks[base].pageTree;
+
+/** The address of every page of `section` under each base, which the base switchers check before they link a page. */
+export const sectionPageUrls = (section: BasedSection, { components, blocks }: SectionSources): BasedPages =>
+  mapBases((base) => (section === 'components' ? components : blocks)[base].getPages().map((page) => page.url));

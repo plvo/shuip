@@ -20,6 +20,11 @@ export const DEFAULT_BASE: Base = 'base';
 
 const BASE_LABELS: Record<Base, string> = { base: 'Base UI', radix: 'Radix' };
 
+const BASE_DESCRIPTIONS: Record<Base, string> = {
+  base: 'Render composition',
+  radix: 'asChild composition',
+};
+
 const LLMS_SEGMENT = 'llms.mdx';
 
 export const isBase = (value: string): value is Base => (BASES as readonly string[]).includes(value);
@@ -68,11 +73,37 @@ export const unbasedUrl = (url: string): string => {
 /** The `generateStaticParams` of a `[base]` segment. */
 export const baseParams = (): { base: Base }[] => BASES.map((base) => ({ base }));
 
-/** The same page in another base, or null when the pathname is not a page that exists per base. */
-export const siblingUrl = (pathname: string, base: Base): string | null => {
+/** The addresses of the pages of a section that exist in each base. */
+export type BasedPages = Record<Base, readonly string[]>;
+
+/**
+ * Where a reader on `pathname` lands when switching to `base`: the same page when it exists there, the index of its
+ * section when it does not, or null when the pathname is not a page that exists per base.
+ */
+export const switchBaseUrl = (pathname: string, base: Base, pages: BasedPages): string | null => {
   const parsed = parseBasedPath(pathname);
-  return parsed && sectionUrl(parsed.section, base, parsed.slugs);
+  if (!parsed) return null;
+  const sibling = sectionUrl(parsed.section, base, parsed.slugs);
+  return pages[base].includes(sibling) ? sibling : sectionUrl(parsed.section, base);
 };
+
+export interface BaseChoice {
+  base: Base;
+  label: string;
+  description: string;
+  href: string;
+  active: boolean;
+}
+
+/** What a base switcher offers on `pathname`, one entry per base. */
+export const baseChoices = (pathname: string, active: Base, pages: BasedPages): BaseChoice[] =>
+  BASES.map((base) => ({
+    base,
+    label: baseLabel(base),
+    description: BASE_DESCRIPTIONS[base],
+    href: switchBaseUrl(pathname, base, pages) ?? pathname,
+    active: base === active,
+  }));
 
 /** Tells a reader of the markdown of a page, human or model, which base it is for and where the others are. */
 export const otherVariantsNote = (pathname: string): string | null => {

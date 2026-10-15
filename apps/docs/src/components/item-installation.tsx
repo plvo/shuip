@@ -12,6 +12,7 @@ import {
 } from 'fumadocs-ui/components/ui/accordion';
 import Link from 'next/link';
 import type React from 'react';
+import { TAB_GROUPS } from '@/lib/tab-groups';
 import { CodeHighlight } from './item-preview';
 
 const registriesSnippet = JSON.stringify({ registries: { [SHUIP_NAMESPACE]: SHUIP_REGISTRY_URL } }, null, 2);
@@ -28,7 +29,13 @@ export function InstallationCmd({ itemName, manualCode, ...props }: Installation
 
   return (
     <>
-      <Tabs items={choices} className={'w-full **:data-code:px-4'} {...props}>
+      <Tabs
+        items={choices}
+        groupId={TAB_GROUPS.packageManager}
+        persist
+        className={'w-full **:data-code:px-4'}
+        {...props}
+      >
         <Tab>
           <CodeBlock keepBackground data-code>
             <Pre>npx shadcn@latest add {itemRef}</Pre>

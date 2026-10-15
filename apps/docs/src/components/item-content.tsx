@@ -44,7 +44,7 @@ export async function ItemExamples({ base, registryName }: ItemExamplesProps) {
       <H3>
         {key === `${registryName}.example` ? 'Default' : filenameToTitle(parseExampleKey(key)?.exampleName ?? key)}
       </H3>
-      <ItemPreview code={code}>
+      <ItemPreview exampleKey={key} code={code}>
         <Preview base={base} registryName={key} />
       </ItemPreview>
     </div>

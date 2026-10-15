@@ -4,15 +4,18 @@ import { CodeBlock } from 'fumadocs-ui/components/codeblock';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import { Highlight, themes } from 'prism-react-renderer';
 import type * as React from 'react';
+import { previewGroupId } from '@/lib/tab-groups';
 
 export interface ItemPreviewProps {
+  /** The registry key of the example, which names the group that remembers its tab. */
+  exampleKey: string;
   code: string;
   children: React.ReactNode;
 }
 
-export function ItemPreview({ code, children }: ItemPreviewProps) {
+export function ItemPreview({ exampleKey, code, children }: ItemPreviewProps) {
   return (
-    <Tabs items={['preview', 'code']}>
+    <Tabs items={['preview', 'code']} groupId={previewGroupId(exampleKey)} persist>
       <Tab className='p-0'>{children}</Tab>
       <Tab>
         <CodeBlock className='px-4'>

@@ -1,12 +1,12 @@
 import { notFound } from 'next/navigation';
 import type React from 'react';
-import { BaseBadge } from '@/components/base-badge';
 import { BaseCookie } from '@/components/base-cookie';
+import { BaseDropdown } from '@/components/base-dropdown';
 import { ProvidersForBase } from '@/components/providers/providers-for-base';
 import { SiteDocsLayout } from '@/components/site-docs-layout';
 import { type BasedSection, isBase } from '@/lib/base-routes';
-import { sidebarTreeFor } from '@/lib/section-sources';
-import { sidebarSources } from '@/lib/source';
+import { sectionPageUrls, sidebarTreeFor } from '@/lib/section-sources';
+import { sectionSources } from '@/lib/source';
 
 export interface BasedSectionLayoutProps {
   section: BasedSection;
@@ -24,8 +24,8 @@ export async function BasedSectionLayout({ section, params, children }: BasedSec
       <BaseCookie base={base} />
       <SiteDocsLayout
         base={base}
-        tree={sidebarTreeFor(section, base, sidebarSources)}
-        banner={<BaseBadge base={base} />}
+        tree={sidebarTreeFor(section, base, sectionSources)}
+        banner={<BaseDropdown base={base} pages={sectionPageUrls(section, sectionSources)} />}
       >
         {children}
       </SiteDocsLayout>
