@@ -10,10 +10,7 @@ const REPO_ROOT = path.resolve(import.meta.dir, '../../..');
 const BLOCK_DOCS_DIR = path.join(REPO_ROOT, 'apps/docs/content/blocks');
 
 /** Sources whose component sets its own `data-state`, so styling on it is not a primitive trigger. */
-const OWN_DATA_STATE = [
-  'packages/registry/items/components/side-dialog/component.radix.tsx',
-  'packages/registry/items/components/side-dialog/component.base.tsx',
-];
+const OWN_DATA_STATE: string[] = [];
 
 const FORM_PRIMITIVE = /^@\/components\/ui\/form(\/|$)/;
 const PRIMITIVE_STATE_CLASS = /data-\[state=/;
@@ -268,7 +265,7 @@ describe('invariant detection', () => {
     expect(flagged).toEqual([]);
   });
 
-  test('flags data-[state= in a source, except the one that sets its own data-state', () => {
+  test('flags data-[state= in a source, except those that set their own data-state', () => {
     const flagged = findViolations([
       source('packages/registry/items/blocks/a/component.radix.tsx', "cn('data-[state=open]:bg-accent')"),
       source('packages/registry/items/components/side-dialog/component.radix.tsx', "cn('data-[state=open]:x')"),
@@ -276,6 +273,7 @@ describe('invariant detection', () => {
     ]).primitiveStateClasses;
     expect(paths(flagged)).toEqual([
       'packages/registry/items/blocks/a/component.radix.tsx',
+      'packages/registry/items/components/side-dialog/component.radix.tsx',
       'packages/registry/items/components/side-dialog/default.example.radix.tsx',
     ]);
   });
