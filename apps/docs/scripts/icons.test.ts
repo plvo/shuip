@@ -1,11 +1,21 @@
 import { describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
+import sharp from 'sharp';
 import { SHUIP_MARK } from '../src/lib/shuip-mark';
-import { APPLE_ICON, buildIco, FAVICON_TILES, ICON_COLORS, readmeMarkSvg, siteIconSvg, tileSvg } from './icons';
+import {
+  APP_DIRECTORY,
+  APPLE_ICON,
+  buildIco,
+  FAVICON_TILES,
+  ICON_COLORS,
+  README_MARK_PATH,
+  readmeMarkSvg,
+  siteIconSvg,
+  type TileOptions,
+  tileSvg,
+} from './icons';
 
-const APP_DIRECTORY = path.resolve(import.meta.dir, '..', 'src', 'app');
-const README_MARK_PATH = path.resolve(import.meta.dir, '..', '..', '..', '.github', 'assets', 'shuip-mark.svg');
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
 const fakePng = (size: number): { size: number; data: Uint8Array } => ({
@@ -26,6 +36,46 @@ const pngDimensions = (bytes: Uint8Array, offset = 0): { width: number; height: 
   return { width: view.getUint32(offset + 16), height: view.getUint32(offset + 20) };
 };
 
+const [, VIEW_BOX_Y, , VIEW_BOX_HEIGHT] = SHUIP_MARK.viewBox.split(' ').map(Number);
+/** The vertical position, on the mark's grid, of the middle of the stroke at the top of the first arc. */
+const TOP_ARC_Y = 6;
+
+/** A pixel of `tile` that is only background, and one on the top arc of the mark. */
+const probesOf = ({ size, inset }: TileOptions): { background: Pixel; arc: Pixel } => {
+  const margin = Math.round(size * inset);
+  const scale = (size - margin * 2) / VIEW_BOX_HEIGHT;
+  return {
+    background: { x: margin - 1, y: Math.floor(size / 2) },
+    arc: { x: Math.floor(size / 2), y: Math.round(margin + (TOP_ARC_Y - VIEW_BOX_Y) * scale) },
+  };
+};
+
+interface Pixel {
+  x: number;
+  y: number;
+}
+
+const rgbOf = (hex: string): number[] => [1, 3, 5].map((start) => Number.parseInt(hex.slice(start, start + 2), 16));
+
+const pixelOf = async (png: Uint8Array, { x, y }: Pixel): Promise<number[]> => {
+  const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const start = (y * info.width + x) * info.channels;
+  return [...data.subarray(start, start + 3)];
+};
+
+const expectPixelColour = async (png: Uint8Array, pixel: Pixel, hex: string): Promise<void> => {
+  const actual = await pixelOf(png, pixel);
+  rgbOf(hex).forEach((channel, index) => {
+    expect(Math.abs(actual[index] - channel)).toBeLessThanOrEqual(2);
+  });
+};
+
+const expectTileDrawn = async (png: Uint8Array, tile: TileOptions): Promise<void> => {
+  const { background, arc } = probesOf(tile);
+  await expectPixelColour(png, background, ICON_COLORS.tile);
+  await expectPixelColour(png, arc, ICON_COLORS.mark);
+};
+
 describe('tileSvg', () => {
   test('renders at the requested pixel size on a solid background', () => {
     const svg = tileSvg({ size: 180, inset: 0.2, radius: 0 });
@@ -38,7 +88,7 @@ describe('tileSvg', () => {
   test('draws the mark in the light colour, inside the padding', () => {
     const svg = tileSvg({ size: 100, inset: 0.2, radius: 0 });
 
-    expect(svg).toContain(`stroke="${ICON_COLORS.paper}"`);
+    expect(svg).toContain(`stroke="${ICON_COLORS.mark}"`);
     expect(svg).toContain('x="20"');
     expect(svg).toContain('y="20"');
     expect(svg).toContain('width="60"');
@@ -103,6 +153,10 @@ describe('committed icons', () => {
     expect(pngDimensions(png)).toEqual({ width: APPLE_ICON.size, height: APPLE_ICON.size });
   });
 
+  test('apple-icon.png shows the mark on the tile colour', async () => {
+    await expectTileDrawn(readCommitted('apple-icon.png'), APPLE_ICON);
+  });
+
   test('favicon.ico holds a valid 32-bit PNG for each favicon size', () => {
     const ico = readCommitted('favicon.ico');
     const view = dataView(ico);
@@ -128,6 +182,18 @@ describe('committed icons', () => {
       expect(bitCount).toBe(32);
       expect(png).toBe(true);
       expect(dimensions).toEqual({ width, height });
+    }
+  });
+
+  test('favicon.ico shows the mark on the tile colour in its larger sizes', async () => {
+    const ico = readCommitted('favicon.ico');
+    const view = dataView(ico);
+
+    for (const [index, tile] of FAVICON_TILES.entries()) {
+      if (tile.size < 32) continue;
+      const entry = 6 + index * 16;
+      const offset = view.getUint32(entry + 12, true);
+      await expectTileDrawn(ico.slice(offset, offset + view.getUint32(entry + 8, true)), tile);
     }
   });
 });

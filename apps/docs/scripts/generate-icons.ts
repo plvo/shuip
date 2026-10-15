@@ -10,17 +10,22 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { APPLE_ICON, buildIco, FAVICON_TILES, readmeMarkSvg, siteIconSvg, type TileOptions, tileSvg } from './icons';
+import {
+  APP_DIRECTORY,
+  APPLE_ICON,
+  buildIco,
+  FAVICON_TILES,
+  README_MARK_PATH,
+  readmeMarkSvg,
+  siteIconSvg,
+  type TileOptions,
+  tileSvg,
+} from './icons';
 
-const APP_DIRECTORY = path.resolve(import.meta.dir, '..', 'src', 'app');
-const README_MARK_PATH = path.resolve(import.meta.dir, '..', '..', '..', '.github', 'assets', 'shuip-mark.svg');
-
-const rasterise = async (tile: TileOptions): Promise<Uint8Array> =>
-  new Uint8Array(
-    await sharp(Buffer.from(tileSvg(tile)))
-      .png()
-      .toBuffer(),
-  );
+const rasterise = (tile: TileOptions): Promise<Uint8Array> =>
+  sharp(Buffer.from(tileSvg(tile)))
+    .png()
+    .toBuffer();
 
 const generate = async (): Promise<void> => {
   fs.writeFileSync(path.join(APP_DIRECTORY, 'icon.svg'), `${siteIconSvg()}\n`);

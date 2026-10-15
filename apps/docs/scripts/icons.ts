@@ -1,14 +1,18 @@
+import path from 'node:path';
 import { SHUIP_MARK } from '../src/lib/shuip-mark';
+
+export const APP_DIRECTORY = path.resolve(import.meta.dir, '..', 'src', 'app');
+export const README_MARK_PATH = path.resolve(import.meta.dir, '..', '..', '..', '.github', 'assets', 'shuip-mark.svg');
 
 /** The mark's light tone, as used on the site's dark theme, and the dark tile behind it, as sRGB hex. */
 export const ICON_COLORS = {
-  paper: '#e6e4e2',
+  mark: '#e6e4e2',
   tile: '#0f0d0a',
 } as const;
 
 export interface TileColors {
   /** The colour of the mark. */
-  paper: string;
+  mark: string;
   /** The colour of the square behind it. */
   tile: string;
 }
@@ -58,7 +62,7 @@ export const tileSvg = ({ size, inset, radius }: TileOptions, colors: TileColors
     `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">`,
     `<rect width="${size}" height="${size}" rx="${corner}" fill="${colors.tile}"/>`,
     `<svg x="${margin}" y="${margin}" width="${markSize}" height="${markSize}" viewBox="${SHUIP_MARK.viewBox}">`,
-    arcsSvg(colors.paper),
+    arcsSvg(colors.mark),
     '</svg>',
     '</svg>',
   ].join('');
@@ -70,7 +74,7 @@ export const siteIconSvg = (): string => tileSvg(SITE_ICON);
 const README_MARK: TileOptions = { size: 96, inset: 0.2, radius: 0.22 };
 
 /** The mark in white on a black rounded tile, for the README, which has no theme to follow. */
-export const readmeMarkSvg = (): string => tileSvg(README_MARK, { paper: '#fff', tile: '#000' });
+export const readmeMarkSvg = (): string => tileSvg(README_MARK, { mark: '#fff', tile: '#000' });
 
 const ICO_HEADER_BYTES = 6;
 const ICO_ENTRY_BYTES = 16;
