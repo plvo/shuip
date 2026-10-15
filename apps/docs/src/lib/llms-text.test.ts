@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { llmsText } from './llms-text';
+import { llmsFullText, llmsText } from './llms-text';
 
 const PROCESSED = [
   'Intro.',
@@ -48,5 +48,25 @@ describe('llmsText', () => {
 
     expect(text).toContain('<BaseOnly base="radix">');
     expect(text).not.toContain('variant');
+  });
+});
+
+describe('llmsFullText', () => {
+  const text = llmsFullText(['# First page', '# Second page']);
+
+  test('says the pages are the Base UI variant', () => {
+    expect(text).toContain('Base UI variant');
+  });
+
+  test('points at the Radix pages and their markdown for components and blocks', () => {
+    expect(text).toContain('/components/radix/<name>');
+    expect(text).toContain('/components/llms.mdx/radix/<name>');
+    expect(text).toContain('/blocks/radix/<name>');
+    expect(text).toContain('/blocks/llms.mdx/radix/<name>');
+  });
+
+  test('lists the pages after the pointer, in order', () => {
+    expect(text.indexOf('/components/radix/<name>')).toBeLessThan(text.indexOf('# First page'));
+    expect(text.endsWith('# First page\n\n# Second page')).toBe(true);
   });
 });
