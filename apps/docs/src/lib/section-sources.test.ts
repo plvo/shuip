@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import type { Node } from 'fumadocs-core/page-tree';
 import { BASES } from './base-routes';
-import { mapBases, sectionLoaders, sectionParams, sidebarTreeFor } from './section-sources';
+import { mapBases, sectionLoaders, sectionPageUrls, sectionParams, sidebarTreeFor } from './section-sources';
 
 const page = (path: string, title: string, registryName?: string) => ({
   type: 'page' as const,
@@ -44,6 +44,22 @@ describe('sectionLoaders', () => {
 
   test('addresses blocks inside their section and base', () => {
     expect(blocks.radix.getPages().map((p) => p.url)).toContain('/blocks/radix/kanban');
+  });
+});
+
+describe('sectionPageUrls', () => {
+  test('lists the address of every page of the section under each base', () => {
+    const urls = sectionPageUrls(components);
+
+    expect(urls.radix).toContain('/components/radix');
+    expect(urls.radix).toContain('/components/radix/react-hook-form/input-field');
+    expect(urls.base).toContain('/components/base/side-dialog');
+  });
+
+  test('keeps the pages of a base inside that base', () => {
+    const urls = sectionPageUrls(blocks);
+
+    for (const base of BASES) expect(urls[base].every((url) => url.startsWith(`/blocks/${base}`))).toBe(true);
   });
 });
 

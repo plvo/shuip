@@ -1,6 +1,6 @@
 import type { Node, Root } from 'fumadocs-core/page-tree';
 import { loader } from 'fumadocs-core/source';
-import { BASES, type Base, type BasedSection, sectionUrl } from './base-routes';
+import { BASES, type Base, type BasedPages, type BasedSection, sectionUrl } from './base-routes';
 import { icon } from './page-icon';
 import { buildSidebarTree, type SidebarPage } from './sidebar-tree';
 
@@ -23,6 +23,10 @@ export const sectionParams = (
   loaders: Record<Base, { generateParams(): { slug?: string[] }[] }>,
 ): { base: Base; slug?: string[] }[] =>
   BASES.flatMap((base) => loaders[base].generateParams().map((params) => ({ base, ...params })));
+
+/** The address of every page of a section under each base, which the base switchers check before they link a page. */
+export const sectionPageUrls = (loaders: Record<Base, { getPages(): { url: string }[] }>): BasedPages =>
+  mapBases((base) => loaders[base].getPages().map((page) => page.url));
 
 export interface SidebarSources {
   components: Record<Base, { getPages(): SidebarPage[] }>;
