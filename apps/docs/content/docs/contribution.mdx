@@ -225,6 +225,17 @@ export interface MyButtonProps extends React.ComponentProps<typeof Button> {
 
 `React.ComponentProps<typeof X>` follows whichever primitive `@/components/ui/x` resolves to, so the same source type-checks against the Radix primitive and against the Base UI one. A hand-written copy of the primitive's props, such as an `asChild?: boolean` you re-declare, only matches one of them. Declare only the props your item adds.
 
+### Type-check both bases
+
+CI type-checks the registry once per base, so run both before you push:
+
+```bash
+bun typecheck:radix
+bun typecheck:base
+```
+
+`bun typecheck:radix` regenerates, then type-checks every `component.radix.tsx` and `*.example.radix.tsx` against the Radix primitives. It is the only check that reaches a canonical file that has a Base UI override, since the Base UI copy of that file is the override.
+
 ### Run the smoke test for both bases
 
 The smoke test installs items into a fresh shadcn project and type-checks the result, so it checks what a consumer receives:
