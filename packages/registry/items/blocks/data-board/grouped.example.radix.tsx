@@ -37,7 +37,7 @@ const TICKETS: Ticket[] = Array.from({ length: 28 }, (_, index) => ({
 
 export default function DataBoardGroupedExample() {
   return (
-    <div className='flex h-[36rem] flex-col'>
+    <div className='flex h-[36rem] w-full min-w-0 flex-col'>
       <DataBoard<Ticket>
         columns={COLUMNS}
         defaultData={TICKETS}

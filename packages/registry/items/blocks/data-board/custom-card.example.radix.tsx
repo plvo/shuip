@@ -33,7 +33,7 @@ export default function DataBoardCustomCardExample() {
   const [deals, setDeals] = React.useState(DEALS);
 
   return (
-    <div className='flex h-[28rem] flex-col'>
+    <div className='flex h-[28rem] w-full min-w-0 flex-col'>
       <DataBoard<Deal>
         columns={COLUMNS}
         data={deals}

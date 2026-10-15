@@ -31,7 +31,7 @@ const TASKS: Task[] = Array.from({ length: 34 }, (_, index) => ({
 
 export default function DataBoardDefaultExample() {
   return (
-    <div className='flex h-[32rem] flex-col'>
+    <div className='flex h-[32rem] w-full min-w-0 flex-col'>
       <DataBoard<Task>
         columns={COLUMNS}
         defaultData={TASKS}
