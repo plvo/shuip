@@ -159,7 +159,10 @@ export function SignupForm() {
 
 ## Composition follows the project's base
 
-The field components work the same on both bases. The triggers around a form do not: when you open a form from a dialog or popover trigger, read `style` in `components.json`. In `base-*` projects, compose with `render` (`<SideDialogTrigger render={<Button />}>`); in Radix projects, with `asChild` (`<SideDialogTrigger asChild><Button /></SideDialogTrigger>`). See **shuip-overview**.
+The field components work the same on Base UI and on Radix. The triggers around a form do not: when you open a form from a dialog or popover trigger, read `style` in `components.json` and compose accordingly (see **shuip-overview**).
+
+- In `base-*` projects, compose with `render`: `<SideDialogTrigger render={<Button />}>Open</SideDialogTrigger>`.
+- In Radix projects, compose with `asChild`: `<SideDialogTrigger asChild><Button>Open</Button></SideDialogTrigger>`.
 
 ## Accessibility & states (both libraries)
 

@@ -37,7 +37,7 @@ The project's `components.json` `style` decides which variant of an item install
 
 Read the `style` before writing any trigger or slot, and compose accordingly:
 
-- In `base-*` projects, compose with `render`: `<DialogTrigger render={<Button />}>Open</DialogTrigger>`. Add `nativeButton={false}` when the rendered element is not a button.
+- In `base-*` projects, compose with `render`: `<DialogTrigger render={<Button />}>Open</DialogTrigger>`. Add `nativeButton={false}` when the rendered element is not a button, except for a link: Base UI discourages `nativeButton={false}` on one, so style a plain anchor with `buttonVariants` instead.
 - In Radix projects, compose with `asChild`: `<DialogTrigger asChild><Button /></DialogTrigger>`.
 
 Never mix the two in one project.
