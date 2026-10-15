@@ -27,7 +27,7 @@ shuip is served as a shadcn registry namespace. Declare it once in your project'
 }
 ```
 
-The CLI replaces `{style}` with the `style` already set in your `components.json` (for example `radix-vega` or `base-nova`) and `{name}` with the item you ask for. shuip resolves every shadcn style, so you never need to edit that part.
+The CLI replaces `{style}` with the `style` already set in your `components.json` and `{name}` with the item you ask for. The `style` also decides which [base](#picking-the-base) you get, so you never edit that part.
 
 Then add any shuip item with the shadcn/ui CLI:
 
@@ -35,14 +35,29 @@ Then add any shuip item with the shadcn/ui CLI:
 npx shadcn@latest add @shuip/input-field
 ```
 
-<Callout type="warn">
-  Earlier versions of this page used plain URLs such as `https://shuip.plvo.dev/r/input-field`. Those URLs are no
-  longer served. Add the namespace above and replace the URL with `@shuip/<name>`.
-</Callout>
+The command is the same for Base UI and Radix. Items are served through the `@shuip` namespace only: a plain item URL without the namespace is not served.
 
 ### Method 2: Manual Copy-Paste
 
 You can also copy and paste the code directly from each component’s documentation page.
+
+## Picking the base
+
+shuip ships every item for two bases: Base UI and Radix. You do not choose one in shuip. The `style` in your `components.json` picks it, because the CLI puts that value into the registry URL and the registry answers with the matching variant.
+
+| `style` in `components.json` | Variant you get |
+| ---------------------------- | --------------- |
+| `base-*` (for example `base-vega`, `base-nova`) | Base UI |
+| `radix-*` (for example `radix-vega`, `radix-nova`) | Radix |
+| `new-york`, `new-york-v4`, `default` | Radix |
+| `aria-*` (React Aria) | Not supported |
+
+A project on an `aria-*` style cannot install shuip items: the registry answers `404` for them, so the install fails.
+
+The documentation follows the same split. Every component and block page exists once per base, and a switcher at the top of the page moves between them. The site remembers your last choice in a cookie and opens on Base UI the first time.
+
+- Components: [Base UI](/components/base) · [Radix](/components/radix)
+- Blocks: [Base UI](/blocks/base) · [Radix](/blocks/radix)
 
 ## File Structure
 
