@@ -2,12 +2,10 @@
 
 import { Loader2 } from 'lucide-react';
 import * as React from 'react';
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import { useFieldContext } from '@/components/ui/shuip/tanstack-form/form-context';
-import { cn } from '@/lib/utils';
 
 const DEBOUNCE_TIME = 300;
 
@@ -102,7 +100,13 @@ export function AutocompleteField({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!open) return;
+    if (!open) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setOpen(true);
+      }
+      return;
+    }
 
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -144,10 +148,24 @@ export function AutocompleteField({
   };
 
   const id = props?.id ?? field.name;
+  const labelId = `${id}-label`;
+  const listboxId = `${id}-listbox`;
+  const optionId = (index: number) => `${listboxId}-option-${index}`;
+  const activeOptionId =
+    open && selectedIndex >= 0 && selectedIndex < items.length ? optionId(selectedIndex) : undefined;
+  const listboxName = label ? { 'aria-labelledby': labelId } : { 'aria-label': props?.['aria-label'] ?? placeholder };
+
+  React.useEffect(() => {
+    if (activeOptionId) document.getElementById(activeOptionId)?.scrollIntoView({ block: 'nearest' });
+  }, [activeOptionId]);
 
   return (
     <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
-      {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
+      {label && (
+        <FieldLabel id={labelId} htmlFor={id}>
+          {label}
+        </FieldLabel>
+      )}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverAnchor asChild>
           <div className='relative'>
@@ -166,6 +184,11 @@ export function AutocompleteField({
               onFocus={() => setOpen(true)}
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
+              role='combobox'
+              aria-autocomplete='list'
+              aria-expanded={open}
+              aria-controls={open ? listboxId : undefined}
+              aria-activedescendant={activeOptionId}
               aria-invalid={!isValid}
             />
             {isPending && (
@@ -177,28 +200,41 @@ export function AutocompleteField({
         </PopoverAnchor>
         <PopoverContent
           ref={popoverRef}
-          className='p-0'
+          id={listboxId}
+          role='listbox'
+          {...listboxName}
+          aria-busy={isPending}
+          className='block max-h-60 overflow-y-auto p-1'
           align='start'
           onOpenAutoFocus={(e) => e.preventDefault()}
+          onMouseDown={(e) => e.preventDefault()}
           style={{ width: 'var(--radix-popover-trigger-width)' }}
         >
-          <Command shouldFilter={false} className='w-full'>
-            <CommandList className='max-h-60'>
-              <CommandEmpty>{isPending ? 'Searching…' : emptyText}</CommandEmpty>
-              <CommandGroup>
-                {items.map((item, index) => (
-                  <CommandItem
-                    key={`${item}-${index}`}
-                    value={item}
-                    onSelect={() => handleSelect(item)}
-                    className={cn('cursor-pointer', selectedIndex === index && 'bg-accent')}
-                  >
-                    {item}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
+          {items.length === 0 && (
+            <div
+              role='option'
+              aria-disabled='true'
+              aria-selected='false'
+              tabIndex={-1}
+              className='py-6 text-center text-sm'
+            >
+              {isPending ? 'Searching…' : emptyText}
+            </div>
+          )}
+          {items.map((item, index) => (
+            <div
+              key={`${item}-${index}`}
+              id={optionId(index)}
+              role='option'
+              aria-selected={selectedIndex === index}
+              tabIndex={-1}
+              onClick={() => handleSelect(item)}
+              onMouseMove={() => setSelectedIndex(index)}
+              className='relative flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none aria-selected:bg-muted aria-selected:text-foreground'
+            >
+              {item}
+            </div>
+          ))}
         </PopoverContent>
       </Popover>
       {!isValid && (

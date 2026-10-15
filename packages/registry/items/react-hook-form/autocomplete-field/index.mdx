@@ -12,7 +12,8 @@ Use it when a field has a set of common values worth suggesting (sources, tags, 
 
 - **Two suggestion modes**: a static `suggestions` array (filtered client-side) or an async `onSearch` function (debounced fetch).
 - **Free text**: the typed value is always kept — closing the dropdown without selecting commits what was typed.
-- **Keyboard navigation**: ArrowUp/ArrowDown to move, Enter to select, Escape to close.
+- **Keyboard navigation**: ArrowDown opens the list, ArrowUp/ArrowDown to move, Enter to select, Escape to close.
+- **Combobox semantics**: the input is a combobox that controls a listbox of options, so screen readers announce the suggestions and the highlighted option.
 - **Custom matching**: override the default case-insensitive substring match via `filter` (static mode).
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
