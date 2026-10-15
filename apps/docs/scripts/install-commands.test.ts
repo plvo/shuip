@@ -1,32 +1,58 @@
 import { describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { shuipRegistryUrl } from '@repo/registry/namespace';
-
-const REPOSITORY_ROOT = path.resolve(import.meta.dir, '..', '..', '..');
-const DOCUMENT_ROOTS = [
-  path.join(REPOSITORY_ROOT, 'apps/docs/content'),
-  path.join(REPOSITORY_ROOT, 'packages/registry/items'),
-  path.join(REPOSITORY_ROOT, 'packages/registry/skills'),
-];
+import { SHUIP_NAMESPACE, shuipRegistryUrl } from '@repo/registry/namespace';
+import { filesUnder, REPOSITORY_ROOT, readDocuments } from './documents';
+import { installTargets } from './install-commands';
 
 const REGISTRY_URL = /https?:\/\/[^\s"'`)]*\/r\/[^\s"'`)]*/g;
-const INSTALL_COMMAND = /shadcn(?:@latest)? add (\S+)/g;
 
-const markdownFiles = (root: string): string[] =>
-  fs.readdirSync(root, { recursive: true, withFileTypes: true }).flatMap((entry) => {
-    const file = path.join(entry.parentPath, entry.name);
-    return (entry.isFile() || entry.isSymbolicLink()) && /\.(mdx|md)$/.test(file) ? [file] : [];
+const under = (...segments: string[]): string => path.join(REPOSITORY_ROOT, ...segments);
+
+const rootMarkdown = fs
+  .readdirSync(REPOSITORY_ROOT)
+  .filter((file) => file.endsWith('.md'))
+  .map((file) => under(file));
+
+const documents = readDocuments([
+  ...rootMarkdown,
+  under('apps/docs/README.md'),
+  under('.claude/CLAUDE.md'),
+  ...['.claude/skills', 'apps/docs/content', 'packages/registry/items', 'packages/registry/skills'].flatMap(
+    (directory) => filesUnder(under(directory), ['.md', '.mdx']),
+  ),
+]);
+
+describe('installTargets', () => {
+  test('reads the item after `add` for any shadcn tag or version', () => {
+    const text = [
+      'npx shadcn@latest add @shuip/a',
+      'pnpm dlx shadcn@canary add @shuip/b',
+      'bun x shadcn@3.1.0 add @shuip/c',
+      'npx shadcn add @shuip/d',
+    ].join('\n');
+
+    expect(installTargets(text)).toEqual(['@shuip/a', '@shuip/b', '@shuip/c', '@shuip/d']);
   });
 
-const documents = [path.join(REPOSITORY_ROOT, 'README.md'), ...DOCUMENT_ROOTS.flatMap(markdownFiles)].map((file) => ({
-  name: path.relative(REPOSITORY_ROOT, file),
-  text: fs.readFileSync(file, 'utf-8'),
-}));
+  test('skips the flags between `add` and the item', () => {
+    expect(installTargets('npx shadcn add -y --overwrite @shuip/x')).toEqual(['@shuip/x']);
+    expect(installTargets('npx shadcn add -y side-dialog')).toEqual(['side-dialog']);
+  });
+
+  test('reports a URL as the target it is', () => {
+    expect(installTargets('npx shadcn@latest add https://shuip.plvo.dev/r/input-field')).toEqual([
+      'https://shuip.plvo.dev/r/input-field',
+    ]);
+  });
+});
 
 describe('the install instructions of the docs, the README and the skills', () => {
   test('are found', () => {
     expect(documents.length).toBeGreaterThan(40);
+    expect(documents.map(({ name }) => name)).toEqual(
+      expect.arrayContaining(['README.md', '.claude/CLAUDE.md', '.claude/skills/creating-registry-item/SKILL.md']),
+    );
   });
 
   test.each(
@@ -38,6 +64,6 @@ describe('the install instructions of the docs, the README and the skills', () =
   test.each(
     documents.map(({ name, text }) => [name, text] as const),
   )('%s installs shuip items through the namespace', (_name, text) => {
-    for (const [, target] of text.matchAll(INSTALL_COMMAND)) expect(target).toStartWith('@shuip/');
+    for (const target of installTargets(text)) expect(target).toStartWith(`${SHUIP_NAMESPACE}/`);
   });
 });
