@@ -18,6 +18,7 @@
   "scripts": {
     "registry:generate": "bun run scripts/generate.ts",
     "typecheck:base": "bun run scripts/generate.ts && tsc --noEmit -p items",
+    "typecheck:radix": "bun run scripts/generate.ts && tsc --noEmit -p .",
     "test": "bun test"
   },
   "dependencies": {

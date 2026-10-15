@@ -2,6 +2,7 @@
   "extends": "@repo/config/ts/react-library.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "types": ["node"],
     "paths": {
       "@/components/ui/shuip/*": ["./stubs/*"],
@@ -13,5 +14,5 @@
     }
   },
   "include": ["items/**/*.ts", "items/**/*.tsx", "__index__.ts"],
-  "exclude": ["node_modules", "stubs", "items/**/*.base.tsx"]
+  "exclude": ["node_modules", "stubs", "items/**/*.base.tsx", "items/**/*.test.ts"]
 }
