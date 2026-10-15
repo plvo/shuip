@@ -2,6 +2,7 @@ import type * as React from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -10,7 +11,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-export interface ConfirmationDialogProps extends React.RefAttributes<HTMLDialogElement> {
+export interface ConfirmationDialogProps
+  extends Pick<React.ComponentProps<typeof Dialog>, 'open' | 'defaultOpen' | 'onOpenChange'> {
   trigger?: React.ReactElement;
   nativeButton?: boolean;
   title?: string;
@@ -37,7 +39,9 @@ export function ConfirmationDialog({
           <DialogDescription className='md:text-left'>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button onClick={onConfirm}>{labelConfirmButton}</Button>
+          <DialogClose render={<Button />} onClick={onConfirm}>
+            {labelConfirmButton}
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

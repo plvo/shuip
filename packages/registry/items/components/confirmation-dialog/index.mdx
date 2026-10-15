@@ -21,8 +21,12 @@ registryName: confirmation-dialog
       </DialogDescription>
     </DialogHeader>
     <DialogFooter>
-      <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-      <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+      <DialogClose asChild>
+        <Button variant="outline">Cancel</Button>
+      </DialogClose>
+      <DialogClose asChild>
+        <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+      </DialogClose>
     </DialogFooter>
   </DialogContent>
 </Dialog>
@@ -43,8 +47,10 @@ registryName: confirmation-dialog
       </DialogDescription>
     </DialogHeader>
     <DialogFooter>
-      <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-      <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+      <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+      <DialogClose render={<Button variant="destructive" />} onClick={handleDelete}>
+        Delete
+      </DialogClose>
     </DialogFooter>
   </DialogContent>
 </Dialog>
@@ -52,7 +58,7 @@ registryName: confirmation-dialog
 
 </BaseOnly>
 
-With `ConfirmationDialog`, the same result in a clean, reusable component:
+With `ConfirmationDialog`, the same result in a clean, reusable component. Clicking the confirm button calls `onConfirm`, then closes the dialog:
 
 ```tsx	
 <ConfirmationDialog
@@ -106,6 +112,23 @@ With `ConfirmationDialog`, the same result in a clean, reusable component:
 />
 ```
 
+### Controlled dialog
+
+Pass `open` and `onOpenChange` to open the dialog from your own state, without a `trigger`:
+
+```tsx
+const [open, setOpen] = useState(false);
+
+<ConfirmationDialog
+  open={open}
+  onOpenChange={setOpen}
+  title="Delete Item"
+  description="This item will be permanently removed."
+  labelConfirmButton="Delete"
+  onConfirm={() => deleteItem(id)}
+/>
+```
+
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 ## Examples
@@ -119,7 +142,7 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 <TypeTable
   type={{
     trigger: {
-      description: 'The trigger to open the dialog',
+      description: 'The trigger to open the dialog, optional when the dialog is controlled',
       type: 'React.ReactNode',
     },
     title: {
@@ -138,9 +161,17 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       description: 'The function to call when the confirmation button is clicked',
       type: '() => void',
     },
-    "...props": {
-      description: 'All props to apply to the dialog',
-      type: 'React.RefAttributes<HTMLDialogElement>',
+    open: {
+      description: 'Whether the dialog is open, to control it',
+      type: 'boolean?',
+    },
+    defaultOpen: {
+      description: 'Whether the dialog starts open, when it is not controlled',
+      type: 'boolean?',
+    },
+    onOpenChange: {
+      description: 'Called when the dialog opens or closes',
+      type: '(open: boolean) => void',
     },
   }}
 />
@@ -152,7 +183,7 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 <TypeTable
   type={{
     trigger: {
-      description: 'The element to open the dialog with, rendered through the Base UI trigger',
+      description: 'The element to open the dialog with, rendered through the Base UI trigger, optional when the dialog is controlled',
       type: 'React.ReactElement',
     },
     nativeButton: {
@@ -175,9 +206,17 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       description: 'The function to call when the confirmation button is clicked',
       type: '() => void',
     },
-    "...props": {
-      description: 'All props to apply to the dialog',
-      type: 'React.RefAttributes<HTMLDialogElement>',
+    open: {
+      description: 'Whether the dialog is open, to control it',
+      type: 'boolean?',
+    },
+    defaultOpen: {
+      description: 'Whether the dialog starts open, when it is not controlled',
+      type: 'boolean?',
+    },
+    onOpenChange: {
+      description: 'Called when the dialog opens or closes',
+      type: '(open: boolean, eventDetails) => void',
     },
   }}
 />
