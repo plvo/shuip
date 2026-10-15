@@ -44,6 +44,7 @@
     "next-themes": "catalog:"
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "catalog:",
     "@repo/config": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
