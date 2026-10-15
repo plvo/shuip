@@ -143,7 +143,13 @@ describe('baseChoices', () => {
 
   test('names and describes each base', () => {
     expect(choices.map((choice) => choice.label)).toEqual(['Base UI', 'Radix']);
-    for (const choice of choices) expect(choice.description.length).toBeGreaterThan(0);
+  });
+
+  test('tells the bases apart by how their primitives compose', () => {
+    expect(choices.map((choice) => choice.description)).toEqual([
+      'Base UI primitives, render composition',
+      'Radix primitives, asChild composition',
+    ]);
   });
 
   test('marks only the active base', () => {
@@ -158,6 +164,15 @@ describe('baseChoices', () => {
     expect(baseChoices('/components/base/popover-anchor', 'base', PAGES).map((choice) => choice.href)).toEqual([
       '/components/base/popover-anchor',
       '/components/radix',
+    ]);
+  });
+});
+
+describe('baseChoices outside the based pages', () => {
+  test('keeps every choice on the page when it has no base to switch', () => {
+    expect(baseChoices('/docs/installation', 'base', PAGES).map((choice) => choice.href)).toEqual([
+      '/docs/installation',
+      '/docs/installation',
     ]);
   });
 });

@@ -5,8 +5,8 @@ import { BaseDropdown } from '@/components/base-dropdown';
 import { ProvidersForBase } from '@/components/providers/providers-for-base';
 import { SiteDocsLayout } from '@/components/site-docs-layout';
 import { type BasedSection, isBase } from '@/lib/base-routes';
-import { sidebarTreeFor } from '@/lib/section-sources';
-import { basedPageUrls, sidebarSources } from '@/lib/source';
+import { sectionPageUrls, sidebarTreeFor } from '@/lib/section-sources';
+import { sidebarSources } from '@/lib/source';
 
 export interface BasedSectionLayoutProps {
   section: BasedSection;
@@ -25,7 +25,7 @@ export async function BasedSectionLayout({ section, params, children }: BasedSec
       <SiteDocsLayout
         base={base}
         tree={sidebarTreeFor(section, base, sidebarSources)}
-        banner={<BaseDropdown base={base} pages={basedPageUrls(section)} />}
+        banner={<BaseDropdown base={base} pages={sectionPageUrls(section, sidebarSources)} />}
       >
         {children}
       </SiteDocsLayout>

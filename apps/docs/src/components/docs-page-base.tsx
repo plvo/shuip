@@ -7,7 +7,8 @@ import { BaseSwitcher } from '@/components/base-switcher';
 import { ItemHeader } from '@/components/item-content';
 import { LLMCopyButton } from '@/components/llm-copy-button';
 import { type Base, type BasedSection, DEFAULT_BASE, llmsUrl, withBase } from '@/lib/base-routes';
-import { basedPageUrls, getPageImage, pageSource } from '@/lib/source';
+import { sectionPageUrls } from '@/lib/section-sources';
+import { getPageImage, pageSource, sidebarSources } from '@/lib/source';
 import { getMDXComponents } from '@/mdx-components';
 
 export type DocsPageProps =
@@ -23,7 +24,7 @@ export async function DocsPageBase(props: DocsPageProps) {
   if (!page) notFound();
 
   const MDX = page.data.body;
-  const base = props.section === 'docs' ? undefined : props.base;
+  const based = props.section === 'docs' ? undefined : props;
 
   const markdownUrl =
     props.section === 'docs'
@@ -39,21 +40,21 @@ export async function DocsPageBase(props: DocsPageProps) {
           <LLMCopyButton markdownUrl={markdownUrl} />
         </div>
         <DocsDescription className='mb-0'>{page.data.description}</DocsDescription>
-        {props.section !== 'docs' && (
-          <BaseSwitcher base={props.base} url={page.url} pages={basedPageUrls(props.section)} />
+        {based && (
+          <BaseSwitcher base={based.base} url={page.url} pages={sectionPageUrls(based.section, sidebarSources)} />
         )}
       </div>
       <DocsBody>
-        {base && page.data.registryName && <ItemHeader base={base} registryName={page.data.registryName} />}
+        {based && page.data.registryName && <ItemHeader base={based.base} registryName={page.data.registryName} />}
         <MDX
           components={getMDXComponents(
             {
               // this allows you to link to other pages with relative file paths
               a: (props: ComponentProps<'a'>) => (
-                <RelativeLink {...props} href={base && props.href ? withBase(props.href, base) : props.href} />
+                <RelativeLink {...props} href={based && props.href ? withBase(props.href, based.base) : props.href} />
               ),
             },
-            base ?? DEFAULT_BASE,
+            based?.base ?? DEFAULT_BASE,
           )}
         />
       </DocsBody>

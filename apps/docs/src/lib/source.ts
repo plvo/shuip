@@ -1,8 +1,8 @@
 import { blocks, components, docs } from 'fumadocs-mdx:collections/server';
 import { type InferPageType, loader } from 'fumadocs-core/source';
-import { type Base, type BasedSection, DEFAULT_BASE, type Section } from './base-routes';
+import { type Base, DEFAULT_BASE, type Section } from './base-routes';
 import { icon } from './page-icon';
-import { type SidebarSources, sectionLoaders, sectionPageUrls, sidebarTreeFor } from './section-sources';
+import { type SidebarSources, sectionLoaders, sidebarTreeFor } from './section-sources';
 import { unbasedSidebarTree } from './sidebar-tree';
 
 export const docsSource = loader({
@@ -19,10 +19,6 @@ type AnyPage = InferPageType<typeof docsSource | (typeof blocksSources)[Base] | 
 
 export const pageSource = (section: Section, base: Base = DEFAULT_BASE) =>
   ({ docs: docsSource, blocks: blocksSources[base], components: componentsSources[base] })[section];
-
-/** The address of every page of a section under each base. */
-export const basedPageUrls = (section: BasedSection) =>
-  sectionPageUrls(section === 'components' ? componentsSources : blocksSources);
 
 // Search and llms-full.txt list the pages of the default base only; each page points at its other variants.
 export const allPages = () => [

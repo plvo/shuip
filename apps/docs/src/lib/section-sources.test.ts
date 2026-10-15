@@ -47,18 +47,21 @@ describe('sectionLoaders', () => {
   });
 });
 
+const sources = { components, blocks, guides };
+
 describe('sectionPageUrls', () => {
   test('lists the address of every page of the section under each base', () => {
-    const urls = sectionPageUrls(components);
+    const urls = sectionPageUrls('components', sources);
 
     expect(urls.radix).toContain('/components/radix');
     expect(urls.radix).toContain('/components/radix/react-hook-form/input-field');
     expect(urls.base).toContain('/components/base/side-dialog');
   });
 
-  test('keeps the pages of a base inside that base', () => {
-    const urls = sectionPageUrls(blocks);
+  test('lists the pages of the section asked for, not of the other one', () => {
+    const urls = sectionPageUrls('blocks', sources);
 
+    expect(urls.base).toContain('/blocks/base/kanban');
     for (const base of BASES) expect(urls[base].every((url) => url.startsWith(`/blocks/${base}`))).toBe(true);
   });
 });

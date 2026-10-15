@@ -20,7 +20,10 @@ export const DEFAULT_BASE: Base = 'base';
 
 const BASE_LABELS: Record<Base, string> = { base: 'Base UI', radix: 'Radix' };
 
-const BASE_DESCRIPTIONS: Record<Base, string> = { base: 'Unstyled primitives from MUI', radix: 'Radix UI primitives' };
+const BASE_DESCRIPTIONS: Record<Base, string> = {
+  base: 'Base UI primitives, render composition',
+  radix: 'Radix primitives, asChild composition',
+};
 
 const LLMS_SEGMENT = 'llms.mdx';
 
@@ -85,8 +88,8 @@ export type BasedPages = Record<Base, readonly string[]>;
  */
 export const switchBaseUrl = (pathname: string, base: Base, pages: BasedPages): string | null => {
   const parsed = parseBasedPath(pathname);
-  if (!parsed) return null;
-  const sibling = sectionUrl(parsed.section, base, parsed.slugs);
+  const sibling = siblingUrl(pathname, base);
+  if (!parsed || sibling === null) return null;
   return pages[base].includes(sibling) ? sibling : sectionUrl(parsed.section, base);
 };
 
