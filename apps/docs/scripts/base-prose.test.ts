@@ -13,6 +13,9 @@ const MDX_ROOTS = [
 // Written for Radix only. A page of either base renders its prose, so these belong inside a Radix `<BaseOnly>`.
 const RADIX_ONLY_API = /asChild|onOpenAutoFocus|onCloseAutoFocus|PopoverAnchor|checked=["']indeterminate["']|radix-ui/;
 
+// Guides outside the per-base sections that explain how the two bases differ, so they name both APIs on purpose.
+const GUIDES_ON_BOTH_BASES = ['apps/docs/content/docs/agent-skills.mdx', 'apps/docs/content/docs/contribution.mdx'];
+
 const mdxFiles = (root: string): string[] =>
   fs.readdirSync(root, { recursive: true, withFileTypes: true }).flatMap((entry) => {
     const file = path.join(entry.parentPath, entry.name);
@@ -30,7 +33,7 @@ describe('the prose of the docs pages', () => {
   });
 
   test.each(
-    documents.map(({ name, text }) => [name, text] as const),
+    documents.filter(({ name }) => !GUIDES_ON_BOTH_BASES.includes(name)).map(({ name, text }) => [name, text] as const),
   )('%s shows no Radix-only API outside a Radix block', (_name, text) => {
     const sharedProse = text.replace(BASE_ONLY_BLOCK, (block, base: string) => (base === 'radix' ? '' : block));
 

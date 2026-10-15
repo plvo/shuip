@@ -16,6 +16,7 @@ description: Use when choosing which shuip item fits a need, or composing shuip 
   - tanstack-query → `@/components/ui/shuip/tanstack-query/<name>`
 - **Exports are unprefixed**: `rhf-input-field` → `InputField`, `kanban` → `Kanban`.
 - For anything form-related, use the **shuip-forms** skill — it covers the rhf/tsf field patterns in depth.
+- **Composition follows the project's base** (`style` in `components.json`): in `base-*` projects, wrap a trigger with `render` (`<SideDialogTrigger render={<Button />}>`); in Radix projects, with `asChild` (`<SideDialogTrigger asChild><Button /></SideDialogTrigger>`). See **shuip-overview**.
 
 ## Catalog
 

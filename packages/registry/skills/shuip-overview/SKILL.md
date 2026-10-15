@@ -25,6 +25,23 @@ npx shadcn@latest add @shuip/<item-name>
 
 Items install under `@/components/ui/shuip/...` (or `@/components/block/shuip/...` for blocks) and pull their shadcn primitives and npm dependencies automatically. **Exported symbols are unprefixed** — the item `rhf-input-field` exports `InputField`; the `rhf-`/`tsf-`/`tsq-` prefix is only the registry name.
 
+## Base UI or Radix
+
+The project's `components.json` `style` decides which variant of an item installs; the install command is the same for both.
+
+| `style` | Variant |
+|---------|---------|
+| `base-*` (for example `base-vega`) | Base UI |
+| `radix-*`, `new-york`, `new-york-v4`, `default` | Radix |
+| `aria-*` | Not supported: the registry answers 404 |
+
+Read the `style` before writing any trigger or slot, and compose accordingly:
+
+- In `base-*` projects, compose with `render`: `<DialogTrigger render={<Button />}>Open</DialogTrigger>`. Add `nativeButton={false}` when the rendered element is not a button.
+- In Radix projects, compose with `asChild`: `<DialogTrigger asChild><Button /></DialogTrigger>`.
+
+Never mix the two in one project.
+
 ## Categories
 
 - **components** — standalone UI: dialogs, buttons, theme toggle (e.g. `side-dialog`, `confirmation-dialog`, `copy-button`, `theme-button`).

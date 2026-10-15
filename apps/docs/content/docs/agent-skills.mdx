@@ -7,6 +7,8 @@ shuip ships **agent skills** alongside its components. A skill is a Markdown gui
 
 Skills install through the same registry and CLI as components, so the `@shuip` namespace from the [installation guide](/docs/installation) must be configured first. Each lands in your project at `.claude/skills/<name>/SKILL.md`, versioned alongside your code.
 
+The skills work with both bases. They tell your agent to read the `style` in `components.json` and to compose accordingly: `render` in `base-*` (Base UI) projects, `asChild` in Radix projects. The [installation guide](/docs/installation#picking-the-base) lists which styles map to which base.
+
 ## Available skills
 
 | Skill | Use it for |
@@ -83,6 +85,23 @@ npx shadcn@latest add @shuip/<item-name>
 
 Items install under `@/components/ui/shuip/...` (or `@/components/block/shuip/...` for blocks) and pull their shadcn primitives and npm dependencies automatically. **Exported symbols are unprefixed** — the item `rhf-input-field` exports `InputField`; the `rhf-`/`tsf-`/`tsq-` prefix is only the registry name.
 
+## Base UI or Radix
+
+The project's `components.json` `style` decides which variant of an item installs; the install command is the same for both.
+
+| `style` | Variant |
+|---------|---------|
+| `base-*` (for example `base-vega`) | Base UI |
+| `radix-*`, `new-york`, `new-york-v4`, `default` | Radix |
+| `aria-*` | Not supported: the registry answers 404 |
+
+Read the `style` before writing any trigger or slot, and compose accordingly:
+
+- In `base-*` projects, compose with `render`: `<DialogTrigger render={<Button />}>Open</DialogTrigger>`. Add `nativeButton={false}` when the rendered element is not a button.
+- In Radix projects, compose with `asChild`: `<DialogTrigger asChild><Button /></DialogTrigger>`.
+
+Never mix the two in one project.
+
 ## Categories
 
 - **components** — standalone UI: dialogs, buttons, theme toggle (e.g. `side-dialog`, `confirmation-dialog`, `copy-button`, `theme-button`).
@@ -124,6 +143,7 @@ description: Use when choosing which shuip item fits a need, or composing shuip 
   - tanstack-query → `@/components/ui/shuip/tanstack-query/<name>`
 - **Exports are unprefixed**: `rhf-input-field` → `InputField`, `kanban` → `Kanban`.
 - For anything form-related, use the **shuip-forms** skill — it covers the rhf/tsf field patterns in depth.
+- **Composition follows the project's base** (`style` in `components.json`): in `base-*` projects, wrap a trigger with `render` (`<SideDialogTrigger render={<Button />}>`); in Radix projects, with `asChild` (`<SideDialogTrigger asChild><Button /></SideDialogTrigger>`). See **shuip-overview**.
 
 ## Catalog
 
@@ -363,6 +383,10 @@ export function SignupForm() {
 
 - tsf fields take split props: `props` for the native input, `fieldProps` for the field wrapper. There is no lens and no `<FormProvider>` wrapper.
 - The tsf `SubmitButton` auto-disables via `form.Subscribe` — render it inside `<form.AppForm>`, no `loading` prop needed.
+
+## Composition follows the project's base
+
+The field components work the same on both bases. The triggers around a form do not: when you open a form from a dialog or popover trigger, read `style` in `components.json`. In `base-*` projects, compose with `render` (`<SideDialogTrigger render={<Button />}>`); in Radix projects, with `asChild` (`<SideDialogTrigger asChild><Button /></SideDialogTrigger>`). See **shuip-overview**.
 
 ## Accessibility & states (both libraries)
 

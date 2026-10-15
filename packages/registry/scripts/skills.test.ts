@@ -187,3 +187,30 @@ describe('emitSkills', () => {
     );
   });
 });
+
+describe('the published skills', () => {
+  const skillsDir = path.resolve(import.meta.dir, '..', 'skills');
+  const skills = fs
+    .readdirSync(skillsDir)
+    .sort()
+    .filter((entry) => fs.existsSync(path.join(skillsDir, entry, 'SKILL.md')))
+    .map((entry) => [entry, fs.readFileSync(path.join(skillsDir, entry, 'SKILL.md'), 'utf-8')] as const);
+
+  test('are the three skills of the bundle', () => {
+    expect(skills.map(([name]) => name)).toEqual(['shuip-components', 'shuip-forms', 'shuip-overview']);
+  });
+
+  test.each(
+    skills,
+  )('%s states that base-* projects compose with render and Radix projects with asChild', (_name, text) => {
+    expect(text).toMatch(/`base-\*`[^\n]*`render`/);
+    expect(text).toMatch(/Radix[^\n]*`asChild`/);
+  });
+
+  test.each(skills)('%s installs items through the namespace only', (_name, text) => {
+    const targets = [...text.matchAll(/shadcn(?:@latest)? add (\S+)/g)].map((match) => match[1]);
+
+    expect(targets.length).toBeGreaterThan(0);
+    for (const target of targets) expect(target).toStartWith('@shuip/');
+  });
+});
