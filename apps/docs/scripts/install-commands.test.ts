@@ -16,7 +16,6 @@ const rootMarkdown = fs
 
 const documents = readDocuments([
   ...rootMarkdown,
-  under('apps/docs/README.md'),
   under('.claude/CLAUDE.md'),
   ...['.claude/skills', 'apps/docs/content', 'packages/registry/items', 'packages/registry/skills'].flatMap(
     (directory) => filesUnder(under(directory), ['.md', '.mdx']),

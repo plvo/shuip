@@ -18,8 +18,6 @@ export const filesUnder = (root: string, extensions: readonly string[]): string[
       : [];
   });
 
-/** The documents at `files`, read from disk. A file that does not exist is left out. */
+/** The documents at `files`, read from disk. A file that does not exist is an error. */
 export const readDocuments = (files: readonly string[]): RepositoryDocument[] =>
-  files
-    .filter((file) => fs.existsSync(file))
-    .map((file) => ({ name: path.relative(REPOSITORY_ROOT, file), text: fs.readFileSync(file, 'utf-8') }));
+  files.map((file) => ({ name: path.relative(REPOSITORY_ROOT, file), text: fs.readFileSync(file, 'utf-8') }));
