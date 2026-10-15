@@ -10,7 +10,7 @@ export function baseOptions(base?: Base): BaseLayoutProps {
       transparentMode: 'top',
       title: (
         <div className='flex items-center gap-2'>
-          <ShuipMark className='size-6 shrink-0' />
+          <ShuipMark className='h-5 w-auto shrink-0' />
           <p className='font-bold whitespace-nowrap font-mono'>shuip</p>
         </div>
       ),
