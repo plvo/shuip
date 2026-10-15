@@ -1,9 +1,15 @@
 'use client';
 
 import { SHUIP_NAMESPACE, SHUIP_REGISTRY_URL, shuipItemRef } from '@repo/registry/namespace';
-import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+  AccordionTrigger,
+} from 'fumadocs-ui/components/ui/accordion';
 import Link from 'next/link';
 import type React from 'react';
 import { CodeHighlight } from './item-preview';
@@ -50,22 +56,33 @@ export function InstallationCmd({ itemName, manualCode, ...props }: Installation
         The command is the same for Base UI and Radix: the CLI reads the style in your <code>components.json</code> and
         installs the matching variant.
       </p>
-      <Accordions type='single' className='text-sm'>
-        <Accordion title={`One-time setup: add the ${SHUIP_NAMESPACE} namespace`}>
-          <p>
-            Add the namespace to your <code>components.json</code> once per project. See the{' '}
-            <Link href='/docs/installation' className='underline underline-offset-4'>
-              installation guide
-            </Link>{' '}
-            for how the style picks the base.
-          </p>
-          <div className='**:data-code:px-4'>
-            <CodeBlock keepBackground data-code>
-              <Pre>{registriesSnippet}</Pre>
-            </CodeBlock>
-          </div>
-        </Accordion>
-      </Accordions>
+      <Accordion type='single' collapsible className='overflow-visible rounded-none border-0 bg-transparent'>
+        <AccordionItem value='namespace'>
+          <AccordionHeader asChild>
+            <div className='font-normal! text-fd-muted-foreground! text-sm'>
+              <AccordionTrigger className='px-0 py-1.5'>
+                Command fails? Add the {SHUIP_NAMESPACE} namespace first
+              </AccordionTrigger>
+            </div>
+          </AccordionHeader>
+          <AccordionContent>
+            <div className='space-y-2 pb-1 text-sm'>
+              <p>
+                Add the namespace to your <code>components.json</code> once per project. See the{' '}
+                <Link href='/docs/installation#picking-the-base' className='a-mdx'>
+                  installation guide
+                </Link>{' '}
+                for how the style picks the base.
+              </p>
+              <div className='**:data-code:px-4'>
+                <CodeBlock keepBackground data-code>
+                  <Pre className='w-full whitespace-pre-wrap break-words'>{registriesSnippet}</Pre>
+                </CodeBlock>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </>
   );
 }

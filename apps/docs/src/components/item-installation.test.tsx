@@ -13,9 +13,16 @@ describe('InstallationCmd', () => {
     expect(render()).toContain('same for Base UI and Radix');
   });
 
-  test('offers the namespace setup as a collapsed disclosure', () => {
+  test('offers the namespace setup as a collapsed disclosure that says when it is needed', () => {
     const markup = render();
-    expect(markup).toMatch(/<button[^>]*aria-expanded="false"[^>]*>[\s\S]*One-time setup/);
-    expect(markup).not.toContain('"registries"');
+
+    expect(markup).toMatch(
+      /<button[^>]*aria-expanded="false"[^>]*>[\s\S]*Command fails\? Add the @shuip namespace first/,
+    );
+    expect(markup).not.toContain('registries');
+  });
+
+  test('adds no heading to the outline of the page', () => {
+    expect(render()).not.toMatch(/<h[1-6][\s>]/);
   });
 });
