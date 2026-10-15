@@ -184,7 +184,7 @@ To change anything in those, edit the source under `packages/registry/items/<cat
 **Adding a Base UI override:**
 1. Copy `component.radix.tsx` (or `<variant>.example.radix.tsx`) to `component.base.tsx` (or `<variant>.example.base.tsx`) in the same folder and change only what diverges.
 2. `bun typecheck:base` regenerates, then type-checks every override and every generated copy against Base UI.
-3. `bun smoke base-vega --items <name>` installs the item into a real Base UI project and type-checks it.
+3. `bun smoke base-vega --items <prefixed-name>` installs the item into a real Base UI project and type-checks it.
 
 The vendored Base UI `PopoverContent` does not expose the Positioner's `anchor` prop. An item that anchors a popover to an element other than its trigger (the autocomplete fields) composes `Popover as PopoverPrimitive` from `@base-ui/react/popover` (`Portal`, `Positioner anchor={ref}`, `Popup`) next to the vendored `Popover` root, and sizes the popup with `var(--anchor-width)`.
 

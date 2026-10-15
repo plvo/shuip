@@ -51,7 +51,7 @@ packages/registry/                # SOURCE OF TRUTH for published items
 packages/config/                  # Shared tsconfig presets
 ```
 
-The generator emits `registry.json`, `registry.base.json`, `__index__.ts`, the stubs, the MDX symlinks, the Base UI copies of every item under `packages/registry/generated/base/`, and `apps/docs/public/r/<variant>/*.json` (one folder per base: `radix/` and `base/`). These files are git-ignored and **never edited by hand**; they are regenerated from `items/`.
+The generator emits `registry.json`, `registry.base.json`, `__index__.ts`, the stubs, the MDX symlinks, and the Base UI copies of the component, block, form and query items under `packages/registry/generated/base/` (`lib` items such as `lib/time` have no Base UI copy). `bun registry:build` then writes `apps/docs/public/r/<variant>/*.json`, one folder per base: `radix/` and `base/`. These files are git-ignored and **never edited by hand**; they are regenerated from `items/`.
 
 ## Add an item
 
@@ -181,7 +181,9 @@ This chains `registry:generate` → `registry:build` → `next build`. If it pas
 
 ## Base UI and Radix
 
-Every item is published for two bases. A consumer gets the variant that matches the `style` in their `components.json` (see [Installation](/docs/installation#picking-the-base)). You write the item once, for Radix, and the generator derives the Base UI variant.
+Every component, block, form and query item is published for two bases. A consumer gets the variant that matches the `style` in their `components.json` (see [Installation](/docs/installation#picking-the-base)). You write the item once, for Radix, and the generator derives the Base UI variant.
+
+In short, the model has three parts: the canonical Radix file is the source, the codemod produces the Base UI copy of it, and an override replaces that copy for one file. The copies under `packages/registry/generated/base/` are build output, so a change to a Base UI variant is always made in the canonical file or in its override.
 
 ### Canonical naming
 
@@ -259,9 +261,6 @@ A doc page exists once per base, but both render the same MDX. Wrap prose or sni
 ````
 
 A test fails when a Radix-only API such as `asChild` appears outside a Radix block, and the markdown served for models keeps only the block of the page's base.
-
-In short, the model has three parts: the canonical Radix file is the source, the codemod produces the Base UI copy of it, and an override replaces that copy for one file. The copies under `packages/registry/generated/base/` are build output, so a change to a Base UI variant is always made in the canonical file or in its override.
-
 ## Coding conventions
 
 - **Biome** is the only linter/formatter. Single quotes, 2-space indent, 120-col, trailing commas. `bun check` runs Biome with auto-fix. Pre-commit hook runs `biome check --write --unsafe` via lint-staged.
