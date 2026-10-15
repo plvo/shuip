@@ -1,8 +1,7 @@
 import { notFound } from 'next/navigation';
 import { type Base, isBase } from './base-routes';
+import { getLLMText, type LlmsSourcePage } from './llms-text';
 import { sectionParams } from './section-sources';
-import type { LlmsSourcePage } from './source';
-import { getLLMText } from './source';
 
 interface LlmsRouteContext {
   params: Promise<{ base: string; slug?: string[] }>;

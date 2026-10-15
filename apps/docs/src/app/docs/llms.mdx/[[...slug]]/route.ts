@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
-import { docsSource, getLLMText } from '@/lib/source';
+import { getLLMText } from '@/lib/llms-text';
+import { docsSource } from '@/lib/source';
 
 export const revalidate = false;
 

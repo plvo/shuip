@@ -5,7 +5,11 @@ export type { Base };
 /** Sections of the docs that exist once per base. Guides under `/docs` do not. */
 export type BasedSection = 'components' | 'blocks';
 
-const BASED_SECTIONS: readonly BasedSection[] = ['components', 'blocks'];
+const SECTION_LABELS: Record<BasedSection, string> = { components: 'Components', blocks: 'Blocks' };
+
+export const BASED_SECTIONS = Object.keys(SECTION_LABELS) as BasedSection[];
+
+export const sectionLabel = (section: BasedSection): string => SECTION_LABELS[section];
 
 /** Every section of the docs, with or without a base. */
 export type Section = 'docs' | BasedSection;

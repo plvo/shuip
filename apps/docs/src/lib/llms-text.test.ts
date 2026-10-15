@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { llmsFullText, llmsText } from './llms-text';
+import { llmsFullDocument, llmsFullText, llmsText } from './llms-text';
 
 const PROCESSED = [
   'Intro.',
@@ -54,8 +54,8 @@ describe('llmsText', () => {
 describe('llmsFullText', () => {
   const text = llmsFullText(['# First page', '# Second page']);
 
-  test('says the pages are the Base UI variant', () => {
-    expect(text).toContain('Base UI variant');
+  test('scopes the Base UI variant to the component and block pages', () => {
+    expect(text).toContain('The component and block pages below are the Base UI variant');
   });
 
   test('points at the Radix pages and their markdown for components and blocks', () => {
@@ -68,5 +68,23 @@ describe('llmsFullText', () => {
   test('lists the pages after the pointer, in order', () => {
     expect(text.indexOf('/components/radix/<name>')).toBeLessThan(text.indexOf('# First page'));
     expect(text.endsWith('# First page\n\n# Second page')).toBe(true);
+  });
+});
+
+describe('llmsFullDocument', () => {
+  const page = (title: string, url: string) => ({ url, data: { title, getText: async () => `Body of ${title}.` } });
+
+  test('is the pointer followed by the markdown of every page, in order', async () => {
+    const document = await llmsFullDocument([
+      page('Installation', '/docs/installation'),
+      page('Side Dialog', '/components/base/side-dialog'),
+    ]);
+
+    expect(document.startsWith(llmsFullText([]))).toBe(true);
+    expect(document.indexOf('# Installation (/docs/installation)')).toBeLessThan(
+      document.indexOf('# Side Dialog (/components/base/side-dialog)'),
+    );
+    expect(document).toContain('Body of Installation.');
+    expect(document).toContain('This is the Base UI variant. Radix variant: /components/radix/side-dialog');
   });
 });
