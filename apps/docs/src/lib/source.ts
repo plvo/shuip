@@ -15,7 +15,9 @@ export const blocksSources = sectionLoaders('blocks', blocks.toFumadocsSource())
 
 export const componentsSources = sectionLoaders('components', components.toFumadocsSource());
 
-type AnyPage = InferPageType<typeof docsSource | (typeof blocksSources)[Base] | (typeof componentsSources)[Base]>;
+export type AnyPage = InferPageType<
+  typeof docsSource | (typeof blocksSources)[Base] | (typeof componentsSources)[Base]
+>;
 
 export const pageSource = (section: Section, base: Base = DEFAULT_BASE) =>
   ({ docs: docsSource, blocks: blocksSources[base], components: componentsSources[base] })[section];
@@ -37,8 +39,11 @@ export const sectionSources: SectionSources = {
 /** The sidebar of the guides under `/docs`, whose component links follow the base the reader visited last. */
 export const docsSidebarTree = () => unbasedSidebarTree(sidebarTreeFor('components', DEFAULT_BASE, sectionSources));
 
+/** The file name each og image route serves at `.../<slug>/image.png`. */
+export const OG_IMAGE_FILE = 'image.png';
+
 export function getPageImage(page: AnyPage, section: Section) {
-  const segments = [...page.slugs, 'image.png'];
+  const segments = [...page.slugs, OG_IMAGE_FILE];
 
   return {
     segments,
@@ -48,4 +53,10 @@ export function getPageImage(page: AnyPage, section: Section) {
 
 /** The page-slug portion of an OG route's catch-all: the segments without the trailing `image.png`. */
 export const pageSlugFromImageSegments = (segments: string[]) =>
-  segments.at(-1) === 'image.png' ? segments.slice(0, -1) : segments;
+  segments.at(-1) === OG_IMAGE_FILE ? segments.slice(0, -1) : segments;
+
+/** The page an og image route serves: drops the trailing `image.png`, then looks the page up. */
+export const pageForOgImage = (
+  source: { getPage(slugs: string[] | undefined): AnyPage | undefined },
+  slug: string[],
+): AnyPage | undefined => source.getPage(pageSlugFromImageSegments(slug));
