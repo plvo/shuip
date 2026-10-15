@@ -1,25 +1,17 @@
 import type { Node, Root } from 'fumadocs-core/page-tree';
 import { loader } from 'fumadocs-core/source';
-import { icons } from 'lucide-react';
-import React from 'react';
 import { BASES, type Base, type BasedSection, sectionUrl } from './base-routes';
+import { icon } from './page-icon';
 import { buildSidebarTree, type SidebarPage } from './sidebar-tree';
 
 type LoaderSource = Parameters<typeof loader>[0]['source'];
-
-export const icon = (name?: string) => {
-  if (!name) {
-    return null;
-  }
-  if (name in icons) return React.createElement(icons[name as keyof typeof icons]);
-};
 
 /** One value per base, in the order of `BASES`. */
 export const mapBases = <T>(create: (base: Base) => T): Record<Base, T> =>
   Object.fromEntries(BASES.map((base) => [base, create(base)])) as Record<Base, T>;
 
 /** The pages of a section under one base, so each page address and each page tree carries that base. */
-export const sectionLoader = <Source extends LoaderSource>(section: BasedSection, base: Base, source: Source) =>
+const sectionLoader = <Source extends LoaderSource>(section: BasedSection, base: Base, source: Source) =>
   loader({ baseUrl: sectionUrl(section, base), source, icon });
 
 /** A loader per base over the same content. */

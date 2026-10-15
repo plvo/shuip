@@ -51,10 +51,6 @@ const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 export const baseCookie = (base: Base): string =>
   `${BASE_COOKIE}=${base}; path=/; max-age=${ONE_YEAR_IN_SECONDS}; SameSite=Lax`;
 
-export const writeBaseCookie = (base: Base, target: { cookie: string }): void => {
-  target.cookie = baseCookie(base);
-};
-
 /** The address of a section: its page in `base`, or, without one, the address that redirects to the reader's base. */
 export const sectionEntryUrl = (section: BasedSection, base?: Base): string =>
   base ? sectionUrl(section, base) : `/${section}`;

@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { DocsPageBase, generateDocsPageMetadata } from '@/components/docs-page-base';
 import { isBase } from '@/lib/base-routes';
-import { paramsOfSection } from '@/lib/source';
+import { sectionParams } from '@/lib/section-sources';
+import { blocksSources } from '@/lib/source';
 
 export default async function BlocksPage(props: PageProps<'/blocks/[base]/[[...slug]]'>) {
   const { base, slug } = await props.params;
@@ -12,7 +13,7 @@ export default async function BlocksPage(props: PageProps<'/blocks/[base]/[[...s
 
 export const dynamicParams = false;
 
-export const generateStaticParams = () => paramsOfSection('blocks');
+export const generateStaticParams = () => sectionParams(blocksSources);
 
 export async function generateMetadata(props: PageProps<'/blocks/[base]/[[...slug]]'>): Promise<Metadata> {
   const { base, slug } = await props.params;

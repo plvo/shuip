@@ -17,7 +17,6 @@ import {
   siblingUrl,
   unbasedUrl,
   withBase,
-  writeBaseCookie,
 } from './base-routes';
 
 describe('bases', () => {
@@ -221,14 +220,6 @@ describe('the base cookie', () => {
   test('keeps the base for a year, for every page of the site', () => {
     expect(baseCookie('radix')).toBe('shuip-base=radix; path=/; max-age=31536000; SameSite=Lax');
     expect(baseCookie('base')).toBe('shuip-base=base; path=/; max-age=31536000; SameSite=Lax');
-  });
-
-  test('is written on the document of the reader', () => {
-    const target = { cookie: '' };
-
-    writeBaseCookie('radix', target);
-
-    expect(target.cookie).toBe(baseCookie('radix'));
   });
 });
 

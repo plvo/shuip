@@ -1,6 +1,6 @@
 import type { Item, Node, Root, Separator } from 'fumadocs-core/page-tree';
 import { type Base, sectionUrl, unbasedUrl } from './base-routes';
-import { COMPONENT_CATEGORIES } from './component-categories';
+import { COMPONENT_CATEGORIES, categoryOf } from './component-categories';
 
 export interface SidebarPage {
   url: string;
@@ -39,11 +39,7 @@ export const buildSidebarTree = ({
   };
   const itemsOf = (category: string): Node[] =>
     pages
-      .filter((page) =>
-        category === 'components'
-          ? page.slugs.length === 1 && page.data.registryName
-          : page.slugs[0] === category && page.slugs.length === 2,
-      )
+      .filter((page) => categoryOf(page.slugs) === category && page.data.registryName)
       .sort(byTitle)
       .map(pageNode);
 
