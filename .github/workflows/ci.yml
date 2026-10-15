@@ -47,6 +47,9 @@ jobs:
       - name: "🔎 Type-check Base UI"
         run: bun run typecheck:base
 
+      - name: "🔎 Type-check Radix"
+        run: bun run typecheck:radix
+
       - name: "🏗️ Build Check"
         id: build
         run: bun run build

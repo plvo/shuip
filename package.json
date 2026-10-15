@@ -29,6 +29,7 @@
     "check": "biome check --write",
     "check:unused": "knip",
     "typecheck:base": "bun run --filter @repo/ui --filter @repo/registry typecheck:base",
+    "typecheck:radix": "bun run --filter @repo/registry typecheck:radix",
     "primitives:sync": "bun run --filter @repo/ui primitives:sync",
     "clean": "rimraf \"**/.turbo\" \"**/node_modules\" \"**/.next\" \"**/.source\" \"**/bun.lock\"",
     "prepare": "husky"
