@@ -23,9 +23,12 @@ describe('the drag-and-drop contexts of the items', () => {
   ]);
   const contexts = sources.flatMap(dndContextsOf);
 
-  test('are found in the blocks that drag', () => {
+  test('are found in every source that renders one', () => {
+    const rendering = sources.filter((file) => /<DndContext\b/.test(fs.readFileSync(file, 'utf-8')));
+
+    expect(rendering.length).toBeGreaterThan(0);
     expect(new Set(contexts.map(({ file }) => file))).toEqual(
-      new Set(['kanban', 'calendar', 'data-board', 'data-table']),
+      new Set(rendering.map((file) => path.basename(path.dirname(file)))),
     );
   });
 
