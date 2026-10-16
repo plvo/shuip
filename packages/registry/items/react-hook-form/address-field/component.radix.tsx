@@ -9,6 +9,7 @@ import { getPlaceDetails, getPlacesAutocomplete } from '@/actions/shuip/places';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
+import { SuggestionEmpty, SuggestionOption, useSuggestionList } from '@/components/ui/shuip/suggestion-list';
 
 const DEFAULT_COUNTRY = 'US';
 const LANGUAGE_RESULT = 'en';
@@ -224,19 +225,20 @@ export function AddressField({
 
   const fullAddressInvalid = fullAddress.fieldState.invalid;
   const id = props.id ?? fullAddress.field.name;
-  const labelId = `${id}-label`;
-  const listboxId = `${id}-listbox`;
-  const optionId = (index: number) => `${listboxId}-option-${index}`;
-  const activeOptionId =
-    showSuggestions && selectedIndex >= 0 && selectedIndex < suggestions.length ? optionId(selectedIndex) : undefined;
-
-  React.useEffect(() => {
-    if (activeOptionId) document.getElementById(activeOptionId)?.scrollIntoView({ block: 'nearest' });
-  }, [activeOptionId]);
+  const suggestionList = useSuggestionList({
+    inputId: id,
+    label,
+    ariaLabel: props['aria-label'],
+    placeholder,
+    open: showSuggestions,
+    count: suggestions.length,
+    selectedIndex,
+    busy: isPending,
+  });
 
   return (
     <Field className='gap-2' data-invalid={fullAddressInvalid}>
-      <FieldLabel id={labelId} htmlFor={id} className='flex items-center justify-between'>
+      <FieldLabel id={suggestionList.labelId} htmlFor={id} className='flex items-center justify-between'>
         {label}
         {fullAddressInvalid && (
           <FieldError className='max-sm:hidden text-xs opacity-80' errors={[fullAddress.fieldState.error]} />
@@ -262,11 +264,7 @@ export function AddressField({
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
-                role='combobox'
-                aria-autocomplete='list'
-                aria-expanded={showSuggestions}
-                aria-controls={showSuggestions ? listboxId : undefined}
-                aria-activedescendant={activeOptionId}
+                {...suggestionList.inputProps}
                 aria-invalid={fullAddressInvalid}
               />
               <div className='absolute inset-y-0 right-0 flex items-center pr-3'>
@@ -280,44 +278,29 @@ export function AddressField({
           </PopoverAnchor>
           <PopoverContent
             ref={popoverRef}
-            id={listboxId}
-            role='listbox'
-            aria-labelledby={labelId}
-            aria-busy={isPending}
-            className='block max-h-60 overflow-y-auto p-1'
+            {...suggestionList.listboxProps}
             align='start'
             onOpenAutoFocus={(e) => e.preventDefault()}
-            onMouseDown={(e) => e.preventDefault()}
             style={{ width: 'var(--radix-popover-trigger-width)' }}
           >
             {suggestions.length === 0 && (
-              <div
-                role='option'
-                aria-disabled='true'
-                aria-selected='false'
-                tabIndex={-1}
-                className='py-6 text-center text-sm'
-              >
-                {isPending ? 'Searching...' : 'No addresses found'}
-              </div>
+              <SuggestionEmpty>{isPending ? 'Searching…' : 'No addresses found'}</SuggestionEmpty>
             )}
             {suggestions.map((suggestion, index) => (
-              <div
+              <SuggestionOption
                 key={suggestion.placeId}
-                id={optionId(index)}
-                role='option'
-                aria-selected={selectedIndex === index}
-                tabIndex={-1}
-                onClick={() => handleSelectAddress(suggestion)}
-                onMouseMove={() => setSelectedIndex(index)}
-                className='relative flex cursor-pointer items-start gap-2 rounded-sm p-3 text-sm outline-hidden select-none aria-selected:bg-muted aria-selected:text-foreground'
+                id={suggestionList.optionId(index)}
+                selected={selectedIndex === index}
+                onSelect={() => handleSelectAddress(suggestion)}
+                onHighlight={() => setSelectedIndex(index)}
+                className='items-start p-3'
               >
                 <MapPin className='size-4 mt-0.5 text-muted-foreground flex-shrink-0' />
                 <div className='flex-1 min-w-0'>
                   <div className='font-medium text-sm'>{suggestion.mainText}</div>
                   <div className='text-xs text-muted-foreground truncate'>{suggestion.secondaryText}</div>
                 </div>
-              </div>
+              </SuggestionOption>
             ))}
           </PopoverContent>
         </Popover>

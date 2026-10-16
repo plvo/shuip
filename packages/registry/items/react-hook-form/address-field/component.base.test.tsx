@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { useLens } from '@hookform/lenses';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { useForm } from 'react-hook-form';
+import { firstElementAttributes } from '../../../scripts/markup';
 import { type AddressData, AddressField } from './component.base';
 
 const EMPTY_ADDRESS: AddressData = { street: '', city: '', postalCode: '', country: '', fullAddress: '' };
@@ -14,24 +15,25 @@ function Subject() {
 
 describe('AddressField closed state', () => {
   const markup = renderToStaticMarkup(<Subject />);
+  const input = firstElementAttributes(markup, 'input');
 
   test('exposes the input as a combobox with a collapsed list', () => {
-    expect(markup).toContain('role="combobox"');
-    expect(markup).toContain('aria-autocomplete="list"');
-    expect(markup).toContain('aria-expanded="false"');
+    expect(input.role).toBe('combobox');
+    expect(input['aria-autocomplete']).toBe('list');
+    expect(input['aria-expanded']).toBe('false');
   });
 
   test('points to no list and no option while closed', () => {
-    expect(markup).not.toContain('aria-controls');
-    expect(markup).not.toContain('aria-activedescendant');
+    expect(input['aria-controls']).toBeUndefined();
+    expect(input['aria-activedescendant']).toBeUndefined();
   });
 
   test('keeps the label bound to the input', () => {
-    expect(markup).toContain('for="address.fullAddress"');
-    expect(markup).toContain('id="address.fullAddress"');
+    expect(firstElementAttributes(markup, 'label').for).toBe('address.fullAddress');
+    expect(input.id).toBe('address.fullAddress');
   });
 
-  test('leaves no popup trigger attribute on the input wrapper', () => {
+  test('leaves no popup trigger attribute on the markup around the input', () => {
     expect(markup).not.toContain('aria-haspopup');
   });
 });

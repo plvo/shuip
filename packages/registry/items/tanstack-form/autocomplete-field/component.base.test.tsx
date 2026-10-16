@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { createFormHook } from '@tanstack/react-form';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { fieldContext, formContext } from '@/components/ui/shuip/tanstack-form/form-context';
+import { firstElementAttributes } from '../../../scripts/markup';
 import { AutocompleteField } from './component.base';
 
 const { useAppForm } = createFormHook({
@@ -23,20 +24,21 @@ function Subject() {
 
 describe('AutocompleteField closed state', () => {
   const markup = renderToStaticMarkup(<Subject />);
+  const input = firstElementAttributes(markup, 'input');
 
   test('exposes the input as a combobox with a collapsed list', () => {
-    expect(markup).toContain('role="combobox"');
-    expect(markup).toContain('aria-autocomplete="list"');
-    expect(markup).toContain('aria-expanded="false"');
+    expect(input.role).toBe('combobox');
+    expect(input['aria-autocomplete']).toBe('list');
+    expect(input['aria-expanded']).toBe('false');
   });
 
   test('points to no list and no option while closed', () => {
-    expect(markup).not.toContain('aria-controls');
-    expect(markup).not.toContain('aria-activedescendant');
+    expect(input['aria-controls']).toBeUndefined();
+    expect(input['aria-activedescendant']).toBeUndefined();
   });
 
   test('keeps the label bound to the input', () => {
-    expect(markup).toContain('for="source"');
-    expect(markup).toContain('id="source"');
+    expect(firstElementAttributes(markup, 'label').for).toBe('source');
+    expect(input.id).toBe('source');
   });
 });

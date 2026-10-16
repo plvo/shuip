@@ -8,6 +8,7 @@ import { useController } from 'react-hook-form';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Popover } from '@/components/ui/popover';
+import { SuggestionEmpty, SuggestionOption, useSuggestionList } from '@/components/ui/shuip/suggestion-list';
 import { cn } from '@/lib/utils';
 
 const DEBOUNCE_TIME = 300;
@@ -151,21 +152,21 @@ export function AutocompleteField({
   };
 
   const id = props.id ?? field.name;
-  const labelId = `${id}-label`;
-  const listboxId = `${id}-listbox`;
-  const optionId = (index: number) => `${listboxId}-option-${index}`;
-  const activeOptionId =
-    open && selectedIndex >= 0 && selectedIndex < items.length ? optionId(selectedIndex) : undefined;
-  const listboxName = label ? { 'aria-labelledby': labelId } : { 'aria-label': props['aria-label'] ?? placeholder };
-
-  React.useEffect(() => {
-    if (activeOptionId) document.getElementById(activeOptionId)?.scrollIntoView({ block: 'nearest' });
-  }, [activeOptionId]);
+  const suggestionList = useSuggestionList({
+    inputId: id,
+    label,
+    ariaLabel: props['aria-label'],
+    placeholder,
+    open,
+    count: items.length,
+    selectedIndex,
+    busy: isPending,
+  });
 
   return (
     <Field className='gap-2' data-invalid={fieldState.invalid}>
       {label && (
-        <FieldLabel id={labelId} htmlFor={id}>
+        <FieldLabel id={suggestionList.labelId} htmlFor={id}>
           {label}
         </FieldLabel>
       )}
@@ -193,11 +194,7 @@ export function AutocompleteField({
             onClick={() => setOpen(true)}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
-            role='combobox'
-            aria-autocomplete='list'
-            aria-expanded={open}
-            aria-controls={open ? listboxId : undefined}
-            aria-activedescendant={activeOptionId}
+            {...suggestionList.inputProps}
             aria-invalid={fieldState.invalid}
           />
           {isPending && (
@@ -210,42 +207,25 @@ export function AutocompleteField({
           <PopoverPrimitive.Positioner anchor={anchorRef} align='start' sideOffset={4} className='isolate z-50'>
             <PopoverPrimitive.Popup
               data-slot='popover-content'
-              id={listboxId}
-              role='listbox'
-              {...listboxName}
-              aria-busy={isPending}
+              {...suggestionList.listboxProps}
               initialFocus={false}
-              onMouseDown={(event) => event.preventDefault()}
               className={cn(
                 'z-50 flex w-72 origin-(--transform-origin) flex-col gap-4 rounded-md bg-popover p-4 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
-                'block max-h-60 overflow-y-auto p-1',
+                suggestionList.listboxProps.className,
               )}
               style={{ width: 'var(--anchor-width)' }}
             >
-              {items.length === 0 && (
-                <div
-                  role='option'
-                  aria-disabled='true'
-                  aria-selected='false'
-                  tabIndex={-1}
-                  className='py-6 text-center text-sm'
-                >
-                  {isPending ? 'Searching…' : emptyText}
-                </div>
-              )}
+              {items.length === 0 && <SuggestionEmpty>{isPending ? 'Searching…' : emptyText}</SuggestionEmpty>}
               {items.map((item, index) => (
-                <div
+                <SuggestionOption
                   key={`${item}-${index}`}
-                  id={optionId(index)}
-                  role='option'
-                  aria-selected={selectedIndex === index}
-                  tabIndex={-1}
-                  onClick={() => handleSelect(item)}
-                  onMouseMove={() => setSelectedIndex(index)}
-                  className='relative flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none aria-selected:bg-muted aria-selected:text-foreground'
+                  id={suggestionList.optionId(index)}
+                  selected={selectedIndex === index}
+                  onSelect={() => handleSelect(item)}
+                  onHighlight={() => setSelectedIndex(index)}
                 >
                   {item}
-                </div>
+                </SuggestionOption>
               ))}
             </PopoverPrimitive.Popup>
           </PopoverPrimitive.Positioner>
