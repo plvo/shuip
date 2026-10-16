@@ -15,6 +15,20 @@ const DEBOUNCE_TIME = 300;
 // The popover gives its content role="dialog"; the combobox exposes the listbox inside it instead.
 const NO_POPUP_ROLE = { role: undefined };
 
+// cmdk hard-codes aria-expanded and aria-controls on its input and spreads the props it receives before them, so
+// they are corrected on the element. The field should move off cmdk (plvo/shuip#151).
+function useListStateOnInput(inputRef: React.RefObject<HTMLInputElement | null>, open: boolean) {
+  const listId = React.useRef<string | null>(null);
+  React.useLayoutEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    listId.current = input.getAttribute('aria-controls') ?? listId.current;
+    input.setAttribute('aria-expanded', String(open));
+    if (open && listId.current) input.setAttribute('aria-controls', listId.current);
+    else input.removeAttribute('aria-controls');
+  }, [inputRef, open]);
+}
+
 export interface ComboboxOption {
   value: string;
   label: string;
@@ -84,6 +98,7 @@ export function ComboboxField({
   const requestIdRef = React.useRef(0);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  useListStateOnInput(inputRef, open);
 
   // Static options + presets, resolved during render so a value shows its label on first
   // paint; async results and manual picks live in `cacheRef`. `getOption` reads both.

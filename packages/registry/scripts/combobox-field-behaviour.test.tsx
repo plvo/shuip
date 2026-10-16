@@ -83,6 +83,7 @@ const chipLabels = (card: HTMLElement) =>
 
 function expectCollapsed(input: HTMLInputElement) {
   expect(isOpen()).toBe(false);
+  expect(isOpen()).toBe(false);
   expect(input.getAttribute('aria-expanded')).toBe('false');
   expect(input.hasAttribute('aria-controls')).toBe(false);
 }
