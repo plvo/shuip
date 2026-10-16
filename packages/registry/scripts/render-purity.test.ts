@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 import { scanItems } from './generate';
+import { parseTsx } from './jsx-source';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '../../..');
 
@@ -121,7 +122,7 @@ interface RefWrite {
 
 /** Every write to an `x.current` of a source that runs while a component or hook renders. */
 const renderTimeRefWrites = (file: string, content: string): RefWrite[] => {
-  const source = ts.createSourceFile(file, content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const source = parseTsx(file, content);
   const found: RefWrite[] = [];
   const visit = (node: ts.Node) => {
     const ref = writtenRef(node);

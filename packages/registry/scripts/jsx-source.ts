@@ -1,5 +1,8 @@
 import ts from 'typescript';
 
+export const parseTsx = (fileName: string, content: string): ts.SourceFile =>
+  ts.createSourceFile(fileName, content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+
 type JsxElement = ts.JsxOpeningElement | ts.JsxSelfClosingElement;
 
 export const elementsNamed = (source: ts.SourceFile, tag: string): JsxElement[] => {
@@ -14,18 +17,16 @@ export const elementsNamed = (source: ts.SourceFile, tag: string): JsxElement[] 
   return found;
 };
 
-/** The source text of the value of attribute `name` on every element `tag`, `{...}` braces removed. */
+/** The source text of the value of attribute `name` on every element `tag`: a string literal keeps its quotes, an expression loses its `{...}` braces. */
 export const attributeValues = (source: ts.SourceFile, tag: string, name: string): string[] =>
   elementsNamed(source, tag).flatMap((element) =>
-    element.attributes.properties.flatMap((attribute) =>
-      ts.isJsxAttribute(attribute) &&
-      attribute.name.getText() === name &&
-      attribute.initializer !== undefined &&
-      ts.isJsxExpression(attribute.initializer) &&
-      attribute.initializer.expression !== undefined
-        ? [attribute.initializer.expression.getText()]
-        : [],
-    ),
+    element.attributes.properties.flatMap((attribute) => {
+      if (!ts.isJsxAttribute(attribute) || attribute.name.getText() !== name || attribute.initializer === undefined) {
+        return [];
+      }
+      if (!ts.isJsxExpression(attribute.initializer)) return [attribute.initializer.getText()];
+      return attribute.initializer.expression === undefined ? [] : [attribute.initializer.expression.getText()];
+    }),
   );
 
 /** The attributes of every element `tag` in source order, a spread shown as `...expression`. */

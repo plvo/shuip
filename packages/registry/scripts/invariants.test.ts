@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import ts from 'typescript';
 import { buildRegistryJson, readRootCatalog, type ScannedItem, scanItems, writeBaseVariant } from './generate';
+import { attributeValues, parseTsx } from './jsx-source';
 import { RADIX_PACKAGE } from './radix-package';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '../../..');
@@ -17,6 +18,7 @@ const OWN_DATA_STATE = [
 
 const FORM_PRIMITIVE = /^@\/components\/ui\/form(\/|$)/;
 const PRIMITIVE_STATE_CLASS = /data-\[state=/;
+const OPACITY_CLASS = /(?<![\w-])opacity-/;
 const RADIX_ONLY_POPOVER_API =
   /\b(?:PopoverAnchor|onOpenAutoFocus|onCloseAutoFocus|onInteractOutside|onPointerDownOutside|onEscapeKeyDown)\b|--radix-/;
 const IMPORT_SPECIFIER = /(?:\bfrom\s+|\bimport\s*\(?\s*|\brequire\(\s*)['"]([^'"]+)['"]/g;
@@ -58,8 +60,15 @@ const blockDocPaths = () =>
 const codeBlocks = (markdown: string) =>
   [...markdown.matchAll(FENCED_CODE_BLOCK)].map((m) => m[2] as string).join('\n');
 
-const importedSpecifiers = ({ kind, content }: SourceFile) =>
-  [...(kind === 'doc' ? codeBlocks(content) : content).matchAll(IMPORT_SPECIFIER)].map((m) => m[1] as string);
+const code = ({ kind, content }: SourceFile) => (kind === 'doc' ? codeBlocks(content) : content);
+
+const importedSpecifiers = (file: SourceFile) => [...code(file).matchAll(IMPORT_SPECIFIER)].map((m) => m[1] as string);
+
+const hasFieldErrorWithOpacity = (file: SourceFile) =>
+  file.content.includes('FieldError') &&
+  attributeValues(parseTsx(file.relativePath, code(file)), 'FieldError', 'className').some((classes) =>
+    OPACITY_CLASS.test(classes),
+  );
 
 const findViolations = (sources: SourceFile[]) => ({
   radixImports: sources.filter((s) => importedSpecifiers(s).some((spec) => RADIX_PACKAGE.test(spec))),
@@ -67,6 +76,7 @@ const findViolations = (sources: SourceFile[]) => ({
   primitiveStateClasses: sources.filter(
     (s) => s.kind === 'source' && PRIMITIVE_STATE_CLASS.test(s.content) && !OWN_DATA_STATE.includes(s.relativePath),
   ),
+  fieldErrorOpacity: sources.filter(hasFieldErrorWithOpacity),
 });
 
 const paths = (sources: SourceFile[]) => sources.map((s) => s.relativePath);
@@ -117,6 +127,10 @@ describe('item sources stay base-agnostic', () => {
     expect(paths(violations.primitiveStateClasses)).toEqual([]);
   });
 
+  test('no FieldError in a source or a doc snippet carries an opacity class', () => {
+    expect(paths(violations.fieldErrorOpacity)).toEqual([]);
+  });
+
   test.each(OWN_DATA_STATE)('%s still sets its own data-state', (relativePath) => {
     const own = sources.find((s) => s.relativePath === relativePath);
     expect(own?.content).toMatch(/\bdata-state=\{/);
@@ -124,7 +138,7 @@ describe('item sources stay base-agnostic', () => {
 });
 
 const asChildSites = (relativePath: string, content: string): string[] => {
-  const file = ts.createSourceFile(relativePath, content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const file = parseTsx(relativePath, content);
   const sites: string[] = [];
   const visit = (node: ts.Node): void => {
     if (ts.isJsxAttribute(node) && node.name.getText(file) === 'asChild') {
@@ -278,6 +292,36 @@ describe('invariant detection', () => {
       'packages/registry/items/blocks/a/component.radix.tsx',
       'packages/registry/items/components/side-dialog/default.example.radix.tsx',
     ]);
+  });
+
+  test.each([
+    ['a literal class', "<FieldError className='text-xs opacity-80' errors={[error]} />"],
+    ['a double-quoted class', '<FieldError className="opacity-50" errors={[error]} />'],
+    ['a variant class', "<FieldError className='text-xs hover:opacity-80' />"],
+    ['an expression class', "<FieldError className={cn('text-xs', dim && 'opacity-80')} />"],
+    ['a container element', "<FieldError className='opacity-80'>{message}</FieldError>"],
+    ['a template literal class', `<FieldError className={\`text-xs \${tone} opacity-80\`} />`],
+    [
+      'a multi-line element',
+      "<FieldError\n  id={errorId}\n  className='text-xs\n    opacity-80'\n  errors={[error]}\n/>",
+    ],
+  ])('flags a FieldError with %s', (_, content) => {
+    expect(paths(findViolations([source('a.tsx', content)]).fieldErrorOpacity)).toEqual(['a.tsx']);
+  });
+
+  test('flags a FieldError with an opacity class in a fenced code block of a doc page, not in its prose', () => {
+    const snippet = ['```tsx', "<FieldError className='opacity-80' errors={[error]} />", '```'].join('\n');
+    const prose = "Do not put `<FieldError className='opacity-80' />` on the error.";
+    expect(paths(findViolations([doc('a.mdx', snippet), doc('b.mdx', prose)]).fieldErrorOpacity)).toEqual(['a.mdx']);
+  });
+
+  test('does not flag a FieldError without opacity, nor opacity on other elements', () => {
+    const flagged = findViolations([
+      source('a.tsx', "<FieldError className='text-xs text-left' errors={[error]} />"),
+      source('b.tsx', "<Check className='opacity-0' /><FieldError errors={[error]} />"),
+      source('c.tsx', "<FieldError className='bg-opacity-half' />"),
+    ]).fieldErrorOpacity;
+    expect(flagged).toEqual([]);
   });
 
   test('flags imports inside a fenced code block of a doc page', () => {
