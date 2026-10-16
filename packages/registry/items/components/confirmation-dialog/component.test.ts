@@ -12,7 +12,13 @@ import {
   resolveOpenState,
 } from './component.radix';
 
-type AnyElement = ReactElement<{ children?: ReactNode; onClick?: unknown; disabled?: boolean }>;
+type AnyElement = ReactElement<{
+  children?: ReactNode;
+  onClick?: unknown;
+  'aria-disabled'?: boolean;
+  'aria-label'?: string;
+  'aria-busy'?: boolean;
+}>;
 
 const subtree = (node: ReactNode): AnyElement[] => {
   if (Array.isArray(node)) return node.flatMap(subtree);
@@ -142,6 +148,25 @@ describe.each(variants)('runConfirmation (%s)', (_variant, { runConfirmation }) 
     expect(unhandled).toEqual([]);
   });
 
+  test('a close that throws after a resolved promise leaves no unhandled rejection and ends the pending state', async () => {
+    const work = deferred();
+    const calls: string[] = [];
+
+    runConfirmation({
+      pending: false,
+      onConfirm: () => work.promise,
+      setPending: (value) => calls.push(`pending:${value}`),
+      close: () => {
+        throw new Error('close failed');
+      },
+    });
+    work.resolve();
+    await flushMicrotasks();
+
+    expect(calls).toEqual(['pending:true', 'pending:false']);
+    expect(unhandled).toEqual([]);
+  });
+
   test('a thenable that is not a Promise is awaited too', async () => {
     const calls: string[] = [];
     // biome-ignore lint/suspicious/noThenProperty: the test hands over a thenable that is not a Promise
@@ -187,19 +212,22 @@ describe.each(variants)('ConfirmationDialogView (%s)', (_variant, { View, stateP
   test('the confirm button is enabled and shows no spinner while nothing is pending', () => {
     const [confirm] = confirmButtons(render());
 
-    expect(confirm.props.disabled).toBe(false);
+    expect(confirm.props['aria-disabled']).toBe(false);
+    expect(confirm.props['aria-busy']).toBe(false);
     expect(subtree(confirm).some((element) => element.type === Loader2Icon)).toBe(false);
   });
 
-  test('the confirm button is disabled and shows a spinner while pending', () => {
+  test('the confirm button is flagged disabled and busy, and shows a named spinner while pending', () => {
     const [confirm] = confirmButtons(render({ pending: true }));
 
-    expect(confirm.props.disabled).toBe(true);
-    expect(subtree(confirm).some((element) => element.type === Loader2Icon)).toBe(true);
+    expect(confirm.props['aria-disabled']).toBe(true);
+    expect(confirm.props['aria-busy']).toBe(true);
+    const spinners = subtree(confirm).filter((element) => element.type === Loader2Icon);
+    expect(spinners.map((spinner) => spinner.props['aria-label'])).toEqual(['Loading']);
     expect(textOf(confirm)).toBe('Go');
   });
 
-  test('a cancel button closes the dialog and never runs the confirmation', () => {
+  test('the cancel button is a DialogClose labelled by labelCancelButton that does not carry the confirm handler', () => {
     const tree = render({ labelCancelButton: 'Nope' });
 
     const cancels = closes(tree);
@@ -207,6 +235,13 @@ describe.each(variants)('ConfirmationDialogView (%s)', (_variant, { View, stateP
     expect(cancels).toHaveLength(1);
     expect(textOf(cancels[0])).toBe('Nope');
     expect(subtree(cancels[0]).some((element) => element.props.onClick === onConfirm)).toBe(false);
+  });
+
+  test('renders the children between the header and the footer', () => {
+    const note = createElement('p', { role: 'alert' }, 'It failed');
+    const tree = render({ children: note } as never);
+
+    expect(subtree(tree)).toContain(note);
   });
 
   test('without labelCancelButton no cancel button renders', () => {

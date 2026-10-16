@@ -21,6 +21,7 @@ export interface ConfirmationDialogProps
   description?: string;
   labelConfirmButton?: string;
   labelCancelButton?: string;
+  children?: React.ReactNode;
   // biome-ignore lint/suspicious/noConfusingVoidType: a callback may return nothing or a promise
   onConfirm?: () => void | PromiseLike<unknown>;
 }
@@ -35,6 +36,7 @@ interface ConfirmationRun {
 const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
   typeof (value as PromiseLike<unknown> | undefined)?.then === 'function';
 
+/** Exported for the tests of the item. */
 export function runConfirmation({ pending, onConfirm, setPending, close }: ConfirmationRun): void {
   if (pending) return;
   const result = onConfirm?.();
@@ -44,7 +46,8 @@ export function runConfirmation({ pending, onConfirm, setPending, close }: Confi
   }
   setPending(true);
   void Promise.resolve(result)
-    .then(close, () => {})
+    .then(close)
+    .catch(() => {})
     .finally(() => setPending(false));
 }
 
@@ -55,6 +58,7 @@ interface OpenState {
   onOpenChange?: (open: boolean) => void;
 }
 
+/** Exported for the tests of the item. */
 export function resolveOpenState({ open, localOpen, setLocalOpen, onOpenChange }: OpenState) {
   const setOpen = (next: boolean) => {
     if (open === undefined) setLocalOpen(next);
@@ -63,6 +67,7 @@ export function resolveOpenState({ open, localOpen, setLocalOpen, onOpenChange }
   return { open: open ?? localOpen, setOpen };
 }
 
+/** Exported for the tests of the item. */
 export interface ConfirmationDialogViewProps
   extends Omit<ConfirmationDialogProps, 'open' | 'defaultOpen' | 'onOpenChange' | 'onConfirm'> {
   open: boolean;
@@ -71,12 +76,14 @@ export interface ConfirmationDialogViewProps
   onConfirm: () => void;
 }
 
+/** Exported for the tests of the item. */
 export function ConfirmationDialogView({
   trigger,
   title,
   description,
   labelConfirmButton,
   labelCancelButton,
+  children,
   open,
   onOpenChange,
   pending,
@@ -90,14 +97,20 @@ export function ConfirmationDialogView({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className='md:text-left'>{description}</DialogDescription>
         </DialogHeader>
+        {children}
         <DialogFooter>
           {labelCancelButton && (
             <DialogClose asChild>
               <Button variant='outline'>{labelCancelButton}</Button>
             </DialogClose>
           )}
-          <Button onClick={onConfirm} disabled={pending} aria-busy={pending}>
-            {pending && <Loader2Icon data-icon='inline-start' className='animate-spin' aria-hidden />}
+          <Button
+            onClick={onConfirm}
+            aria-disabled={pending}
+            aria-busy={pending}
+            className='aria-disabled:pointer-events-none aria-disabled:opacity-50'
+          >
+            {pending && <Loader2Icon data-icon='inline-start' className='animate-spin' aria-label='Loading' />}
             {labelConfirmButton}
           </Button>
         </DialogFooter>

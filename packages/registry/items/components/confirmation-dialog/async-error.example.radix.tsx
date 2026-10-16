@@ -14,9 +14,12 @@ export default function ConfirmationDialogAsyncErrorExample() {
     <ConfirmationDialog
       trigger={<Button>Save changes</Button>}
       title='Save changes'
-      description={error ?? 'Are you sure you want to save these changes?'}
+      description='Are you sure you want to save these changes?'
       labelConfirmButton='Save'
       labelCancelButton='Cancel'
+      onOpenChange={(open) => {
+        if (!open) setError(undefined);
+      }}
       onConfirm={async () => {
         setError(undefined);
         try {
@@ -26,6 +29,12 @@ export default function ConfirmationDialogAsyncErrorExample() {
           throw e;
         }
       }}
-    />
+    >
+      {error && (
+        <p role='alert' className='text-sm text-destructive'>
+          {error}
+        </p>
+      )}
+    </ConfirmationDialog>
   );
 }
