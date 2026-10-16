@@ -54,7 +54,7 @@ export function PasswordField({ lens, label, description, tooltip, ...props }: P
           )}
         </InputGroupAddon>
       </InputGroup>
-      {fieldState.invalid && <FieldError className='text-xs text-left opacity-80' errors={[fieldState.error]} />}
+      {fieldState.invalid && <FieldError className='text-xs text-left' errors={[fieldState.error]} />}
       {description && <FieldDescription className='text-xs'>{description}</FieldDescription>}
     </Field>
   );

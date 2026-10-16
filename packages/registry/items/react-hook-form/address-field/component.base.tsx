@@ -384,7 +384,7 @@ export function AddressField({
         </Popover>
       </div>
       {description && <p className='text-sm text-muted-foreground'>{description}</p>}
-      {invalid && <FieldError id={errorId} className='text-xs text-left opacity-80' errors={[error]} />}
+      {invalid && <FieldError id={errorId} className='text-xs text-left' errors={[error]} />}
     </Field>
   );
 }
