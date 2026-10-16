@@ -25,17 +25,11 @@
     "fumadocs-ui": "catalog:fumadocs",
     "next-mdx-remote": "catalog:fumadocs",
     "next-themes": "catalog:",
-    "gray-matter": "catalog:fumadocs",
     "prism-react-renderer": "catalog:fumadocs",
     "lucide-react": "catalog:",
-    "tailwind-merge": "catalog:",
-    "clsx": "catalog:",
     "zod": "catalog:",
-    "@dnd-kit/core": "catalog:",
-    "@dnd-kit/sortable": "catalog:",
-    "@dnd-kit/utilities": "catalog:",
-    "shadcn": "catalog:",
-    "@vercel/analytics": "^2.0.1"
+    "@vercel/analytics": "^2.0.1",
+    "sonner": "catalog:"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
@@ -43,11 +37,9 @@
     "@types/node": "^25.6.0",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@biomejs/biome": "^2.4.14",
     "@tailwindcss/postcss": "catalog:",
     "sharp": "catalog:",
     "tailwindcss": "catalog:",
-    "tw-animate-css": "catalog:",
     "postcss": "^8.5.15",
     "typescript": "catalog:"
   }
