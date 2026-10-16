@@ -40,6 +40,16 @@ export function addressFieldError(errors: AddressErrors): { message?: string } |
   return unselected ? { message: ADDRESS_NOT_SELECTED_MESSAGE } : undefined;
 }
 
+interface ControlledField {
+  field: { value?: string; onChange: (value: string) => void };
+}
+
+export function clearFilledFields(controllers: ControlledField[]): void {
+  for (const { field } of controllers) {
+    if (field.value) field.onChange('');
+  }
+}
+
 interface AddressSuggestion {
   placeId: string;
   description: string;
@@ -130,19 +140,15 @@ export function AddressField({
     };
   }, [searchQuery, country]);
 
-  const inputRefCallback = React.useCallback(
+  const setInputRef = React.useCallback(
     (node: HTMLInputElement | null) => {
       inputRef.current = node;
-      fullAddress.field.ref(node);
+      for (const { field } of [fullAddress, street, city, postalCode, countryField]) field.ref(node);
     },
-    [fullAddress.field.ref],
+    [fullAddress.field.ref, street.field.ref, city.field.ref, postalCode.field.ref, countryField.field.ref],
   );
 
-  const clearPlace = () => {
-    for (const { field } of [street, city, postalCode, countryField, placeId]) {
-      if (field.value) field.onChange('');
-    }
-  };
+  const clearPlace = () => clearFilledFields([street, city, postalCode, countryField, placeId]);
 
   const fetchPlaceDetails = async (suggestion: AddressSuggestion) => {
     try {
@@ -202,7 +208,6 @@ export function AddressField({
       } else {
         clearPlace();
         fullAddress.field.onChange(suggestion.description.trim());
-        placeId.field.onChange(suggestion.placeId.trim());
       }
     });
   };
@@ -275,6 +280,8 @@ export function AddressField({
   });
   const invalid = error !== undefined;
   const id = props.id ?? fullAddress.field.name;
+  const errorId = `${id}-error`;
+  const describedBy = [props['aria-describedby'], invalid ? errorId : undefined].filter(Boolean).join(' ') || undefined;
   const suggestionList = useSuggestionList({
     inputId: id,
     label,
@@ -301,7 +308,7 @@ export function AddressField({
         >
           <div ref={anchorRef} className='relative'>
             <Input
-              ref={inputRefCallback}
+              ref={setInputRef}
               name={fullAddress.field.name}
               value={fullAddress.field.value ?? ''}
               placeholder={placeholder}
@@ -319,6 +326,7 @@ export function AddressField({
               onKeyDown={handleKeyDown}
               {...suggestionList.inputProps}
               aria-invalid={invalid}
+              aria-describedby={describedBy}
             />
             <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3'>
               {isPending ? (
@@ -366,7 +374,7 @@ export function AddressField({
         </Popover>
       </div>
       {description && <p className='text-sm text-muted-foreground'>{description}</p>}
-      {invalid && <FieldError className='text-xs text-left opacity-80' errors={[error]} />}
+      {invalid && <FieldError id={errorId} className='text-xs text-left opacity-80' errors={[error]} />}
     </Field>
   );
 }

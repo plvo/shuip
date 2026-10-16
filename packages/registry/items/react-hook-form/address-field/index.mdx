@@ -85,7 +85,7 @@ When they do not, submitting the form is refused and the field says why:
 - A typed address that was never picked shows one error below the input, "Select an address from the suggestions", marks the input `aria-invalid="true"` and moves focus to it. The four sub-fields have no input of their own, so their errors are folded into this single message.
 - An empty input shows the `fullAddress` message, "Address is required".
 - Editing the text after a pick clears `street`, `city`, `postalCode`, `country` and `placeId`, so the form never submits a place that no longer matches what the input shows. The error comes back until the user picks another suggestion.
-- A suggestion whose place details cannot be fetched, or come back empty, counts as not picked: the input keeps the suggestion text, the sub-fields stay empty and submitting shows the same error.
+- A suggestion whose place details cannot be fetched, or come back empty, counts as not picked: the input keeps the suggestion text, the sub-fields and `placeId` stay empty and submitting shows the same error.
 
 The same holds when no suggestion can appear, for example when `GOOGLE_PLACES_API_KEY` is missing or the Places request fails. Configure the key before you ship the field.
 
