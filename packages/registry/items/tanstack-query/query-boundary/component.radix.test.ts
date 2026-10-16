@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import { createElement } from 'react';
+import { createElement, type ReactElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import type { FallbackProps } from 'react-error-boundary';
 import { DefaultErrorFallback, QueryBoundary } from './component.radix';
 
 const renderFallback = (queryKeys?: string[]) =>
@@ -30,8 +31,6 @@ describe('DefaultErrorFallback', () => {
   });
 });
 
-// The error path of QueryBoundary (the queryKeys pass-through and the errorFallback override) needs a DOM to catch a
-// thrown error in an ErrorBoundary, so it is not covered here.
 describe('QueryBoundary loading state', () => {
   const Suspending = () => {
     throw new Promise<void>(() => {});
@@ -58,5 +57,37 @@ describe('QueryBoundary loading state', () => {
     const markup = renderToStaticMarkup(createElement(QueryBoundary, null, createElement('p', null, 'Ready')));
     expect(markup).toContain('Ready');
     expect(markup).not.toContain('Loading...');
+  });
+});
+
+type QueryErrorResetBoundaryElement = ReactElement<{ children: (value: { reset: () => void }) => ReactElement }>;
+type ErrorBoundaryElement = ReactElement<{ onReset: () => void; fallbackRender: (props: FallbackProps) => ReactNode }>;
+
+// The wiring is read off the element tree: catching a thrown error is react-error-boundary's job and is not exercised.
+describe('QueryBoundary error wiring', () => {
+  const reset = () => {};
+  const failure: FallbackProps = { error: new Error('boom'), resetErrorBoundary: () => {} };
+
+  const errorBoundaryOf = (props: Parameters<typeof QueryBoundary>[0]) => {
+    const resetBoundary = QueryBoundary(props) as QueryErrorResetBoundaryElement;
+    return resetBoundary.props.children({ reset }) as ErrorBoundaryElement;
+  };
+
+  test('resets the queries when the error boundary resets', () => {
+    expect(errorBoundaryOf({ children: null }).props.onReset).toBe(reset);
+  });
+
+  test('passes the query keys to the default error fallback', () => {
+    const { fallbackRender } = errorBoundaryOf({ children: null, queryKeys: ['users', 'posts'] }).props;
+    expect(visibleText(renderToStaticMarkup(fallbackRender(failure)))).toContain('Concerned queries: users, posts');
+  });
+
+  test('replaces the default error fallback with a custom one', () => {
+    const errorFallback = ({ error }: FallbackProps) =>
+      createElement('p', null, `custom: ${error instanceof Error ? error.message : ''}`);
+    const { fallbackRender } = errorBoundaryOf({ children: null, queryKeys: ['users'], errorFallback }).props;
+    const markup = renderToStaticMarkup(fallbackRender(failure));
+    expect(markup).toContain('custom: boom');
+    expect(markup).not.toContain('Oops, something went wrong!');
   });
 });
