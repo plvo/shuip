@@ -114,18 +114,14 @@ describe('destructive tints', () => {
 
   const light = palette('root');
 
-  test('light: text-destructive on the /10 tint over card reaches 4.5:1', () => {
-    expect(contrast(light.destructive, light.tintOver(light.card, 0.1))).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
-  });
-
-  // Known gap: these light-theme pairs sit below 4.5:1 today (about 4.28, 3.61 and 3.80).
-  // The light tokens are out of scope for the dark contrast fix. When a light palette change
-  // lifts one above 4.5:1, this test fails: move the pair to the asserted ones above.
   test.each([
     ['/10 tint over background', 0.1, 'background'],
+    ['/10 tint over card', 0.1, 'card'],
     ['/20 tint over background', 0.2, 'background'],
     ['/20 tint over card', 0.2, 'card'],
-  ] as const)('light: text-destructive on the %s is a known gap', (_name, alpha, surface) => {
-    expect(contrast(light.destructive, light.tintOver(light[surface], alpha))).toBeLessThan(MIN_TEXT_CONTRAST);
+  ] as const)('light: text-destructive on the %s reaches 4.5:1', (_name, alpha, surface) => {
+    expect(contrast(light.destructive, light.tintOver(light[surface], alpha))).toBeGreaterThanOrEqual(
+      MIN_TEXT_CONTRAST,
+    );
   });
 });
