@@ -1,14 +1,9 @@
 import { describe, expect, test } from 'bun:test';
-import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
-import { filesUnder } from './documents';
+import { attributeNames, parseTsx, tsxSourceFiles } from './documents';
 
-const SRC_DIR = path.resolve(import.meta.dir, '..', 'src');
 const FUMADOCS_TABS = 'fumadocs-ui/components/tabs';
-
-const parse = (file: string) =>
-  ts.createSourceFile(file, fs.readFileSync(file, 'utf-8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 
 const importsTabs = (source: ts.SourceFile): boolean =>
   source.statements.some(
@@ -26,11 +21,7 @@ const tabsElements = (source: ts.SourceFile): string[][] => {
   const found: string[][] = [];
   const visit = (node: ts.Node) => {
     if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) && node.tagName.getText() === 'Tabs') {
-      found.push(
-        node.attributes.properties.flatMap((attribute) =>
-          ts.isJsxAttribute(attribute) ? [attribute.name.getText()] : ['...spread'],
-        ),
-      );
+      found.push(attributeNames(node));
     }
     ts.forEachChild(node, visit);
   };
@@ -38,9 +29,7 @@ const tabsElements = (source: ts.SourceFile): string[][] => {
   return found;
 };
 
-const files = filesUnder(SRC_DIR, ['.tsx'])
-  .filter((file) => !file.includes('.test.'))
-  .filter((file) => importsTabs(parse(file)));
+const files = tsxSourceFiles().filter((file) => importsTabs(parseTsx(file)));
 
 // A group of tabs that does not persist sends the reader back to its default tab on every page.
 describe('the fumadocs Tabs of the docs', () => {
@@ -49,7 +38,7 @@ describe('the fumadocs Tabs of the docs', () => {
   });
 
   test.each(files)('%s gives every Tabs a groupId and persist', (file) => {
-    const elements = tabsElements(parse(file));
+    const elements = tabsElements(parseTsx(file));
 
     expect(elements.length).toBeGreaterThan(0);
     for (const attributes of elements) {
