@@ -10,7 +10,7 @@ import { getPlaceDetails, getPlacesAutocomplete } from '@/actions/shuip/places';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Popover } from '@/components/ui/popover';
-import { SuggestionEmpty, SuggestionOption, useSuggestionList } from '@/components/ui/shuip/suggestion-list';
+import { listboxClassName, SuggestionOption, useSuggestionList } from '@/components/ui/shuip/suggestion-list';
 import { cn } from '@/lib/utils';
 
 const DEFAULT_COUNTRY = 'US';
@@ -297,18 +297,15 @@ export function AddressField({
                 finalFocus={false}
                 className={cn(
                   'z-50 flex w-72 origin-(--transform-origin) flex-col gap-4 rounded-md bg-popover p-4 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
-                  suggestionList.listboxProps.className,
+                  listboxClassName,
                 )}
                 style={{ width: 'var(--anchor-width)' }}
               >
-                {suggestions.length === 0 && (
-                  <SuggestionEmpty>{isPending ? 'Searching…' : 'No addresses found'}</SuggestionEmpty>
-                )}
                 {suggestions.map((suggestion, index) => (
                   <SuggestionOption
                     key={suggestion.placeId}
                     id={suggestionList.optionId(index)}
-                    selected={selectedIndex === index}
+                    highlighted={selectedIndex === index}
                     onSelect={() => handleSelectAddress(suggestion)}
                     onHighlight={() => setSelectedIndex(index)}
                     className='items-start p-3'
@@ -316,7 +313,9 @@ export function AddressField({
                     <MapPin className='size-4 mt-0.5 text-muted-foreground flex-shrink-0' />
                     <div className='flex-1 min-w-0'>
                       <div className='font-medium text-sm'>{suggestion.mainText}</div>
-                      <div className='text-xs text-muted-foreground truncate'>{suggestion.secondaryText}</div>
+                      <div className='text-xs text-muted-foreground truncate group-aria-selected/suggestion:text-accent-foreground'>
+                        {suggestion.secondaryText}
+                      </div>
                     </div>
                   </SuggestionOption>
                 ))}

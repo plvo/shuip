@@ -105,10 +105,10 @@ describe('useSuggestionList', () => {
 
 describe('options', () => {
   test('mark the highlighted option as selected and every other as not selected', () => {
-    const option = (selected: boolean) =>
+    const option = (highlighted: boolean) =>
       firstElementAttributes(
         renderToStaticMarkup(
-          createElement(SuggestionOption, { id: 'a', selected, onSelect: () => {}, onHighlight: () => {} }, 'A'),
+          createElement(SuggestionOption, { id: 'a', highlighted, onSelect: () => {}, onHighlight: () => {} }, 'A'),
         ),
         'div',
       );

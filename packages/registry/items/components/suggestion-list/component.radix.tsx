@@ -3,10 +3,11 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
-const LISTBOX_CLASS = 'no-scrollbar block max-h-60 scroll-py-1 overflow-x-hidden overflow-y-auto p-2';
+/** The classes of the popup that holds the options; merge it into the popup's own classes. */
+export const listboxClassName = 'no-scrollbar block max-h-60 scroll-py-1 overflow-x-hidden overflow-y-auto p-2';
 
 const OPTION_CLASS =
-  "relative flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none aria-selected:bg-accent aria-selected:text-accent-foreground aria-selected:**:[svg]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
+  "group/suggestion relative flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none aria-selected:bg-accent aria-selected:text-accent-foreground aria-selected:**:[svg]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
 const EMPTY_CLASS = 'py-6 text-center text-sm text-muted-foreground';
 
@@ -55,10 +56,7 @@ export type ComboboxInputProps = Pick<
   'role' | 'aria-autocomplete' | 'aria-expanded' | 'aria-controls' | 'aria-activedescendant'
 >;
 
-export type ListboxProps = Pick<
-  React.ComponentProps<'div'>,
-  'id' | 'role' | 'aria-busy' | 'className' | 'onMouseDown'
-> &
+export type ListboxProps = Pick<React.ComponentProps<'div'>, 'id' | 'role' | 'aria-busy' | 'onMouseDown'> &
   ReturnType<typeof listboxName>;
 
 export interface SuggestionList {
@@ -95,25 +93,24 @@ export function useSuggestionList(state: SuggestionListState): SuggestionList {
       role: 'listbox',
       ...listboxName(state),
       'aria-busy': busy,
-      className: LISTBOX_CLASS,
       onMouseDown: (event) => event.preventDefault(),
     },
   };
 }
 
 export interface SuggestionOptionProps extends Omit<React.ComponentProps<'div'>, 'onSelect'> {
-  selected: boolean;
+  highlighted: boolean;
   onSelect: () => void;
   onHighlight: () => void;
 }
 
 /** One selectable suggestion. The single highlight is drawn from `aria-selected`. */
-export function SuggestionOption({ selected, onSelect, onHighlight, className, ...props }: SuggestionOptionProps) {
+export function SuggestionOption({ highlighted, onSelect, onHighlight, className, ...props }: SuggestionOptionProps) {
   return (
     <div
       {...props}
       role='option'
-      aria-selected={selected}
+      aria-selected={highlighted}
       tabIndex={-1}
       onClick={onSelect}
       onMouseMove={onHighlight}

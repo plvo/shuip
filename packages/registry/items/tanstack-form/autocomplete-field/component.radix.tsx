@@ -5,7 +5,12 @@ import * as React from 'react';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
-import { SuggestionEmpty, SuggestionOption, useSuggestionList } from '@/components/ui/shuip/suggestion-list';
+import {
+  listboxClassName,
+  SuggestionEmpty,
+  SuggestionOption,
+  useSuggestionList,
+} from '@/components/ui/shuip/suggestion-list';
 import { useFieldContext } from '@/components/ui/shuip/tanstack-form/form-context';
 
 const DEBOUNCE_TIME = 300;
@@ -198,6 +203,7 @@ export function AutocompleteField({
         <PopoverContent
           ref={popoverRef}
           {...suggestionList.listboxProps}
+          className={listboxClassName}
           align='start'
           onOpenAutoFocus={(e) => e.preventDefault()}
           style={{ width: 'var(--radix-popover-trigger-width)' }}
@@ -207,7 +213,7 @@ export function AutocompleteField({
             <SuggestionOption
               key={`${item}-${index}`}
               id={suggestionList.optionId(index)}
-              selected={selectedIndex === index}
+              highlighted={selectedIndex === index}
               onSelect={() => handleSelect(item)}
               onHighlight={() => setSelectedIndex(index)}
             >

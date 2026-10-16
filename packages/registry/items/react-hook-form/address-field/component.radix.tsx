@@ -9,7 +9,7 @@ import { getPlaceDetails, getPlacesAutocomplete } from '@/actions/shuip/places';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
-import { SuggestionEmpty, SuggestionOption, useSuggestionList } from '@/components/ui/shuip/suggestion-list';
+import { listboxClassName, SuggestionOption, useSuggestionList } from '@/components/ui/shuip/suggestion-list';
 
 const DEFAULT_COUNTRY = 'US';
 const LANGUAGE_RESULT = 'en';
@@ -279,18 +279,16 @@ export function AddressField({
           <PopoverContent
             ref={popoverRef}
             {...suggestionList.listboxProps}
+            className={listboxClassName}
             align='start'
             onOpenAutoFocus={(e) => e.preventDefault()}
             style={{ width: 'var(--radix-popover-trigger-width)' }}
           >
-            {suggestions.length === 0 && (
-              <SuggestionEmpty>{isPending ? 'Searching…' : 'No addresses found'}</SuggestionEmpty>
-            )}
             {suggestions.map((suggestion, index) => (
               <SuggestionOption
                 key={suggestion.placeId}
                 id={suggestionList.optionId(index)}
-                selected={selectedIndex === index}
+                highlighted={selectedIndex === index}
                 onSelect={() => handleSelectAddress(suggestion)}
                 onHighlight={() => setSelectedIndex(index)}
                 className='items-start p-3'
@@ -298,7 +296,9 @@ export function AddressField({
                 <MapPin className='size-4 mt-0.5 text-muted-foreground flex-shrink-0' />
                 <div className='flex-1 min-w-0'>
                   <div className='font-medium text-sm'>{suggestion.mainText}</div>
-                  <div className='text-xs text-muted-foreground truncate'>{suggestion.secondaryText}</div>
+                  <div className='text-xs text-muted-foreground truncate group-aria-selected/suggestion:text-accent-foreground'>
+                    {suggestion.secondaryText}
+                  </div>
                 </div>
               </SuggestionOption>
             ))}

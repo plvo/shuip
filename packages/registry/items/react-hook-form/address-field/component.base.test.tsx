@@ -3,6 +3,7 @@ import { useLens } from '@hookform/lenses';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { useForm } from 'react-hook-form';
 import { firstElementAttributes } from '../../../scripts/markup';
+import { labelId } from '../../components/suggestion-list/component.radix';
 import { type AddressData, AddressField } from './component.base';
 
 const EMPTY_ADDRESS: AddressData = { street: '', city: '', postalCode: '', country: '', fullAddress: '' };
@@ -30,6 +31,7 @@ describe('AddressField closed state', () => {
 
   test('keeps the label bound to the input', () => {
     expect(firstElementAttributes(markup, 'label').for).toBe('address.fullAddress');
+    expect(firstElementAttributes(markup, 'label').id).toBe(labelId('address.fullAddress'));
     expect(input.id).toBe('address.fullAddress');
   });
 
