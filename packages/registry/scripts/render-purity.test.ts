@@ -199,16 +199,7 @@ interface KnownWrite {
 }
 
 /** Writes that still happen while rendering, each matching one write of the source. Remove the entry when fixed. */
-const KNOWN_RENDER_TIME_WRITES: KnownWrite[] = [
-  {
-    file: 'packages/registry/items/react-hook-form/combobox-field/component.radix.tsx',
-    text: 'onSearchRef.current = onSearch',
-  },
-  {
-    file: 'packages/registry/items/tanstack-form/combobox-field/component.radix.tsx',
-    text: 'onSearchRef.current = onSearch',
-  },
-];
+const KNOWN_RENDER_TIME_WRITES: KnownWrite[] = [];
 
 const relativeToRepo = (file: string): string => path.relative(REPO_ROOT, file).split(path.sep).join('/');
 

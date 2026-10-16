@@ -10,7 +10,7 @@ export interface PreviewFrameProps {
 
 export function PreviewFrame({ registryName, component: PreviewComponent }: PreviewFrameProps) {
   return (
-    <div className='not-prose w-full min-h-[150px] flex items-center justify-center p-8 bg-background border border-border rounded-md'>
+    <div className='not-prose w-full min-h-[150px] flex items-center justify-center-safe overflow-x-auto p-8 bg-background border border-border rounded-md'>
       {PreviewComponent ? (
         <React.Suspense
           fallback={

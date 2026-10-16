@@ -6,10 +6,14 @@ import * as React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import { useFieldContext } from '@/components/ui/shuip/tanstack-form/form-context';
 import { cn } from '@/lib/utils';
 
 const DEBOUNCE_TIME = 300;
+
+// The popover gives its content role="dialog"; the combobox exposes the listbox inside it instead.
+const NO_POPUP_ROLE = { role: undefined };
 
 export interface ComboboxOption {
   value: string;
@@ -104,7 +108,9 @@ export function ComboboxField({
 
   // Held in a ref so an inline `onSearch` prop doesn't re-trigger the search effect every render.
   const onSearchRef = React.useRef(onSearch);
-  onSearchRef.current = onSearch;
+  React.useEffect(() => {
+    onSearchRef.current = onSearch;
+  });
   const hasSearch = Boolean(onSearch);
 
   const runSearch = React.useCallback((search: string) => {
@@ -231,54 +237,61 @@ export function ComboboxField({
   return (
     <Field className='gap-2' data-invalid={!isValid}>
       {label && <FieldLabel>{label}</FieldLabel>}
-      <Command shouldFilter={false} className='relative h-auto overflow-visible bg-transparent'>
-        <div
-          ref={containerRef}
-          aria-invalid={!isValid || undefined}
-          className={cn('flex w-full flex-wrap items-center', shellVariants[variant], shellSizes[size])}
-          onMouseDown={(e) => {
-            if (e.target !== inputRef.current) {
-              e.preventDefault();
-              inputRef.current?.focus();
-            }
-          }}
-        >
-          <Search className={cn('shrink-0 text-muted-foreground', iconSize)} aria-hidden />
-          {multiple &&
-            selectedValues.map((value) => (
-              <Badge key={value} variant='secondary' className='gap-1'>
-                {getOption(value)?.label ?? value}
-                <button
-                  type='button'
-                  className='cursor-pointer rounded-full outline-none focus-visible:ring-1 focus-visible:ring-ring'
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    removeValue(value);
-                  }}
-                  aria-label={`Remove ${getOption(value)?.label ?? value}`}
-                >
-                  <X className='size-3' />
-                </button>
-              </Badge>
-            ))}
-          <CommandPrimitive.Input
-            ref={inputRef}
-            value={inputValue}
-            placeholder={showPlaceholder ? placeholder : undefined}
-            aria-label={label}
-            aria-invalid={!isValid || undefined}
-            onValueChange={handleValueChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            className='min-w-20 flex-1 bg-transparent outline-hidden placeholder:text-muted-foreground'
-          />
-          {isPending && <Loader2 className={cn('shrink-0 animate-spin text-muted-foreground', iconSize)} />}
-        </div>
-        {open && (
-          <div
-            className='absolute top-full left-0 z-50 mt-1 w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md'
+      <Command shouldFilter={false} className='h-auto overflow-visible bg-transparent'>
+        <Popover open={open}>
+          <PopoverAnchor asChild>
+            <div
+              ref={containerRef}
+              aria-invalid={!isValid || undefined}
+              className={cn('flex w-full flex-wrap items-center', shellVariants[variant], shellSizes[size])}
+              onMouseDown={(e) => {
+                if (e.target !== inputRef.current) {
+                  e.preventDefault();
+                  inputRef.current?.focus();
+                }
+              }}
+            >
+              <Search className={cn('shrink-0 text-muted-foreground', iconSize)} aria-hidden />
+              {multiple &&
+                selectedValues.map((value) => (
+                  <Badge key={value} variant='secondary' className='gap-1'>
+                    {getOption(value)?.label ?? value}
+                    <button
+                      type='button'
+                      className='cursor-pointer rounded-full outline-none focus-visible:ring-1 focus-visible:ring-ring'
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        removeValue(value);
+                      }}
+                      aria-label={`Remove ${getOption(value)?.label ?? value}`}
+                    >
+                      <X className='size-3' />
+                    </button>
+                  </Badge>
+                ))}
+              <CommandPrimitive.Input
+                ref={inputRef}
+                value={inputValue}
+                placeholder={showPlaceholder ? placeholder : undefined}
+                aria-label={label}
+                aria-invalid={!isValid || undefined}
+                onValueChange={handleValueChange}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onKeyDown={handleKeyDown}
+                className='min-w-20 flex-1 bg-transparent outline-hidden placeholder:text-muted-foreground'
+              />
+              {isPending && <Loader2 className={cn('shrink-0 animate-spin text-muted-foreground', iconSize)} />}
+            </div>
+          </PopoverAnchor>
+          <PopoverContent
+            align='start'
+            sideOffset={8}
+            {...NO_POPUP_ROLE}
+            className='overflow-hidden p-0'
+            onOpenAutoFocus={(e) => e.preventDefault()}
             onMouseDown={(e) => e.preventDefault()}
+            style={{ width: 'var(--radix-popover-trigger-width)' }}
           >
             <CommandList className='max-h-60'>
               {items.length === 0 ? (
@@ -307,8 +320,8 @@ export function ComboboxField({
                 </CommandGroup>
               )}
             </CommandList>
-          </div>
-        )}
+          </PopoverContent>
+        </Popover>
       </Command>
       {!isValid && (
         <FieldError
