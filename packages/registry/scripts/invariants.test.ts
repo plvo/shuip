@@ -319,8 +319,10 @@ const REGISTRY_NAME = /^registryName:\s*['"]?([^'"\s]+)['"]?\s*$/m;
 
 const declaredRegistryName = (doc: string) => doc.match(REGISTRY_NAME)?.[1];
 
+const withoutCodeBlocks = (markdown: string) => markdown.replace(FENCED_CODE_BLOCK, '');
+
 const rendersItemExamples = (doc: string, registryName: string) =>
-  new RegExp(`<ItemExamples\\s+registryName=\\{?['"]${registryName}['"]\\}?\\s*/>`).test(doc);
+  new RegExp(`<ItemExamples\\s+registryName=\\{?['"]${registryName}['"]\\}?\\s*/>`).test(withoutCodeBlocks(doc));
 
 const docsMissingExamples = (docs: { relativePath: string; content: string; exampleCount: number }[]) =>
   docs.flatMap(({ relativePath, content, exampleCount }) => {
@@ -338,9 +340,7 @@ describe('item doc pages render their examples', () => {
 
   test('scans every item doc page that declares a registry name', () => {
     expect(docs.filter((doc) => declaredRegistryName(doc.content)).length).toBeGreaterThan(0);
-    expect(docs.map((doc) => doc.relativePath)).toContain(
-      'packages/registry/items/tanstack-query/query-boundary/index.mdx',
-    );
+    expect(docs.some((doc) => declaredRegistryName(doc.content) && doc.exampleCount > 1)).toBe(true);
   });
 
   test('every doc page of an item with more than its default example renders ItemExamples', () => {
@@ -354,6 +354,11 @@ describe('item doc pages render their examples', () => {
 
     test('flags a page without the block', () => {
       expect(check(page('## Props'))).toEqual(['a.mdx']);
+    });
+
+    test('flags a page that only shows the block inside a code snippet', () => {
+      const snippet = ['```mdx', "<ItemExamples registryName={'tsq-x'} />", '```'].join('\n');
+      expect(check(page(snippet))).toEqual(['a.mdx']);
     });
 
     test('flags a page whose block names another item', () => {

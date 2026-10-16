@@ -44,7 +44,7 @@ export default function QueryBoundaryErrorHandlingExample() {
             {requested ? 'Reset' : 'Load profile'}
           </Button>
         </div>
-        <div className='flex min-h-64 w-full items-center justify-center'>
+        <div className='flex min-h-24 w-full items-center justify-center'>
           {requested ? (
             <QueryBoundary
               queryKeys={PROFILE_QUERY_KEYS}
@@ -74,7 +74,7 @@ function Profile({ shouldFail }: { shouldFail: boolean }) {
 
   return (
     <div className='w-full rounded-lg border bg-muted/50 p-4'>
-      <h3 className='font-semibold'>{data.name}</h3>
+      <p className='font-semibold'>{data.name}</p>
       <p className='text-sm text-muted-foreground'>{data.email}</p>
     </div>
   );
