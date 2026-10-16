@@ -1,47 +1,62 @@
 import { describe, expect, test } from 'bun:test';
+import fs from 'node:fs';
+import path from 'node:path';
 import { REGISTRY_INDEX as RADIX_INDEX } from '@repo/registry/__index__';
 import { REGISTRY_INDEX as BASE_INDEX } from '@repo/registry/__index__.base';
-import { parseExampleKey } from '@repo/registry/example-key';
+import { exampleKey } from '@repo/registry/example-key';
 import { BASES, type Base } from './base-routes';
 import { previewPageOf, previewParams } from './preview-pages';
-import { exampleKeyOf } from './preview-routes';
 import { sectionLoaders } from './section-sources';
+
+const CONTENT_DIR = path.resolve(import.meta.dir, '..', '..', 'content');
 
 const INDEXES: Record<Base, Record<string, unknown>> = { base: BASE_INDEX, radix: RADIX_INDEX };
 
 const exampleKeysOf = (base: Base) => Object.keys(INDEXES[base]).filter((key) => key.endsWith('.example'));
 
-const BLOCKS = ['kanban', 'responsive-dialog', 'title-section'];
+const frontmatterOf = (file: string): Record<string, string> =>
+  Object.fromEntries(
+    [...(/^---\n([\s\S]*?)\n---/.exec(fs.readFileSync(file, 'utf-8'))?.[1] ?? '').matchAll(/^(\w+):\s*(.+)$/gm)].map(
+      ([, key, value]) => [key, (value as string).trim()],
+    ),
+  );
 
-const itemsOf = (base: Base) => [
-  ...new Set(exampleKeysOf(base).flatMap((key) => parseExampleKey(key)?.itemName ?? [])),
-];
-
-const page = (item: string) => ({
-  type: 'page' as const,
-  path: `${item}.mdx`,
-  data: { title: item.toUpperCase(), registryName: item },
-});
-
-const index = { type: 'page' as const, path: 'index.mdx', data: { title: 'Index' } };
-
-const documented = {
-  components: sectionLoaders('components', {
-    files: [
-      index,
-      ...itemsOf('base')
-        .filter((item) => !BLOCKS.includes(item))
-        .map(page),
-    ],
-  }),
-  blocks: sectionLoaders('blocks', { files: [index, ...BLOCKS.map(page)] }),
+/** The pages of a section as the docs load them, from the MDX files and their frontmatter. */
+const pagesOf = (section: 'components' | 'blocks') => {
+  const root = path.join(CONTENT_DIR, section);
+  return fs
+    .readdirSync(root, { recursive: true, withFileTypes: true })
+    .filter((entry) => (entry.isFile() || entry.isSymbolicLink()) && entry.name.endsWith('.mdx'))
+    .map((entry) => {
+      const file = path.join(entry.parentPath, entry.name);
+      const { title, registryName } = frontmatterOf(file);
+      return { type: 'page' as const, path: path.relative(root, file), data: { title: title as string, registryName } };
+    });
 };
 
-describe('previewParams', () => {
-  const params = previewParams(documented);
+const docs = {
+  components: sectionLoaders('components', { files: pagesOf('components') }),
+  blocks: sectionLoaders('blocks', { files: pagesOf('blocks') }),
+};
 
-  test.each(BASES)('has one entry per example of the %s registry, and no other', (base) => {
-    const keys = params.filter((param) => param.base === base).map((param) => exampleKeyOf(param.item, param.example));
+describe('the docs pages the full-page route is built from', () => {
+  test('are read from the content of the docs', () => {
+    const items = docs.components.base
+      .getPages()
+      .concat(docs.blocks.base.getPages())
+      .flatMap((page) => page.data.registryName ?? []);
+
+    expect(items).toContain('copy-button');
+    expect(items).toContain('rhf-input-field');
+    expect(items).toContain('kanban');
+  });
+});
+
+describe('previewParams', () => {
+  const params = previewParams(docs);
+
+  test.each(BASES)('has one entry per example of the %s registry, so no example is left without a page', (base) => {
+    const keys = params.filter((param) => param.base === base).map((param) => exampleKey(param.item, param.example));
 
     expect([...keys].sort()).toEqual(exampleKeysOf(base).sort());
     expect(new Set(keys).size).toBe(keys.length);
@@ -54,25 +69,29 @@ describe('previewParams', () => {
 
   test('leaves out an item the docs have no page for', () => {
     const withoutCopyButton = previewParams({
-      components: sectionLoaders('components', { files: [index, page('side-dialog')] }),
-      blocks: sectionLoaders('blocks', { files: [index] }),
+      components: sectionLoaders('components', {
+        files: pagesOf('components').filter((page) => page.data.registryName !== 'copy-button'),
+      }),
+      blocks: docs.blocks,
     });
 
     expect(withoutCopyButton.map((param) => param.item)).not.toContain('copy-button');
-    expect(withoutCopyButton.map((param) => param.item)).toContain('side-dialog');
   });
 });
 
 describe('previewPageOf', () => {
-  test('finds the docs page of a component and of a block under the base asked for', () => {
-    expect(previewPageOf('base', 'copy-button', documented)).toEqual({
-      title: 'COPY-BUTTON',
-      url: '/components/base/copy-button',
+  test('finds the docs page of a component, under the base asked for, with the title the page shows', () => {
+    expect(previewPageOf('radix', 'rhf-input-field', docs)).toEqual({
+      title: 'Input Field',
+      url: '/components/radix/react-hook-form/input-field',
     });
-    expect(previewPageOf('radix', 'kanban', documented)).toEqual({ title: 'KANBAN', url: '/blocks/radix/kanban' });
+  });
+
+  test('finds the docs page of a block', () => {
+    expect(previewPageOf('base', 'kanban', docs)).toEqual({ title: 'Kanban', url: '/blocks/base/kanban' });
   });
 
   test('finds nothing for an item with no docs page', () => {
-    expect(previewPageOf('base', 'no-such-item', documented)).toBeUndefined();
+    expect(previewPageOf('base', 'no-such-item', docs)).toBeUndefined();
   });
 });

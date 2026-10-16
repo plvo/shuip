@@ -1,7 +1,6 @@
-import { parseExampleKey } from '@repo/registry/example-key';
 import type { Base } from '@/lib/base-routes';
 import { itemSourcesFor } from '@/lib/item-sources';
-import { filenameToTitle } from '@/lib/utils';
+import { exampleTitle } from '@/lib/preview-routes';
 import { useMDXComponents } from '@/mdx-components';
 import { InstallationCmd } from './item-installation';
 import { ItemPreview } from './item-preview';
@@ -41,9 +40,7 @@ export async function ItemExamples({ base, registryName }: ItemExamplesProps) {
 
   return examples.map(({ key, code }) => (
     <div key={key} className='my-6 space-y-4'>
-      <H3>
-        {key === `${registryName}.example` ? 'Default' : filenameToTitle(parseExampleKey(key)?.exampleName ?? key)}
-      </H3>
+      <H3>{exampleTitle(key)}</H3>
       <ItemPreview exampleKey={key} code={code}>
         <Preview base={base} registryName={key} />
       </ItemPreview>

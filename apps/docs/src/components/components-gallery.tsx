@@ -37,7 +37,7 @@ export function ComponentsGallery({ base }: { base: Base }) {
                 <Card key={page.url} className='gap-0 overflow-hidden py-0 transition-shadow hover:shadow-2xl'>
                   <div className='flex h-40 items-center justify-center overflow-hidden border-b border-border'>
                     <LazyPreview className='w-full'>
-                      <Preview base={base} registryName={`${page.data.registryName}.example`} />
+                      <Preview base={base} registryName={`${page.data.registryName}.example`} expandable={false} />
                     </LazyPreview>
                   </div>
                   <Link href={page.url} className='no-underline'>

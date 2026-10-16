@@ -1,7 +1,8 @@
 import { parseExampleKey } from '@repo/registry/example-key';
 import { listItemExamples } from '@repo/registry/item-source';
 import { BASES, type Base } from './base-routes';
-import { blocksSources, componentsSources } from './source';
+import type { SectionSources } from './section-sources';
+import { sectionSources } from './source';
 
 export interface PreviewParams {
   base: Base;
@@ -9,20 +10,10 @@ export interface PreviewParams {
   example: string;
 }
 
-interface PageList {
-  getPages(): { url: string; data: { title: string; registryName?: string } }[];
-}
+type DocumentedSources = Pick<SectionSources, 'components' | 'blocks'>;
 
-/** The pages of the docs that document registry items, per base. */
-export interface DocumentedSources {
-  components: Record<Base, PageList>;
-  blocks: Record<Base, PageList>;
-}
-
-const DOCS: DocumentedSources = { components: componentsSources, blocks: blocksSources };
-
-const documentedPages = (base: Base, sources: DocumentedSources) =>
-  [sources.components, sources.blocks].flatMap((section) =>
+const documentedPages = (base: Base, { components, blocks }: DocumentedSources) =>
+  [components, blocks].flatMap((section) =>
     section[base]
       .getPages()
       .flatMap((page) =>
@@ -36,13 +27,17 @@ export interface PreviewPage {
 }
 
 /** The docs page of an item, which the full-page view of its examples names and returns to. */
-export const previewPageOf = (base: Base, item: string, sources = DOCS): PreviewPage | undefined => {
+export const previewPageOf = (
+  base: Base,
+  item: string,
+  sources: DocumentedSources = sectionSources,
+): PreviewPage | undefined => {
   const page = documentedPages(base, sources).find((candidate) => candidate.item === item);
   return page && { title: page.title, url: page.url };
 };
 
 /** The `generateStaticParams` of the full-page route: every example of every documented item under every base. */
-export const previewParams = (sources = DOCS): PreviewParams[] =>
+export const previewParams = (sources: DocumentedSources = sectionSources): PreviewParams[] =>
   BASES.flatMap((base) =>
     documentedPages(base, sources).flatMap(({ item }) =>
       listItemExamples(base, item).flatMap((key) => {

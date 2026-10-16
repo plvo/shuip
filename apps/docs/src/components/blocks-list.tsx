@@ -20,7 +20,7 @@ export function BlocksList({ base }: { base: Base }) {
           </Link>
           <div className='h-80 overflow-hidden border-t border-border'>
             <LazyPreview className='h-full'>
-              <Preview base={base} registryName={`${page.data.registryName}.example`} />
+              <Preview base={base} registryName={`${page.data.registryName}.example`} expandable={false} />
             </LazyPreview>
           </div>
         </Card>

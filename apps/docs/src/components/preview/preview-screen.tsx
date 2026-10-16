@@ -3,6 +3,9 @@
 import { XIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
+import { morphBack } from './morph-back';
+import { closesOnEscape, transitionNameOf } from './preview-morph';
+import { useOrigin } from './preview-origin';
 import { PreviewTransition } from './preview-transition';
 
 export interface PreviewScreenProps {
@@ -14,24 +17,35 @@ export interface PreviewScreenProps {
   children: React.ReactNode;
 }
 
-/** An example alone on its page, with the controls that close it: the button, Escape and the browser's Back. */
+/**
+ * An example alone on its page, with the button and the Escape key that close it. A view opened from a card goes
+ * back to the page of that card; one opened on its own, from a link or a reload, goes to the docs page of the item.
+ */
 export function PreviewScreen({ registryName, title, exampleTitle, docsUrl, children }: PreviewScreenProps) {
   const router = useRouter();
+  const openedFromCard = useOrigin() !== null;
+  const headingRef = React.useRef<HTMLHeadingElement>(null);
+  const viewRef = React.useRef<HTMLDivElement>(null);
 
-  const close = React.useCallback(() => router.push(docsUrl, { scroll: false }), [router, docsUrl]);
+  React.useEffect(() => headingRef.current?.focus({ preventScroll: true }), []);
+
+  const close = React.useCallback(() => {
+    if (openedFromCard && viewRef.current) morphBack(viewRef.current, registryName, () => router.back());
+    else router.push(docsUrl, { scroll: false });
+  }, [openedFromCard, registryName, router, docsUrl]);
 
   React.useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !event.defaultPrevented) close();
+      if (closesOnEscape(event)) close();
     };
     document.addEventListener('keydown', closeOnEscape);
     return () => document.removeEventListener('keydown', closeOnEscape);
   }, [close]);
 
   return (
-    <div className='flex min-h-dvh flex-col gap-3 p-3 sm:p-4'>
+    <main className='flex min-h-dvh flex-col gap-3 p-3 sm:p-4'>
       <header className='flex items-center justify-between gap-3'>
-        <h1 className='min-w-0 font-mono text-lg font-semibold'>
+        <h1 ref={headingRef} tabIndex={-1} className='min-w-0 font-mono text-lg font-semibold outline-none'>
           {title}
           <span aria-hidden className='px-2 text-muted-foreground'>
             /
@@ -48,9 +62,11 @@ export function PreviewScreen({ registryName, title, exampleTitle, docsUrl, chil
           Close
         </button>
       </header>
-      <PreviewTransition registryName={registryName} named>
-        <div className='flex min-h-0 flex-1 flex-col'>{children}</div>
+      <PreviewTransition name={transitionNameOf(registryName)}>
+        <div ref={viewRef} className='flex min-h-0 flex-1 flex-col'>
+          {children}
+        </div>
       </PreviewTransition>
-    </div>
+    </main>
   );
 }

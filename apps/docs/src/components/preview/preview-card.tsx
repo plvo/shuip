@@ -2,7 +2,9 @@
 
 import * as React from 'react';
 import { ExpandButton } from './expand-button';
-import { originOf, takeScrollToRestore, useOrigin } from './preview-origin';
+import { landMorph } from './morph-back';
+import { cardTransitionName, originOf, scrollToRestoreFor } from './preview-morph';
+import { takeScrollToRestore, useOrigin } from './preview-origin';
 import { PreviewTransition } from './preview-transition';
 
 export interface PreviewCardProps {
@@ -16,21 +18,26 @@ export interface PreviewCardProps {
 
 /** A preview with the button that opens it full page, and the morph that button starts. */
 export function PreviewCard({ registryName, slot, href, label, children }: PreviewCardProps) {
-  const origin = originOf(slot, registryName);
-  const opened = useOrigin() === origin;
+  const origin = useOrigin();
+  const originOnMount = React.useRef(origin);
+  const cardRef = React.useRef<HTMLDivElement>(null);
+  const buttonRef = React.useRef<HTMLAnchorElement>(null);
 
-  const openedOnMount = React.useRef(opened);
+  // A page that mounts with an origin is the one a full-page view closes to: the card the reader opened scrolls
+  // back into place, takes the focus and meets the view in the transition.
   React.useLayoutEffect(() => {
-    if (!openedOnMount.current) return;
-    const scroll = takeScrollToRestore();
-    if (scroll !== null) window.scrollTo({ top: scroll, behavior: 'instant' });
-  }, []);
+    const scroll = scrollToRestoreFor(originOnMount.current, slot, registryName, takeScrollToRestore);
+    if (scroll === null) return;
+    window.scrollTo({ top: scroll, behavior: 'instant' });
+    buttonRef.current?.focus({ preventScroll: true });
+    if (cardRef.current) landMorph(cardRef.current);
+  }, [slot, registryName]);
 
   return (
-    <PreviewTransition registryName={registryName} named={opened}>
-      <div className='relative'>
+    <PreviewTransition name={cardTransitionName(origin, slot, registryName)}>
+      <div ref={cardRef} className='relative'>
         {children}
-        <ExpandButton href={href} label={label} origin={origin} />
+        <ExpandButton ref={buttonRef} href={href} label={label} origin={originOf(slot, registryName)} />
       </div>
     </PreviewTransition>
   );

@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { previewLabel, previewUrl } from '@/lib/preview-routes';
+import { previewCardWiring } from '@/lib/preview-routes';
 import { ExpandButton } from './expand-button';
 
-const buttonFor = (registryName: string) =>
-  renderToStaticMarkup(
-    <ExpandButton href={previewUrl('base', registryName)} label={previewLabel(registryName)} origin='page:x' />,
-  );
+const buttonFor = (registryName: string) => {
+  const { href, label } = previewCardWiring('base', registryName, 'page');
+  return renderToStaticMarkup(<ExpandButton href={href} label={label} origin='page:x' />);
+};
 
 describe('ExpandButton', () => {
   test('links to the full page of the example', () => {
@@ -23,6 +23,6 @@ describe('ExpandButton', () => {
   });
 
   test('hides its icon from assistive technology, so the name is the label alone', () => {
-    expect(buttonFor('copy-button.example')).toContain('aria-hidden="true"');
+    expect(buttonFor('copy-button.example')).toMatch(/<svg[^>]*aria-hidden="true"/);
   });
 });

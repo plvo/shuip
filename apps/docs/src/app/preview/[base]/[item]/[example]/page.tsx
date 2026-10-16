@@ -1,10 +1,11 @@
+import { exampleKey } from '@repo/registry/example-key';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { previewFor } from '@/components/preview/preview';
 import { PreviewScreen } from '@/components/preview/preview-screen';
 import { isBase } from '@/lib/base-routes';
 import { previewPageOf, previewParams } from '@/lib/preview-pages';
-import { exampleKeyOf, exampleTitle } from '@/lib/preview-routes';
+import { exampleTitle } from '@/lib/preview-routes';
 
 type PreviewPageProps = PageProps<'/preview/[base]/[item]/[example]'>;
 
@@ -13,7 +14,7 @@ const targetOf = async (props: PreviewPageProps) => {
   if (!isBase(base)) notFound();
   const page = previewPageOf(base, item);
   if (!page) notFound();
-  const registryName = exampleKeyOf(item, example);
+  const registryName = exampleKey(item, example);
   return { base, page, registryName, exampleTitle: exampleTitle(registryName) };
 };
 

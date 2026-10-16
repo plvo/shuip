@@ -1,20 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
-import ts from 'typescript';
-import { attributeNames, parseTsx, tsxSourceFiles } from './documents';
-
-const elementsNamed = (source: ts.SourceFile, tagName: string): ts.JsxOpeningLikeElement[] => {
-  const found: ts.JsxOpeningLikeElement[] = [];
-  const visit = (node: ts.Node) => {
-    if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) && node.tagName.getText() === tagName) {
-      found.push(node);
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
-  return found;
-};
+import type ts from 'typescript';
+import { attributeNames, elementsNamed, parseTsx, tsxSourceFiles } from './documents';
 
 const SOURCES = tsxSourceFiles();
 
@@ -37,18 +25,35 @@ describe('the expand button of the preview cards', () => {
   });
 });
 
+/** The text of the block that opens at `opening`, braces matched. */
+const blockAt = (css: string, opening: string): string => {
+  const start = css.indexOf(opening);
+  if (start === -1) return '';
+  let depth = 0;
+  for (let index = css.indexOf('{', start); index < css.length; index++) {
+    depth += css[index] === '{' ? 1 : css[index] === '}' ? -1 : 0;
+    if (depth === 0) return css.slice(start, index + 1);
+  }
+  return '';
+};
+
 describe('the view transitions of the docs', () => {
   const css = fs.readFileSync(path.resolve(import.meta.dir, '..', 'src', 'styles', 'globals.css'), 'utf-8');
-  const reducedMotion = css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'));
+  const reducedMotion = blockAt(css, '@media (prefers-reduced-motion: reduce)');
 
   test('morph a card into its full page and back', () => {
     expect(css).toContain('::view-transition-group(.preview-morph)');
   });
 
-  test('play no animation when the reader prefers reduced motion', () => {
+  test('play no animation of any transition when the reader prefers reduced motion', () => {
+    expect(reducedMotion).not.toBe('');
     for (const pseudoElement of ['group', 'old', 'new']) {
       expect(reducedMotion).toContain(`::view-transition-${pseudoElement}(*)`);
     }
-    expect(reducedMotion).toContain('animation: none !important');
+    expect(reducedMotion).toMatch(/animation:\s*none\s*!important/);
+  });
+
+  test('leave the morph out of the reduced-motion block, which removes it', () => {
+    expect(reducedMotion).not.toContain('.preview-morph');
   });
 });

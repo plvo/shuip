@@ -1,4 +1,4 @@
-import { exampleKey, parseExampleKey } from '@repo/registry/example-key';
+import { DEFAULT_EXAMPLE, parseExampleKey } from '@repo/registry/example-key';
 import { filenameToTitle } from '@/lib/utils';
 import type { Base } from './base-routes';
 
@@ -11,17 +11,38 @@ export const previewUrl = (base: Base, registryName: string): string => {
   return ['', PREVIEW_SEGMENT, base, parsed.itemName, parsed.exampleName].join('/');
 };
 
-export const exampleKeyOf = (item: string, example: string): string => exampleKey(item, example);
-
 /** What the reader calls an example: `Default` for the one every item has, the title of its name otherwise. */
 export const exampleTitle = (registryName: string): string => {
   const parsed = parseExampleKey(registryName);
   return filenameToTitle(parsed?.exampleName ?? registryName);
 };
 
-/** The accessible name of the button that opens an example full page. */
-export const previewLabel = (registryName: string): string => {
+/**
+ * The accessible name of the button that opens an example full page. `itemTitle` is the title of the docs page of
+ * the item, which is what the page says; without one the name of the item stands in.
+ */
+export const previewLabel = (registryName: string, itemTitle?: string): string => {
   const parsed = parseExampleKey(registryName);
-  const subject = parsed?.exampleName === 'default' ? [] : [exampleTitle(registryName)];
-  return ['Open', filenameToTitle(parsed?.itemName ?? registryName), ...subject, 'full page'].join(' ');
+  const subject = parsed?.exampleName === DEFAULT_EXAMPLE ? [] : [exampleTitle(registryName)];
+  return ['Open', itemTitle ?? filenameToTitle(parsed?.itemName ?? registryName), ...subject, 'full page'].join(' ');
 };
+
+export interface PreviewCardWiring {
+  registryName: string;
+  slot: string;
+  href: string;
+  label: string;
+}
+
+/** What a preview card needs to open its example full page: where the page is and what to call the button. */
+export const previewCardWiring = (
+  base: Base,
+  registryName: string,
+  slot: string,
+  itemTitle?: string,
+): PreviewCardWiring => ({
+  registryName,
+  slot,
+  href: previewUrl(base, registryName),
+  label: previewLabel(registryName, itemTitle),
+});
