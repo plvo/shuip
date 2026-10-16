@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import ts from 'typescript';
 import { buildRegistryJson, readRootCatalog, type ScannedItem, scanItems, writeBaseVariant } from './generate';
-import { attributeValues, elementsMatching, namedImports, parseTsx } from './jsx-source';
+import { attributeValues, elementsMatching, isImportedFromPackage, namedImports, parseTsx } from './jsx-source';
 import { RADIX_PACKAGE } from './radix-package';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '../../..');
@@ -154,8 +154,10 @@ const asChildSites = (relativePath: string, content: string): string[] => {
   const sites: string[] = [];
   const visit = (node: ts.Node): void => {
     if (ts.isJsxAttribute(node) && node.name.getText(file) === 'asChild') {
-      const tag = (node.parent.parent as ts.JsxOpeningLikeElement).tagName.getText(file);
-      sites.push(`${relativePath} <${tag} asChild${node.initializer ? '={…}' : ''}>`);
+      const { tagName } = node.parent.parent as ts.JsxOpeningLikeElement;
+      if (!isImportedFromPackage(file, tagName)) {
+        sites.push(`${relativePath} <${tagName.getText(file)} asChild${node.initializer ? '={…}' : ''}>`);
+      }
     } else if (ts.isIdentifier(node) && node.text === 'asChild' && !ts.isJsxAttribute(node.parent)) {
       sites.push(`${relativePath} mentions asChild`);
     }
@@ -164,12 +166,6 @@ const asChildSites = (relativePath: string, content: string): string[] => {
   visit(file);
   return sites;
 };
-
-// cmdk, not the vendored primitives, owns these inputs: its asChild composes the same way on both bases.
-const ASCHILD_ON_CMDK = [
-  'react-hook-form/combobox-field/component.base.tsx <CommandPrimitive.Input asChild={…}>',
-  'tanstack-form/combobox-field/component.base.tsx <CommandPrimitive.Input asChild={…}>',
-];
 
 describe('the Base UI variant stays free of Radix', () => {
   const items = scanItems();
@@ -202,15 +198,15 @@ describe('the Base UI variant stays free of Radix', () => {
     expect(paths(offenders)).toEqual([]);
   });
 
-  // No `asChild` survives in the Base UI output, whether used or declared. A site that does fails this test: give it
-  // an override or a canonical form that composes on both bases, or list it here after checking that it composes.
+  // No `asChild` survives in the Base UI output, whether used or declared, except on an element imported from an npm
+  // package, which composes through its own library. A site that does fails this test: give it an override or
+  // a canonical form that composes on both bases.
   test('no asChild site is left in the published Base UI sources', () => {
     const consumerDir = path.join(outDir, 'consumer', 'items');
     const remaining = fs
       .readdirSync(consumerDir, { recursive: true, encoding: 'utf-8' })
       .filter((entry) => entry.endsWith('.tsx'))
-      .flatMap((entry) => asChildSites(entry, fs.readFileSync(path.join(consumerDir, entry), 'utf-8')))
-      .filter((site) => !ASCHILD_ON_CMDK.includes(site));
+      .flatMap((entry) => asChildSites(entry, fs.readFileSync(path.join(consumerDir, entry), 'utf-8')));
     expect(remaining.sort()).toEqual([]);
   });
 

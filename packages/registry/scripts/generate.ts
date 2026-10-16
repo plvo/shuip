@@ -18,6 +18,7 @@ import {
   toDocsSource,
 } from './base-variant';
 import { buildRegistryDependencies, type Catalog, flattenCatalogs, pinDependencies } from './dependencies';
+import { isPackageSpecifier } from './jsx-source';
 import { applySkillSourcesToDocs, assertUniqueNames, emitSkills, resolveCatalog } from './skills';
 
 const ROOT = path.resolve(import.meta.dir, '..');
@@ -119,7 +120,7 @@ const parseImports = (source: string): string[] => {
   while ((m = importRegex.exec(source)) !== null) {
     const spec = m[1];
     if (!spec) continue;
-    if (spec.startsWith('.') || spec.startsWith('@/') || spec.startsWith('@repo/') || spec.startsWith('#/')) continue;
+    if (!isPackageSpecifier(spec)) continue;
     const parts = spec.split('/');
     if (spec.startsWith('@')) {
       out.add(parts.slice(0, 2).join('/'));

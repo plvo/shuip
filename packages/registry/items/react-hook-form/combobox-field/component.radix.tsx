@@ -286,7 +286,7 @@ export function ComboboxField(props: ComboboxFieldProps) {
                   </Badge>
                 ))}
               <CommandPrimitive.Input
-                asChild={true}
+                asChild
                 ref={inputRef}
                 value={inputValue}
                 placeholder={showPlaceholder ? placeholder : undefined}

@@ -12,6 +12,7 @@
  * `Portal`, a `Positioner` with `anchor` set to the `ref` of the anchored element, and a `Popup`.
  */
 import ts from 'typescript';
+import { isImportedFromPackage } from './jsx-source';
 
 export interface BaseVariant {
   code: string;
@@ -102,7 +103,7 @@ export const toBaseVariant = (source: string): BaseVariant => {
   const convert = (element: ts.JsxElement): string | undefined => {
     const { tagName, attributes } = element.openingElement;
     const asChild = attributes.properties.find(isAsChild);
-    if (!asChild || asChild.initializer) return undefined;
+    if (!asChild || asChild.initializer || isImportedFromPackage(file, tagName)) return undefined;
 
     const parentTag = tagName.getText(file);
     const child = singleElementChild(element);
