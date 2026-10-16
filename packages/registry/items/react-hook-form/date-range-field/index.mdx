@@ -26,7 +26,7 @@ The field binds via `@hookform/lenses`. Declare the value as an optional `DateRa
 ```tsx
 import type { DateRange } from 'react-day-picker';
 import { useLens } from '@hookform/lenses';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { DateRangeField } from '@/components/ui/shuip/react-hook-form/date-range-field';
 
 type Values = { stay: DateRange | undefined };
@@ -34,11 +34,9 @@ type Values = { stay: DateRange | undefined };
 const form = useForm<Values>({ defaultValues: { stay: undefined } });
 const lens = useLens({ control: form.control });
 
-<FormProvider {...form}>
-  <form onSubmit={form.handleSubmit(onSubmit)}>
-    <DateRangeField lens={lens.focus('stay')} label='Stay' />
-  </form>
-</FormProvider>
+<form onSubmit={form.handleSubmit(onSubmit)}>
+  <DateRangeField lens={lens.focus('stay')} label='Stay' />
+</form>
 ```
 
 ## Trigger label

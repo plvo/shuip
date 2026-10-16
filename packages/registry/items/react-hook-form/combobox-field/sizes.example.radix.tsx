@@ -1,7 +1,7 @@
 'use client';
 
 import { useLens } from '@hookform/lenses';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { ComboboxField, type ComboboxOption } from '@/components/ui/shuip/react-hook-form/combobox-field';
 
 const COUNTRIES: ComboboxOption[] = [
@@ -23,25 +23,23 @@ export default function ComboboxFieldSizesExample() {
   const lens = useLens({ control: form.control });
 
   return (
-    <FormProvider {...form}>
-      <form className='space-y-4'>
-        <ComboboxField
-          size='sm'
-          lens={lens.focus('small')}
-          label='Small'
-          placeholder='Search a country…'
-          options={COUNTRIES}
-          defaultSelected={PRESET}
-        />
-        <ComboboxField
-          size='default'
-          lens={lens.focus('normal')}
-          label='Default'
-          placeholder='Search a country…'
-          options={COUNTRIES}
-          defaultSelected={PRESET}
-        />
-      </form>
-    </FormProvider>
+    <form className='space-y-4'>
+      <ComboboxField
+        size='sm'
+        lens={lens.focus('small')}
+        label='Small'
+        placeholder='Search a country…'
+        options={COUNTRIES}
+        defaultSelected={PRESET}
+      />
+      <ComboboxField
+        size='default'
+        lens={lens.focus('normal')}
+        label='Default'
+        placeholder='Search a country…'
+        options={COUNTRIES}
+        defaultSelected={PRESET}
+      />
+    </form>
   );
 }

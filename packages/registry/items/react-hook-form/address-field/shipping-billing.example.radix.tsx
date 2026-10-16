@@ -3,7 +3,7 @@
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as React from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { type AddressData, AddressField, addressSchema } from '@/components/ui/shuip/react-hook-form/address-field';
 import { CheckboxField } from '@/components/ui/shuip/react-hook-form/checkbox-field';
@@ -61,34 +61,32 @@ export default function RhfAddressFieldShippingBillingExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6 w-full'>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6 w-full'>
+      <div className='space-y-4'>
+        <h3 className='text-lg font-semibold'>Billing Address</h3>
+        <AddressField
+          lens={lens.focus('billing')}
+          label='Billing Address'
+          placeholder='Enter billing address'
+          description='Address for payment processing'
+        />
+      </div>
+
+      <CheckboxField lens={lens.focus('sameAsShipping')} label='Shipping address is the same as billing address' />
+
+      {!sameAsShipping && (
         <div className='space-y-4'>
-          <h3 className='text-lg font-semibold'>Billing Address</h3>
+          <h3 className='text-lg font-semibold'>Shipping Address</h3>
           <AddressField
-            lens={lens.focus('billing')}
-            label='Billing Address'
-            placeholder='Enter billing address'
-            description='Address for payment processing'
+            lens={lens.focus('shipping')}
+            label='Shipping Address'
+            placeholder='Enter shipping address'
+            description='Address where items will be delivered'
           />
         </div>
+      )}
 
-        <CheckboxField lens={lens.focus('sameAsShipping')} label='Shipping address is the same as billing address' />
-
-        {!sameAsShipping && (
-          <div className='space-y-4'>
-            <h3 className='text-lg font-semibold'>Shipping Address</h3>
-            <AddressField
-              lens={lens.focus('shipping')}
-              label='Shipping Address'
-              placeholder='Enter shipping address'
-              description='Address where items will be delivered'
-            />
-          </div>
-        )}
-
-        <SubmitButton>Save Addresses</SubmitButton>
-      </form>
-    </FormProvider>
+      <SubmitButton>Save Addresses</SubmitButton>
+    </form>
   );
 }

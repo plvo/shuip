@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { TimeRangeField } from '@/components/ui/shuip/react-hook-form/time-range';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -37,11 +37,9 @@ export default function RhfTimeRangeExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <TimeRangeField lens={lens.focus('slot')} label='Meeting slot' description='Pick a start and end time' />
-        <SubmitButton>Save</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <TimeRangeField lens={lens.focus('slot')} label='Meeting slot' description='Pick a start and end time' />
+      <SubmitButton>Save</SubmitButton>
+    </form>
   );
 }

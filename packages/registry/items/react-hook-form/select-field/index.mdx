@@ -22,21 +22,19 @@ Field components bind via `@hookform/lenses`. Create a lens once per form:
 
 ```tsx
 import { useLens } from '@hookform/lenses';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { SelectField } from '@/components/ui/shuip/react-hook-form/select-field';
 
 const form = useForm<MyForm>({ defaultValues: { country: 'us' } });
 const lens = useLens({ control: form.control });
 
-<FormProvider {...form}>
-  <form onSubmit={form.handleSubmit(onSubmit)}>
-    <SelectField
-      lens={lens.focus('country')}
-      label='Country'
-      options={{ 'United States': 'us', Canada: 'ca', France: 'fr' }}
-    />
-  </form>
-</FormProvider>
+<form onSubmit={form.handleSubmit(onSubmit)}>
+  <SelectField
+    lens={lens.focus('country')}
+    label='Country'
+    options={{ 'United States': 'us', Canada: 'ca', France: 'fr' }}
+  />
+</form>
 ```
 
 Default selections belong on `useForm({ defaultValues })`, not on the field component.

@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import { NumberField } from '@/components/ui/shuip/react-hook-form/number-field';
@@ -35,32 +35,30 @@ export default function RhfInputFieldValidationExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <InputField
-          lens={lens.focus('username')}
-          label='Username'
-          description='Username will be used for your profile'
-          placeholder='Enter username'
-        />
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <InputField
+        lens={lens.focus('username')}
+        label='Username'
+        description='Username will be used for your profile'
+        placeholder='Enter username'
+      />
 
-        <InputField
-          lens={lens.focus('email')}
-          type='email'
-          label='Email'
-          description='We will send confirmation to this email'
-          placeholder='your@email.com'
-        />
+      <InputField
+        lens={lens.focus('email')}
+        type='email'
+        label='Email'
+        description='We will send confirmation to this email'
+        placeholder='your@email.com'
+      />
 
-        <NumberField
-          lens={lens.focus('age')}
-          label='Age'
-          description='You must be 18 or older to register'
-          placeholder='25'
-        />
+      <NumberField
+        lens={lens.focus('age')}
+        label='Age'
+        description='You must be 18 or older to register'
+        placeholder='25'
+      />
 
-        <SubmitButton>Register</SubmitButton>
-      </form>
-    </FormProvider>
+      <SubmitButton>Register</SubmitButton>
+    </form>
   );
 }

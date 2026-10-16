@@ -4,11 +4,14 @@ import os from 'node:os';
 import path from 'node:path';
 import ts from 'typescript';
 import { buildRegistryJson, readRootCatalog, type ScannedItem, scanItems, writeBaseVariant } from './generate';
-import { attributeValues, parseTsx } from './jsx-source';
+import { attributeValues, elementsMatching, namedImports, parseTsx } from './jsx-source';
 import { RADIX_PACKAGE } from './radix-package';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '../../..');
 const BLOCK_DOCS_DIR = path.join(REPO_ROOT, 'apps/docs/content/blocks');
+const GUIDE_DOCS_DIR = path.join(REPO_ROOT, 'apps/docs/content/docs');
+const RHF_GUIDE_DOC = path.join(REPO_ROOT, 'apps/docs/content/components/react-hook-form/index.mdx');
+const FORMS_SKILL_DOC = path.join(REPO_ROOT, 'packages/registry/skills/shuip-forms/SKILL.md');
 
 /** Sources whose component sets its own `data-state`, so styling on it is not a primitive trigger. */
 const OWN_DATA_STATE = [
@@ -49,13 +52,22 @@ const itemSourcePaths = (item: ScannedItem) => [
   ...overridePaths(item),
 ];
 
+const itemExamplePaths = (item: ScannedItem) =>
+  item.examples.flatMap((example) => [example.absPath, ...(example.overridePath ? [example.overridePath] : [])]);
+
 const itemDocPaths = (item: ScannedItem) => (item.hasMdx ? [path.join(item.itemDir, 'index.mdx')] : []);
 
-const blockDocPaths = () =>
+const mdxPathsIn = (dir: string) =>
   fs
-    .readdirSync(BLOCK_DOCS_DIR)
+    .readdirSync(dir)
     .filter((filename) => filename.endsWith('.mdx'))
-    .map((filename) => path.join(BLOCK_DOCS_DIR, filename));
+    .map((filename) => path.join(dir, filename));
+
+const blockDocPaths = () => mdxPathsIn(BLOCK_DOCS_DIR);
+
+const itemAndBlockDocPaths = (items: ScannedItem[]) => [...items.flatMap(itemDocPaths), ...blockDocPaths()];
+
+const guideDocPaths = () => [...mdxPathsIn(GUIDE_DOCS_DIR), RHF_GUIDE_DOC, FORMS_SKILL_DOC];
 
 const codeBlocks = (markdown: string) =>
   [...markdown.matchAll(FENCED_CODE_BLOCK)].map((m) => m[2] as string).join('\n');
@@ -84,7 +96,7 @@ const paths = (sources: SourceFile[]) => sources.map((s) => s.relativePath);
 describe('item sources stay base-agnostic', () => {
   const items = scanItems();
   const sources = items.flatMap(itemSourcePaths).map((absPath) => readSource(absPath, 'source'));
-  const docs = [...items.flatMap(itemDocPaths), ...blockDocPaths()].map((absPath) => readSource(absPath, 'doc'));
+  const docs = itemAndBlockDocPaths(items).map((absPath) => readSource(absPath, 'doc'));
   const violations = findViolations([...sources, ...docs]);
 
   test('scans the main file of every item, including lib items', () => {
@@ -356,6 +368,143 @@ describe('invariant detection', () => {
   test('does not apply the data-[state= rule to doc pages', () => {
     const page = ['```tsx', "cn('data-[state=open]:bg-accent')", '```'].join('\n');
     expect(findViolations([doc('a.mdx', page)]).primitiveStateClasses).toEqual([]);
+  });
+});
+
+const FORM_PROVIDER_TAG = /(?:^|\.)FormProvider$/;
+const INLINE_EDIT_TAG = /(?:^|\.)InlineEditField$/;
+
+/** The code blocks of a page, a block that embeds markdown (an `md` fence holding a skill) standing for its own blocks. */
+const snippetsOf = (markdown: string): string[] =>
+  [...markdown.matchAll(FENCED_CODE_BLOCK)].flatMap((m) => {
+    const embedded = snippetsOf(m[2] as string);
+    return embedded.length > 0 ? embedded : [m[2] as string];
+  });
+
+/** A field binds through its lens; only `InlineEditField` reads the form context, to validate on commit. */
+const hasProviderWithoutInlineEdit = (file: SourceFile) =>
+  (file.kind === 'doc' ? snippetsOf(file.content) : [file.content]).some((snippet) => {
+    const tree = parseTsx(file.relativePath, snippet);
+    const aliases = namedImports(tree, 'react-hook-form')
+      .filter(({ imported }) => imported === 'FormProvider')
+      .map(({ local }) => local);
+    const providers = elementsMatching(tree, (tag) => FORM_PROVIDER_TAG.test(tag) || aliases.includes(tag));
+    return providers.some(
+      (provider) =>
+        ts.isJsxSelfClosingElement(provider) ||
+        elementsMatching(provider.parent, (tag) => INLINE_EDIT_TAG.test(tag)).length === 0,
+    );
+  });
+
+describe('a FormProvider wraps an InlineEditField', () => {
+  const items = scanItems();
+  const examples = items.flatMap(itemExamplePaths).map((absPath) => readSource(absPath, 'source'));
+  const docs = [...itemAndBlockDocPaths(items), ...guideDocPaths()].map((absPath) => readSource(absPath, 'doc'));
+
+  test('scans the examples that keep the provider', () => {
+    expect(paths(examples)).toContain('packages/registry/items/react-hook-form/inline-edit/default.example.radix.tsx');
+  });
+
+  test('scans the guides, the forms skill and the generated agent skills page', () => {
+    expect(paths(docs)).toEqual(
+      expect.arrayContaining([
+        'apps/docs/content/components/react-hook-form/index.mdx',
+        'packages/registry/skills/shuip-forms/SKILL.md',
+        'apps/docs/content/docs/agent-skills.mdx',
+      ]),
+    );
+  });
+
+  test('no example renders a FormProvider around fields that bind through their lens', () => {
+    expect(paths(examples.filter(hasProviderWithoutInlineEdit))).toEqual([]);
+  });
+
+  test('no doc snippet renders a FormProvider around fields that bind through their lens', () => {
+    expect(paths(docs.filter(hasProviderWithoutInlineEdit))).toEqual([]);
+  });
+
+  describe('detection', () => {
+    const source = (content: string): SourceFile => ({ relativePath: 'a.tsx', kind: 'source', content });
+    const doc = (content: string): SourceFile => ({ relativePath: 'a.mdx', kind: 'doc', content });
+    const provider = "import { FormProvider } from 'react-hook-form';";
+    const inlineEdit = "<InlineEditField lens={lens.focus('name')} />";
+    const inputField = "<InputField lens={lens.focus('name')} />";
+
+    test.each([
+      ['a named import', `${provider}\nexport const A = () => <FormProvider {...form}>${inputField}</FormProvider>;`],
+      [
+        'a namespace import',
+        `import * as RHF from 'react-hook-form';\nexport const A = () => <RHF.FormProvider {...form}>${inputField}</RHF.FormProvider>;`,
+      ],
+      ['a render without an import', `export const A = () => <FormProvider {...form}>${inputField}</FormProvider>;`],
+      [
+        'an aliased import',
+        `import { FormProvider as Provider } from 'react-hook-form';\nexport const A = () => <Provider {...form}>${inputField}</Provider>;`,
+      ],
+      [
+        'an InlineEditField only in a comment',
+        `${provider}\n// ${inlineEdit}\nexport const A = () => <FormProvider {...form}>{/* ${inlineEdit} */}${inputField}</FormProvider>;`,
+      ],
+      [
+        'an InlineEditField only in a string',
+        `${provider}\nexport const A = () => <FormProvider {...form}>{'${inlineEdit}'}${inputField}</FormProvider>;`,
+      ],
+      [
+        'an InlineEditField only in an unused import',
+        `${provider}\nimport { InlineEditField } from '@/components/ui/shuip/react-hook-form/inline-edit';\nexport const A = () => <FormProvider {...form}>${inputField}</FormProvider>;`,
+      ],
+      [
+        'an unrelated InlineEditField next to the provider',
+        `${provider}\nexport const A = () => <><FormProvider {...form}>${inputField}</FormProvider>${inlineEdit}</>;`,
+      ],
+      ['a self-closing provider', `${provider}\nexport const A = () => <FormProvider {...form} />;`],
+    ])('flags %s', (_, content) => {
+      expect(paths([source(content)].filter(hasProviderWithoutInlineEdit))).toEqual(['a.tsx']);
+    });
+
+    test.each([
+      [
+        'an InlineEditField inside the provider',
+        `${provider}\nexport const A = () => <FormProvider {...form}><div>${inlineEdit}</div></FormProvider>;`,
+      ],
+      [
+        'an InlineEditField inside an aliased provider',
+        `import { FormProvider as Provider } from 'react-hook-form';\nexport const A = () => <Provider {...form}>${inlineEdit}</Provider>;`,
+      ],
+      ['no provider rendered', `${provider}\nexport const A = () => ${inputField};`],
+    ])('accepts %s', (_, content) => {
+      expect([source(content)].filter(hasProviderWithoutInlineEdit)).toEqual([]);
+    });
+
+    test('flags a doc whose provider is in another block than the InlineEditField', () => {
+      const page = [
+        '```tsx',
+        `<FormProvider {...form}>${inputField}</FormProvider>`,
+        '```',
+        '',
+        '```tsx',
+        inlineEdit,
+        '```',
+      ];
+      expect(paths([doc(page.join('\n'))].filter(hasProviderWithoutInlineEdit))).toEqual(['a.mdx']);
+    });
+
+    test('reads the blocks embedded in a markdown block, not its prose', () => {
+      const prose = 'Wrap it in `<FormProvider {...form}>` for the inline field.';
+      const embed = (block: string) => ['````md', prose, '```tsx', block, '```', '````'].join('\n');
+      expect([doc(embed(inputField))].filter(hasProviderWithoutInlineEdit)).toEqual([]);
+      expect(
+        paths(
+          [doc(embed(`<FormProvider {...form}>${inputField}</FormProvider>`))].filter(hasProviderWithoutInlineEdit),
+        ),
+      ).toEqual(['a.mdx']);
+    });
+
+    test('ignores a doc mention of the provider outside fenced code', () => {
+      expect([doc('Wrap it in `<FormProvider {...form}>` when needed.')].filter(hasProviderWithoutInlineEdit)).toEqual(
+        [],
+      );
+    });
   });
 });
 

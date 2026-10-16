@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { PasswordField } from '@/components/ui/shuip/react-hook-form/password-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -35,17 +35,15 @@ export default function PasswordFieldTooltipExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <PasswordField
-          lens={lens.focus('password')}
-          label='Password'
-          description='Your password'
-          placeholder='Password'
-          tooltip='Must contain: 8+ characters, uppercase, number, special char'
-        />
-        <SubmitButton>Check</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <PasswordField
+        lens={lens.focus('password')}
+        label='Password'
+        description='Your password'
+        placeholder='Password'
+        tooltip='Must contain: 8+ characters, uppercase, number, special char'
+      />
+      <SubmitButton>Check</SubmitButton>
+    </form>
   );
 }

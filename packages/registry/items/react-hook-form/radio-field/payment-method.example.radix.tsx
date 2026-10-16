@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import { RadioField } from '@/components/ui/shuip/react-hook-form/radio-field';
@@ -43,45 +43,43 @@ export default function RhfRadioFieldPaymentMethodExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <RadioField
-          lens={lens.focus('paymentMethod')}
-          options={['card', 'paypal', 'bank']}
-          label='Payment Method'
-          description='Select how you want to pay'
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <RadioField
+        lens={lens.focus('paymentMethod')}
+        options={['card', 'paypal', 'bank']}
+        label='Payment Method'
+        description='Select how you want to pay'
+      />
+
+      {paymentMethod === 'card' && (
+        <InputField
+          lens={lens.focus('cardNumber')}
+          label='Card Number'
+          placeholder='1234 5678 9012 3456'
+          description='Enter your credit card number'
         />
+      )}
 
-        {paymentMethod === 'card' && (
-          <InputField
-            lens={lens.focus('cardNumber')}
-            label='Card Number'
-            placeholder='1234 5678 9012 3456'
-            description='Enter your credit card number'
-          />
-        )}
+      {paymentMethod === 'paypal' && (
+        <InputField
+          lens={lens.focus('paypalEmail')}
+          type='email'
+          label='PayPal Email'
+          placeholder='your@email.com'
+          description='Email associated with your PayPal account'
+        />
+      )}
 
-        {paymentMethod === 'paypal' && (
-          <InputField
-            lens={lens.focus('paypalEmail')}
-            type='email'
-            label='PayPal Email'
-            placeholder='your@email.com'
-            description='Email associated with your PayPal account'
-          />
-        )}
+      {paymentMethod === 'bank' && (
+        <InputField
+          lens={lens.focus('accountNumber')}
+          label='Account Number'
+          placeholder='Enter your account number'
+          description='Your bank account number for direct transfer'
+        />
+      )}
 
-        {paymentMethod === 'bank' && (
-          <InputField
-            lens={lens.focus('accountNumber')}
-            label='Account Number'
-            placeholder='Enter your account number'
-            description='Your bank account number for direct transfer'
-          />
-        )}
-
-        <SubmitButton>Process Payment</SubmitButton>
-      </form>
-    </FormProvider>
+      <SubmitButton>Process Payment</SubmitButton>
+    </form>
   );
 }

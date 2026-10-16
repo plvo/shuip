@@ -3,7 +3,7 @@
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
@@ -45,23 +45,21 @@ export default function SideDialogSimpleExample() {
         <Button variant='outline'>Open Form Side Dialog</Button>
       </SideDialogTrigger>
       <SideDialogContent>
-        <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <SideDialogHeader>
-              <SideDialogTitle>Form Side Dialog</SideDialogTitle>
-              <SideDialogDescription>This is a form side dialog.</SideDialogDescription>
-            </SideDialogHeader>
-            <SideDialogBody className='space-y-4'>
-              <InputField lens={lens.focus('name')} label='Name' description='This is a description' />
-            </SideDialogBody>
-            <SideDialogFooter>
-              <SideDialogClose asChild>
-                <Button variant='outline'>Cancel</Button>
-              </SideDialogClose>
-              <SubmitButton className='w-fit'>Submit</SubmitButton>
-            </SideDialogFooter>
-          </form>
-        </FormProvider>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <SideDialogHeader>
+            <SideDialogTitle>Form Side Dialog</SideDialogTitle>
+            <SideDialogDescription>This is a form side dialog.</SideDialogDescription>
+          </SideDialogHeader>
+          <SideDialogBody className='space-y-4'>
+            <InputField lens={lens.focus('name')} label='Name' description='This is a description' />
+          </SideDialogBody>
+          <SideDialogFooter>
+            <SideDialogClose asChild>
+              <Button variant='outline'>Cancel</Button>
+            </SideDialogClose>
+            <SubmitButton className='w-fit'>Submit</SubmitButton>
+          </SideDialogFooter>
+        </form>
       </SideDialogContent>
     </SideDialog>
   );

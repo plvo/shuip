@@ -23,17 +23,15 @@ Field components bind via `@hookform/lenses`. Create a lens once per form:
 
 ```tsx
 import { useLens } from '@hookform/lenses';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 
 const form = useForm<MyForm>({ defaultValues: { email: '' } });
 const lens = useLens({ control: form.control });
 
-<FormProvider {...form}>
-  <form onSubmit={form.handleSubmit(onSubmit)}>
-    <InputField lens={lens.focus('email')} label='Email' />
-  </form>
-</FormProvider>
+<form onSubmit={form.handleSubmit(onSubmit)}>
+  <InputField lens={lens.focus('email')} label='Email' />
+</form>
 ```
 
 ## Less boilerplate

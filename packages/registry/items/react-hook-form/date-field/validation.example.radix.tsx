@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { DateField } from '@/components/ui/shuip/react-hook-form/date-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -35,17 +35,15 @@ export default function RhfDateFieldValidationExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <DateField
-          lens={lens.focus('appointment')}
-          label='Appointment'
-          description='Within the next 12 months'
-          minDate={today}
-          maxDate={oneYearFromNow}
-        />
-        <SubmitButton>Book</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <DateField
+        lens={lens.focus('appointment')}
+        label='Appointment'
+        description='Within the next 12 months'
+        minDate={today}
+        maxDate={oneYearFromNow}
+      />
+      <SubmitButton>Book</SubmitButton>
+    </form>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { RadioField } from '@/components/ui/shuip/react-hook-form/radio-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -32,16 +32,14 @@ export default function RadioFieldExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <RadioField
-          lens={lens.focus('selection')}
-          options={['Yes', 'No', 'Maybe', 'Not sure']}
-          label='Are you sure?'
-          description='This is a description'
-        />
-        <SubmitButton>Check</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <RadioField
+        lens={lens.focus('selection')}
+        options={['Yes', 'No', 'Maybe', 'Not sure']}
+        label='Are you sure?'
+        description='This is a description'
+      />
+      <SubmitButton>Check</SubmitButton>
+    </form>
   );
 }

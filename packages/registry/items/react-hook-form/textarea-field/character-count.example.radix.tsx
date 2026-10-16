@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { TextareaField } from '@/components/ui/shuip/react-hook-form/textarea-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -36,33 +36,31 @@ export default function RhfTextareaFieldCharacterCountExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 w-full max-w-lg'>
-        <div className='space-y-2'>
-          <TextareaField
-            lens={lens.focus('tweet')}
-            label='Tweet'
-            rows={4}
-            maxLength={MAX_LENGTH}
-            placeholder="What's happening?"
-          />
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 w-full max-w-lg'>
+      <div className='space-y-2'>
+        <TextareaField
+          lens={lens.focus('tweet')}
+          label='Tweet'
+          rows={4}
+          maxLength={MAX_LENGTH}
+          placeholder="What's happening?"
+        />
 
-          <div className='flex justify-between text-sm'>
-            <span className='text-muted-foreground'>
-              {tweet.length} / {MAX_LENGTH} characters
-            </span>
-            <span
-              className={`font-medium ${
-                isOverLimit ? 'text-destructive' : isNearLimit ? 'text-orange-500' : 'text-muted-foreground'
-              }`}
-            >
-              {remaining} remaining
-            </span>
-          </div>
+        <div className='flex justify-between text-sm'>
+          <span className='text-muted-foreground'>
+            {tweet.length} / {MAX_LENGTH} characters
+          </span>
+          <span
+            className={`font-medium ${
+              isOverLimit ? 'text-destructive' : isNearLimit ? 'text-orange-500' : 'text-muted-foreground'
+            }`}
+          >
+            {remaining} remaining
+          </span>
         </div>
+      </div>
 
-        <SubmitButton>Post Tweet</SubmitButton>
-      </form>
-    </FormProvider>
+      <SubmitButton>Post Tweet</SubmitButton>
+    </form>
   );
 }

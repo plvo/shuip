@@ -5,17 +5,40 @@ export const parseTsx = (fileName: string, content: string): ts.SourceFile =>
 
 type JsxElement = ts.JsxOpeningElement | ts.JsxSelfClosingElement;
 
-export const elementsNamed = (source: ts.SourceFile, tag: string): JsxElement[] => {
+/** The elements at or under `root` whose tag satisfies `isTag`, in source order. */
+export const elementsMatching = (root: ts.Node, isTag: (tag: string) => boolean): JsxElement[] => {
   const found: JsxElement[] = [];
   const visit = (node: ts.Node) => {
-    if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) && node.tagName.getText() === tag) {
+    if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) && isTag(node.tagName.getText())) {
       found.push(node);
     }
     ts.forEachChild(node, visit);
   };
-  visit(source);
+  visit(root);
   return found;
 };
+
+export const elementsNamed = (source: ts.SourceFile, tag: string): JsxElement[] =>
+  elementsMatching(source, (name) => name === tag);
+
+export const importDeclarations = (source: ts.SourceFile, specifier: string): ts.ImportDeclaration[] =>
+  source.statements.filter(
+    (statement): statement is ts.ImportDeclaration =>
+      ts.isImportDeclaration(statement) &&
+      ts.isStringLiteral(statement.moduleSpecifier) &&
+      statement.moduleSpecifier.text === specifier,
+  );
+
+/** The named bindings imported from `specifier`: `import { a as b }` gives `{ imported: 'a', local: 'b' }`. */
+export const namedImports = (source: ts.SourceFile, specifier: string): { imported: string; local: string }[] =>
+  importDeclarations(source, specifier).flatMap((declaration) =>
+    declaration.importClause?.namedBindings !== undefined && ts.isNamedImports(declaration.importClause.namedBindings)
+      ? declaration.importClause.namedBindings.elements.map((element) => ({
+          imported: (element.propertyName ?? element.name).text,
+          local: element.name.text,
+        }))
+      : [],
+  );
 
 /** The source text of the value of attribute `name` on every element `tag`: a string literal keeps its quotes, an expression loses its `{...}` braces. */
 export const attributeValues = (source: ts.SourceFile, tag: string, name: string): string[] =>

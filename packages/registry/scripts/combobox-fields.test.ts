@@ -2,7 +2,14 @@ import { describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
-import { attributeOrder, attributeValues, elementsNamed, parseTsx } from './jsx-source';
+import {
+  attributeOrder,
+  attributeValues,
+  elementsNamed,
+  importDeclarations,
+  namedImports,
+  parseTsx,
+} from './jsx-source';
 
 const ITEMS_DIR = path.resolve(import.meta.dir, '../items');
 const SUGGESTION_LIST = '@/components/ui/shuip/suggestion-list';
@@ -33,21 +40,6 @@ const parse = ({ item, variant }: Field) => {
   return parseTsx(file, fs.readFileSync(file, 'utf-8'));
 };
 
-const importDeclarations = (source: ts.SourceFile, specifier: string): ts.ImportDeclaration[] =>
-  source.statements.filter(
-    (statement): statement is ts.ImportDeclaration =>
-      ts.isImportDeclaration(statement) &&
-      ts.isStringLiteral(statement.moduleSpecifier) &&
-      statement.moduleSpecifier.text === specifier,
-  );
-
-const namedImports = (source: ts.SourceFile, specifier: string): string[] =>
-  importDeclarations(source, specifier).flatMap((declaration) =>
-    declaration.importClause?.namedBindings !== undefined && ts.isNamedImports(declaration.importClause.namedBindings)
-      ? declaration.importClause.namedBindings.elements.map((element) => element.name.text)
-      : [],
-  );
-
 const mentions = (source: ts.SourceFile, identifier: string): boolean => {
   let found = false;
   const visit = (node: ts.Node) => {
@@ -62,7 +54,7 @@ describe.each(FIELDS)('$item $variant', (field) => {
   const source = parse(field);
 
   test('takes the combobox wiring from the shared suggestion list', () => {
-    expect(namedImports(source, SUGGESTION_LIST)).toEqual(
+    expect(namedImports(source, SUGGESTION_LIST).map(({ local }) => local)).toEqual(
       expect.arrayContaining(['SuggestionOption', 'useSuggestionList']),
     );
   });

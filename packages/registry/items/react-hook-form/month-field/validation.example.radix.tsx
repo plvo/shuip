@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { MonthField } from '@/components/ui/shuip/react-hook-form/month-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -38,17 +38,15 @@ export default function RhfMonthFieldValidationExample() {
   tenYearsFromNow.setFullYear(tenYearsFromNow.getFullYear() + 10);
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <MonthField
-          lens={lens.focus('startMonth')}
-          label='Subscription start'
-          description='Past months are disabled in the calendar and rejected by Zod.'
-          minDate={startOfCurrentMonth()}
-          maxDate={tenYearsFromNow}
-        />
-        <SubmitButton>Start subscription</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <MonthField
+        lens={lens.focus('startMonth')}
+        label='Subscription start'
+        description='Past months are disabled in the calendar and rejected by Zod.'
+        minDate={startOfCurrentMonth()}
+        maxDate={tenYearsFromNow}
+      />
+      <SubmitButton>Start subscription</SubmitButton>
+    </form>
   );
 }

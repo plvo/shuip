@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AutocompleteField } from '@/components/ui/shuip/react-hook-form/autocomplete-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -27,17 +27,15 @@ export default function AutocompleteFieldExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <AutocompleteField
-          lens={lens.focus('source')}
-          label='Source'
-          description='Pick a known source or type your own'
-          placeholder='e.g. LinkedIn'
-          suggestions={SOURCES}
-        />
-        <SubmitButton>Submit</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <AutocompleteField
+        lens={lens.focus('source')}
+        label='Source'
+        description='Pick a known source or type your own'
+        placeholder='e.g. LinkedIn'
+        suggestions={SOURCES}
+      />
+      <SubmitButton>Submit</SubmitButton>
+    </form>
   );
 }

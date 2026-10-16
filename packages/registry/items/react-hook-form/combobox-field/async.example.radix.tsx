@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ComboboxField, type ComboboxOption } from '@/components/ui/shuip/react-hook-form/combobox-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -35,18 +35,16 @@ export default function ComboboxFieldAsyncExample() {
   const lens = useLens({ control: form.control });
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit((values) => alert(`Assignee: ${values.assignee}`))} className='space-y-4'>
-        <ComboboxField
-          lens={lens.focus('assignee')}
-          label='Assignee'
-          description='Empty query returns recents; typing searches'
-          placeholder='Search a user…'
-          onSearch={searchUsers}
-          maxResults={5}
-        />
-        <SubmitButton>Submit</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit((values) => alert(`Assignee: ${values.assignee}`))} className='space-y-4'>
+      <ComboboxField
+        lens={lens.focus('assignee')}
+        label='Assignee'
+        description='Empty query returns recents; typing searches'
+        placeholder='Search a user…'
+        onSearch={searchUsers}
+        maxResults={5}
+      />
+      <SubmitButton>Submit</SubmitButton>
+    </form>
   );
 }

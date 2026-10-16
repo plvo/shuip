@@ -41,14 +41,14 @@ Field naming follows the input type: `input-field`, `password-field`, `number-fi
 
 ## react-hook-form pattern
 
-Create one lens per form with `useLens({ control })`, then give each field `lens.focus('fieldName')`. Wrap everything in `<FormProvider {...form}>`.
+Create one lens per form with `useLens({ control })`, then give each field `lens.focus('fieldName')`. Fields bind through the lens, so no provider is needed. The exception is `InlineEditField`, which validates on commit through `useFormContext()` and must render under `<FormProvider {...form}>`. Wrap the form in it as well when your own components call `useFormContext()`.
 
 ```tsx
 'use client';
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import { PasswordField } from '@/components/ui/shuip/react-hook-form/password-field';
@@ -84,14 +84,12 @@ export function SignupForm() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <InputField lens={lens.focus('email')} label="Email" type="email" placeholder="you@example.com" />
-        <PasswordField lens={lens.focus('password')} label="Password" />
-        <PasswordField lens={lens.focus('confirmPassword')} label="Confirm password" />
-        <SubmitButton loading={form.formState.isSubmitting}>Create account</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <InputField lens={lens.focus('email')} label="Email" type="email" placeholder="you@example.com" />
+      <PasswordField lens={lens.focus('password')} label="Password" />
+      <PasswordField lens={lens.focus('confirmPassword')} label="Confirm password" />
+      <SubmitButton loading={form.formState.isSubmitting}>Create account</SubmitButton>
+    </form>
   );
 }
 ```

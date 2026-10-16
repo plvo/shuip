@@ -20,7 +20,7 @@ For date-only fields, use `Calendar` directly. This component is for cases where
 
 ```tsx
 import { useLens } from '@hookform/lenses';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { DatetimeField } from '@/components/ui/shuip/react-hook-form/datetime-field';
 
@@ -30,11 +30,9 @@ type Values = z.infer<typeof schema>;
 const form = useForm<Values>({ defaultValues: { scheduledAt: undefined } });
 const lens = useLens({ control: form.control });
 
-<FormProvider {...form}>
-  <form onSubmit={form.handleSubmit(onSubmit)}>
-    <DatetimeField lens={lens.focus('scheduledAt')} label='Scheduled at' />
-  </form>
-</FormProvider>
+<form onSubmit={form.handleSubmit(onSubmit)}>
+  <DatetimeField lens={lens.focus('scheduledAt')} label='Scheduled at' />
+</form>
 ```
 
 ## Behavior

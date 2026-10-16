@@ -3,7 +3,7 @@
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { SelectField } from '@/components/ui/shuip/react-hook-form/select-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -74,26 +74,24 @@ export default function RhfSelectFieldDependentExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <SelectField
-          lens={lens.focus('country')}
-          options={COUNTRIES}
-          label='Country'
-          placeholder='Select a country'
-          description='Choose your country'
-        />
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <SelectField
+        lens={lens.focus('country')}
+        options={COUNTRIES}
+        label='Country'
+        placeholder='Select a country'
+        description='Choose your country'
+      />
 
-        <SelectField
-          lens={lens.focus('state')}
-          options={stateOptions}
-          label='State / Province'
-          placeholder={Object.keys(stateOptions).length === 0 ? 'Select a country first' : 'Select a state'}
-          description='Choose your state or province'
-        />
+      <SelectField
+        lens={lens.focus('state')}
+        options={stateOptions}
+        label='State / Province'
+        placeholder={Object.keys(stateOptions).length === 0 ? 'Select a country first' : 'Select a state'}
+        description='Choose your state or province'
+      />
 
-        <SubmitButton>Submit</SubmitButton>
-      </form>
-    </FormProvider>
+      <SubmitButton>Submit</SubmitButton>
+    </form>
   );
 }

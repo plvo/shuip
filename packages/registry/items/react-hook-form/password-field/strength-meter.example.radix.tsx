@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { PasswordField } from '@/components/ui/shuip/react-hook-form/password-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -72,47 +72,45 @@ export default function RhfPasswordFieldStrengthMeterExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <div className='space-y-2'>
-          <PasswordField
-            lens={lens.focus('password')}
-            label='Password'
-            tooltip={
-              <div className='space-y-1'>
-                <p className='font-semibold'>Password must contain:</p>
-                <ul className='list-disc list-inside text-sm space-y-0.5'>
-                  <li>At least 8 characters (12+ recommended)</li>
-                  <li>Uppercase and lowercase letters</li>
-                  <li>At least one number</li>
-                  <li>At least one special character</li>
-                </ul>
-              </div>
-            }
-            placeholder='Enter password'
-          />
-
-          {password && (
-            <div className='space-y-1.5'>
-              <div className='flex gap-1'>
-                {[...Array(4)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={cn('h-1 flex-1 rounded-full transition-colors', i < strength ? color : 'bg-muted')}
-                  />
-                ))}
-              </div>
-              <p className='text-sm text-muted-foreground'>
-                Strength: <span className='font-medium'>{label}</span>
-              </p>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <div className='space-y-2'>
+        <PasswordField
+          lens={lens.focus('password')}
+          label='Password'
+          tooltip={
+            <div className='space-y-1'>
+              <p className='font-semibold'>Password must contain:</p>
+              <ul className='list-disc list-inside text-sm space-y-0.5'>
+                <li>At least 8 characters (12+ recommended)</li>
+                <li>Uppercase and lowercase letters</li>
+                <li>At least one number</li>
+                <li>At least one special character</li>
+              </ul>
             </div>
-          )}
-        </div>
+          }
+          placeholder='Enter password'
+        />
 
-        <PasswordField lens={lens.focus('confirmPassword')} label='Confirm Password' placeholder='Re-enter password' />
+        {password && (
+          <div className='space-y-1.5'>
+            <div className='flex gap-1'>
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className={cn('h-1 flex-1 rounded-full transition-colors', i < strength ? color : 'bg-muted')}
+                />
+              ))}
+            </div>
+            <p className='text-sm text-muted-foreground'>
+              Strength: <span className='font-medium'>{label}</span>
+            </p>
+          </div>
+        )}
+      </div>
 
-        <SubmitButton>Create Account</SubmitButton>
-      </form>
-    </FormProvider>
+      <PasswordField lens={lens.focus('confirmPassword')} label='Confirm Password' placeholder='Re-enter password' />
+
+      <SubmitButton>Create Account</SubmitButton>
+    </form>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Card } from '@/components/ui/card';
 import { RadioField } from '@/components/ui/shuip/react-hook-form/radio-field';
@@ -47,52 +47,50 @@ export default function RhfRadioFieldConditionalPricingExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <RadioField
+        lens={lens.focus('plan')}
+        options={PLANS}
+        label='Select Plan'
+        description='Choose the plan that fits your needs'
+      />
+
+      {plan && plan !== 'free' && (
         <RadioField
-          lens={lens.focus('plan')}
-          options={PLANS}
-          label='Select Plan'
-          description='Choose the plan that fits your needs'
+          lens={lens.focus('billingCycle')}
+          options={['monthly', 'annual']}
+          label='Billing Cycle'
+          description='Annual billing includes a 20% discount'
         />
+      )}
 
-        {plan && plan !== 'free' && (
-          <RadioField
-            lens={lens.focus('billingCycle')}
-            options={['monthly', 'annual']}
-            label='Billing Cycle'
-            description='Annual billing includes a 20% discount'
-          />
-        )}
-
-        {plan && (
-          <Card className='p-4'>
-            <div className='space-y-2'>
-              <div className='flex justify-between'>
-                <span className='font-semibold'>Plan:</span>
-                <span className='capitalize'>{plan}</span>
-              </div>
-              {plan !== 'free' && (
-                <>
-                  <div className='flex justify-between'>
-                    <span className='font-semibold'>Billing:</span>
-                    <span className='capitalize'>{billingCycle}</span>
-                  </div>
-                  <div className='flex justify-between text-lg font-bold'>
-                    <span>Total:</span>
-                    <span>${displayPrice.toFixed(2)}/month</span>
-                  </div>
-                  {billingCycle === 'annual' && (
-                    <p className='text-sm text-muted-foreground'>Billed annually at ${annualPrice.toFixed(2)}</p>
-                  )}
-                </>
-              )}
+      {plan && (
+        <Card className='p-4'>
+          <div className='space-y-2'>
+            <div className='flex justify-between'>
+              <span className='font-semibold'>Plan:</span>
+              <span className='capitalize'>{plan}</span>
             </div>
-          </Card>
-        )}
+            {plan !== 'free' && (
+              <>
+                <div className='flex justify-between'>
+                  <span className='font-semibold'>Billing:</span>
+                  <span className='capitalize'>{billingCycle}</span>
+                </div>
+                <div className='flex justify-between text-lg font-bold'>
+                  <span>Total:</span>
+                  <span>${displayPrice.toFixed(2)}/month</span>
+                </div>
+                {billingCycle === 'annual' && (
+                  <p className='text-sm text-muted-foreground'>Billed annually at ${annualPrice.toFixed(2)}</p>
+                )}
+              </>
+            )}
+          </div>
+        </Card>
+      )}
 
-        <SubmitButton>Continue</SubmitButton>
-      </form>
-    </FormProvider>
+      <SubmitButton>Continue</SubmitButton>
+    </form>
   );
 }

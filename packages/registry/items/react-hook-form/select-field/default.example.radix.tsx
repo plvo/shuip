@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { SelectField, type SelectFieldOption } from '@/components/ui/shuip/react-hook-form/select-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -36,16 +36,9 @@ export default function SelectFieldExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <SelectField
-          lens={lens.focus('selection')}
-          placeholder='Select an option'
-          label='selection'
-          options={options}
-        />
-        <SubmitButton>Check</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <SelectField lens={lens.focus('selection')} placeholder='Select an option' label='selection' options={options} />
+      <SubmitButton>Check</SubmitButton>
+    </form>
   );
 }
