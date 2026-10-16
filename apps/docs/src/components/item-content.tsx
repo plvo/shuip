@@ -50,39 +50,3 @@ export async function ItemExamples({ base, registryName }: ItemExamplesProps) {
     </div>
   ));
 }
-
-export interface Prop {
-  name: string;
-  type: string;
-  description: string;
-}
-
-export function PropTable({ props, title }: { props: Prop[]; title?: string }) {
-  const { h2: H2 } = useMDXComponents();
-
-  return (
-    <>
-      <H2>{title || 'Props'}</H2>
-      <table className={'w-full border-collapse border-spacing-0 my-6 border border-border rounded-lg overflow-hidden'}>
-        <thead className={'bg-muted/50'}>
-          <tr>
-            <th className={'h-12 px-4 text-left align-middle font-semibold text-muted-foreground'}>Name</th>
-            <th className={'h-12 px-4 text-left align-middle font-semibold text-muted-foreground'}>Type</th>
-            <th className={'h-12 px-4 text-left align-middle font-semibold text-muted-foreground'}>Description</th>
-          </tr>
-        </thead>
-        <tbody className={'bg-background'}>
-          {props.map((prop, i) => (
-            <tr key={`${prop.name}-${i}`} className={'border-b border-border transition-colors hover:bg-muted/50'}>
-              <td className={'p-4 align-middle'}>{prop.name}</td>
-              <td className={'p-4 align-middle'}>
-                <code className='rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm'>{prop.type}</code>
-              </td>
-              <td className={'p-4 align-middle'}>{prop.description}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </>
-  );
-}
