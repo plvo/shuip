@@ -244,6 +244,8 @@ CI runs [knip](https://knip.dev) once the tests have passed, and fails a PR that
 bun check:unused
 ```
 
+It checks `apps/docs` and the code of `packages/ui` and `packages/registry` that is not published: `packages/ui/src/lib`, `packages/registry/src` and `packages/registry/scripts`. It does not check the exports of the registry items (`packages/registry/items/**`), which are the API a consumer imports, nor those of the vendored primitives (`packages/ui/src/components/ui/**` and `ui-base/**`), which are synced and never hand-edited. An unused file inside those folders is not reported either.
+
 Declare each package in the `package.json` of the workspace that imports it. An undeclared import can resolve locally because packages are hoisted into the root `node_modules`, and knip is what catches it.
 
 ### Run the smoke test for both bases
