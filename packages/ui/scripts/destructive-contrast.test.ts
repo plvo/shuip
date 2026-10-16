@@ -106,10 +106,12 @@ describe('destructive tints', () => {
   const dark = palette('dark');
 
   test.each([
-    ['background', dark.background],
-    ['card', dark.card],
-  ])('dark: text-destructive on the /20 tint over %s reaches 4.5:1', (_name, backdrop) => {
-    expect(contrast(dark.destructive, dark.tintOver(backdrop, 0.2))).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+    ['/20 tint over background', 0.2, 'background'],
+    ['/20 tint over card', 0.2, 'card'],
+    ['/30 tint over background', 0.3, 'background'],
+    ['/30 tint over card', 0.3, 'card'],
+  ] as const)('dark: text-destructive on the %s reaches 4.5:1', (_name, alpha, surface) => {
+    expect(contrast(dark.destructive, dark.tintOver(dark[surface], alpha))).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
   });
 
   const light = palette('root');
