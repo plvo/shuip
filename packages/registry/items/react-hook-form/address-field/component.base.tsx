@@ -28,6 +28,45 @@ export const addressSchema = z.object({
 
 export type AddressData = z.infer<typeof addressSchema>;
 
+const ADDRESS_NOT_SELECTED_MESSAGE = 'Select an address from the suggestions';
+
+type AddressErrors = Partial<
+  Record<'fullAddress' | 'street' | 'city' | 'postalCode' | 'country', { message?: string } | undefined>
+>;
+
+export function addressFieldError(errors: AddressErrors): { message?: string } | undefined {
+  if (errors.fullAddress) return errors.fullAddress;
+  const unselected = [errors.street, errors.city, errors.postalCode, errors.country].some(Boolean);
+  return unselected ? { message: ADDRESS_NOT_SELECTED_MESSAGE } : undefined;
+}
+
+interface ControlledField {
+  field: { value?: string; onChange: (value: string) => void };
+}
+
+export function clearFilledFields(controllers: ControlledField[]): void {
+  for (const { field } of controllers) {
+    if (field.value) field.onChange('');
+  }
+}
+
+interface ElementTarget {
+  field: { ref: (node: HTMLInputElement | null) => void };
+}
+
+export function handElementToFields(controllers: ElementTarget[], node: HTMLInputElement | null): void {
+  for (const { field } of controllers) field.ref(node);
+}
+
+export async function lookupPlaceDetails<Details>(lookup: () => Promise<Details>): Promise<Details | undefined> {
+  try {
+    return await lookup();
+  } catch (error) {
+    console.error('Error fetching place details:', error);
+    return undefined;
+  }
+}
+
 interface AddressSuggestion {
   placeId: string;
   description: string;
@@ -118,17 +157,29 @@ export function AddressField({
     };
   }, [searchQuery, country]);
 
+  const setInputRef = React.useCallback(
+    (node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      handElementToFields([fullAddress, street, city, postalCode, countryField], node);
+    },
+    [fullAddress.field.ref, street.field.ref, city.field.ref, postalCode.field.ref, countryField.field.ref],
+  );
+
+  const clearPlace = () => clearFilledFields([street, city, postalCode, countryField, placeId]);
+
   const handleSelectAddress = (suggestion: AddressSuggestion) => {
     setShowSuggestions(false);
     setSelectedIndex(-1);
     setSearchQuery('');
 
     startTransition(async () => {
-      const details = await getPlaceDetails({
-        placeId: suggestion.placeId,
-        fields: ['address_components', 'formatted_address', 'geometry'],
-        language: LANGUAGE_RESULT,
-      });
+      const details = await lookupPlaceDetails(() =>
+        getPlaceDetails({
+          placeId: suggestion.placeId,
+          fields: ['address_components', 'formatted_address', 'geometry'],
+          language: LANGUAGE_RESULT,
+        }),
+      );
 
       if (details?.result) {
         const addressComponents = details.result.address_components || [];
@@ -162,11 +213,11 @@ export function AddressField({
         city.field.onChange(cityValue.trim());
         postalCode.field.onChange(postalCodeValue.trim());
         countryField.field.onChange(countryValue.trim());
-        fullAddress.field.onChange(details.result.formatted_address.trim());
+        fullAddress.field.onChange((details.result.formatted_address ?? suggestion.description).trim());
         placeId.field.onChange(suggestion.placeId.trim());
       } else {
+        clearPlace();
         fullAddress.field.onChange(suggestion.description.trim());
-        placeId.field.onChange(suggestion.placeId.trim());
       }
     });
   };
@@ -230,8 +281,17 @@ export function AddressField({
     }, 150);
   };
 
-  const fullAddressInvalid = fullAddress.fieldState.invalid;
+  const error = addressFieldError({
+    fullAddress: fullAddress.fieldState.error,
+    street: street.fieldState.error,
+    city: city.fieldState.error,
+    postalCode: postalCode.fieldState.error,
+    country: countryField.fieldState.error,
+  });
+  const invalid = error !== undefined;
   const id = props.id ?? fullAddress.field.name;
+  const errorId = `${id}-error`;
+  const describedBy = [props['aria-describedby'], invalid ? errorId : undefined].filter(Boolean).join(' ') || undefined;
   const suggestionList = useSuggestionList({
     inputId: id,
     label,
@@ -244,12 +304,9 @@ export function AddressField({
   });
 
   return (
-    <Field className='gap-2' data-invalid={fullAddressInvalid}>
-      <FieldLabel id={suggestionList.labelId} htmlFor={id} className='flex items-center justify-between'>
+    <Field className='gap-2' data-invalid={invalid}>
+      <FieldLabel id={suggestionList.labelId} htmlFor={id}>
         {label}
-        {fullAddressInvalid && (
-          <FieldError className='max-sm:hidden text-xs opacity-80' errors={[fullAddress.fieldState.error]} />
-        )}
       </FieldLabel>
       <div className='relative'>
         <Popover
@@ -261,7 +318,7 @@ export function AddressField({
         >
           <div ref={anchorRef} className='relative'>
             <Input
-              ref={inputRef}
+              ref={setInputRef}
               name={fullAddress.field.name}
               value={fullAddress.field.value ?? ''}
               placeholder={placeholder}
@@ -270,6 +327,7 @@ export function AddressField({
               id={id}
               onChange={(e) => {
                 const value = e.target.value;
+                clearPlace();
                 fullAddress.field.onChange(value);
                 setSearchQuery(value);
               }}
@@ -277,7 +335,8 @@ export function AddressField({
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
               {...suggestionList.inputProps}
-              aria-invalid={fullAddressInvalid}
+              aria-invalid={invalid}
+              aria-describedby={describedBy}
             />
             <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3'>
               {isPending ? (
@@ -325,9 +384,7 @@ export function AddressField({
         </Popover>
       </div>
       {description && <p className='text-sm text-muted-foreground'>{description}</p>}
-      {fullAddressInvalid && (
-        <FieldError className='sm:hidden text-xs text-left opacity-80' errors={[fullAddress.fieldState.error]} />
-      )}
+      {invalid && <FieldError id={errorId} className='text-xs text-left opacity-80' errors={[error]} />}
     </Field>
   );
 }
