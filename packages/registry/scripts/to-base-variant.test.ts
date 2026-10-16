@@ -189,6 +189,18 @@ describe('toBaseVariant', () => {
     expect(code).not.toContain('asChild');
   });
 
+  test('converts an asChild on a tag with no identifier, whatever packages the file imports', () => {
+    const input = lines(
+      "import { Slot } from 'radix-slot';",
+      '',
+      '<this.Trigger asChild>',
+      '  <Button />',
+      '</this.Trigger>',
+    );
+
+    expect(toBaseVariant(input).code).toContain('<this.Trigger render={<Button />} />');
+  });
+
   test('returns a file without asChild byte for byte', () => {
     const input = lines(
       "'use client';",

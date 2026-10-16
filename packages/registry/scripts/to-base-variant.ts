@@ -4,7 +4,8 @@
  * The `asChild` to `render` rewrite is ported from the `transformAsChild` transformer of shadcn/ui
  * (packages/registry/src/transformers/transform-aschild.ts), MIT License, Copyright (c) 2023 shadcn.
  * It differs on purpose: it edits the TypeScript syntax tree in place instead of printing it, leaves
- * `asChild={expr}` pass-throughs alone, and adds `nativeButton={false}` for every rendered element that
+ * `asChild={expr}` pass-throughs and the `asChild` of elements imported from an npm package alone (they compose
+ * through their own library, on both bases), and adds `nativeButton={false}` for every rendered element that
  * is not a button, not only under `Button`.
  *
  * A `Popover` that holds a `PopoverAnchor asChild` is anchored to an element other than a trigger. The vendored

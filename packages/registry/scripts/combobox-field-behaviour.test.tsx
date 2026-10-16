@@ -82,6 +82,7 @@ const chipLabels = (card: HTMLElement) =>
   [...card.querySelectorAll('button[aria-label^="Remove"]')].map((button) => button.getAttribute('aria-label'));
 
 function expectCollapsed(input: HTMLInputElement) {
+  expect(isOpen()).toBe(false);
   expect(input.getAttribute('aria-expanded')).toBe('false');
   expect(input.hasAttribute('aria-controls')).toBe(false);
 }
@@ -159,7 +160,6 @@ describe.each(VARIANTS)('ComboboxField, %s', (variant) => {
 
   test('reports the list as collapsed, with nothing to control, before it is ever opened', async () => {
     const { input } = await mountField({ options: COUNTRIES });
-    expect(isOpen()).toBe(false);
     expectCollapsed(input);
   });
 
@@ -174,10 +174,8 @@ describe.each(VARIANTS)('ComboboxField, %s', (variant) => {
     await focus(input);
     expectExpanded(input);
     await click(optionNamed('France'));
-    expect(isOpen()).toBe(true);
     expectExpanded(input);
     await press(input, 'Escape');
-    expect(isOpen()).toBe(false);
     expectCollapsed(input);
   });
 
@@ -190,7 +188,6 @@ describe.each(VARIANTS)('ComboboxField, %s', (variant) => {
     await focus(input);
     expect(isOpen()).toBe(true);
     await close(input);
-    expect(isOpen()).toBe(false);
     expectCollapsed(input);
   });
 

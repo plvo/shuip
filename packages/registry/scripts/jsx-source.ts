@@ -58,6 +58,7 @@ const rootIdentifier = (tag: ts.JsxTagNameExpression): string | undefined => {
 /** Whether `tag` is imported from an npm package: such an element composes through its own library, not through a vendored primitive. */
 export const isImportedFromPackage = (source: ts.SourceFile, tag: ts.JsxTagNameExpression): boolean => {
   const name = rootIdentifier(tag);
+  if (name === undefined) return false;
   return source.statements.some((statement) => {
     if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) return false;
     if (!isPackageSpecifier(statement.moduleSpecifier.text)) return false;
