@@ -5,7 +5,7 @@ import { REGISTRY_INDEX as RADIX_INDEX } from '@repo/registry/__index__';
 import { REGISTRY_INDEX as BASE_INDEX } from '@repo/registry/__index__.base';
 import { exampleKey } from '@repo/registry/example-key';
 import { BASES, type Base } from './base-routes';
-import { previewPageOf, previewParams } from './preview-pages';
+import { itemTitleOf, previewPageOf, previewParams } from './preview-pages';
 import { sectionLoaders } from './section-sources';
 
 const CONTENT_DIR = path.resolve(import.meta.dir, '..', '..', 'content');
@@ -93,5 +93,21 @@ describe('previewPageOf', () => {
 
   test('finds nothing for an item with no docs page', () => {
     expect(previewPageOf('base', 'no-such-item', docs)).toBeUndefined();
+  });
+});
+
+describe('itemTitleOf', () => {
+  test('is the title of the docs page of the item of an example, not its category-prefixed registry name', () => {
+    expect(itemTitleOf('base', 'rhf-input-field.example', docs)).toBe('Input Field');
+    expect(itemTitleOf('radix', 'rhf-input-field.with-label.example', docs)).toBe('Input Field');
+  });
+
+  test('is the title of a block page', () => {
+    expect(itemTitleOf('base', 'kanban.custom-card.example', docs)).toBe('Kanban');
+  });
+
+  test('is nothing for an item with no docs page or a key that is no example', () => {
+    expect(itemTitleOf('base', 'no-such-item.example', docs)).toBeUndefined();
+    expect(itemTitleOf('base', 'kanban', docs)).toBeUndefined();
   });
 });

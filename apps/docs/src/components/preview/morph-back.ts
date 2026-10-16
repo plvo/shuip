@@ -1,70 +1,95 @@
-import { transitionNameOf } from './preview-morph';
+import { MORPH_CLASS, transitionNameOf } from './preview-morph';
 
 const COMMIT_TIMEOUT_MS = 1000;
-const MORPH_CLASS = 'preview-morph';
 
-interface Landing {
-  land(card: HTMLElement): void;
+/** The part of an element a transition names: its inline style. */
+export interface MorphElement {
+  style: Pick<CSSStyleDeclaration, 'setProperty' | 'removeProperty'>;
 }
 
-let landing: Landing | null = null;
-let morphing = false;
+/** What a morph needs of the browser, so that it can be run against another one. */
+export interface MorphEnvironment {
+  supportsViewTransitions(): boolean;
+  prefersReducedMotion(): boolean;
+  /** Starts a view transition that waits for `update` before it captures the new state. */
+  startViewTransition(update: () => Promise<void>): { finished: Promise<unknown> };
+  /** Runs `callback` after `milliseconds`, and returns the function that cancels it. */
+  after(milliseconds: number, callback: () => void): () => void;
+}
 
-const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const browser: MorphEnvironment = {
+  supportsViewTransitions: () => typeof document.startViewTransition === 'function',
+  prefersReducedMotion: () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  startViewTransition: (update) => document.startViewTransition(update),
+  after(milliseconds, callback) {
+    const timer = window.setTimeout(callback, milliseconds);
+    return () => window.clearTimeout(timer);
+  },
+};
 
-const nameElement = (element: HTMLElement, name: string) => {
-  element.style.viewTransitionName = name;
+const nameElement = (element: MorphElement, name: string) => {
+  element.style.setProperty('view-transition-name', name);
   element.style.setProperty('view-transition-class', MORPH_CLASS);
 };
 
-const unnameElement = (element: HTMLElement) => {
+const unnameElement = (element: MorphElement) => {
   element.style.removeProperty('view-transition-name');
   element.style.removeProperty('view-transition-class');
 };
 
-/**
- * Goes back to the page that opened a full-page view, as a view transition from the view to the card it was opened
- * from. React starts no transition for a history traversal, so the browser's own is started here, around the
- * navigation: the view is named before it starts, and the card names itself with `landMorph` once it is back in
- * place. The page holds on the old view until then, or for a second at most. The browser's own Back button cannot be
- * wrapped the same way: React updates the page in the same task as the traversal, before the browser captures the old
- * state, so there is nothing left to morph from.
- */
-export const morphBack = (view: HTMLElement, registryName: string, goBack: () => void): void => {
-  if (morphing || !document.startViewTransition || prefersReducedMotion()) {
-    goBack();
-    return;
-  }
-  const name = transitionNameOf(registryName);
-  let card: HTMLElement | null = null;
-  morphing = true;
-  nameElement(view, name);
+export const createMorph = (environment: MorphEnvironment) => {
+  let landing: ((card: MorphElement) => void) | null = null;
+  let morphing = false;
 
-  const transition = document.startViewTransition(
-    () =>
-      new Promise<void>((resolve) => {
-        const giveUp = window.setTimeout(resolve, COMMIT_TIMEOUT_MS);
-        landing = {
-          land(landed) {
-            window.clearTimeout(giveUp);
-            card = landed;
-            nameElement(landed, name);
-            resolve();
-          },
-        };
-        goBack();
-      }),
-  );
-
-  transition.finished.finally(() => {
-    morphing = false;
+  const takeLanding = () => {
+    const land = landing;
     landing = null;
-    if (card) unnameElement(card);
-  });
+    return land;
+  };
+
+  /**
+   * Goes back to the page that opened a full-page view, as a view transition from the view to the card it was
+   * opened from. React starts no transition for a history traversal, so the browser's own is started here, around
+   * the navigation: the view is named before it starts, and the card names itself with `landMorph` once it is back
+   * in place. The page holds on the old view until then, or for a second at most. The browser's own Back button
+   * cannot be wrapped the same way: React updates the page in the same task as the traversal, before the browser
+   * captures the old state, so there is nothing left to morph from.
+   */
+  const morphBack = (view: MorphElement, registryName: string, goBack: () => void): void => {
+    if (morphing || !environment.supportsViewTransitions() || environment.prefersReducedMotion()) {
+      goBack();
+      return;
+    }
+    const name = transitionNameOf(registryName);
+    let landedCard: MorphElement | null = null;
+    morphing = true;
+    nameElement(view, name);
+
+    const transition = environment.startViewTransition(
+      () =>
+        new Promise<void>((resolve) => {
+          const cancelGiveUp = environment.after(COMMIT_TIMEOUT_MS, resolve);
+          landing = (card) => {
+            cancelGiveUp();
+            landedCard = card;
+            nameElement(card, name);
+            resolve();
+          };
+          goBack();
+        }),
+    );
+
+    transition.finished.finally(() => {
+      morphing = false;
+      takeLanding();
+      if (landedCard) unnameElement(landedCard);
+    });
+  };
+
+  /** Called by the card a full-page view returns to, once it is in the page and scrolled into place. */
+  const landMorph = (card: MorphElement): void => takeLanding()?.(card);
+
+  return { morphBack, landMorph };
 };
 
-/** Called by the card a full-page view returns to, once it is in the page and scrolled into place. */
-export const landMorph = (card: HTMLElement): void => {
-  landing?.land(card);
-  landing = null;
-};
+export const { morphBack, landMorph } = createMorph(browser);

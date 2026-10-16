@@ -1,6 +1,5 @@
-import { parseExampleKey } from '@repo/registry/example-key';
 import type { Base } from '@/lib/base-routes';
-import { previewPageOf } from '@/lib/preview-pages';
+import { itemTitleOf } from '@/lib/preview-pages';
 import { previewCardWiring } from '@/lib/preview-routes';
 import { BaseUiPreview } from './base-ui-preview';
 import { PreviewCard } from './preview-card';
@@ -24,10 +23,8 @@ export function Preview({ base, registryName, slot = 'page', expandable = true }
   const BasePreview = previewFor(base);
   if (!expandable) return <BasePreview registryName={registryName} />;
 
-  const item = parseExampleKey(registryName)?.itemName;
-  const itemTitle = item ? previewPageOf(base, item)?.title : undefined;
   return (
-    <PreviewCard {...previewCardWiring(base, registryName, slot, itemTitle)}>
+    <PreviewCard {...previewCardWiring(base, registryName, slot, itemTitleOf(base, registryName))}>
       <BasePreview registryName={registryName} />
     </PreviewCard>
   );

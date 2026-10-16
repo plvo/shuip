@@ -46,3 +46,13 @@ export const previewParams = (sources: DocumentedSources = sectionSources): Prev
       }),
     ),
   );
+
+/** The title of the docs page of the item an example belongs to, which is what the page calls the item. */
+export const itemTitleOf = (
+  base: Base,
+  registryName: string,
+  sources: DocumentedSources = sectionSources,
+): string | undefined => {
+  const item = parseExampleKey(registryName)?.itemName;
+  return item ? previewPageOf(base, item, sources)?.title : undefined;
+};

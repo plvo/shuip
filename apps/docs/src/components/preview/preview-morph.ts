@@ -1,6 +1,9 @@
 /** Names one preview card of a page. A page can show the same example twice, so the example alone does not. */
 export const originOf = (slot: string, registryName: string): string => `${slot}:${registryName}`;
 
+/** The view-transition class of the morph between a card and its full page, which the stylesheet gives its timing. */
+export const MORPH_CLASS = 'preview-morph';
+
 /** The view-transition name an example carries on its docs card and on its full page, which makes the two one element. */
 export const transitionNameOf = (registryName: string): string => `preview-${registryName.replaceAll('.', '--')}`;
 

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { MORPH_CLASS } from './preview-morph';
 
 export interface PreviewTransitionProps {
   /** The view-transition name, which the card of an example and its full page share; unnamed takes no part. */
@@ -11,7 +12,7 @@ export interface PreviewTransitionProps {
 /** Makes the card of an example and its full page the same element for the browser to morph between. */
 export function PreviewTransition({ name, children }: PreviewTransitionProps) {
   return (
-    <React.ViewTransition name={name} share='preview-morph' default='none'>
+    <React.ViewTransition name={name} share={MORPH_CLASS} default='none'>
       {children}
     </React.ViewTransition>
   );
