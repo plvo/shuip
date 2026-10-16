@@ -1,18 +1,17 @@
 import { describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
-import path from 'node:path';
-import ts from 'typescript';
 import { scanItems } from './generate';
-import { elementsNamed, parseTsx } from './jsx-source';
+import { attributeOrder, attributeValues, elementsNamed, parseTsx } from './jsx-source';
 
-const hasId = (element: ts.JsxOpeningElement | ts.JsxSelfClosingElement) =>
-  element.attributes.properties.some((attribute) => ts.isJsxAttribute(attribute) && attribute.name.getText() === 'id');
-
-const dndContextsOf = (file: string) =>
-  elementsNamed(parseTsx(file, fs.readFileSync(file, 'utf-8')), 'DndContext').map((element) => ({
-    file: path.basename(path.dirname(file)),
-    hasId: hasId(element),
-  }));
+const contextsOf = (file: string) => {
+  const source = parseTsx(file, fs.readFileSync(file, 'utf-8'));
+  return {
+    file,
+    count: elementsNamed(source, 'DndContext').length,
+    attributes: attributeOrder(source, 'DndContext'),
+    ids: attributeValues(source, 'DndContext', 'id'),
+  };
+};
 
 // dnd-kit numbers the contexts it renders with a counter that lives in the module, so a server that has rendered
 // other pages hands out different numbers than a fresh browser and the page hydrates with a mismatch.
@@ -21,18 +20,28 @@ describe('the drag-and-drop contexts of the items', () => {
     item.componentPath,
     ...(item.componentOverridePath ? [item.componentOverridePath] : []),
   ]);
-  const contexts = sources.flatMap(dndContextsOf);
+  const contexts = sources.map(contextsOf).filter(({ count }) => count > 0);
 
   test('are found in every source that renders one', () => {
     const rendering = sources.filter((file) => /<DndContext\b/.test(fs.readFileSync(file, 'utf-8')));
 
     expect(rendering.length).toBeGreaterThan(0);
-    expect(new Set(contexts.map(({ file }) => file))).toEqual(
-      new Set(rendering.map((file) => path.basename(path.dirname(file)))),
-    );
+    expect(new Set(contexts.map(({ file }) => file))).toEqual(new Set(rendering));
   });
 
-  test('all carry an id', () => {
-    expect(contexts.filter(({ hasId: carriesId }) => !carriesId)).toEqual([]);
+  test('all carry an id of their own, not one passed along in a spread', () => {
+    const withoutId = contexts.flatMap(({ file, attributes }) =>
+      attributes.filter((names) => !names.includes('id')).map(() => file),
+    );
+
+    expect(withoutId).toEqual([]);
+  });
+
+  test('take that id from an expression, so that each instance can have its own', () => {
+    const literal = contexts.flatMap(({ file, count, ids }) =>
+      ids.length === count && ids.every((id) => !/^['"`]/.test(id)) ? [] : [file],
+    );
+
+    expect(literal).toEqual([]);
   });
 });
