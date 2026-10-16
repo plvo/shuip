@@ -1,62 +1,81 @@
 'use client';
 
-import { AlertTriangle, LoaderCircle } from 'lucide-react';
+import { QueryClient, QueryClientProvider, useSuspenseQuery } from '@tanstack/react-query';
+import { LoaderCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { QueryBoundary } from '@/components/ui/shuip/tanstack-query/query-boundary';
 
+const PROFILE_QUERY_KEYS = ['profile', 'ada'];
+
+const wait = (milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+
+async function fetchProfile(shouldFail: boolean) {
+  await wait(800);
+  if (shouldFail) throw new Error('The profile request failed.');
+  return { name: 'Ada Lovelace', email: 'ada@example.com' };
+}
+
 export default function QueryBoundaryErrorHandlingExample() {
-  const [shouldError, setShouldError] = useState(false);
-  const queryKeys = ['error-demo', 'user-profile'];
+  const [queryClient] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false } } }));
+  const [requested, setRequested] = useState(false);
+  const [shouldFail, setShouldFail] = useState(true);
+
+  const toggleRequest = () => {
+    if (requested) queryClient.removeQueries({ queryKey: PROFILE_QUERY_KEYS });
+    setRequested(!requested);
+  };
 
   return (
-    <div className='space-y-4'>
-      <div className='flex gap-2'>
-        <Button variant='outline' onClick={() => setShouldError(false)}>
-          Show Success
-        </Button>
-        <Button variant='destructive' onClick={() => setShouldError(true)}>
-          Trigger Error
-        </Button>
+    <QueryClientProvider client={queryClient}>
+      <div className='flex w-full max-w-sm flex-col items-center gap-6'>
+        <div className='flex w-full items-center justify-between gap-4'>
+          <div className='flex items-center gap-2'>
+            <Checkbox
+              id='fail-next-request'
+              checked={shouldFail}
+              onCheckedChange={(checked) => setShouldFail(checked === true)}
+            />
+            <Label htmlFor='fail-next-request'>Fail the next request</Label>
+          </div>
+          <Button variant={requested ? 'outline' : 'default'} onClick={toggleRequest}>
+            {requested ? 'Reset' : 'Load profile'}
+          </Button>
+        </div>
+        <div className='flex min-h-64 w-full items-center justify-center'>
+          {requested ? (
+            <QueryBoundary
+              queryKeys={PROFILE_QUERY_KEYS}
+              loadingFallback={
+                <div role='status' className='flex items-center gap-2 text-muted-foreground'>
+                  <LoaderCircle className='size-4 animate-spin' />
+                  Loading profile...
+                </div>
+              }
+            >
+              <Profile shouldFail={shouldFail} />
+            </QueryBoundary>
+          ) : (
+            <p className='text-sm text-muted-foreground'>Nothing requested yet.</p>
+          )}
+        </div>
       </div>
-
-      <QueryBoundary
-        queryKeys={queryKeys}
-        loadingFallback={
-          <div className='flex items-center justify-center p-8'>
-            <LoaderCircle className='animate-spin mr-2' />
-            Loading user profile...
-          </div>
-        }
-        errorFallback={({ error, resetErrorBoundary }) => (
-          <div className='p-6 rounded-lg border border-destructive/30 bg-destructive/5 flex flex-col items-center justify-center space-y-4 text-center'>
-            <AlertTriangle className='text-destructive size-12' />
-            <div>
-              <h3 className='text-lg font-semibold mb-2'>Custom Error Handler</h3>
-              <p className='text-muted-foreground'>{error instanceof Error ? error.message : 'An error occurred'}</p>
-              <p className='text-xs text-muted-foreground mt-2'>Queries: {queryKeys.join(', ')}</p>
-            </div>
-            <Button onClick={resetErrorBoundary} variant='outline' className='gap-2'>
-              Try Again
-            </Button>
-          </div>
-        )}
-      >
-        <ErrorProneComponent shouldError={shouldError} />
-      </QueryBoundary>
-    </div>
+    </QueryClientProvider>
   );
 }
 
-function ErrorProneComponent({ shouldError }: { shouldError: boolean }) {
-  if (shouldError) {
-    throw new Error('Something went wrong while loading the user profile!');
-  }
+function Profile({ shouldFail }: { shouldFail: boolean }) {
+  const { data } = useSuspenseQuery({
+    queryKey: PROFILE_QUERY_KEYS,
+    queryFn: () => fetchProfile(shouldFail),
+  });
 
   return (
-    <div className='p-4 border rounded-lg bg-green-50'>
-      <h3 className='font-semibold mb-2 text-green-800'>Success!</h3>
-      <p className='text-green-700'>User profile loaded successfully.</p>
+    <div className='w-full rounded-lg border bg-muted/50 p-4'>
+      <h3 className='font-semibold'>{data.name}</h3>
+      <p className='text-sm text-muted-foreground'>{data.email}</p>
     </div>
   );
 }

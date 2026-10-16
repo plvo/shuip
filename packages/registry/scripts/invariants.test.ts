@@ -315,6 +315,69 @@ describe('invariant detection', () => {
   });
 });
 
+const REGISTRY_NAME = /^registryName:\s*['"]?([^'"\s]+)['"]?\s*$/m;
+
+const declaredRegistryName = (doc: string) => doc.match(REGISTRY_NAME)?.[1];
+
+const rendersItemExamples = (doc: string, registryName: string) =>
+  new RegExp(`<ItemExamples\\s+registryName=\\{?['"]${registryName}['"]\\}?\\s*/>`).test(doc);
+
+const docsMissingExamples = (docs: { relativePath: string; content: string; exampleCount: number }[]) =>
+  docs.flatMap(({ relativePath, content, exampleCount }) => {
+    const registryName = declaredRegistryName(content);
+    return registryName && exampleCount > 1 && !rendersItemExamples(content, registryName) ? [relativePath] : [];
+  });
+
+describe('item doc pages render their examples', () => {
+  const docs = scanItems()
+    .filter((item) => item.hasMdx)
+    .map((item) => {
+      const doc = readSource(path.join(item.itemDir, 'index.mdx'), 'doc');
+      return { ...doc, exampleCount: item.examples.length };
+    });
+
+  test('scans every item doc page that declares a registry name', () => {
+    expect(docs.filter((doc) => declaredRegistryName(doc.content)).length).toBeGreaterThan(0);
+    expect(docs.map((doc) => doc.relativePath)).toContain(
+      'packages/registry/items/tanstack-query/query-boundary/index.mdx',
+    );
+  });
+
+  test('every doc page of an item with more than its default example renders ItemExamples', () => {
+    expect(docsMissingExamples(docs)).toEqual([]);
+  });
+
+  describe('detection', () => {
+    const page = (body: string) => `---\ntitle: T\nregistryName: tsq-x\n---\n\n${body}\n`;
+    const check = (content: string, exampleCount = 2) =>
+      docsMissingExamples([{ relativePath: 'a.mdx', content, exampleCount }]);
+
+    test('flags a page without the block', () => {
+      expect(check(page('## Props'))).toEqual(['a.mdx']);
+    });
+
+    test('flags a page whose block names another item', () => {
+      expect(check(page("<ItemExamples registryName={'tsq-y'} />"))).toEqual(['a.mdx']);
+    });
+
+    test.each([
+      ['braced single quotes', "<ItemExamples registryName={'tsq-x'} />"],
+      ['plain single quotes', "<ItemExamples registryName='tsq-x' />"],
+      ['plain double quotes', '<ItemExamples registryName="tsq-x"/>'],
+    ])('accepts %s', (_, body) => {
+      expect(check(page(body))).toEqual([]);
+    });
+
+    test('accepts a page whose item has only its default example', () => {
+      expect(check(page('## Props'), 1)).toEqual([]);
+    });
+
+    test('ignores a page that declares no registry name', () => {
+      expect(check('## Props', 3)).toEqual([]);
+    });
+  });
+});
+
 describe('published registry entries', () => {
   const { items } = buildRegistryJson(scanItems(), readRootCatalog());
 
