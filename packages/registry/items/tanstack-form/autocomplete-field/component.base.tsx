@@ -1,5 +1,7 @@
 'use client';
 
+// Override of component.radix.tsx for what the codemod cannot derive: Tab closes the list, a click on the input
+// reopens it, an outside press on the anchor does not dismiss it, and the blur handler does not look at the popup.
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import { Loader2 } from 'lucide-react';
 import * as React from 'react';
