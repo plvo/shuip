@@ -284,15 +284,20 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     right: initialState?.columnPinning?.right ?? [],
   }));
 
+  const currentSorting = props.state?.sorting ?? sorting;
+  const currentColumnFilters = props.state?.columnFilters ?? columnFilters;
+  const currentGlobalFilter = props.state?.globalFilter ?? globalFilter;
+
   const table = useReactTable<TData>({
     data,
     columns,
     pageCount: pageCount ?? undefined,
     defaultColumn: { filterFn: dataTableFilterFn },
+    autoResetPageIndex: false,
     state: {
-      sorting: props.state?.sorting ?? sorting,
-      columnFilters: props.state?.columnFilters ?? columnFilters,
-      globalFilter: props.state?.globalFilter ?? globalFilter,
+      sorting: currentSorting,
+      columnFilters: currentColumnFilters,
+      globalFilter: currentGlobalFilter,
       columnVisibility,
       rowSelection,
       pagination: props.state?.pagination ?? pagination,
@@ -321,6 +326,22 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
           getFacetedRowModel: getFacetedRowModel(),
           getFacetedUniqueValues: getFacetedUniqueValues(),
         }),
+  });
+
+  // TanStack queues the reset of the page from the render that computes the rows, and a React that renders in slices,
+  // as it does when it hydrates, runs that microtask before the component has mounted. The reset runs here instead,
+  // from a layout effect so that no frame shows a page the new rows do not reach, and only when the rows can have
+  // changed. The inputs are compared through a ref, not a dependency array: an array would also run the effect on
+  // mount and on the second run of strict mode, and send a table that starts on `initialState.pagination` back to
+  // its first page.
+  const rowInputs = [data, currentSorting, currentColumnFilters, currentGlobalFilter];
+  const previousRowInputs = React.useRef(rowInputs);
+  React.useLayoutEffect(() => {
+    const previous = previousRowInputs.current;
+    previousRowInputs.current = rowInputs;
+    if (manual) return;
+    if (rowInputs.every((input, index) => Object.is(input, previous[index]))) return;
+    table.resetPageIndex();
   });
 
   return { table };
@@ -1257,6 +1278,7 @@ function FilterBuilder<TData>({ table }: { table: Table<TData> }) {
   const allUsed = fields.length > 0 && fields.every((field) => columnFilters.some((item) => item.id === field.id));
 
   const sensors = useReorderSensors();
+  const dndId = React.useId();
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -1273,7 +1295,7 @@ function FilterBuilder<TData>({ table }: { table: Table<TData> }) {
       {rows.length === 0 ? (
         <p className='px-1 py-2 text-muted-foreground text-sm'>No filters applied to this view.</p>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={rows.map((row) => row.field.id)} strategy={verticalListSortingStrategy}>
             <div className='flex flex-col gap-2'>
               {rows.map((row, index) => (
@@ -1414,6 +1436,7 @@ function SortBuilder<TData>({ table }: { table: Table<TData> }) {
   const allUsed = fields.length > 0 && fields.every((field) => sorting.some((sort) => sort.id === field.id));
 
   const sensors = useReorderSensors();
+  const dndId = React.useId();
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -1430,7 +1453,7 @@ function SortBuilder<TData>({ table }: { table: Table<TData> }) {
       {sorting.length === 0 ? (
         <p className='px-1 py-2 text-muted-foreground text-sm'>No sorts applied to this view.</p>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={sorting.map((sort) => sort.id)} strategy={verticalListSortingStrategy}>
             <div className='flex flex-col gap-2'>
               {sorting.map((sort, index) => (
