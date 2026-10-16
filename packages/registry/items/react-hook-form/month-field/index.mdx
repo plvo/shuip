@@ -20,7 +20,7 @@ The field binds to the form via a typed lens from [`@hookform/lenses`](https://g
 
 ```tsx
 import { useLens } from '@hookform/lenses';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { MonthField } from '@/components/ui/shuip/react-hook-form/month-field';
 
 type Values = { billingMonth: Date | undefined };
@@ -28,11 +28,9 @@ type Values = { billingMonth: Date | undefined };
 const form = useForm<Values>({ defaultValues: { billingMonth: undefined } });
 const lens = useLens({ control: form.control });
 
-<FormProvider {...form}>
-  <form onSubmit={form.handleSubmit(onSubmit)}>
-    <MonthField lens={lens.focus('billingMonth')} label='Billing month' />
-  </form>
-</FormProvider>
+<form onSubmit={form.handleSubmit(onSubmit)}>
+  <MonthField lens={lens.focus('billingMonth')} label='Billing month' />
+</form>
 ```
 
 ## Value shape

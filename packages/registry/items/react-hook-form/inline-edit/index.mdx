@@ -11,6 +11,8 @@ editable input on click; read and edit share one typography scale, so editing is
 On each commit the field writes its value to the form and validates it — an invalid value
 keeps the field in edit mode with the error shown inline.
 
+Unlike the other React Hook Form fields, `InlineEditField` must render under `<FormProvider {...form}>`: it validates on commit through `useFormContext().trigger`, and throws without the provider.
+
 Persisting is the form's job, not the field's: subscribe to the form with `form.watch` (or
 submit it). The example below autosaves the whole form to `localStorage` from a single
 `watch` subscription, so one handler covers every field.

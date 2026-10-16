@@ -39,7 +39,7 @@ Field components bind via `@hookform/lenses`. Create a lens once per form, then 
 
 ```tsx
 import { useLens } from '@hookform/lenses';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AddressField, addressSchema } from '@/components/ui/shuip/react-hook-form/address-field';
@@ -54,11 +54,9 @@ const form = useForm<z.infer<typeof schema>>({
 });
 const lens = useLens({ control: form.control });
 
-<FormProvider {...form}>
-  <form onSubmit={form.handleSubmit(onSubmit)}>
-    <AddressField lens={lens.focus('address')} country='FR' />
-  </form>
-</FormProvider>
+<form onSubmit={form.handleSubmit(onSubmit)}>
+  <AddressField lens={lens.focus('address')} country='FR' />
+</form>
 ```
 
 ## Compound field

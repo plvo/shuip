@@ -22,17 +22,15 @@ Field components bind via `@hookform/lenses`. Create a lens once per form:
 
 ```tsx
 import { useLens } from '@hookform/lenses';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { CheckboxField } from '@/components/ui/shuip/react-hook-form/checkbox-field';
 
 const form = useForm<MyForm>({ defaultValues: { agree: false } });
 const lens = useLens({ control: form.control });
 
-<FormProvider {...form}>
-  <form onSubmit={form.handleSubmit(onSubmit)}>
-    <CheckboxField lens={lens.focus('agree')} label='I agree' />
-  </form>
-</FormProvider>
+<form onSubmit={form.handleSubmit(onSubmit)}>
+  <CheckboxField lens={lens.focus('agree')} label='I agree' />
+</form>
 ```
 
 ## Less boilerplate

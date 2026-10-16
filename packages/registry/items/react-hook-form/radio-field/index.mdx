@@ -22,17 +22,15 @@ Field components bind via `@hookform/lenses`. Create a lens once per form:
 
 ```tsx
 import { useLens } from '@hookform/lenses';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { RadioField } from '@/components/ui/shuip/react-hook-form/radio-field';
 
 const form = useForm<MyForm>({ defaultValues: { plan: 'free' } });
 const lens = useLens({ control: form.control });
 
-<FormProvider {...form}>
-  <form onSubmit={form.handleSubmit(onSubmit)}>
-    <RadioField lens={lens.focus('plan')} options={['free', 'pro', 'enterprise']} label='Plan' />
-  </form>
-</FormProvider>
+<form onSubmit={form.handleSubmit(onSubmit)}>
+  <RadioField lens={lens.focus('plan')} options={['free', 'pro', 'enterprise']} label='Plan' />
+</form>
 ```
 
 ## Less boilerplate

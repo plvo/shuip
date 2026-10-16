@@ -14,7 +14,7 @@ A lens is a typed pointer into your form's values. Create the form as usual, der
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -27,17 +27,17 @@ export function NameForm() {
   const lens = useLens({ control: form.control });
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit((values) => alert(values.name))} className='space-y-4'>
-        <InputField lens={lens.focus('name')} label='Name' placeholder='John' />
-        <SubmitButton>Submit</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit((values) => alert(values.name))} className='space-y-4'>
+      <InputField lens={lens.focus('name')} label='Name' placeholder='John' />
+      <SubmitButton>Submit</SubmitButton>
+    </form>
   );
 }
 ```
 
 `lens.focus('name')` only accepts real keys of `Values`, and the field's value type is inferred from there. Validation is whatever you wire on the form (here, a Zod resolver) — the field reads `fieldState.invalid` and renders the error for you.
+
+The fields read the form through the lens, so the form needs no `FormProvider`. Wrap it in `<FormProvider {...form}>` when your own components call `useFormContext()`, and for [`InlineEditField`](/components/react-hook-form/inline-edit), which validates on commit through the form context.
 
 ## What you get
 
