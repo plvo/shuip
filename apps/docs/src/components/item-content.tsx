@@ -20,7 +20,7 @@ export async function ItemHeader({ base, registryName, text }: ItemHeaderProps) 
     <div className='space-y-4'>
       {text && <p>{text}</p>}
       <InstallationCmd itemName={registryName} manualCode={code} />
-      <Preview base={base} registryName={`${registryName}.example`} />
+      <Preview base={base} registryName={`${registryName}.example`} slot='header' />
     </div>
   );
 }

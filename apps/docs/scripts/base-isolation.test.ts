@@ -101,3 +101,28 @@ describe('the modules that choose a base', () => {
     expect(specifiers.filter((specifier) => BASE_UI_ONLY.test(specifier) || RADIX_ONLY.test(specifier))).toEqual([]);
   });
 });
+
+describe('the full-page preview route', () => {
+  const routeFiles = fs
+    .readdirSync(path.join(SRC_DIR, 'app', 'preview'), { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.tsx'))
+    .map((entry) => path.join(entry.parentPath, entry.name));
+  const PER_BASE_MODULE = /\/(base-ui|radix)-(preview|providers)$/;
+  const importsOf = (name: string) => specifiersOf(routeFiles.find((file) => path.basename(file) === name) as string);
+
+  test('has a layout and a page', () => {
+    expect(routeFiles.map((file) => path.basename(file)).sort()).toEqual(['layout.tsx', 'page.tsx']);
+  });
+
+  test.each(routeFiles)('%s imports the primitives only through the modules that choose a base', (file) => {
+    const specifiers = specifiersOf(file);
+
+    expect(specifiers.filter((specifier) => BASE_UI_ONLY.test(specifier) || RADIX_ONLY.test(specifier))).toEqual([]);
+    expect(specifiers.filter((specifier) => PER_BASE_MODULE.test(specifier))).toEqual([]);
+  });
+
+  test('mounts the providers of the base of the address in its layout, once', () => {
+    expect(importsOf('layout.tsx')).toContain('@/components/providers/providers-for-base');
+    expect(importsOf('page.tsx')).not.toContain('@/components/providers/providers-for-base');
+  });
+});

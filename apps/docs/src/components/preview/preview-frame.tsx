@@ -2,15 +2,22 @@
 
 import { Loader2Icon } from 'lucide-react';
 import * as React from 'react';
+import { cn } from '@/lib/utils';
 
 export interface PreviewFrameProps {
   registryName: string;
   component: React.ComponentType | undefined;
+  className?: string;
 }
 
-export function PreviewFrame({ registryName, component: PreviewComponent }: PreviewFrameProps) {
+export function PreviewFrame({ registryName, component: PreviewComponent, className }: PreviewFrameProps) {
   return (
-    <div className='not-prose w-full min-h-[150px] flex items-center justify-center-safe overflow-x-auto p-8 bg-background border border-border rounded-md'>
+    <div
+      className={cn(
+        'not-prose w-full min-h-[150px] flex items-center justify-center-safe overflow-x-auto p-8 bg-background border border-border rounded-md',
+        className,
+      )}
+    >
       {PreviewComponent ? (
         <React.Suspense
           fallback={
