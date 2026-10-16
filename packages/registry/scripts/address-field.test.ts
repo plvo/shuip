@@ -12,6 +12,9 @@ const SHARED_DECLARATIONS = [
   'addressFieldError',
   'ControlledField',
   'clearFilledFields',
+  'ElementTarget',
+  'handElementToFields',
+  'lookupPlaceDetails',
 ];
 
 const parse = (variant: (typeof VARIANTS)[number]) => {
@@ -87,17 +90,17 @@ describe.each(VARIANTS)('AddressField in the %s variant', (variant) => {
 
   test('gives the input a ref that hands the element to the controller of every field of the address', () => {
     const setInputRef = initializerOf(source, 'setInputRef');
-    const [handOver] = setInputRef === undefined ? [] : nodesOf(setInputRef, ts.isForOfStatement);
+    const [handOver] = callsTo(setInputRef, 'handElementToFields');
+    const [controllers, node] = handOver?.arguments ?? [];
 
     expect(attributeValues(source, 'Input', 'ref')).toEqual(['setInputRef']);
     expect(setInputRef?.getText()).toContain('inputRef.current = node');
-    expect(handOver !== undefined && ts.isArrayLiteralExpression(handOver.expression)).toBe(true);
+    expect(node?.getText()).toBe('node');
     expect(
-      handOver !== undefined && ts.isArrayLiteralExpression(handOver.expression)
-        ? handOver.expression.elements.map((element) => element.getText())
+      controllers !== undefined && ts.isArrayLiteralExpression(controllers)
+        ? controllers.elements.map((element) => element.getText())
         : [],
     ).toEqual(['fullAddress', 'street', 'city', 'postalCode', 'countryField']);
-    expect(callsTo(handOver?.statement, 'field.ref')).toHaveLength(1);
   });
 
   test('renders a single error below the input, out of the label', () => {
@@ -184,18 +187,15 @@ describe.each(VARIANTS)('AddressField in the %s variant', (variant) => {
     expect(writtenAt).toBeGreaterThan(clearedAt);
   });
 
-  test('looks the place details up inside a try block', () => {
+  test('awaits the place details lookup through lookupPlaceDetails', () => {
     const [lookup, ...others] = callsTo(source, 'getPlaceDetails');
+    const [guarded] = callsTo(initializerOf(source, 'details'), 'lookupPlaceDetails');
+    const [fetcher] = guarded?.arguments ?? [];
 
     expect(others).toEqual([]);
-    expect(lookup).toBeDefined();
-    expect(
-      hasAncestor(
-        lookup,
-        (ancestor) =>
-          ts.isTryStatement(ancestor) && ancestor.tryBlock.pos <= lookup.pos && lookup.end <= ancestor.tryBlock.end,
-      ),
-    ).toBe(true);
+    expect(initializerOf(source, 'details')?.kind).toBe(ts.SyntaxKind.AwaitExpression);
+    expect(fetcher !== undefined && ts.isArrowFunction(fetcher)).toBe(true);
+    expect(lookup !== undefined && hasAncestor(lookup, (ancestor) => ancestor === fetcher)).toBe(true);
   });
 
   test('treats place details without a result as not picked', () => {
@@ -209,5 +209,14 @@ describe.each(VARIANTS)('AddressField in the %s variant', (variant) => {
       'suggestion.description.trim()',
     ]);
     expect(callsTo(notPicked, 'placeId.field.onChange')).toEqual([]);
+  });
+
+  test('writes the place of the suggestion once the details are found', () => {
+    const detailsBranch = nodesOf(source, ts.isIfStatement).find(
+      (statement) => statement.expression.getText() === 'details?.result',
+    );
+    const picked = callsTo(detailsBranch?.thenStatement, 'placeId.field.onChange');
+
+    expect(picked.map((call) => call.arguments[0]?.getText())).toEqual(['suggestion.placeId.trim()']);
   });
 });

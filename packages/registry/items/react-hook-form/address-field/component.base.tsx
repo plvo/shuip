@@ -50,6 +50,23 @@ export function clearFilledFields(controllers: ControlledField[]): void {
   }
 }
 
+interface ElementTarget {
+  field: { ref: (node: HTMLInputElement | null) => void };
+}
+
+export function handElementToFields(controllers: ElementTarget[], node: HTMLInputElement | null): void {
+  for (const { field } of controllers) field.ref(node);
+}
+
+export async function lookupPlaceDetails<Details>(lookup: () => Promise<Details>): Promise<Details | undefined> {
+  try {
+    return await lookup();
+  } catch (error) {
+    console.error('Error fetching place details:', error);
+    return undefined;
+  }
+}
+
 interface AddressSuggestion {
   placeId: string;
   description: string;
@@ -143,25 +160,12 @@ export function AddressField({
   const setInputRef = React.useCallback(
     (node: HTMLInputElement | null) => {
       inputRef.current = node;
-      for (const { field } of [fullAddress, street, city, postalCode, countryField]) field.ref(node);
+      handElementToFields([fullAddress, street, city, postalCode, countryField], node);
     },
     [fullAddress.field.ref, street.field.ref, city.field.ref, postalCode.field.ref, countryField.field.ref],
   );
 
   const clearPlace = () => clearFilledFields([street, city, postalCode, countryField, placeId]);
-
-  const fetchPlaceDetails = async (suggestion: AddressSuggestion) => {
-    try {
-      return await getPlaceDetails({
-        placeId: suggestion.placeId,
-        fields: ['address_components', 'formatted_address', 'geometry'],
-        language: LANGUAGE_RESULT,
-      });
-    } catch (error) {
-      console.error('Error fetching place details:', error);
-      return undefined;
-    }
-  };
 
   const handleSelectAddress = (suggestion: AddressSuggestion) => {
     setShowSuggestions(false);
@@ -169,7 +173,13 @@ export function AddressField({
     setSearchQuery('');
 
     startTransition(async () => {
-      const details = await fetchPlaceDetails(suggestion);
+      const details = await lookupPlaceDetails(() =>
+        getPlaceDetails({
+          placeId: suggestion.placeId,
+          fields: ['address_components', 'formatted_address', 'geometry'],
+          language: LANGUAGE_RESULT,
+        }),
+      );
 
       if (details?.result) {
         const addressComponents = details.result.address_components || [];
