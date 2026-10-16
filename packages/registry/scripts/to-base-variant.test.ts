@@ -159,48 +159,6 @@ describe('toBaseVariant', () => {
     expect(warnings).toEqual([]);
   });
 
-  test('leaves an asChild on an element imported from an npm package to its own library', () => {
-    const input = lines(
-      "import { Command as CommandPrimitive } from 'cmdk';",
-      '',
-      '<CommandPrimitive.Input asChild>',
-      '  <input aria-expanded={false} />',
-      '</CommandPrimitive.Input>',
-    );
-
-    expect(toBaseVariant(input)).toEqual({ code: input, warnings: [] });
-  });
-
-  test.each([
-    '@/components/ui/dialog',
-    '@/components/block/shuip/responsive-dialog',
-  ])('converts an asChild on an element imported from %s', (module) => {
-    const input = lines(
-      `import { DialogClose } from '${module}';`,
-      '',
-      '<DialogClose asChild>',
-      '  <Button />',
-      '</DialogClose>',
-    );
-
-    const { code } = toBaseVariant(input);
-
-    expect(code).toContain('<DialogClose render={<Button />} />');
-    expect(code).not.toContain('asChild');
-  });
-
-  test('converts an asChild on a tag with no identifier, whatever packages the file imports', () => {
-    const input = lines(
-      "import { Slot } from 'radix-slot';",
-      '',
-      '<this.Trigger asChild>',
-      '  <Button />',
-      '</this.Trigger>',
-    );
-
-    expect(toBaseVariant(input).code).toContain('<this.Trigger render={<Button />} />');
-  });
-
   test('returns a file without asChild byte for byte', () => {
     const input = lines(
       "'use client';",

@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import ts from 'typescript';
 import { buildRegistryJson, readRootCatalog, type ScannedItem, scanItems, writeBaseVariant } from './generate';
-import { attributeValues, elementsMatching, isImportedFromPackage, namedImports, parseTsx } from './jsx-source';
+import { attributeValues, elementsMatching, namedImports, parseTsx } from './jsx-source';
 import { RADIX_PACKAGE } from './radix-package';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '../../..');
@@ -154,10 +154,8 @@ const asChildSites = (relativePath: string, content: string): string[] => {
   const sites: string[] = [];
   const visit = (node: ts.Node): void => {
     if (ts.isJsxAttribute(node) && node.name.getText(file) === 'asChild') {
-      const { tagName } = node.parent.parent as ts.JsxOpeningLikeElement;
-      if (!isImportedFromPackage(file, tagName)) {
-        sites.push(`${relativePath} <${tagName.getText(file)} asChild${node.initializer ? '={…}' : ''}>`);
-      }
+      const tag = (node.parent.parent as ts.JsxOpeningLikeElement).tagName.getText(file);
+      sites.push(`${relativePath} <${tag} asChild${node.initializer ? '={…}' : ''}>`);
     } else if (ts.isIdentifier(node) && node.text === 'asChild' && !ts.isJsxAttribute(node.parent)) {
       sites.push(`${relativePath} mentions asChild`);
     }
@@ -198,9 +196,8 @@ describe('the Base UI variant stays free of Radix', () => {
     expect(paths(offenders)).toEqual([]);
   });
 
-  // No `asChild` survives in the Base UI output, whether used or declared, except on an element imported from an npm
-  // package, which composes through its own library. A site that does fails this test: give it an override or
-  // a canonical form that composes on both bases.
+  // No `asChild` survives in the Base UI output, whether used or declared. A site that does fails this test: give it
+  // an override or a canonical form that composes on both bases, or list it here after checking that it composes.
   test('no asChild site is left in the published Base UI sources', () => {
     const consumerDir = path.join(outDir, 'consumer', 'items');
     const remaining = fs

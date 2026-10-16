@@ -40,41 +40,6 @@ export const namedImports = (source: ts.SourceFile, specifier: string): { import
       : [],
   );
 
-/** Whether an import specifier names an npm package, not a relative path or one of the `@/`, `@repo/` and `#/` aliases. */
-export const isPackageSpecifier = (specifier: string): boolean =>
-  !(
-    specifier.startsWith('.') ||
-    specifier.startsWith('@/') ||
-    specifier.startsWith('@repo/') ||
-    specifier.startsWith('#/')
-  );
-
-const rootIdentifier = (tag: ts.JsxTagNameExpression): string | undefined => {
-  let node: ts.Node = tag;
-  while (ts.isPropertyAccessExpression(node)) node = node.expression;
-  return ts.isIdentifier(node) ? node.text : undefined;
-};
-
-/** Whether `tag` is imported from an npm package: such an element composes through its own library, not through a vendored primitive. */
-export const isImportedFromPackage = (source: ts.SourceFile, tag: ts.JsxTagNameExpression): boolean => {
-  const name = rootIdentifier(tag);
-  if (name === undefined) return false;
-  return source.statements.some((statement) => {
-    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) return false;
-    if (!isPackageSpecifier(statement.moduleSpecifier.text)) return false;
-    const clause = statement.importClause;
-    if (clause === undefined) return false;
-    const { namedBindings } = clause;
-    return (
-      clause.name?.text === name ||
-      (namedBindings !== undefined &&
-        (ts.isNamespaceImport(namedBindings)
-          ? namedBindings.name.text === name
-          : namedBindings.elements.some((element) => element.name.text === name)))
-    );
-  });
-};
-
 /** The source text of the value of attribute `name` on every element `tag`: a string literal keeps its quotes, an expression loses its `{...}` braces. */
 export const attributeValues = (source: ts.SourceFile, tag: string, name: string): string[] =>
   elementsNamed(source, tag).flatMap((element) =>

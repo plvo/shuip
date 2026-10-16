@@ -4,8 +4,7 @@
  * The `asChild` to `render` rewrite is ported from the `transformAsChild` transformer of shadcn/ui
  * (packages/registry/src/transformers/transform-aschild.ts), MIT License, Copyright (c) 2023 shadcn.
  * It differs on purpose: it edits the TypeScript syntax tree in place instead of printing it, leaves
- * `asChild={expr}` pass-throughs and the `asChild` of elements imported from an npm package alone (they compose
- * through their own library, on both bases), and adds `nativeButton={false}` for every rendered element that
+ * `asChild={expr}` pass-throughs alone, and adds `nativeButton={false}` for every rendered element that
  * is not a button, not only under `Button`.
  *
  * A `Popover` that holds a `PopoverAnchor asChild` is anchored to an element other than a trigger. The vendored
@@ -13,7 +12,6 @@
  * `Portal`, a `Positioner` with `anchor` set to the `ref` of the anchored element, and a `Popup`.
  */
 import ts from 'typescript';
-import { isImportedFromPackage } from './jsx-source';
 
 export interface BaseVariant {
   code: string;
@@ -104,7 +102,7 @@ export const toBaseVariant = (source: string): BaseVariant => {
   const convert = (element: ts.JsxElement): string | undefined => {
     const { tagName, attributes } = element.openingElement;
     const asChild = attributes.properties.find(isAsChild);
-    if (!asChild || asChild.initializer || isImportedFromPackage(file, tagName)) return undefined;
+    if (!asChild || asChild.initializer) return undefined;
 
     const parentTag = tagName.getText(file);
     const child = singleElementChild(element);

@@ -16,10 +16,6 @@ const DEBOUNCE_TIME = 300;
 // The popover gives its content role="dialog"; the combobox exposes the listbox inside it instead.
 const NO_POPUP_ROLE = { role: undefined };
 
-// cmdk sets aria-expanded and aria-controls after the props it receives, so only the child of an asChild input can
-// override them: the list is not rendered while closed, and aria-controls would point to nothing.
-const listStateAria = (open: boolean) => ({ 'aria-expanded': open, ...(open ? {} : { 'aria-controls': undefined }) });
-
 export interface ComboboxOption {
   value: string;
   label: string;
@@ -286,7 +282,6 @@ export function ComboboxField(props: ComboboxFieldProps) {
                   </Badge>
                 ))}
               <CommandPrimitive.Input
-                asChild
                 ref={inputRef}
                 value={inputValue}
                 placeholder={showPlaceholder ? placeholder : undefined}
@@ -297,9 +292,7 @@ export function ComboboxField(props: ComboboxFieldProps) {
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
                 className='min-w-20 flex-1 bg-transparent outline-hidden placeholder:text-muted-foreground'
-              >
-                <input {...listStateAria(open)} />
-              </CommandPrimitive.Input>
+              />
               {isPending && <Loader2 className={cn('shrink-0 animate-spin text-muted-foreground', iconSize)} />}
             </div>
           </PopoverAnchor>
