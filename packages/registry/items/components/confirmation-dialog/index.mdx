@@ -58,7 +58,7 @@ registryName: confirmation-dialog
 
 </BaseOnly>
 
-With `ConfirmationDialog`, the same result in a clean, reusable component. Clicking the confirm button calls `onConfirm`, then closes the dialog:
+With `ConfirmationDialog`, the same result in a clean, reusable component. Clicking the confirm button calls `onConfirm`, then closes the dialog. Set `labelCancelButton` to add a cancel button next to it:
 
 ```tsx	
 <ConfirmationDialog
@@ -66,9 +66,39 @@ With `ConfirmationDialog`, the same result in a clean, reusable component. Click
   title="Are you sure?"
   description="This action cannot be undone. This will permanently delete the item."
   labelConfirmButton="Delete"
+  labelCancelButton="Cancel"
   onConfirm={handleDelete}
 />
 ```
+
+## Async confirmation
+
+When `onConfirm` returns a promise, the dialog waits for it:
+
+- the confirm button is marked disabled and shows a spinner, so a second click cannot start the action twice. It stays focusable, so keyboard focus is not lost;
+- the dialog closes when the promise resolves;
+- the dialog stays open and the button is enabled again when it rejects. The rejection is not logged or rethrown by the component: show the error yourself, for example as `children` of the dialog, which render between the description and the buttons. Give it `role="alert"` so screen readers announce it.
+
+```tsx
+<ConfirmationDialog
+  trigger={<Button variant="destructive">Delete Account</Button>}
+  title="Delete Account"
+  description="This will permanently delete your account and all associated data."
+  labelConfirmButton="Delete Account"
+  labelCancelButton="Cancel"
+  onConfirm={() => deleteAccount()}
+/>
+```
+
+A synchronous `onConfirm` closes the dialog right after it returns.
+
+Cancel and Escape do not stop the work: they close the dialog, the promise keeps running, and the confirm button stays pending, also when the dialog is reopened, until the promise settles. The dialog then closes if it resolves.
+
+<BaseOnly base="base">
+
+The dialog closes through the Base UI `actionsRef`, so every close that the confirm button causes, after a synchronous or an asynchronous `onConfirm`, reaches `onOpenChange` with the `imperative-action` reason.
+
+</BaseOnly>
 
 ## Common use cases
 
@@ -80,6 +110,7 @@ With `ConfirmationDialog`, the same result in a clean, reusable component. Click
   title="Delete Account"
   description="This will permanently delete your account and all associated data. This action cannot be undone."
   labelConfirmButton="Delete Account"
+  labelCancelButton="Cancel"
   onConfirm={() => deleteAccount()}
 />
 ```
@@ -114,7 +145,7 @@ With `ConfirmationDialog`, the same result in a clean, reusable component. Click
 
 ### Controlled dialog
 
-Pass `open` and `onOpenChange` to open the dialog from your own state, without a `trigger`:
+Pass `open` and `onOpenChange` to open the dialog from your own state, without a `trigger`. The dialog still closes after `onConfirm`, and when an async `onConfirm` resolves, by calling `onOpenChange(false)`:
 
 ```tsx
 const [open, setOpen] = useState(false);
@@ -157,9 +188,17 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       description: 'The label of the confirmation button',
       type: 'string',
     },
+    children: {
+      description: 'Content shown between the description and the buttons, for example an error message',
+      type: 'React.ReactNode',
+    },
+    labelCancelButton: {
+      description: 'The label of the cancel button, which closes the dialog without calling onConfirm. No cancel button is rendered without it',
+      type: 'string?',
+    },
     onConfirm: {
-      description: 'The function to call when the confirmation button is clicked',
-      type: '() => void',
+      description: 'Called when the confirmation button is clicked. The dialog closes right after a synchronous call. When it returns a promise, the button is marked disabled and shows a spinner until the promise settles, the dialog closes if it resolves and stays open if it rejects',
+      type: '() => void | PromiseLike<unknown>',
     },
     open: {
       description: 'Whether the dialog is open, to control it',
@@ -202,9 +241,17 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       description: 'The label of the confirmation button',
       type: 'string',
     },
+    children: {
+      description: 'Content shown between the description and the buttons, for example an error message',
+      type: 'React.ReactNode',
+    },
+    labelCancelButton: {
+      description: 'The label of the cancel button, which closes the dialog without calling onConfirm. No cancel button is rendered without it',
+      type: 'string?',
+    },
     onConfirm: {
-      description: 'The function to call when the confirmation button is clicked',
-      type: '() => void',
+      description: 'Called when the confirmation button is clicked. The dialog closes right after a synchronous call. When it returns a promise, the button is marked disabled and shows a spinner until the promise settles, the dialog closes if it resolves and stays open if it rejects',
+      type: '() => void | PromiseLike<unknown>',
     },
     open: {
       description: 'Whether the dialog is open, to control it',
