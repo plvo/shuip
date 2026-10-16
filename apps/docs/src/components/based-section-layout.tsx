@@ -25,7 +25,7 @@ export async function BasedSectionLayout({ section, params, children }: BasedSec
       <SiteDocsLayout
         base={base}
         tree={sidebarTreeFor(section, base, sectionSources)}
-        banner={<BaseDropdown base={base} pages={sectionPageUrls(section, sectionSources)} />}
+        banner={<BaseDropdown key='base-dropdown' base={base} pages={sectionPageUrls(section, sectionSources)} />}
       >
         {children}
       </SiteDocsLayout>
