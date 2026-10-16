@@ -302,6 +302,7 @@ export function ComboboxField(props: ComboboxFieldProps) {
             {...NO_POPUP_ROLE}
             className='overflow-hidden p-0'
             onOpenAutoFocus={(e) => e.preventDefault()}
+            onCloseAutoFocus={(e) => e.preventDefault()}
             onMouseDown={(e) => e.preventDefault()}
             style={{ width: 'var(--radix-popover-trigger-width)' }}
           >
