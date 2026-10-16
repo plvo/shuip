@@ -44,7 +44,7 @@ bun check              # Biome check + write (also runs on lint-staged pre-commi
 bun format             # Biome format
 bun lint               # Biome lint
 bun primitives:sync    # Refresh both vendored primitive sets from ui.shadcn.com (needs network)
-bun check:unused       # knip
+bun check:unused       # knip (knip.config.ts); CI runs it after the tests, once registry:generate has produced stubs/ and generated/
 bun run test           # Unit tests of every workspace that has some (turbo)
 bun smoke [style]      # Consumer smoke test: install every @shuip item in a fresh shadcn project (default radix-vega), then tsc. --keep leaves the project in /tmp
                        #   --items a,b restricts the installed items, e.g. bun smoke base-vega --items search-input
@@ -161,6 +161,7 @@ Shared dependency versions live in `package.json` → `workspaces.catalog` (defa
 - **Biome** is the only linter/formatter (no ESLint/Prettier). Config: single quotes, 2-space indent, 120-col, trailing commas. Lint-staged runs `biome check --write --unsafe` on commit via husky.
 - **TypeScript 6**. Project references are declared at root but workspaces are not marked `composite: true` — IDE works, `tsc --build` from root does not. Per-workspace `tsc --noEmit` is fine.
 - **Tests use `bun test`** (bun:test), run from `packages/registry`, `packages/ui` and `apps/docs` through `bun run test`. CI runs them on every PR.
+- **`bun check:unused` (knip) runs in CI** and fails a PR that adds an unused file, export or dependency, or an import a workspace does not declare. `knip.config.ts` lists the files loaded in ways knip cannot see (fumadocs config, `.mdx` imports, `actions/github-script`) as `entry`; each `ignore*` entry there says why. If `content/docs/changelog.mdx` stops importing `changelog-content.tsx`, remove its entry.
 - **`next build` is the authoritative type gate** — `apps/docs` `tsc --noEmit` works but emits a harmless `baseUrl` TS5101 deprecation. `bun build:docs` can OOM (exit 137) on low-RAM machines; use `NODE_OPTIONS=--max-old-space-size=6144 bun build:docs`.
 - **shadcn config** is at `packages/ui/components.json` (radix-vega style, RSC enabled).
 
