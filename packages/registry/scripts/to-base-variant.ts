@@ -34,7 +34,7 @@ const FOCUS_PROPS = new Map([
   ['onCloseAutoFocus', 'finalFocus'],
 ]);
 const PREVENT_DEFAULT_HANDLER = /^\{\s*\(\s*(\w+)\s*\)\s*=>\s*\1\.preventDefault\(\)\s*\}$/;
-const RADIX_ONLY_CONTENT_PROPS = new Set([
+export const RADIX_ONLY_CONTENT_PROPS = new Set([
   'asChild',
   'forceMount',
   'avoidCollisions',
@@ -228,7 +228,12 @@ export const toBaseVariant = (source: string): BaseVariant => {
       return leaveAsIs(anchor, 'PopoverAnchor', 'it is not an asChild around a single element');
     }
     const anchorRef = anchorRefOf(anchored);
-    if (!anchorRef) return leaveAsIs(anchor, 'PopoverAnchor', 'its child has no ref to anchor the popup to');
+    if (!anchorRef)
+      return leaveAsIs(
+        anchor,
+        'PopoverAnchor',
+        'its child needs ref={name} or ref={object.name} to anchor the popup to',
+      );
     const unsupported = content.openingElement.attributes.properties.map(unsupportedContentProp).find(Boolean);
     if (unsupported) return leaveAsIs(content, 'PopoverContent', `${unsupported} has no Base UI equivalent`);
 

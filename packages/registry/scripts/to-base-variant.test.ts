@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { toBaseVariant } from './to-base-variant';
+import { RADIX_ONLY_CONTENT_PROPS, toBaseVariant } from './to-base-variant';
 
 const lines = (...rows: string[]): string => `${rows.join('\n')}\n`;
 const compact = (code: string): string => code.replace(/\s+/g, ' ').trim();
@@ -10,7 +10,19 @@ const VENDORED_POPOVER = fs.readFileSync(
   path.resolve(import.meta.dir, '../../ui/src/components/ui-base/popover.tsx'),
   'utf-8',
 );
-const VENDORED_POPOVER_CLASSES = VENDORED_POPOVER.match(/"(z-50 flex w-72[^"]*)"/)?.[1] as string;
+
+// What the codemod copies from the vendored PopoverContent. A change of its shape fails here with this message.
+const vendoredPopover = () => {
+  const popupClasses = VENDORED_POPOVER.match(/"(z-50 flex w-72[^"]*)"/)?.[1];
+  const positionerClasses = VENDORED_POPOVER.match(/<PopoverPrimitive\.Positioner[^>]*?className="([^"]*)"/)?.[1];
+  const sideOffset = VENDORED_POPOVER.match(/sideOffset = (\d+),/)?.[1];
+  if (popupClasses === undefined || positionerClasses === undefined || sideOffset === undefined) {
+    throw new Error(
+      'ui-base/popover.tsx no longer has the PopoverContent that the anchored popover codemod copies: update POPUP_CLASSES, POSITIONER_CLASSES and DEFAULT_SIDE_OFFSET in to-base-variant.ts, then this reader',
+    );
+  }
+  return { popupClasses, positionerClasses, sideOffset };
+};
 
 describe('toBaseVariant', () => {
   test('turns asChild composition into a render prop and moves the children to the parent', () => {
@@ -283,6 +295,7 @@ describe('toBaseVariant on a popover anchored to another element', () => {
     );
 
     const { code, warnings } = toBaseVariant(input);
+    const { popupClasses } = vendoredPopover();
 
     expect(compact(code)).toBe(
       compact(
@@ -296,7 +309,7 @@ describe('toBaseVariant on a popover anchored to another element', () => {
           '<div ref={boxRef} className="box"><input /></div>',
           "<PopoverPrimitive.Portal><PopoverPrimitive.Positioner anchor={boxRef} align='start' sideOffset={8}",
           "className='isolate z-50'><PopoverPrimitive.Popup data-slot='popover-content'",
-          `className={cn('${VENDORED_POPOVER_CLASSES}', 'p-0')}`,
+          `className={cn('${popupClasses}', 'p-0')}`,
           'initialFocus={false}',
           "style={{ width: 'var(--anchor-width)' }}>",
           '<List />',
@@ -309,22 +322,20 @@ describe('toBaseVariant on a popover anchored to another element', () => {
     expect(warnings).toEqual([]);
   });
 
-  test('uses the class list of the vendored Base UI PopoverContent', () => {
-    expect(VENDORED_POPOVER_CLASSES).toContain('data-open:animate-in');
-    expect(toBaseVariant(popover(anchored, content())).code).toContain(`className='${VENDORED_POPOVER_CLASSES}'`);
-  });
+  test('copies the classes and the default offset that the vendored PopoverContent gives its parts', () => {
+    const { popupClasses, positionerClasses, sideOffset } = vendoredPopover();
 
-  test('gives the positioner the offset of the vendored PopoverContent when the source sets none', () => {
-    expect(compact(toBaseVariant(popover(anchored, content("align='start'"))).code)).toContain(
-      "anchor={boxRef} align='start' sideOffset={4} className='isolate z-50'",
-    );
+    const { code } = toBaseVariant(popover(anchored, content()));
+
+    expect(code).toContain(`className='${popupClasses}'`);
+    expect(compact(code)).toContain(`anchor={boxRef} sideOffset={${sideOffset}} className='${positionerClasses}'`);
   });
 
   test('keeps a className expression after the vendored classes and imports cn only when it is missing', () => {
     const withExpression = popover(anchored, content('className={listboxClassName}'));
     const withoutCn = withExpression.replace("import { cn } from '@/lib/utils';\n", '');
 
-    expect(toBaseVariant(withExpression).code).toContain(`cn('${VENDORED_POPOVER_CLASSES}', listboxClassName)`);
+    expect(toBaseVariant(withExpression).code).toContain(`cn('${vendoredPopover().popupClasses}', listboxClassName)`);
     expect(toBaseVariant(withExpression).code.match(/import \{ cn \}/g)).toHaveLength(1);
     expect(toBaseVariant(withoutCn).code).toContain("import { cn } from '@/lib/utils';");
   });
@@ -347,6 +358,18 @@ describe('toBaseVariant on a popover anchored to another element', () => {
     expect(code).toContain('onMouseDown={stop}');
   });
 
+  test('gives the positioner the placement props and the popup the others', () => {
+    const { code } = toBaseVariant(popover(anchored, content("side='top'", 'alignOffset={4}', 'onMouseDown={stop}')));
+
+    const positioner = code.match(/<PopoverPrimitive\.Positioner[^>]*>/)?.[0];
+    const popup = code.match(/<PopoverPrimitive\.Popup[^>]*>/)?.[0];
+    expect(positioner).toContain("side='top'");
+    expect(positioner).toContain('alignOffset={4}');
+    expect(popup).not.toMatch(/ side=/);
+    expect(popup).not.toContain('alignOffset');
+    expect(popup).toContain('onMouseDown={stop}');
+  });
+
   test('keeps a popover that is not anchored to another element as it is', () => {
     const plain = lines(
       "import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';",
@@ -367,27 +390,87 @@ describe('toBaseVariant on a popover anchored to another element', () => {
     expect(code).not.toContain('PopoverAnchor');
   });
 
+  const popoverImport = "import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';";
+  const anchoredBy = (ref: string) => ['<PopoverAnchor asChild>', `  <div ref=${ref} />`, '</PopoverAnchor>'];
+  const noRefWarning =
+    'line 6: PopoverAnchor is left as is, its child needs ref={name} or ref={object.name} to anchor the popup to';
+
   test.each([
     [
       'the anchored element has no ref',
       popover(['<PopoverAnchor asChild>', '  <div />', '</PopoverAnchor>'], content()),
-      'line 6: PopoverAnchor is left as is, its child has no ref to anchor the popup to',
     ],
-    [
-      'the content uses a Radix-only prop',
-      popover(anchored, content('onEscapeKeyDown={close}')),
-      'line 9: PopoverContent is left as is, onEscapeKeyDown has no Base UI equivalent',
-    ],
-    [
-      'the content handles the focus in another way than preventing the default',
-      popover(anchored, content('onOpenAutoFocus={focusList}')),
-      'line 9: PopoverContent is left as is, onOpenAutoFocus has no Base UI equivalent',
-    ],
-  ])('warns, and does not rebuild the content as a Base UI popup, when %s', (_, input, warning) => {
+    ['its ref is a callback', popover(anchoredBy('{(element) => setBox(element)}'), content())],
+    ['its ref is not a name', popover(anchoredBy('{refs[0]}'), content())],
+  ])('warns, and does not anchor the popup, when %s', (_, input) => {
     const { code, warnings } = toBaseVariant(input);
 
     expect(code).toContain('<PopoverContent');
+    expect(code).not.toContain('anchor=');
     expect(code).not.toContain('PopoverPrimitive');
-    expect(warnings).toEqual([warning]);
+    expect(code).toContain(popoverImport);
+    expect(code).not.toContain('@base-ui');
+    expect(warnings).toEqual([noRefWarning]);
+  });
+
+  test.each([...RADIX_ONLY_CONTENT_PROPS])('warns, and does not rebuild the content, when it has %s', (prop) => {
+    const { code, warnings } = toBaseVariant(popover(anchored, content(`${prop}={value}`)));
+
+    expect(code).toContain('<PopoverContent');
+    expect(code).not.toContain('PopoverPrimitive');
+    expect(code).toContain(popoverImport);
+    expect(code).not.toContain('@base-ui');
+    expect(warnings).toEqual([`line 9: PopoverContent is left as is, ${prop} has no Base UI equivalent`]);
+  });
+
+  test('warns, and does not rebuild the content, when it handles the focus other than by preventing the default', () => {
+    const { code, warnings } = toBaseVariant(popover(anchored, content('onOpenAutoFocus={focusList}')));
+
+    expect(code).toContain('<PopoverContent');
+    expect(code).not.toContain('@base-ui');
+    expect(warnings).toEqual(['line 9: PopoverContent is left as is, onOpenAutoFocus has no Base UI equivalent']);
+  });
+
+  describe('imports from the vendored popover', () => {
+    const plainPopover = '<Popover><PopoverTrigger>Open</PopoverTrigger><PopoverContent>Hi</PopoverContent></Popover>';
+    const importing = (...names: string[]) => `import { ${names.join(', ')} } from '@/components/ui/popover';`;
+
+    test('keeps PopoverContent, and drops PopoverAnchor, while a plain popover still uses PopoverContent', () => {
+      const input = lines(
+        importing('Popover', 'PopoverAnchor', 'PopoverContent', 'PopoverTrigger'),
+        '<Popover>',
+        ...anchored,
+        ...content(),
+        '</Popover>',
+        plainPopover,
+      );
+
+      const { code, warnings } = toBaseVariant(input);
+
+      expect(code).toContain(importing('Popover', 'PopoverContent', 'PopoverTrigger'));
+      expect(code).not.toContain('PopoverAnchor');
+      expect(code).toContain('<PopoverContent>Hi</PopoverContent>');
+      expect(warnings).toEqual([]);
+    });
+
+    test('keeps both imports while an anchored popover falls back', () => {
+      const input = lines(
+        importing('Popover', 'PopoverAnchor', 'PopoverContent'),
+        '<Popover>',
+        ...anchored,
+        ...content(),
+        '</Popover>',
+        '<Popover>',
+        ...anchoredBy('{(element) => setBox(element)}'),
+        ...content(),
+        '</Popover>',
+      );
+
+      const { code, warnings } = toBaseVariant(input);
+
+      expect(code).toContain(importing('Popover', 'PopoverAnchor', 'PopoverContent'));
+      expect(code).toContain('anchor={boxRef}');
+      expect(warnings).toHaveLength(1);
+    });
   });
 });
