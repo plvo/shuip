@@ -1,5 +1,8 @@
 'use client';
 
+// Override of component.radix.tsx for what the codemod cannot derive: Tab closes the suggestions, an outside press on
+// the anchor does not dismiss them, the popup does not take focus back on close (finalFocus), and the icon over
+// the input ignores the pointer.
 import { Popover as PopoverPrimitive } from '@base-ui/react/popover';
 import type { Lens } from '@hookform/lenses';
 import { Loader2, MapPin } from 'lucide-react';
