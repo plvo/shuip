@@ -1,4 +1,7 @@
-import type * as React from 'react';
+'use client';
+
+import { Loader2Icon } from 'lucide-react';
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,20 +21,56 @@ export interface ConfirmationDialogProps
   title?: string;
   description?: string;
   labelConfirmButton?: string;
-  onConfirm?: () => void;
+  labelCancelButton?: string;
+  // biome-ignore lint/suspicious/noConfusingVoidType: a callback may return nothing or a promise
+  onConfirm?: () => void | PromiseLike<unknown>;
 }
 
-export function ConfirmationDialog({
+interface ConfirmationRun {
+  pending: boolean;
+  onConfirm?: ConfirmationDialogProps['onConfirm'];
+  setPending: (pending: boolean) => void;
+  close: () => void;
+}
+
+const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
+  typeof (value as PromiseLike<unknown> | undefined)?.then === 'function';
+
+export function runConfirmation({ pending, onConfirm, setPending, close }: ConfirmationRun): void {
+  if (pending) return;
+  const result = onConfirm?.();
+  if (!isPromiseLike(result)) {
+    close();
+    return;
+  }
+  setPending(true);
+  void Promise.resolve(result)
+    .then(close, () => {})
+    .finally(() => setPending(false));
+}
+
+type DialogActionsRef = NonNullable<React.ComponentProps<typeof Dialog>['actionsRef']>;
+
+export interface ConfirmationDialogViewProps extends Omit<ConfirmationDialogProps, 'onConfirm'> {
+  actionsRef: DialogActionsRef;
+  pending: boolean;
+  onConfirm: () => void;
+}
+
+export function ConfirmationDialogView({
   trigger,
   nativeButton,
   title,
   description,
   labelConfirmButton,
+  labelCancelButton,
+  actionsRef,
+  pending,
   onConfirm,
   ...props
-}: ConfirmationDialogProps) {
+}: ConfirmationDialogViewProps) {
   return (
-    <Dialog {...props}>
+    <Dialog actionsRef={actionsRef} {...props}>
       {trigger && <DialogTrigger render={trigger} nativeButton={nativeButton} />}
       <DialogContent>
         <DialogHeader>
@@ -39,11 +78,27 @@ export function ConfirmationDialog({
           <DialogDescription className='md:text-left'>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogClose render={<Button />} onClick={onConfirm}>
+          {labelCancelButton && <DialogClose render={<Button variant='outline' />}>{labelCancelButton}</DialogClose>}
+          <Button onClick={onConfirm} disabled={pending} aria-busy={pending}>
+            {pending && <Loader2Icon data-icon='inline-start' className='animate-spin' aria-hidden />}
             {labelConfirmButton}
-          </DialogClose>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function ConfirmationDialog({ onConfirm, ...props }: ConfirmationDialogProps) {
+  const [pending, setPending] = React.useState(false);
+  const actionsRef: DialogActionsRef = React.useRef(null);
+
+  return (
+    <ConfirmationDialogView
+      {...props}
+      actionsRef={actionsRef}
+      pending={pending}
+      onConfirm={() => runConfirmation({ pending, onConfirm, setPending, close: () => actionsRef.current?.close() })}
+    />
   );
 }

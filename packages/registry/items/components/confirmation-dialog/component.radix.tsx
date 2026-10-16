@@ -1,4 +1,7 @@
-import type * as React from 'react';
+'use client';
+
+import { Loader2Icon } from 'lucide-react';
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,19 +20,70 @@ export interface ConfirmationDialogProps
   title?: string;
   description?: string;
   labelConfirmButton?: string;
-  onConfirm?: () => void;
+  labelCancelButton?: string;
+  // biome-ignore lint/suspicious/noConfusingVoidType: a callback may return nothing or a promise
+  onConfirm?: () => void | PromiseLike<unknown>;
 }
 
-export function ConfirmationDialog({
+interface ConfirmationRun {
+  pending: boolean;
+  onConfirm?: ConfirmationDialogProps['onConfirm'];
+  setPending: (pending: boolean) => void;
+  close: () => void;
+}
+
+const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
+  typeof (value as PromiseLike<unknown> | undefined)?.then === 'function';
+
+export function runConfirmation({ pending, onConfirm, setPending, close }: ConfirmationRun): void {
+  if (pending) return;
+  const result = onConfirm?.();
+  if (!isPromiseLike(result)) {
+    close();
+    return;
+  }
+  setPending(true);
+  void Promise.resolve(result)
+    .then(close, () => {})
+    .finally(() => setPending(false));
+}
+
+interface OpenState {
+  open?: boolean;
+  localOpen: boolean;
+  setLocalOpen: (open: boolean) => void;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function resolveOpenState({ open, localOpen, setLocalOpen, onOpenChange }: OpenState) {
+  const setOpen = (next: boolean) => {
+    if (open === undefined) setLocalOpen(next);
+    onOpenChange?.(next);
+  };
+  return { open: open ?? localOpen, setOpen };
+}
+
+export interface ConfirmationDialogViewProps
+  extends Omit<ConfirmationDialogProps, 'open' | 'defaultOpen' | 'onOpenChange' | 'onConfirm'> {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  pending: boolean;
+  onConfirm: () => void;
+}
+
+export function ConfirmationDialogView({
   trigger,
   title,
   description,
   labelConfirmButton,
+  labelCancelButton,
+  open,
+  onOpenChange,
+  pending,
   onConfirm,
-  ...props
-}: ConfirmationDialogProps) {
+}: ConfirmationDialogViewProps) {
   return (
-    <Dialog {...props}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -37,11 +91,39 @@ export function ConfirmationDialog({
           <DialogDescription className='md:text-left'>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogClose asChild>
-            <Button onClick={onConfirm}>{labelConfirmButton}</Button>
-          </DialogClose>
+          {labelCancelButton && (
+            <DialogClose asChild>
+              <Button variant='outline'>{labelCancelButton}</Button>
+            </DialogClose>
+          )}
+          <Button onClick={onConfirm} disabled={pending} aria-busy={pending}>
+            {pending && <Loader2Icon data-icon='inline-start' className='animate-spin' aria-hidden />}
+            {labelConfirmButton}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function ConfirmationDialog({
+  open: controlledOpen,
+  defaultOpen = false,
+  onOpenChange,
+  onConfirm,
+  ...props
+}: ConfirmationDialogProps) {
+  const [localOpen, setLocalOpen] = React.useState(defaultOpen);
+  const [pending, setPending] = React.useState(false);
+  const { open, setOpen } = resolveOpenState({ open: controlledOpen, localOpen, setLocalOpen, onOpenChange });
+
+  return (
+    <ConfirmationDialogView
+      {...props}
+      open={open}
+      onOpenChange={setOpen}
+      pending={pending}
+      onConfirm={() => runConfirmation({ pending, onConfirm, setPending, close: () => setOpen(false) })}
+    />
   );
 }
