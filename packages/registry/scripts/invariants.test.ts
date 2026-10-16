@@ -165,6 +165,12 @@ const asChildSites = (relativePath: string, content: string): string[] => {
   return sites;
 };
 
+// cmdk, not the vendored primitives, owns these inputs: its asChild composes the same way on both bases.
+const ASCHILD_ON_CMDK = [
+  'react-hook-form/combobox-field/component.base.tsx <CommandPrimitive.Input asChild={…}>',
+  'tanstack-form/combobox-field/component.base.tsx <CommandPrimitive.Input asChild={…}>',
+];
+
 describe('the Base UI variant stays free of Radix', () => {
   const items = scanItems();
   const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'shuip-base-invariants-'));
@@ -203,7 +209,8 @@ describe('the Base UI variant stays free of Radix', () => {
     const remaining = fs
       .readdirSync(consumerDir, { recursive: true, encoding: 'utf-8' })
       .filter((entry) => entry.endsWith('.tsx'))
-      .flatMap((entry) => asChildSites(entry, fs.readFileSync(path.join(consumerDir, entry), 'utf-8')));
+      .flatMap((entry) => asChildSites(entry, fs.readFileSync(path.join(consumerDir, entry), 'utf-8')))
+      .filter((site) => !ASCHILD_ON_CMDK.includes(site));
     expect(remaining.sort()).toEqual([]);
   });
 

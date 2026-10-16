@@ -144,6 +144,27 @@ describe.each(VARIANTS)('ComboboxField, %s', (variant) => {
     expect(listbox()).not.toBeNull();
   });
 
+  test('reports the list as collapsed, with nothing to control, while it is closed', async () => {
+    const { input } = await mountField({ options: COUNTRIES });
+    expect(isOpen()).toBe(false);
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    expect(input.hasAttribute('aria-controls')).toBe(false);
+    await focus(input);
+    await press(input, 'Escape');
+    expect(isOpen()).toBe(false);
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    expect(input.hasAttribute('aria-controls')).toBe(false);
+  });
+
+  test('reports the list as expanded and controlling the listbox while it is open', async () => {
+    const { input } = await mountField({ options: COUNTRIES });
+    await focus(input);
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+    const controlled = document.getElementById(input.getAttribute('aria-controls') ?? '');
+    expect(controlled).not.toBeNull();
+    expect(controlled).toBe(listbox());
+  });
+
   test('lists every option on focus and filters them as the user types', async () => {
     const { input } = await mountField({ options: COUNTRIES });
     await focus(input);
