@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import ts from 'typescript';
 
 export const REPOSITORY_ROOT = path.resolve(import.meta.dir, '..', '..', '..');
+const SRC_DIR = path.resolve(import.meta.dir, '..', 'src');
 
 export interface RepositoryDocument {
   /** The path of the document from the repository root. */
@@ -21,3 +23,16 @@ export const filesUnder = (root: string, extensions: readonly string[]): string[
 /** The documents at `files`, read from disk. A file that does not exist is an error. */
 export const readDocuments = (files: readonly string[]): RepositoryDocument[] =>
   files.map((file) => ({ name: path.relative(REPOSITORY_ROOT, file), text: fs.readFileSync(file, 'utf-8') }));
+
+/** The non-test `.tsx` files of the docs app. */
+export const tsxSourceFiles = (): string[] => filesUnder(SRC_DIR, ['.tsx']).filter((file) => !file.includes('.test.'));
+
+/** The TSX file at `file`, parsed. */
+export const parseTsx = (file: string): ts.SourceFile =>
+  ts.createSourceFile(file, fs.readFileSync(file, 'utf-8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+
+/** The attribute names of a JSX element, with `...spread` standing for each spread attribute. */
+export const attributeNames = (element: ts.JsxOpeningLikeElement): string[] =>
+  element.attributes.properties.flatMap((attribute) =>
+    ts.isJsxAttribute(attribute) ? [attribute.name.getText()] : ['...spread'],
+  );
