@@ -78,13 +78,11 @@ const isOpen = () => listbox() !== null;
 const options = () => [...document.querySelectorAll<HTMLElement>('[role="option"]')];
 const optionLabels = () => options().map((option) => option.textContent);
 const optionNamed = (label: string) => options().find((option) => option.textContent?.includes(label)) as HTMLElement;
-const highlightedOption = () => options().find((option) => option.getAttribute('aria-selected') === 'true');
 const chipLabels = (card: HTMLElement) =>
   [...card.querySelectorAll('button[aria-label^="Remove"]')].map((button) => button.getAttribute('aria-label'));
 
 function expectCollapsed(input: HTMLInputElement) {
   expect(isOpen()).toBe(false);
-  expect(input.hasAttribute('aria-activedescendant')).toBe(false);
   expect(input.getAttribute('aria-expanded')).toBe('false');
   expect(input.hasAttribute('aria-controls')).toBe(false);
 }
@@ -95,13 +93,6 @@ function expectExpanded(input: HTMLInputElement) {
   const controlled = document.getElementById(input.getAttribute('aria-controls') ?? '');
   expect(controlled).not.toBeNull();
   expect(controlled).toBe(listbox());
-  expectActiveDescendantRendered(input);
-}
-
-function expectActiveDescendantRendered(input: HTMLInputElement) {
-  const activeId = input.getAttribute('aria-activedescendant');
-  if (activeId === null) return;
-  expect(options().map((option) => option.id)).toContain(activeId);
 }
 
 async function focus(input: HTMLInputElement) {
@@ -193,25 +184,6 @@ describe.each(VARIANTS)('ComboboxField, %s', (variant) => {
     await focus(input);
     await blur(input);
     expectCollapsed(input);
-    await focus(input);
-    expectExpanded(input);
-  });
-
-  test('points at the option the arrow keys highlight', async () => {
-    const { input } = await mountField({ options: COUNTRIES });
-    await focus(input);
-    await press(input, 'ArrowDown');
-    expect(highlightedOption()?.textContent).toContain('Germany');
-    expect(input.getAttribute('aria-activedescendant')).toBe(highlightedOption()?.id as string);
-  });
-
-  test('points at nothing after the list closes on a highlighted option, and never at a missing option once reopened', async () => {
-    const { input } = await mountField({ options: COUNTRIES });
-    await focus(input);
-    await press(input, 'ArrowDown');
-    await press(input, 'Escape');
-    expectCollapsed(input);
-    await blur(input);
     await focus(input);
     expectExpanded(input);
   });

@@ -16,10 +16,9 @@ const DEBOUNCE_TIME = 300;
 // The popover gives its content role="dialog"; the combobox exposes the listbox inside it instead.
 const NO_POPUP_ROLE = { role: undefined };
 
-// cmdk hard-codes aria-expanded and aria-controls on its input and spreads the props it receives before them, and
-// leaves aria-activedescendant on an option that is gone once the list closes. The input would then report an open
-// list and point to elements that do not exist, so they are corrected on the element, and aria-activedescendant is
-// removed whenever cmdk writes it while the list is closed (see plvo/shuip#151).
+// cmdk hard-codes aria-expanded and aria-controls on its input and spreads the props it receives before them, so
+// the input would report an open list and point to a missing listbox while the list is closed. They are corrected
+// on the element instead (see plvo/shuip#151).
 function useListStateOnInput(inputRef: React.RefObject<HTMLInputElement | null>, open: boolean) {
   const listId = React.useRef<string | null>(null);
   React.useLayoutEffect(() => {
@@ -29,12 +28,6 @@ function useListStateOnInput(inputRef: React.RefObject<HTMLInputElement | null>,
     input.setAttribute('aria-expanded', String(open));
     if (open && listId.current) input.setAttribute('aria-controls', listId.current);
     else input.removeAttribute('aria-controls');
-    if (open) return;
-    const removeActiveDescendant = () => input.removeAttribute('aria-activedescendant');
-    removeActiveDescendant();
-    const observer = new MutationObserver(removeActiveDescendant);
-    observer.observe(input, { attributes: true, attributeFilter: ['aria-activedescendant'] });
-    return () => observer.disconnect();
   }, [inputRef, open]);
 }
 
