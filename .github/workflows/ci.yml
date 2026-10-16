@@ -44,6 +44,9 @@ jobs:
       - name: "🧪 Run Tests"
         run: bun run test
 
+      - name: "🧹 Check Unused Code and Dependencies"
+        run: bun run check:unused
+
       - name: "🔎 Type-check Base UI"
         run: bun run typecheck:base
 

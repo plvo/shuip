@@ -20,24 +20,3 @@ export function filenameToTitle(filename: string) {
     .map((w) => firstCharUppercase(w))
     .join(' ');
 }
-
-/**
- * @example titleToFilename('My File Name') // my-file-name
- */
-export function titleToFilename(title: string) {
-  return title
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
-}
-
-/**
- * @returns [category, name]
- */
-export function processSlug(slug: string[] | string): [string, string] {
-  if (typeof slug === 'string') {
-    slug = slug.split('/');
-  }
-  return [slug[0], slug[1] ?? 'index'];
-}

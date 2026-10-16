@@ -236,6 +236,18 @@ bun typecheck:base
 
 `bun typecheck:radix` regenerates, then type-checks every `component.radix.tsx` and `*.example.radix.tsx` against the Radix primitives. It is the only check that reaches a canonical file that has a Base UI override, since the Base UI copy of that file is the override.
 
+### Check for unused code and undeclared imports
+
+CI runs [knip](https://knip.dev) once the tests have passed, and fails a PR that adds an unused file, an unused export or dependency, or an import that the workspace's `package.json` does not declare. Run it before you push, after `bun registry:generate`, which produces the `stubs/` and `generated/` files it reads:
+
+```bash
+bun check:unused
+```
+
+It checks `apps/docs` and the code of `packages/ui` and `packages/registry` that is not published: `packages/ui/src/lib`, `packages/registry/src` and `packages/registry/scripts`. It does not check the exports of the registry items (`packages/registry/items/**`), which are the API a consumer imports, nor those of the vendored primitives (`packages/ui/src/components/ui/**` and `ui-base/**`), which are synced and never hand-edited. An unused file inside those folders is not reported either.
+
+Declare each package in the `package.json` of the workspace that imports it. An undeclared import can resolve locally because packages are hoisted into the root `node_modules`, and knip is what catches it.
+
 ### Run the smoke test for both bases
 
 The smoke test installs items into a fresh shadcn project and type-checks the result, so it checks what a consumer receives:
