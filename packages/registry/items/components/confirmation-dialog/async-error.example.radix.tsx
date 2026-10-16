@@ -17,9 +17,7 @@ export default function ConfirmationDialogAsyncErrorExample() {
       description='Are you sure you want to save these changes?'
       labelConfirmButton='Save'
       labelCancelButton='Cancel'
-      onOpenChange={(open) => {
-        if (!open) setError(undefined);
-      }}
+      onOpenChange={() => setError(undefined)}
       onConfirm={async () => {
         setError(undefined);
         try {

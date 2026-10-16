@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { Loader2Icon } from 'lucide-react';
 import { createElement, isValidElement, type ReactElement, type ReactNode } from 'react';
-import { Dialog, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader } from '@/components/ui/dialog';
 import {
   ConfirmationDialogView as BaseConfirmationDialogView,
   runConfirmation as baseRunConfirmation,
@@ -17,6 +17,7 @@ type AnyElement = ReactElement<{
   onClick?: unknown;
   'aria-disabled'?: boolean;
   'aria-label'?: string;
+  className?: string;
   'aria-busy'?: boolean;
 }>;
 
@@ -222,6 +223,9 @@ describe.each(variants)('ConfirmationDialogView (%s)', (_variant, { View, stateP
 
     expect(confirm.props['aria-disabled']).toBe(true);
     expect(confirm.props['aria-busy']).toBe(true);
+    expect(confirm.props.className?.split(' ')).toEqual(
+      expect.arrayContaining(['aria-disabled:pointer-events-none', 'aria-disabled:opacity-50']),
+    );
     const spinners = subtree(confirm).filter((element) => element.type === Loader2Icon);
     expect(spinners.map((spinner) => spinner.props['aria-label'])).toEqual(['Loading']);
     expect(textOf(confirm)).toBe('Go');
@@ -241,7 +245,15 @@ describe.each(variants)('ConfirmationDialogView (%s)', (_variant, { View, stateP
     const note = createElement('p', { role: 'alert' }, 'It failed');
     const tree = render({ children: note } as never);
 
-    expect(subtree(tree)).toContain(note);
+    const [content] = subtree(tree).filter((element) => element.type === DialogContent);
+    const parts = Array.isArray(content.props.children) ? content.props.children : [content.props.children];
+
+    expect(parts.map((part: ReactNode) => (isValidElement(part) ? part.type : part))).toEqual([
+      DialogHeader,
+      'p',
+      DialogFooter,
+    ]);
+    expect(parts[1]).toBe(note);
   });
 
   test('without labelCancelButton no cancel button renders', () => {

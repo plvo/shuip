@@ -145,3 +145,12 @@ describe('the ConfirmationDialog wrapper in the base variant', () => {
     expect(attributeValues(source, 'Dialog', 'actionsRef')).toEqual(['actionsRef']);
   });
 });
+
+describe('the async-error example', () => {
+  const file = path.join(ITEM_DIR, 'async-error.example.radix.tsx');
+  const source = parseTsx(file, fs.readFileSync(file, 'utf-8'));
+
+  test('clears its error on every change of the open state, so a late rejection cannot leak into the next opening', () => {
+    expect(attributeValues(source, 'ConfirmationDialog', 'onOpenChange')).toEqual(['() => setError(undefined)']);
+  });
+});
