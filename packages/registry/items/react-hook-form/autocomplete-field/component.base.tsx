@@ -5,10 +5,15 @@ import type { Lens } from '@hookform/lenses';
 import { Loader2 } from 'lucide-react';
 import * as React from 'react';
 import { useController } from 'react-hook-form';
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Popover } from '@/components/ui/popover';
+import {
+  listboxClassName,
+  SuggestionEmpty,
+  SuggestionOption,
+  useSuggestionList,
+} from '@/components/ui/shuip/suggestion-list';
 import { cn } from '@/lib/utils';
 
 const DEBOUNCE_TIME = 300;
@@ -102,7 +107,13 @@ export function AutocompleteField({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!open) return;
+    if (!open) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setOpen(true);
+      }
+      return;
+    }
 
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -146,10 +157,24 @@ export function AutocompleteField({
   };
 
   const id = props.id ?? field.name;
+  const suggestionList = useSuggestionList({
+    inputId: id,
+    label,
+    ariaLabel: props['aria-label'],
+    placeholder,
+    open,
+    count: items.length,
+    selectedIndex,
+    busy: isPending,
+  });
 
   return (
     <Field className='gap-2' data-invalid={fieldState.invalid}>
-      {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
+      {label && (
+        <FieldLabel id={suggestionList.labelId} htmlFor={id}>
+          {label}
+        </FieldLabel>
+      )}
       <Popover
         open={open}
         onOpenChange={(nextOpen, { reason, event }) => {
@@ -174,6 +199,7 @@ export function AutocompleteField({
             onClick={() => setOpen(true)}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
+            {...suggestionList.inputProps}
             aria-invalid={fieldState.invalid}
           />
           {isPending && (
@@ -186,31 +212,26 @@ export function AutocompleteField({
           <PopoverPrimitive.Positioner anchor={anchorRef} align='start' sideOffset={4} className='isolate z-50'>
             <PopoverPrimitive.Popup
               data-slot='popover-content'
+              {...suggestionList.listboxProps}
               initialFocus={false}
-              onMouseDown={(event) => event.preventDefault()}
               className={cn(
                 'z-50 flex w-72 origin-(--transform-origin) flex-col gap-4 rounded-md bg-popover p-4 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
-                'p-0',
+                listboxClassName,
               )}
               style={{ width: 'var(--anchor-width)' }}
             >
-              <Command shouldFilter={false} className='w-full'>
-                <CommandList className='max-h-60'>
-                  <CommandEmpty>{isPending ? 'Searching…' : emptyText}</CommandEmpty>
-                  <CommandGroup>
-                    {items.map((item, index) => (
-                      <CommandItem
-                        key={`${item}-${index}`}
-                        value={item}
-                        onSelect={() => handleSelect(item)}
-                        className={cn('cursor-pointer', selectedIndex === index && 'bg-accent')}
-                      >
-                        {item}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
+              {items.length === 0 && <SuggestionEmpty>{isPending ? 'Searching…' : emptyText}</SuggestionEmpty>}
+              {items.map((item, index) => (
+                <SuggestionOption
+                  key={`${item}-${index}`}
+                  id={suggestionList.optionId(index)}
+                  highlighted={selectedIndex === index}
+                  onSelect={() => handleSelect(item)}
+                  onHighlight={() => setSelectedIndex(index)}
+                >
+                  {item}
+                </SuggestionOption>
+              ))}
             </PopoverPrimitive.Popup>
           </PopoverPrimitive.Positioner>
         </PopoverPrimitive.Portal>

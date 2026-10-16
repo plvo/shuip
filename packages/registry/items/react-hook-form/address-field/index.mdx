@@ -12,7 +12,8 @@ The field binds to the form via a typed lens from [`@hookform/lenses`](https://g
 
 - **Compound field**: manages `street`, `city`, `postalCode`, `country`, `fullAddress`, and `placeId` under a single sub-tree
 - **Typed lens binding**: `lens.focus('address')` autocompletes from your form's value type — no `<MyForm>` generic at the call site
-- **Google Places autocomplete**: server action, popover dropdown, keyboard navigation, debounced search
+- **Google Places autocomplete**: server action, popover dropdown, debounced search
+- **Combobox semantics**: the input is a combobox that controls a listbox of suggestions, with ArrowDown/ArrowUp, Enter and Escape, so screen readers announce the suggestions and the highlighted one
 - **Zod schema export**: `addressSchema` is published alongside the component for easy composition (`z.object({ address: addressSchema })`)
 
 ## Configuration

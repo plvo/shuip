@@ -4,11 +4,15 @@ import type { Lens } from '@hookform/lenses';
 import { Loader2 } from 'lucide-react';
 import * as React from 'react';
 import { useController } from 'react-hook-form';
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import {
+  listboxClassName,
+  SuggestionEmpty,
+  SuggestionOption,
+  useSuggestionList,
+} from '@/components/ui/shuip/suggestion-list';
 
 const DEBOUNCE_TIME = 300;
 
@@ -101,7 +105,13 @@ export function AutocompleteField({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!open) return;
+    if (!open) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setOpen(true);
+      }
+      return;
+    }
 
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -143,10 +153,24 @@ export function AutocompleteField({
   };
 
   const id = props.id ?? field.name;
+  const suggestionList = useSuggestionList({
+    inputId: id,
+    label,
+    ariaLabel: props['aria-label'],
+    placeholder,
+    open,
+    count: items.length,
+    selectedIndex,
+    busy: isPending,
+  });
 
   return (
     <Field className='gap-2' data-invalid={fieldState.invalid}>
-      {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
+      {label && (
+        <FieldLabel id={suggestionList.labelId} htmlFor={id}>
+          {label}
+        </FieldLabel>
+      )}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverAnchor asChild>
           <div className='relative'>
@@ -165,6 +189,7 @@ export function AutocompleteField({
               onFocus={() => setOpen(true)}
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
+              {...suggestionList.inputProps}
               aria-invalid={fieldState.invalid}
             />
             {isPending && (
@@ -176,28 +201,24 @@ export function AutocompleteField({
         </PopoverAnchor>
         <PopoverContent
           ref={popoverRef}
-          className='p-0'
+          {...suggestionList.listboxProps}
+          className={listboxClassName}
           align='start'
           onOpenAutoFocus={(e) => e.preventDefault()}
           style={{ width: 'var(--radix-popover-trigger-width)' }}
         >
-          <Command shouldFilter={false} className='w-full'>
-            <CommandList className='max-h-60'>
-              <CommandEmpty>{isPending ? 'Searching…' : emptyText}</CommandEmpty>
-              <CommandGroup>
-                {items.map((item, index) => (
-                  <CommandItem
-                    key={`${item}-${index}`}
-                    value={item}
-                    onSelect={() => handleSelect(item)}
-                    className={cn('cursor-pointer', selectedIndex === index && 'bg-accent')}
-                  >
-                    {item}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
+          {items.length === 0 && <SuggestionEmpty>{isPending ? 'Searching…' : emptyText}</SuggestionEmpty>}
+          {items.map((item, index) => (
+            <SuggestionOption
+              key={`${item}-${index}`}
+              id={suggestionList.optionId(index)}
+              highlighted={selectedIndex === index}
+              onSelect={() => handleSelect(item)}
+              onHighlight={() => setSelectedIndex(index)}
+            >
+              {item}
+            </SuggestionOption>
+          ))}
         </PopoverContent>
       </Popover>
       {fieldState.invalid && <FieldError className='text-xs text-left' errors={[fieldState.error]} />}
