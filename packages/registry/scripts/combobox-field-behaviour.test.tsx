@@ -83,7 +83,6 @@ const chipLabels = (card: HTMLElement) =>
 
 function expectCollapsed(input: HTMLInputElement) {
   expect(isOpen()).toBe(false);
-  expect(isOpen()).toBe(false);
   expect(input.getAttribute('aria-expanded')).toBe('false');
   expect(input.hasAttribute('aria-controls')).toBe(false);
 }
@@ -178,6 +177,15 @@ describe.each(VARIANTS)('ComboboxField, %s', (variant) => {
     expectExpanded(input);
     await press(input, 'Escape');
     expectCollapsed(input);
+  });
+
+  test('reports the list as expanded and controlling the listbox again once it is reopened', async () => {
+    const { input } = await mountField({ options: COUNTRIES });
+    await focus(input);
+    await blur(input);
+    expectCollapsed(input);
+    await focus(input);
+    expectExpanded(input);
   });
 
   test.each([

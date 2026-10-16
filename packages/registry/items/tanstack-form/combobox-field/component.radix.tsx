@@ -16,7 +16,8 @@ const DEBOUNCE_TIME = 300;
 const NO_POPUP_ROLE = { role: undefined };
 
 // cmdk hard-codes aria-expanded and aria-controls on its input and spreads the props it receives before them, so
-// they are corrected on the element. The field should move off cmdk (plvo/shuip#151).
+// the input would report an open list and point to a missing listbox while the list is closed. They are corrected
+// on the element instead (see plvo/shuip#151).
 function useListStateOnInput(inputRef: React.RefObject<HTMLInputElement | null>, open: boolean) {
   const listId = React.useRef<string | null>(null);
   React.useLayoutEffect(() => {
