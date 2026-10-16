@@ -65,6 +65,11 @@ const isBlankText = (node: ts.JsxChild): boolean => ts.isJsxText(node) && node.c
 const openingOf = (element: ts.JsxElement | ts.JsxSelfClosingElement): ts.JsxOpeningLikeElement =>
   ts.isJsxElement(element) ? element.openingElement : element;
 
+const hasProp = (element: ts.JsxElement, name: string): boolean =>
+  element.openingElement.attributes.properties.some(
+    (attribute) => ts.isJsxAttribute(attribute) && attribute.name.getText() === name,
+  );
+
 const singleElementChild = (element: ts.JsxElement): ts.JsxElement | ts.JsxSelfClosingElement | undefined => {
   const [child, ...others] = element.children.filter((node) => !isBlankText(node));
   return child && others.length === 0 && isElement(child) ? child : undefined;
@@ -162,17 +167,16 @@ export const toBaseVariant = (source: string): BaseVariant => {
   const anchoredContent = (content: ts.JsxElement, anchorRef: string): string => {
     const attributes = content.openingElement.attributes.properties;
     const isPositionerProp = (attribute: ts.JsxAttributeLike) => POSITIONER_PROPS.has(nameOf(attribute) ?? '');
-    const hasProp = (name: string) => attributes.some((attribute) => nameOf(attribute) === name);
 
     const positioner = [`anchor={${anchorRef}}`, ...attributes.filter(isPositionerProp).map(attributeText)];
-    if (!hasProp('sideOffset')) positioner.push(`sideOffset={${DEFAULT_SIDE_OFFSET}}`);
+    if (!hasProp(content, 'sideOffset')) positioner.push(`sideOffset={${DEFAULT_SIDE_OFFSET}}`);
     positioner.push(`className='${POSITIONER_CLASSES}'`);
 
     const popup = [
       "data-slot='popover-content'",
       ...attributes.filter((a) => !isPositionerProp(a)).map(popupAttribute),
     ];
-    if (!hasProp('className')) popup.push(`className='${POPUP_CLASSES}'`);
+    if (!hasProp(content, 'className')) popup.push(`className='${POPUP_CLASSES}'`);
 
     const children = content.children.map(emit).join('');
     return `${leadingTriviaOf(content)}<PopoverPrimitive.Portal><PopoverPrimitive.Positioner ${positioner.join(' ')}><PopoverPrimitive.Popup ${popup.join(' ')}>${children}</PopoverPrimitive.Popup></PopoverPrimitive.Positioner></PopoverPrimitive.Portal>`;
@@ -204,8 +208,7 @@ export const toBaseVariant = (source: string): BaseVariant => {
   };
 
   const replacements = new Map<ts.Node, () => string>();
-  let anchorsRebuilt = 0;
-  let contentsRebuilt = 0;
+  let rebuilt = 0;
   let mergesClassName = false;
 
   const planAnchoredPopover = (popover: ts.JsxElement) => {
@@ -231,9 +234,8 @@ export const toBaseVariant = (source: string): BaseVariant => {
 
     replacements.set(anchor, () => `${leadingTriviaOf(anchor)}${emit(anchored)}`);
     replacements.set(content, () => anchoredContent(content, anchorRef.getText(file)));
-    anchorsRebuilt++;
-    contentsRebuilt++;
-    mergesClassName ||= content.openingElement.attributes.properties.some((a) => nameOf(a) === 'className');
+    rebuilt++;
+    mergesClassName ||= hasProp(content, 'className');
   };
 
   const planAnchoredPopovers = (node: ts.Node) => {
@@ -251,49 +253,46 @@ export const toBaseVariant = (source: string): BaseVariant => {
     return count;
   };
 
-  // The anchored parts are no longer used from the vendored popover once every one of them is rebuilt.
-  const unusedPopoverImports = (): Set<string> => {
-    const unused = new Set<string>();
-    if (anchorsRebuilt > 0 && countElements('PopoverAnchor') === anchorsRebuilt) unused.add('PopoverAnchor');
-    if (contentsRebuilt > 0 && countElements('PopoverContent') === contentsRebuilt) unused.add('PopoverContent');
-    return unused;
-  };
+  planAnchoredPopovers(file);
 
+  // The anchored parts are no longer used from the vendored popover once every one of them is rebuilt.
+  const unusedPopoverImports = new Set(
+    ['PopoverAnchor', 'PopoverContent'].filter((tag) => rebuilt > 0 && countElements(tag) === rebuilt),
+  );
   const imports = file.statements.filter(ts.isImportDeclaration);
   const importsCn = imports.some((declaration) => {
     const bindings = declaration.importClause?.namedBindings;
     return bindings && ts.isNamedImports(bindings) && bindings.elements.some((element) => element.name.text === 'cn');
   });
-  const addsCnImport = () => mergesClassName && !importsCn;
+  const addsCnImport = mergesClassName && !importsCn;
 
   const withoutUnusedPopoverImports = (declaration: ts.ImportDeclaration): string => {
     const bindings = declaration.importClause?.namedBindings;
     const original = source.slice(declaration.pos, declaration.end);
-    const unused = unusedPopoverImports();
     const isPopoverImport =
       ts.isStringLiteral(declaration.moduleSpecifier) && declaration.moduleSpecifier.text === POPOVER_MODULE;
-    if (!isPopoverImport || !bindings || !ts.isNamedImports(bindings) || unused.size === 0) return original;
+    if (!isPopoverImport || !bindings || !ts.isNamedImports(bindings) || unusedPopoverImports.size === 0)
+      return original;
 
-    const kept = bindings.elements.filter((element) => !unused.has((element.propertyName ?? element.name).text));
+    const kept = bindings.elements.filter(
+      (element) => !unusedPopoverImports.has((element.propertyName ?? element.name).text),
+    );
     if (kept.length === 0) return leadingTriviaOf(declaration);
     const names = kept.map((element) => element.getText(file)).join(', ');
     return `${leadingTriviaOf(declaration)}import { ${names} } from ${declaration.moduleSpecifier.getText(file)};`;
   };
 
-  // The Base UI primitive goes first, where Biome sorts a scoped package, and cn last of the aliases.
+  // The Base UI primitive goes first, where Biome sorts a scoped package, and cn after the last import.
   const emitImport = (declaration: ts.ImportDeclaration): string => {
     const text = withoutUnusedPopoverImports(declaration);
-    if (anchorsRebuilt === 0) return text;
+    if (rebuilt === 0) return text;
     const trivia = leadingTriviaOf(declaration);
     const withPrimitive =
       declaration === imports[0]
         ? `${trivia}${[POPOVER_PRIMITIVE_IMPORT, text.slice(trivia.length)].filter(Boolean).join('\n')}`
         : text;
-    return declaration === imports.at(-1) && addsCnImport() ? `${withPrimitive}\n${CN_IMPORT}` : withPrimitive;
+    return declaration === imports.at(-1) && addsCnImport ? `${withPrimitive}\n${CN_IMPORT}` : withPrimitive;
   };
 
-  planAnchoredPopovers(file);
-  const code = emit(file);
-  const importsToAdd = [POPOVER_PRIMITIVE_IMPORT, ...(addsCnImport() ? [CN_IMPORT] : [])].join('\n');
-  return { code: imports.length === 0 && anchorsRebuilt > 0 ? `${importsToAdd}\n${code}` : code, warnings };
+  return { code: emit(file), warnings };
 };
