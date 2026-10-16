@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
-import { attributeValues, elementsNamed } from './jsx-source';
+import { attributeValues, elementsNamed, parseTsx } from './jsx-source';
 
 const ITEM_DIR = path.resolve(import.meta.dir, '../items/react-hook-form/address-field');
 const VARIANTS = ['radix', 'base'] as const;
@@ -19,7 +19,7 @@ const SHARED_DECLARATIONS = [
 
 const parse = (variant: (typeof VARIANTS)[number]) => {
   const file = path.join(ITEM_DIR, `component.${variant}.tsx`);
-  return ts.createSourceFile(file, fs.readFileSync(file, 'utf-8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  return parseTsx(file, fs.readFileSync(file, 'utf-8'));
 };
 
 const nodesOf = <T extends ts.Node>(root: ts.Node, guard: (node: ts.Node) => node is T): T[] => {

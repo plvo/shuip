@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
-import { attributeOrder, attributeValues, elementsNamed } from './jsx-source';
+import { attributeOrder, attributeValues, elementsNamed, parseTsx } from './jsx-source';
 
 const ITEMS_DIR = path.resolve(import.meta.dir, '../items');
 const SUGGESTION_LIST = '@/components/ui/shuip/suggestion-list';
@@ -30,7 +30,7 @@ const FIELDS: Field[] = ['radix', 'base'].flatMap((variant) =>
 
 const parse = ({ item, variant }: Field) => {
   const file = path.join(ITEMS_DIR, item, `component.${variant}.tsx`);
-  return ts.createSourceFile(file, fs.readFileSync(file, 'utf-8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  return parseTsx(file, fs.readFileSync(file, 'utf-8'));
 };
 
 const importDeclarations = (source: ts.SourceFile, specifier: string): ts.ImportDeclaration[] =>
