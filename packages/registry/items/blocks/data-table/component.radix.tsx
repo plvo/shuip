@@ -284,15 +284,20 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     right: initialState?.columnPinning?.right ?? [],
   }));
 
+  const currentSorting = props.state?.sorting ?? sorting;
+  const currentColumnFilters = props.state?.columnFilters ?? columnFilters;
+  const currentGlobalFilter = props.state?.globalFilter ?? globalFilter;
+
   const table = useReactTable<TData>({
     data,
     columns,
     pageCount: pageCount ?? undefined,
     defaultColumn: { filterFn: dataTableFilterFn },
+    autoResetPageIndex: false,
     state: {
-      sorting: props.state?.sorting ?? sorting,
-      columnFilters: props.state?.columnFilters ?? columnFilters,
-      globalFilter: props.state?.globalFilter ?? globalFilter,
+      sorting: currentSorting,
+      columnFilters: currentColumnFilters,
+      globalFilter: currentGlobalFilter,
       columnVisibility,
       rowSelection,
       pagination: props.state?.pagination ?? pagination,
@@ -321,6 +326,17 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
           getFacetedRowModel: getFacetedRowModel(),
           getFacetedUniqueValues: getFacetedUniqueValues(),
         }),
+  });
+
+  // TanStack queues the reset of the page from the render that computes the rows, and a React that renders in slices,
+  // as it does when it hydrates, runs that microtask before the component has mounted. The reset runs here instead,
+  // from an effect, and only when the rows can have changed.
+  const rowInputs = [data, currentSorting, currentColumnFilters, currentGlobalFilter];
+  const previousRowInputs = React.useRef(rowInputs);
+  React.useEffect(() => {
+    const unchanged = rowInputs.every((input, index) => Object.is(input, previousRowInputs.current[index]));
+    previousRowInputs.current = rowInputs;
+    if (!(unchanged || manual)) table.resetPageIndex();
   });
 
   return { table };
