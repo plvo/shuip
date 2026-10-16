@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { TextareaField } from '@/components/ui/shuip/react-hook-form/textarea-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -29,28 +29,26 @@ export default function RhfTextareaFieldTooltipExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <TextareaField
-          lens={lens.focus('notes')}
-          label='Notes'
-          description='Add any additional notes or comments'
-          tooltip={
-            <div className='space-y-1 text-sm'>
-              <p className='font-semibold'>Formatting tips:</p>
-              <ul className='list-disc list-inside space-y-0.5'>
-                <li>Keep it concise and clear</li>
-                <li>Use bullet points for lists</li>
-                <li>Mention important details first</li>
-              </ul>
-            </div>
-          }
-          rows={8}
-          placeholder='Enter your notes here...'
-        />
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <TextareaField
+        lens={lens.focus('notes')}
+        label='Notes'
+        description='Add any additional notes or comments'
+        tooltip={
+          <div className='space-y-1 text-sm'>
+            <p className='font-semibold'>Formatting tips:</p>
+            <ul className='list-disc list-inside space-y-0.5'>
+              <li>Keep it concise and clear</li>
+              <li>Use bullet points for lists</li>
+              <li>Mention important details first</li>
+            </ul>
+          </div>
+        }
+        rows={8}
+        placeholder='Enter your notes here...'
+      />
 
-        <SubmitButton>Save Notes</SubmitButton>
-      </form>
-    </FormProvider>
+      <SubmitButton>Save Notes</SubmitButton>
+    </form>
   );
 }

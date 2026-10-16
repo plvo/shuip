@@ -3,7 +3,7 @@
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import z from 'zod';
 import {
   ResponsiveDialog,
@@ -133,58 +133,54 @@ function LongFormDialog() {
         <Button variant='outline'>Long Form</Button>
       </ResponsiveDialogTrigger>
       <ResponsiveDialogContent>
-        <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col flex-1 min-h-0'>
-            <ResponsiveDialogHeader>
-              <ResponsiveDialogTitle>Create Profile</ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>
-                Fill in your details to create your team profile.
-              </ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
-            <ResponsiveDialogBody className='space-y-4'>
-              <div className='grid grid-cols-2 gap-3'>
-                <InputField lens={lens.focus('firstName')} label='First name' />
-                <InputField lens={lens.focus('lastName')} label='Last name' />
-              </div>
-              <InputField lens={lens.focus('email')} label='Email' type='email' />
-              <InputField lens={lens.focus('phone')} label='Phone' type='tel' />
-              <InputField lens={lens.focus('company')} label='Company' />
-              <SelectField
-                lens={lens.focus('role')}
-                label='Role'
-                options={{
-                  Admin: 'admin',
-                  Developer: 'developer',
-                  Designer: 'designer',
-                  Manager: 'manager',
-                  Viewer: 'viewer',
-                }}
-              />
+        <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col flex-1 min-h-0'>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Create Profile</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>Fill in your details to create your team profile.</ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogBody className='space-y-4'>
+            <div className='grid grid-cols-2 gap-3'>
+              <InputField lens={lens.focus('firstName')} label='First name' />
+              <InputField lens={lens.focus('lastName')} label='Last name' />
+            </div>
+            <InputField lens={lens.focus('email')} label='Email' type='email' />
+            <InputField lens={lens.focus('phone')} label='Phone' type='tel' />
+            <InputField lens={lens.focus('company')} label='Company' />
+            <SelectField
+              lens={lens.focus('role')}
+              label='Role'
+              options={{
+                Admin: 'admin',
+                Developer: 'developer',
+                Designer: 'designer',
+                Manager: 'manager',
+                Viewer: 'viewer',
+              }}
+            />
 
-              <SelectField
-                lens={lens.focus('country')}
-                label='Country'
-                options={{
-                  France: 'fr',
-                  Germany: 'de',
-                  'United States': 'us',
-                  'United Kingdom': 'gb',
-                  Canada: 'ca',
-                  Australia: 'au',
-                }}
-              />
-              <TextareaField lens={lens.focus('bio')} label='Bio' rows={4} />
-            </ResponsiveDialogBody>
-            <ResponsiveDialogFooter>
-              <ResponsiveDialogClose asChild>
-                <Button variant='outline' className='max-md:w-full'>
-                  Cancel
-                </Button>
-              </ResponsiveDialogClose>
-              <SubmitButton className='max-md:w-full'>Create Profile</SubmitButton>
-            </ResponsiveDialogFooter>
-          </form>
-        </FormProvider>
+            <SelectField
+              lens={lens.focus('country')}
+              label='Country'
+              options={{
+                France: 'fr',
+                Germany: 'de',
+                'United States': 'us',
+                'United Kingdom': 'gb',
+                Canada: 'ca',
+                Australia: 'au',
+              }}
+            />
+            <TextareaField lens={lens.focus('bio')} label='Bio' rows={4} />
+          </ResponsiveDialogBody>
+          <ResponsiveDialogFooter>
+            <ResponsiveDialogClose asChild>
+              <Button variant='outline' className='max-md:w-full'>
+                Cancel
+              </Button>
+            </ResponsiveDialogClose>
+            <SubmitButton className='max-md:w-full'>Create Profile</SubmitButton>
+          </ResponsiveDialogFooter>
+        </form>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

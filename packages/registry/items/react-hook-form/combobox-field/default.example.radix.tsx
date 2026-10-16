@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ComboboxField, type ComboboxOption } from '@/components/ui/shuip/react-hook-form/combobox-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -35,18 +35,16 @@ export default function ComboboxFieldExample() {
   const lens = useLens({ control: form.control });
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <ComboboxField
-          lens={lens.focus('country')}
-          label='Country'
-          description='The preset value resolves its label at rest'
-          placeholder='Search a country…'
-          options={COUNTRIES}
-          defaultSelected={{ value: 'fr', label: 'France' }}
-        />
-        <SubmitButton>Submit</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <ComboboxField
+        lens={lens.focus('country')}
+        label='Country'
+        description='The preset value resolves its label at rest'
+        placeholder='Search a country…'
+        options={COUNTRIES}
+        defaultSelected={{ value: 'fr', label: 'France' }}
+      />
+      <SubmitButton>Submit</SubmitButton>
+    </form>
   );
 }

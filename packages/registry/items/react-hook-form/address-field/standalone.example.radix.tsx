@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AddressField, addressSchema } from '@/components/ui/shuip/react-hook-form/address-field';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
@@ -42,17 +42,15 @@ export default function AddressFieldExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 w-full'>
-        <InputField lens={lens.focus('name')} label='Name' placeholder='Enter your name' />
-        <AddressField lens={lens.focus('address')} placeholder='Enter your address' className='w-full' />
-        <SubmitButton>Check</SubmitButton>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 w-full'>
+      <InputField lens={lens.focus('name')} label='Name' placeholder='Enter your name' />
+      <AddressField lens={lens.focus('address')} placeholder='Enter your address' className='w-full' />
+      <SubmitButton>Check</SubmitButton>
 
-        <pre className='border border-primary rounded-md p-4 overflow-x-auto'>
-          <h3 className='text-primary'>Form values</h3>
-          <pre>{JSON.stringify(form.watch(), null, 2)}</pre>
-        </pre>
-      </form>
-    </FormProvider>
+      <pre className='border border-primary rounded-md p-4 overflow-x-auto'>
+        <h3 className='text-primary'>Form values</h3>
+        <pre>{JSON.stringify(form.watch(), null, 2)}</pre>
+      </pre>
+    </form>
   );
 }

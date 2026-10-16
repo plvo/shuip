@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { CheckboxField } from '@/components/ui/shuip/react-hook-form/checkbox-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -35,41 +35,39 @@ export default function CheckboxFieldGroupExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <div className='space-y-3'>
+        <h3 className='font-semibold'>Features</h3>
+        <p className='text-sm text-muted-foreground'>Select the features you want to enable</p>
+
         <div className='space-y-3'>
-          <h3 className='font-semibold'>Features</h3>
-          <p className='text-sm text-muted-foreground'>Select the features you want to enable</p>
+          <CheckboxField
+            lens={featuresLens.focus('notifications')}
+            label='Enable push notifications'
+            description='Receive real-time updates about your activity'
+          />
 
-          <div className='space-y-3'>
-            <CheckboxField
-              lens={featuresLens.focus('notifications')}
-              label='Enable push notifications'
-              description='Receive real-time updates about your activity'
-            />
+          <CheckboxField
+            lens={featuresLens.focus('analytics')}
+            label='Enable analytics tracking'
+            description='Help us improve by sharing usage data'
+          />
 
-            <CheckboxField
-              lens={featuresLens.focus('analytics')}
-              label='Enable analytics tracking'
-              description='Help us improve by sharing usage data'
-            />
+          <CheckboxField
+            lens={featuresLens.focus('darkMode')}
+            label='Enable dark mode'
+            description='Switch to a darker color scheme'
+          />
 
-            <CheckboxField
-              lens={featuresLens.focus('darkMode')}
-              label='Enable dark mode'
-              description='Switch to a darker color scheme'
-            />
-
-            <CheckboxField
-              lens={featuresLens.focus('apiAccess')}
-              label='Enable API access'
-              description='Get programmatic access to your data'
-            />
-          </div>
+          <CheckboxField
+            lens={featuresLens.focus('apiAccess')}
+            label='Enable API access'
+            description='Get programmatic access to your data'
+          />
         </div>
+      </div>
 
-        <SubmitButton>Save Preferences</SubmitButton>
-      </form>
-    </FormProvider>
+      <SubmitButton>Save Preferences</SubmitButton>
+    </form>
   );
 }

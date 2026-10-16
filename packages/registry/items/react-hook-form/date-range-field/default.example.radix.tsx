@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { DateRangeField } from '@/components/ui/shuip/react-hook-form/date-range-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -31,16 +31,14 @@ export default function RhfDateRangeFieldExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <DateRangeField
-          lens={lens.focus('range')}
-          label='Stay'
-          description='Pick check-in and check-out dates'
-          placeholder='Pick a date range'
-        />
-        <SubmitButton>Save</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <DateRangeField
+        lens={lens.focus('range')}
+        label='Stay'
+        description='Pick check-in and check-out dates'
+        placeholder='Pick a date range'
+      />
+      <SubmitButton>Save</SubmitButton>
+    </form>
   );
 }

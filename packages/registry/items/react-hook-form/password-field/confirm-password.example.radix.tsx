@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { PasswordField } from '@/components/ui/shuip/react-hook-form/password-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -38,24 +38,22 @@ export default function RhfPasswordFieldConfirmPasswordExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <PasswordField
-          lens={lens.focus('password')}
-          label='Password'
-          description='Choose a strong password'
-          placeholder='Enter password'
-        />
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <PasswordField
+        lens={lens.focus('password')}
+        label='Password'
+        description='Choose a strong password'
+        placeholder='Enter password'
+      />
 
-        <PasswordField
-          lens={lens.focus('confirmPassword')}
-          label='Confirm Password'
-          description='Re-enter your password to confirm'
-          placeholder='Confirm password'
-        />
+      <PasswordField
+        lens={lens.focus('confirmPassword')}
+        label='Confirm Password'
+        description='Re-enter your password to confirm'
+        placeholder='Confirm password'
+      />
 
-        <SubmitButton>Set Password</SubmitButton>
-      </form>
-    </FormProvider>
+      <SubmitButton>Set Password</SubmitButton>
+    </form>
   );
 }

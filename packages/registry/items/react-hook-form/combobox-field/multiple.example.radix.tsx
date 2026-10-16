@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ComboboxField, type ComboboxOption } from '@/components/ui/shuip/react-hook-form/combobox-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -34,19 +34,17 @@ export default function ComboboxFieldMultipleExample() {
   const lens = useLens({ control: form.control });
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <ComboboxField
-          multiple
-          lens={lens.focus('frameworks')}
-          label='Frameworks'
-          description='Pick several; backspace removes the last chip'
-          placeholder='Search frameworks…'
-          options={FRAMEWORKS}
-          defaultSelected={[{ value: 'next', label: 'Next.js', sublabel: 'React framework' }]}
-        />
-        <SubmitButton>Submit</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <ComboboxField
+        multiple
+        lens={lens.focus('frameworks')}
+        label='Frameworks'
+        description='Pick several; backspace removes the last chip'
+        placeholder='Search frameworks…'
+        options={FRAMEWORKS}
+        defaultSelected={[{ value: 'next', label: 'Next.js', sublabel: 'React framework' }]}
+      />
+      <SubmitButton>Submit</SubmitButton>
+    </form>
   );
 }

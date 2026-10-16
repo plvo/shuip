@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { TimeField } from '@/components/ui/shuip/react-hook-form/time-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -37,17 +37,15 @@ export default function RhfTimeFieldValidationExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <TimeField
-          lens={lens.focus('appointment')}
-          label='Appointment'
-          description={`Office hours: ${BUSINESS_OPEN} – ${BUSINESS_CLOSE}`}
-          min={BUSINESS_OPEN}
-          max={BUSINESS_CLOSE}
-        />
-        <SubmitButton>Book</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <TimeField
+        lens={lens.focus('appointment')}
+        label='Appointment'
+        description={`Office hours: ${BUSINESS_OPEN} – ${BUSINESS_CLOSE}`}
+        min={BUSINESS_OPEN}
+        max={BUSINESS_CLOSE}
+      />
+      <SubmitButton>Book</SubmitButton>
+    </form>
   );
 }

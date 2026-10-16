@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { DatetimeField } from '@/components/ui/shuip/react-hook-form/datetime-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -27,16 +27,14 @@ export default function RhfDatetimeFieldValidationExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <DatetimeField
-          lens={lens.focus('startsAt')}
-          label='Starts at'
-          description='Must be a future date and time.'
-          minDate={new Date()}
-        />
-        <SubmitButton>Book</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <DatetimeField
+        lens={lens.focus('startsAt')}
+        label='Starts at'
+        description='Must be a future date and time.'
+        minDate={new Date()}
+      />
+      <SubmitButton>Book</SubmitButton>
+    </form>
   );
 }

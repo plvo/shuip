@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { InputField } from '@/components/ui/shuip/react-hook-form/input-field';
@@ -32,27 +32,25 @@ export default function PasswordFieldLoginExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <Card>
-          <CardHeader>
-            <CardTitle>Login</CardTitle>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            <InputField lens={lens.focus('email')} label='Email' placeholder='john@example.com' />
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <Card>
+        <CardHeader>
+          <CardTitle>Login</CardTitle>
+        </CardHeader>
+        <CardContent className='space-y-4'>
+          <InputField lens={lens.focus('email')} label='Email' placeholder='john@example.com' />
 
-            <PasswordField
-              lens={lens.focus('password')}
-              label='Password'
-              placeholder='Password'
-              tooltip='Must contain: 8+ characters, uppercase, number, special char'
-            />
-          </CardContent>
-          <CardFooter>
-            <SubmitButton>Login</SubmitButton>
-          </CardFooter>
-        </Card>
-      </form>
-    </FormProvider>
+          <PasswordField
+            lens={lens.focus('password')}
+            label='Password'
+            placeholder='Password'
+            tooltip='Must contain: 8+ characters, uppercase, number, special char'
+          />
+        </CardContent>
+        <CardFooter>
+          <SubmitButton>Login</SubmitButton>
+        </CardFooter>
+      </Card>
+    </form>
   );
 }

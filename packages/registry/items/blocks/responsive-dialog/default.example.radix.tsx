@@ -3,7 +3,7 @@
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import z from 'zod';
 import {
   ResponsiveDialog,
@@ -299,26 +299,24 @@ function ResponsiveDialogFormExample() {
         <Button variant='outline'>Open Dialog</Button>
       </ResponsiveDialogTrigger>
       <ResponsiveDialogContent>
-        <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <ResponsiveDialogHeader>
-              <ResponsiveDialogTitle>Responsive Dialog</ResponsiveDialogTitle>
-              <ResponsiveDialogDescription>
-                This dialog adapts to your screen size. On desktop, it's a side dialog. On mobile, it's a drawer.
-              </ResponsiveDialogDescription>
-            </ResponsiveDialogHeader>
-            <ResponsiveDialogBody className='space-y-4'>
-              <InputField lens={lens.focus('name')} label='Name' />
-              <InputField lens={lens.focus('email')} label='Email' />
-            </ResponsiveDialogBody>
-            <ResponsiveDialogFooter>
-              <ResponsiveDialogClose asChild>
-                <Button variant='outline'>Close</Button>
-              </ResponsiveDialogClose>
-              <SubmitButton className='max-md:w-full'>Submit</SubmitButton>
-            </ResponsiveDialogFooter>
-          </form>
-        </FormProvider>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Responsive Dialog</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              This dialog adapts to your screen size. On desktop, it's a side dialog. On mobile, it's a drawer.
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogBody className='space-y-4'>
+            <InputField lens={lens.focus('name')} label='Name' />
+            <InputField lens={lens.focus('email')} label='Email' />
+          </ResponsiveDialogBody>
+          <ResponsiveDialogFooter>
+            <ResponsiveDialogClose asChild>
+              <Button variant='outline'>Close</Button>
+            </ResponsiveDialogClose>
+            <SubmitButton className='max-md:w-full'>Submit</SubmitButton>
+          </ResponsiveDialogFooter>
+        </form>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
   );

@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { NumberField } from '@/components/ui/shuip/react-hook-form/number-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -30,22 +30,20 @@ export default function RhfNumberFieldExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <NumberField lens={lens.focus('quantity')} label='Quantity' description='Integer quantity' placeholder='1' />
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <NumberField lens={lens.focus('quantity')} label='Quantity' description='Integer quantity' placeholder='1' />
 
-        <NumberField
-          lens={lens.focus('ratio')}
-          type='range'
-          label='Ratio'
-          description='Rendered as a range slider'
-          min={0}
-          max={1}
-          step={0.1}
-        />
+      <NumberField
+        lens={lens.focus('ratio')}
+        type='range'
+        label='Ratio'
+        description='Rendered as a range slider'
+        min={0}
+        max={1}
+        step={0.1}
+      />
 
-        <SubmitButton>Submit</SubmitButton>
-      </form>
-    </FormProvider>
+      <SubmitButton>Submit</SubmitButton>
+    </form>
   );
 }

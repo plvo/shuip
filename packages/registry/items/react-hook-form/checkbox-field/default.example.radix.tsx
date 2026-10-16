@@ -2,7 +2,7 @@
 
 import { useLens } from '@hookform/lenses';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FormProvider, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { CheckboxField } from '@/components/ui/shuip/react-hook-form/checkbox-field';
 import { SubmitButton } from '@/components/ui/shuip/submit-button';
@@ -31,15 +31,13 @@ export default function CheckboxFieldExample() {
   }
 
   return (
-    <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-        <CheckboxField
-          lens={lens.focus('checkbox')}
-          label='Accept terms and conditions'
-          description='To continue, you must accept the terms and conditions because tbh it says so'
-        />
-        <SubmitButton>Submit</SubmitButton>
-      </form>
-    </FormProvider>
+    <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+      <CheckboxField
+        lens={lens.focus('checkbox')}
+        label='Accept terms and conditions'
+        description='To continue, you must accept the terms and conditions because tbh it says so'
+      />
+      <SubmitButton>Submit</SubmitButton>
+    </form>
   );
 }
