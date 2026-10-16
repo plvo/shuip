@@ -28,6 +28,21 @@ export const attributeValues = (source: ts.SourceFile, tag: string, name: string
     ),
   );
 
+/** The source text of the value of attribute `name` on every element `tag`: a string literal with its quotes, an expression with its braces removed. */
+export const attributeSources = (source: ts.SourceFile, tag: string, name: string): string[] =>
+  elementsNamed(source, tag).flatMap((element) =>
+    element.attributes.properties.flatMap((attribute) => {
+      if (!ts.isJsxAttribute(attribute) || attribute.name.getText() !== name || attribute.initializer === undefined) {
+        return [];
+      }
+      return [
+        ts.isJsxExpression(attribute.initializer)
+          ? (attribute.initializer.expression?.getText() ?? '')
+          : attribute.initializer.getText(),
+      ];
+    }),
+  );
+
 /** The attributes of every element `tag` in source order, a spread shown as `...expression`. */
 export const attributeOrder = (source: ts.SourceFile, tag: string): string[][] =>
   elementsNamed(source, tag).map((element) =>

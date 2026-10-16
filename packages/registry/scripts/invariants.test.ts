@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import ts from 'typescript';
 import { buildRegistryJson, readRootCatalog, type ScannedItem, scanItems, writeBaseVariant } from './generate';
+import { attributeSources } from './jsx-source';
 import { RADIX_PACKAGE } from './radix-package';
 
 const REPO_ROOT = path.resolve(import.meta.dir, '../../..');
@@ -17,6 +18,7 @@ const OWN_DATA_STATE = [
 
 const FORM_PRIMITIVE = /^@\/components\/ui\/form(\/|$)/;
 const PRIMITIVE_STATE_CLASS = /data-\[state=/;
+const OPACITY_CLASS = /(?<![\w-])opacity-/;
 const RADIX_ONLY_POPOVER_API =
   /\b(?:PopoverAnchor|onOpenAutoFocus|onCloseAutoFocus|onInteractOutside|onPointerDownOutside|onEscapeKeyDown)\b|--radix-/;
 const IMPORT_SPECIFIER = /(?:\bfrom\s+|\bimport\s*\(?\s*|\brequire\(\s*)['"]([^'"]+)['"]/g;
@@ -61,12 +63,24 @@ const codeBlocks = (markdown: string) =>
 const importedSpecifiers = ({ kind, content }: SourceFile) =>
   [...(kind === 'doc' ? codeBlocks(content) : content).matchAll(IMPORT_SPECIFIER)].map((m) => m[1] as string);
 
+const parseTsx = (relativePath: string, content: string) =>
+  ts.createSourceFile(relativePath, content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+
+const hasFieldErrorWithOpacity = ({ relativePath, kind, content }: SourceFile) =>
+  kind === 'source' &&
+  relativePath.endsWith('.tsx') &&
+  content.includes('FieldError') &&
+  attributeSources(parseTsx(relativePath, content), 'FieldError', 'className').some((classes) =>
+    OPACITY_CLASS.test(classes),
+  );
+
 const findViolations = (sources: SourceFile[]) => ({
   radixImports: sources.filter((s) => importedSpecifiers(s).some((spec) => RADIX_PACKAGE.test(spec))),
   formPrimitiveImports: sources.filter((s) => importedSpecifiers(s).some((spec) => FORM_PRIMITIVE.test(spec))),
   primitiveStateClasses: sources.filter(
     (s) => s.kind === 'source' && PRIMITIVE_STATE_CLASS.test(s.content) && !OWN_DATA_STATE.includes(s.relativePath),
   ),
+  fieldErrorOpacity: sources.filter(hasFieldErrorWithOpacity),
 });
 
 const paths = (sources: SourceFile[]) => sources.map((s) => s.relativePath);
@@ -115,6 +129,10 @@ describe('item sources stay base-agnostic', () => {
 
   test('no source styles a primitive trigger through data-[state=', () => {
     expect(paths(violations.primitiveStateClasses)).toEqual([]);
+  });
+
+  test('no FieldError carries an opacity class', () => {
+    expect(paths(violations.fieldErrorOpacity)).toEqual([]);
   });
 
   test.each(OWN_DATA_STATE)('%s still sets its own data-state', (relativePath) => {
@@ -168,6 +186,10 @@ describe('the Base UI variant stays free of Radix', () => {
   test('no generated file uses a Radix-only Popover API', () => {
     const offenders = generatedFiles.filter((file) => RADIX_ONLY_POPOVER_API.test(file.content));
     expect(paths(offenders)).toEqual([]);
+  });
+
+  test('no generated FieldError carries an opacity class', () => {
+    expect(paths(findViolations(generatedFiles).fieldErrorOpacity)).toEqual([]);
   });
 
   // No `asChild` survives in the Base UI output, whether used or declared. A site that does fails this test: give it
@@ -278,6 +300,25 @@ describe('invariant detection', () => {
       'packages/registry/items/blocks/a/component.radix.tsx',
       'packages/registry/items/components/side-dialog/default.example.radix.tsx',
     ]);
+  });
+
+  test.each([
+    ['a literal class', "<FieldError className='text-xs opacity-80' errors={[error]} />"],
+    ['a double-quoted class', '<FieldError className="opacity-50" errors={[error]} />'],
+    ['a variant class', "<FieldError className='text-xs hover:opacity-80' />"],
+    ['an expression class', "<FieldError className={cn('text-xs', dim && 'opacity-80')} />"],
+    ['a container element', "<FieldError className='opacity-80'>{message}</FieldError>"],
+  ])('flags a FieldError with %s', (_, content) => {
+    expect(paths(findViolations([source('a.tsx', content)]).fieldErrorOpacity)).toEqual(['a.tsx']);
+  });
+
+  test('does not flag a FieldError without opacity, nor opacity on other elements', () => {
+    const flagged = findViolations([
+      source('a.tsx', "<FieldError className='text-xs text-left' errors={[error]} />"),
+      source('b.tsx', "<Check className='opacity-0' /><FieldError errors={[error]} />"),
+      source('c.tsx', "<FieldError className='bg-opacity-half' />"),
+    ]).fieldErrorOpacity;
+    expect(flagged).toEqual([]);
   });
 
   test('flags imports inside a fenced code block of a doc page', () => {
