@@ -169,6 +169,15 @@ describe.each(VARIANTS)('ComboboxField, %s', (variant) => {
     expect(isOpen()).toBe(true);
   });
 
+  test('closes after a pick without the popup giving focus back to the input, which would reopen the list', async () => {
+    const { input } = await mountField({ options: COUNTRIES });
+    await focus(input);
+    await click(optionNamed('Spain'));
+    expect(isOpen()).toBe(false);
+    expect(document.activeElement).not.toBe(input);
+    expect(document.activeElement).toBe(document.body);
+  });
+
   test('selects the highlighted option with the keyboard', async () => {
     const { input } = await mountField({ options: COUNTRIES });
     await focus(input);
