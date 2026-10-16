@@ -216,6 +216,30 @@ describe.each(VARIANTS)('ComboboxField, %s', (variant) => {
     expectExpanded(input);
   });
 
+  test('points at the option highlighted before the list closed once it is reopened', async () => {
+    const { input } = await mountField({ options: COUNTRIES });
+    await focus(input);
+    await press(input, 'ArrowDown');
+    await press(input, 'Escape');
+    await blur(input);
+    await focus(input);
+    expect(highlightedOption()?.textContent).toContain('Germany');
+    expect(input.getAttribute('aria-activedescendant')).toBe(highlightedOption()?.id as string);
+  });
+
+  test('keeps pointing at the last option when ArrowDown has nowhere further to go after a reopen', async () => {
+    const { input } = await mountField({ options: COUNTRIES });
+    await focus(input);
+    await press(input, 'ArrowDown');
+    await press(input, 'ArrowDown');
+    await press(input, 'Escape');
+    await blur(input);
+    await focus(input);
+    await press(input, 'ArrowDown');
+    expect(highlightedOption()?.textContent).toContain('Spain');
+    expect(input.getAttribute('aria-activedescendant')).toBe(highlightedOption()?.id as string);
+  });
+
   test.each([
     ['Escape', (input: HTMLInputElement) => press(input, 'Escape')],
     ['a pick', () => click(optionNamed('Spain'))],
