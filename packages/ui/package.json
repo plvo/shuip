@@ -21,17 +21,15 @@
     "clsx": "catalog:",
     "class-variance-authority": "catalog:",
     "lucide-react": "catalog:",
-    "tailwindcss-animate": "catalog:",
     "cmdk": "catalog:",
-    "sonner": "catalog:",
     "vaul": "catalog:",
-    "next-themes": "catalog:",
     "react-day-picker": "catalog:",
     "date-fns": "catalog:",
     "radix-ui": "catalog:radix",
     "@base-ui/react": "catalog:",
     "cn": "catalog:",
-    "shadcn": "catalog:"
+    "shadcn": "catalog:",
+    "tw-animate-css": "catalog:"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",

@@ -38,14 +38,16 @@
     "@dnd-kit/sortable": "catalog:",
     "@dnd-kit/utilities": "catalog:",
     "lucide-react": "catalog:",
-    "@repo/ui": "workspace:*"
+    "@repo/ui": "workspace:*",
+    "@base-ui/react": "catalog:",
+    "cmdk": "catalog:",
+    "next-themes": "catalog:"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "gray-matter": "catalog:fumadocs",
     "next": "catalog:",
     "typescript": "catalog:"
   }
