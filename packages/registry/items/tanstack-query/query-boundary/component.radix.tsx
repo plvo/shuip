@@ -46,7 +46,7 @@ export function DefaultErrorFallback({
       <div>
         <h3 className='text-lg font-semibold mb-2'>Oops, something went wrong!</h3>
         <p className='text-muted-foreground'>{error instanceof Error ? error.message : 'Unexpected error'}</p>
-        {queryKeys.length && (
+        {queryKeys.length > 0 && (
           <p className='text-xs text-muted-foreground mt-2'>
             Concerned quer{queryKeys.length > 1 ? 'ies' : 'y'}: {queryKeys.join(', ')}
           </p>
