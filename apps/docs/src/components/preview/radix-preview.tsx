@@ -1,8 +1,8 @@
 'use client';
 
 import { REGISTRY_INDEX } from '@repo/registry/__index__';
-import { PreviewFrame } from './preview-frame';
+import { PreviewFrame, type PreviewFrameProps } from './preview-frame';
 
-export function RadixPreview({ registryName }: { registryName: string }) {
-  return <PreviewFrame registryName={registryName} component={REGISTRY_INDEX[registryName]?.component} />;
+export function RadixPreview(props: Omit<PreviewFrameProps, 'component'>) {
+  return <PreviewFrame {...props} component={REGISTRY_INDEX[props.registryName]?.component} />;
 }

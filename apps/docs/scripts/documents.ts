@@ -36,3 +36,16 @@ export const attributeNames = (element: ts.JsxOpeningLikeElement): string[] =>
   element.attributes.properties.flatMap((attribute) =>
     ts.isJsxAttribute(attribute) ? [attribute.name.getText()] : ['...spread'],
   );
+
+/** The opening elements named `tagName` in the file, in source order. */
+export const elementsNamed = (source: ts.SourceFile, tagName: string): ts.JsxOpeningLikeElement[] => {
+  const found: ts.JsxOpeningLikeElement[] = [];
+  const visit = (node: ts.Node) => {
+    if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) && node.tagName.getText() === tagName) {
+      found.push(node);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return found;
+};

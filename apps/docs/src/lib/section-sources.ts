@@ -27,7 +27,7 @@ export const sectionParams = (
 /** The pages of the docs, per section and base, from which the sidebars and the page lists of the switchers come. */
 export interface SectionSources {
   components: Record<Base, { getPages(): SidebarPage[] }>;
-  blocks: Record<Base, { pageTree: Root; getPages(): { url: string }[] }>;
+  blocks: Record<Base, { pageTree: Root; getPages(): SidebarPage[] }>;
   /** The pages under `/docs`, which have no base. */
   guides: Node[];
 }

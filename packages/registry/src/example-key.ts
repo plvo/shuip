@@ -1,4 +1,4 @@
-const DEFAULT_EXAMPLE = 'default';
+export const DEFAULT_EXAMPLE = 'default';
 
 const EXAMPLE_KEY = /^([^.]+)\.(?:(.+)\.)?example$/;
 
