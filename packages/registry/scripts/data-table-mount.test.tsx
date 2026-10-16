@@ -4,17 +4,24 @@ import type { Root } from 'react-dom/client';
 import { installDom, resolveCanonicalAliases } from './dom-environment';
 
 type Row = { id: number; name: string };
+type TableProps = Parameters<typeof import('../items/blocks/data-table/component.radix').useDataTable<Row>>[0];
 
 const rowsOf = (count: number): Row[] => Array.from({ length: count }, (_, id) => ({ id, name: `row ${id}` }));
 
 const COLUMNS: ColumnDef<Row>[] = [{ accessorKey: 'name', header: 'Name' }];
+
+const setActEnvironment = (enabled: boolean) => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = enabled;
+};
 
 const roots: Root[] = [];
 let uninstallDom: () => Promise<void>;
 let act: typeof import('react').act;
 let createElement: typeof import('react').createElement;
 let startTransition: typeof import('react').startTransition;
+let useLayoutEffect: typeof import('react').useLayoutEffect;
 let Suspense: typeof import('react').Suspense;
+let StrictMode: typeof import('react').StrictMode;
 let createRoot: typeof import('react-dom/client').createRoot;
 let useDataTable: typeof import('../items/blocks/data-table/component.radix').useDataTable;
 
@@ -22,7 +29,7 @@ let useDataTable: typeof import('../items/blocks/data-table/component.radix').us
 beforeAll(async () => {
   uninstallDom = installDom();
   resolveCanonicalAliases(/data-table\/component\.radix\.tsx$/);
-  ({ act, createElement, startTransition, Suspense } = await import('react'));
+  ({ act, createElement, startTransition, useLayoutEffect, Suspense, StrictMode } = await import('react'));
   ({ createRoot } = await import('react-dom/client'));
   ({ useDataTable } = await import('../items/blocks/data-table/component.radix'));
 });
@@ -32,7 +39,7 @@ afterAll(async () => {
 });
 
 afterEach(async () => {
-  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  setActEnvironment(true);
   await act(async () => {
     for (const root of roots.splice(0)) root.unmount();
   });
@@ -56,8 +63,8 @@ const holdThread = (milliseconds: number) => {
 describe('useDataTable while its table is first rendered', () => {
   // React renders a transition in slices and runs the microtasks between them, so one component of a table can render
   // before the microtasks that follow another have run. That is how a hydrating page renders its tables.
-  test('updates no state before the component has mounted, however React slices the render', async () => {
-    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = false;
+  test('logs no error before the component has mounted, however React slices the render', async () => {
+    setActEnvironment(false);
     const errors = spyOn(console, 'error').mockImplementation(() => {});
     let mounted: () => void = () => {};
     const hasMounted = new Promise<void>((resolve) => {
@@ -73,8 +80,8 @@ describe('useDataTable while its table is first rendered', () => {
       holdThread(20);
       return null;
     }
-    function MountedSignal() {
-      mounted();
+    function CommitSignal() {
+      useLayoutEffect(() => mounted(), []);
       return null;
     }
     function Page() {
@@ -86,90 +93,183 @@ describe('useDataTable while its table is first rendered', () => {
         createElement(SlowSibling),
         createElement(ReadsTheRows, { table, read: 'sorted' }),
         createElement(SlowSibling),
-        createElement(MountedSignal),
+        createElement(CommitSignal),
       );
     }
 
     startTransition(() => newRoot().render(createElement(Page)));
     await hasMounted;
-    await new Promise((resolve) => setTimeout(resolve, 20));
 
-    const notMounted = errors.mock.calls.filter(([message]) => String(message).includes("hasn't mounted yet"));
+    const logged = errors.mock.calls.map(([message]) => String(message));
     errors.mockRestore();
-    expect(notMounted).toEqual([]);
+    expect(logged).toEqual([]);
   });
 });
 
-describe('useDataTable after it has mounted', () => {
-  let table: Table<Row>;
+/** A table in a page that renders again with the props it is given next. */
+const mountTable = async (initial: TableProps, options: { strict?: boolean } = {}) => {
+  let props = initial;
+  let table = undefined as unknown as Table<Row>;
+  const committedPages: number[] = [];
+  let committed: () => void = () => {};
 
-  const render = async (data: Row[]) => {
-    function Page() {
-      table = useDataTable({ data, columns: COLUMNS }).table;
-      table.getRowModel();
-      return null;
-    }
-    const root = newRoot();
-    await act(async () => root.render(createElement(Page)));
-    return { root, Page };
+  function Page() {
+    table = useDataTable(props).table;
+    table.getRowModel();
+    useLayoutEffect(() => {
+      committedPages.push(table.getState().pagination.pageIndex);
+      committed();
+    });
+    return null;
+  }
+  const page = options.strict ? createElement(StrictMode, null, createElement(Page)) : createElement(Page);
+  const root = newRoot();
+  await act(async () => root.render(page));
+
+  return {
+    table: () => table,
+    committedPages,
+    renderWith: async (next: TableProps) => {
+      props = next;
+      await act(async () => root.render(createElement(Page)));
+    },
+    renderWithoutAct: (next: TableProps) => {
+      props = next;
+      return new Promise<void>((resolve) => {
+        committed = resolve;
+        root.render(createElement(Page));
+      });
+    },
   };
+};
 
-  test('shows the first page of a table it has not been told otherwise', async () => {
-    await render(rowsOf(25));
+const pageOf = (table: Table<Row>) => table.getState().pagination.pageIndex;
 
-    expect(table.getState().pagination).toEqual({ pageIndex: 0, pageSize: 10 });
-  });
+describe('useDataTable after it has mounted', () => {
+  const data = rowsOf(25);
 
   test('goes back to the first page when the filter changes', async () => {
-    await render(rowsOf(25));
-    await act(async () => table.setPageIndex(2));
-    expect(table.getState().pagination.pageIndex).toBe(2);
+    const { table } = await mountTable({ data, columns: COLUMNS });
+    await act(async () => table().setPageIndex(2));
 
-    await act(async () => table.setGlobalFilter('row 1'));
+    await act(async () => table().setGlobalFilter('row 1'));
 
-    expect(table.getState().pagination.pageIndex).toBe(0);
+    expect(pageOf(table())).toBe(0);
   });
 
   test('goes back to the first page when a column filter changes', async () => {
-    await render(rowsOf(25));
-    await act(async () => table.setPageIndex(1));
+    const { table } = await mountTable({ data, columns: COLUMNS });
+    await act(async () => table().setPageIndex(1));
 
-    await act(async () => table.setColumnFilters([{ id: 'name', value: 'row 2' }]));
+    await act(async () => table().setColumnFilters([{ id: 'name', value: 'row 2' }]));
 
-    expect(table.getState().pagination.pageIndex).toBe(0);
+    expect(pageOf(table())).toBe(0);
   });
 
   test('goes back to the first page when the sorting changes', async () => {
-    await render(rowsOf(25));
-    await act(async () => table.setPageIndex(2));
+    const { table } = await mountTable({ data, columns: COLUMNS });
+    await act(async () => table().setPageIndex(2));
 
-    await act(async () => table.setSorting([{ id: 'name', desc: true }]));
+    await act(async () => table().setSorting([{ id: 'name', desc: true }]));
 
-    expect(table.getState().pagination.pageIndex).toBe(0);
+    expect(pageOf(table())).toBe(0);
   });
 
-  test('goes back to the first page when the data changes', async () => {
-    const { root, Page } = await render(rowsOf(25));
-    await act(async () => table.setPageIndex(2));
+  test('goes back to the first page when the same table is given other data', async () => {
+    const { table, renderWith } = await mountTable({ data, columns: COLUMNS });
+    await act(async () => table().setPageIndex(2));
 
-    function NextPage() {
-      table = useDataTable({ data: rowsOf(30), columns: COLUMNS }).table;
-      table.getRowModel();
-      return null;
-    }
-    await act(async () => root.render(createElement(NextPage)));
-    void Page;
+    await renderWith({ data: rowsOf(30), columns: COLUMNS });
 
-    expect(table.getState().pagination.pageIndex).toBe(0);
+    expect(pageOf(table())).toBe(0);
   });
 
-  test('stays on its page when something else re-renders it', async () => {
-    const data = rowsOf(25);
-    const { root, Page } = await render(data);
-    await act(async () => table.setPageIndex(2));
+  test('stays on its page when it renders again with the data it had', async () => {
+    const { table, renderWith } = await mountTable({ data, columns: COLUMNS });
+    await act(async () => table().setPageIndex(2));
 
-    await act(async () => root.render(createElement(Page)));
+    await renderWith({ data, columns: COLUMNS });
 
-    expect(table.getState().pagination.pageIndex).toBe(2);
+    expect(pageOf(table())).toBe(2);
+  });
+
+  test('keeps the page it was given to start on, strict mode included', async () => {
+    const initialState = { pagination: { pageIndex: 2, pageSize: 10 } };
+
+    const { table } = await mountTable({ data, columns: COLUMNS, initialState }, { strict: true });
+
+    expect(pageOf(table())).toBe(2);
+  });
+
+  // The page a reader sees must never be one the rows no longer reach, so the reset is made before the browser paints.
+  test('is back on the first page in the same commit that shows the new rows, not a frame later', async () => {
+    const { table, committedPages, renderWithoutAct } = await mountTable({ data, columns: COLUMNS });
+    await act(async () => table().setPageIndex(2));
+    setActEnvironment(false);
+    committedPages.length = 0;
+
+    await renderWithoutAct({ data: rowsOf(30), columns: COLUMNS });
+
+    expect(committedPages.at(-1)).toBe(0);
+  });
+});
+
+describe('useDataTable when the page of a server holds the rows', () => {
+  const manualProps = { data: rowsOf(10), columns: COLUMNS, pageCount: 3 };
+
+  test('stays on its page when it is given the rows of that page', async () => {
+    const { table, renderWith } = await mountTable(manualProps);
+    await act(async () => table().setPageIndex(2));
+
+    await renderWith({ ...manualProps, data: rowsOf(10).map((row) => ({ ...row, id: row.id + 20 })) });
+
+    expect(pageOf(table())).toBe(2);
+  });
+
+  test('stays on its page when the filter changes, which is for the server to answer', async () => {
+    const { table } = await mountTable(manualProps);
+    await act(async () => table().setPageIndex(2));
+
+    await act(async () => table().setGlobalFilter('row 1'));
+
+    expect(pageOf(table())).toBe(2);
+  });
+});
+
+describe('useDataTable when its caller holds the sorting and the filters', () => {
+  const held = { sorting: [], columnFilters: [], globalFilter: '' };
+  const ignore = () => {};
+  const controlled = (state: Partial<typeof held>): TableProps => ({
+    data: rowsOf(25),
+    columns: COLUMNS,
+    state: { ...held, ...state },
+    onSortingChange: ignore,
+    onColumnFiltersChange: ignore,
+    onGlobalFilterChange: ignore,
+  });
+  const data = rowsOf(25);
+  const changes: [string, Partial<typeof held>][] = [
+    ['sorting', { sorting: [{ id: 'name', desc: true }] as never }],
+    ['column filters', { columnFilters: [{ id: 'name', value: 'row 2' }] as never }],
+    ['global filter', { globalFilter: 'row 1' }],
+  ];
+
+  test.each(changes)('goes back to the first page when it holds other %s', async (_name, change) => {
+    const initial = controlled({});
+    const { table, renderWith } = await mountTable({ ...initial, data });
+    await act(async () => table().setPageIndex(2));
+
+    await renderWith({ ...controlled(change), data });
+
+    expect(pageOf(table())).toBe(0);
+  });
+
+  test('stays on its page when it holds the same state', async () => {
+    const { table, renderWith } = await mountTable({ ...controlled({}), data });
+    await act(async () => table().setPageIndex(2));
+
+    await renderWith({ ...controlled({}), data });
+
+    expect(pageOf(table())).toBe(2);
   });
 });

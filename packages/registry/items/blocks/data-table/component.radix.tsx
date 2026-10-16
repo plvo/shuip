@@ -330,13 +330,18 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
 
   // TanStack queues the reset of the page from the render that computes the rows, and a React that renders in slices,
   // as it does when it hydrates, runs that microtask before the component has mounted. The reset runs here instead,
-  // from an effect, and only when the rows can have changed.
+  // from a layout effect so that no frame shows a page the new rows do not reach, and only when the rows can have
+  // changed. The inputs are compared through a ref, not a dependency array: an array would also run the effect on
+  // mount and on the second run of strict mode, and send a table that starts on `initialState.pagination` back to
+  // its first page.
   const rowInputs = [data, currentSorting, currentColumnFilters, currentGlobalFilter];
   const previousRowInputs = React.useRef(rowInputs);
-  React.useEffect(() => {
-    const unchanged = rowInputs.every((input, index) => Object.is(input, previousRowInputs.current[index]));
+  React.useLayoutEffect(() => {
+    const previous = previousRowInputs.current;
     previousRowInputs.current = rowInputs;
-    if (!(unchanged || manual)) table.resetPageIndex();
+    if (manual) return;
+    if (rowInputs.every((input, index) => Object.is(input, previous[index]))) return;
+    table.resetPageIndex();
   });
 
   return { table };
