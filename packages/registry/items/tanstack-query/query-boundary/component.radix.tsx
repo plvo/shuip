@@ -41,12 +41,15 @@ export function DefaultErrorFallback({
   queryKeys = [],
 }: FallbackProps & { queryKeys?: string[] }) {
   return (
-    <div className='p-6 rounded-lg border border-destructive/30 bg-destructive/5 flex flex-col items-center justify-center space-y-4 text-center'>
+    <div
+      role='alert'
+      className='p-6 rounded-lg border border-destructive/30 bg-destructive/5 flex flex-col items-center justify-center space-y-4 text-center'
+    >
       <AlertTriangle className='text-destructive size-12' />
       <div>
-        <h3 className='text-lg font-semibold mb-2'>Oops, something went wrong!</h3>
+        <h4 className='text-lg font-semibold mb-2'>Oops, something went wrong!</h4>
         <p className='text-muted-foreground'>{error instanceof Error ? error.message : 'Unexpected error'}</p>
-        {queryKeys.length && (
+        {queryKeys.length > 0 && (
           <p className='text-xs text-muted-foreground mt-2'>
             Concerned quer{queryKeys.length > 1 ? 'ies' : 'y'}: {queryKeys.join(', ')}
           </p>
