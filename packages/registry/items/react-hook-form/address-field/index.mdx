@@ -14,6 +14,7 @@ The field binds to the form via a typed lens from [`@hookform/lenses`](https://g
 - **Typed lens binding**: `lens.focus('address')` autocompletes from your form's value type — no `<MyForm>` generic at the call site
 - **Google Places autocomplete**: server action, popover dropdown, debounced search
 - **Combobox semantics**: the input is a combobox that controls a listbox of suggestions, with ArrowDown/ArrowUp, Enter and Escape, so screen readers announce the suggestions and the highlighted one
+- **Suggestion required**: `addressSchema` requires a resolved place, so the user must pick a suggestion. Without one, the field shows an error, marks the input invalid and takes focus on submit
 - **Zod schema export**: `addressSchema` is published alongside the component for easy composition (`z.object({ address: addressSchema })`)
 
 ## Configuration
@@ -74,6 +75,19 @@ const placeId     = useController(lens.focus('placeId').interop());
 ```
 
 When Google Places returns details for a selected suggestion, each `field.onChange(...)` populates its sub-field — no global `setValue` call against string paths.
+
+## Picking a suggestion
+
+`addressSchema` requires `street`, `city`, `postalCode` and `country`, and only picking a suggestion fills them. Typing a complete address is not enough: the user has to pick one of the suggestions.
+
+When they do not, submitting the form is refused and the field says why:
+
+- A typed address that was never picked shows one error below the input, "Select an address from the suggestions", marks the input `aria-invalid="true"` and moves focus to it. The four sub-fields have no input of their own, so their errors are folded into this single message.
+- An empty input shows the `fullAddress` message, "Address is required".
+- Editing the text after a pick clears `street`, `city`, `postalCode`, `country` and `placeId`, so the form never submits a place that no longer matches what the input shows. The error comes back until the user picks another suggestion.
+- A suggestion whose place details cannot be fetched, or come back empty, counts as not picked: the input keeps the suggestion text, the sub-fields stay empty and submitting shows the same error.
+
+The same holds when no suggestion can appear, for example when `GOOGLE_PLACES_API_KEY` is missing or the Places request fails. Configure the key before you ship the field.
 
 ## Less boilerplate
 
