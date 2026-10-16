@@ -287,9 +287,9 @@ describe('toBaseVariant on a popover anchored to another element', () => {
     expect(compact(code)).toBe(
       compact(
         lines(
+          "import { Popover as PopoverPrimitive } from '@base-ui/react/popover';",
           "import { Popover } from '@/components/ui/popover';",
           "import { cn } from '@/lib/utils';",
-          "import { Popover as PopoverPrimitive } from '@base-ui/react/popover';",
           '',
           'export const Demo = () => (',
           '  <Popover open={open}>',

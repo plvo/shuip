@@ -264,28 +264,36 @@ export const toBaseVariant = (source: string): BaseVariant => {
     const bindings = declaration.importClause?.namedBindings;
     return bindings && ts.isNamedImports(bindings) && bindings.elements.some((element) => element.name.text === 'cn');
   });
-  const addedImports = (): string =>
-    [POPOVER_PRIMITIVE_IMPORT, ...(mergesClassName && !importsCn ? [CN_IMPORT] : [])].join('\n');
+  const addsCnImport = () => mergesClassName && !importsCn;
 
-  const emitImport = (declaration: ts.ImportDeclaration): string => {
+  const withoutUnusedPopoverImports = (declaration: ts.ImportDeclaration): string => {
     const bindings = declaration.importClause?.namedBindings;
     const original = source.slice(declaration.pos, declaration.end);
-    const isLastImport = declaration === imports.at(-1);
-    const withAdded = (text: string) => (isLastImport && anchorsRebuilt > 0 ? `${text}\n${addedImports()}` : text);
-
     const unused = unusedPopoverImports();
     const isPopoverImport =
       ts.isStringLiteral(declaration.moduleSpecifier) && declaration.moduleSpecifier.text === POPOVER_MODULE;
-    if (!isPopoverImport || !bindings || !ts.isNamedImports(bindings) || unused.size === 0) return withAdded(original);
+    if (!isPopoverImport || !bindings || !ts.isNamedImports(bindings) || unused.size === 0) return original;
 
     const kept = bindings.elements.filter((element) => !unused.has((element.propertyName ?? element.name).text));
-    if (kept.length === 0) return withAdded(leadingTriviaOf(declaration));
+    if (kept.length === 0) return leadingTriviaOf(declaration);
     const names = kept.map((element) => element.getText(file)).join(', ');
-    const rebuilt = `import { ${names} } from ${declaration.moduleSpecifier.getText(file)};`;
-    return withAdded(`${leadingTriviaOf(declaration)}${rebuilt}`);
+    return `${leadingTriviaOf(declaration)}import { ${names} } from ${declaration.moduleSpecifier.getText(file)};`;
+  };
+
+  // The Base UI primitive goes first, where Biome sorts a scoped package, and cn last of the aliases.
+  const emitImport = (declaration: ts.ImportDeclaration): string => {
+    const text = withoutUnusedPopoverImports(declaration);
+    if (anchorsRebuilt === 0) return text;
+    const trivia = leadingTriviaOf(declaration);
+    const withPrimitive =
+      declaration === imports[0]
+        ? `${trivia}${[POPOVER_PRIMITIVE_IMPORT, text.slice(trivia.length)].filter(Boolean).join('\n')}`
+        : text;
+    return declaration === imports.at(-1) && addsCnImport() ? `${withPrimitive}\n${CN_IMPORT}` : withPrimitive;
   };
 
   planAnchoredPopovers(file);
   const code = emit(file);
-  return { code: imports.length === 0 && anchorsRebuilt > 0 ? `${addedImports()}\n${code}` : code, warnings };
+  const importsToAdd = [POPOVER_PRIMITIVE_IMPORT, ...(addsCnImport() ? [CN_IMPORT] : [])].join('\n');
+  return { code: imports.length === 0 && anchorsRebuilt > 0 ? `${importsToAdd}\n${code}` : code, warnings };
 };
