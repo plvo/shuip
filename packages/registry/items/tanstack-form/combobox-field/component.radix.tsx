@@ -17,12 +17,10 @@ const NO_POPUP_ROLE = { role: undefined };
 
 // cmdk hard-codes aria-expanded and aria-controls on its input and spreads the props it receives before them, and
 // leaves aria-activedescendant on an option that is gone once the list closes. The input would then report an open
-// list and point to elements that do not exist, so they are corrected on the element. aria-activedescendant is
-// taken off whenever cmdk writes it while the list is closed, and points at the highlighted option again once the
-// list is rendered, because cmdk keeps its highlight but does not rewrite the attribute (see plvo/shuip#151).
+// list and point to elements that do not exist, so they are corrected on the element, and aria-activedescendant is
+// removed whenever cmdk writes it while the list is closed (see plvo/shuip#151).
 function useListStateOnInput(inputRef: React.RefObject<HTMLInputElement | null>, open: boolean) {
   const listId = React.useRef<string | null>(null);
-  const hasHighlight = React.useRef(false);
   React.useLayoutEffect(() => {
     const input = inputRef.current;
     if (!input) return;
@@ -30,26 +28,8 @@ function useListStateOnInput(inputRef: React.RefObject<HTMLInputElement | null>,
     input.setAttribute('aria-expanded', String(open));
     if (open && listId.current) input.setAttribute('aria-controls', listId.current);
     else input.removeAttribute('aria-controls');
-
-    const { ownerDocument } = input;
-    if (open) {
-      const pointAtHighlightedOption = () => {
-        if (!hasHighlight.current || input.hasAttribute('aria-activedescendant')) return;
-        const highlighted = ownerDocument
-          .getElementById(listId.current ?? '')
-          ?.querySelector('[role="option"][aria-selected="true"]');
-        if (highlighted) input.setAttribute('aria-activedescendant', highlighted.id);
-      };
-      pointAtHighlightedOption();
-      const observer = new MutationObserver(pointAtHighlightedOption);
-      observer.observe(ownerDocument.body, { childList: true, subtree: true });
-      return () => observer.disconnect();
-    }
-
-    const removeActiveDescendant = () => {
-      hasHighlight.current ||= input.hasAttribute('aria-activedescendant');
-      input.removeAttribute('aria-activedescendant');
-    };
+    if (open) return;
+    const removeActiveDescendant = () => input.removeAttribute('aria-activedescendant');
     removeActiveDescendant();
     const observer = new MutationObserver(removeActiveDescendant);
     observer.observe(input, { attributes: true, attributeFilter: ['aria-activedescendant'] });
