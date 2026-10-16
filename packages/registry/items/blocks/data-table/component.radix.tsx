@@ -1257,6 +1257,7 @@ function FilterBuilder<TData>({ table }: { table: Table<TData> }) {
   const allUsed = fields.length > 0 && fields.every((field) => columnFilters.some((item) => item.id === field.id));
 
   const sensors = useReorderSensors();
+  const dndId = React.useId();
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -1273,7 +1274,7 @@ function FilterBuilder<TData>({ table }: { table: Table<TData> }) {
       {rows.length === 0 ? (
         <p className='px-1 py-2 text-muted-foreground text-sm'>No filters applied to this view.</p>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={rows.map((row) => row.field.id)} strategy={verticalListSortingStrategy}>
             <div className='flex flex-col gap-2'>
               {rows.map((row, index) => (
@@ -1414,6 +1415,7 @@ function SortBuilder<TData>({ table }: { table: Table<TData> }) {
   const allUsed = fields.length > 0 && fields.every((field) => sorting.some((sort) => sort.id === field.id));
 
   const sensors = useReorderSensors();
+  const dndId = React.useId();
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -1430,7 +1432,7 @@ function SortBuilder<TData>({ table }: { table: Table<TData> }) {
       {sorting.length === 0 ? (
         <p className='px-1 py-2 text-muted-foreground text-sm'>No sorts applied to this view.</p>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={sorting.map((sort) => sort.id)} strategy={verticalListSortingStrategy}>
             <div className='flex flex-col gap-2'>
               {sorting.map((sort, index) => (

@@ -93,6 +93,7 @@ export function Kanban<T extends Record<string, unknown>>({
   const deferredQuery = React.useDeferredValue(query);
   const [activeId, setActiveId] = React.useState<string | null>(null);
 
+  const dndId = React.useId();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -246,6 +247,7 @@ export function Kanban<T extends Record<string, unknown>>({
       ) : null}
 
       <DndContext
+        id={dndId}
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}

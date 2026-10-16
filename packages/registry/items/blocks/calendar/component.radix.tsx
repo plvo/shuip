@@ -219,6 +219,7 @@ function CalendarRoot<T extends CalendarEventLike>({
   const getTitle = React.useCallback((it: T) => String(it[titleField] ?? ''), [titleField]);
   const getColor = React.useCallback((it: T) => color?.(it), [color]);
 
+  const dndId = React.useId();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   const handleDragEnd = React.useCallback(
@@ -357,7 +358,7 @@ function CalendarRoot<T extends CalendarEventLike>({
   return (
     <CalendarContext.Provider value={value as unknown as CalendarContextValue}>
       {editable ? (
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <DndContext id={dndId} sensors={sensors} onDragEnd={handleDragEnd}>
           {children}
         </DndContext>
       ) : (
