@@ -81,6 +81,19 @@ const optionNamed = (label: string) => options().find((option) => option.textCon
 const chipLabels = (card: HTMLElement) =>
   [...card.querySelectorAll('button[aria-label^="Remove"]')].map((button) => button.getAttribute('aria-label'));
 
+function expectCollapsed(input: HTMLInputElement) {
+  expect(input.getAttribute('aria-expanded')).toBe('false');
+  expect(input.hasAttribute('aria-controls')).toBe(false);
+}
+
+function expectExpanded(input: HTMLInputElement) {
+  expect(isOpen()).toBe(true);
+  expect(input.getAttribute('aria-expanded')).toBe('true');
+  const controlled = document.getElementById(input.getAttribute('aria-controls') ?? '');
+  expect(controlled).not.toBeNull();
+  expect(controlled).toBe(listbox());
+}
+
 async function focus(input: HTMLInputElement) {
   await act(async () => {
     input.focus();
@@ -144,25 +157,41 @@ describe.each(VARIANTS)('ComboboxField, %s', (variant) => {
     expect(listbox()).not.toBeNull();
   });
 
-  test('reports the list as collapsed, with nothing to control, while it is closed', async () => {
+  test('reports the list as collapsed, with nothing to control, before it is ever opened', async () => {
     const { input } = await mountField({ options: COUNTRIES });
     expect(isOpen()).toBe(false);
-    expect(input.getAttribute('aria-expanded')).toBe('false');
-    expect(input.hasAttribute('aria-controls')).toBe(false);
-    await focus(input);
-    await press(input, 'Escape');
-    expect(isOpen()).toBe(false);
-    expect(input.getAttribute('aria-expanded')).toBe('false');
-    expect(input.hasAttribute('aria-controls')).toBe(false);
+    expectCollapsed(input);
   });
 
   test('reports the list as expanded and controlling the listbox while it is open', async () => {
     const { input } = await mountField({ options: COUNTRIES });
     await focus(input);
-    expect(input.getAttribute('aria-expanded')).toBe('true');
-    const controlled = document.getElementById(input.getAttribute('aria-controls') ?? '');
-    expect(controlled).not.toBeNull();
-    expect(controlled).toBe(listbox());
+    expectExpanded(input);
+  });
+
+  test('reports the list as expanded in multiple mode, also after a pick keeps it open', async () => {
+    const { input } = await mountField({ multiple: true, options: COUNTRIES });
+    await focus(input);
+    expectExpanded(input);
+    await click(optionNamed('France'));
+    expect(isOpen()).toBe(true);
+    expectExpanded(input);
+    await press(input, 'Escape');
+    expect(isOpen()).toBe(false);
+    expectCollapsed(input);
+  });
+
+  test.each([
+    ['Escape', (input: HTMLInputElement) => press(input, 'Escape')],
+    ['a pick', () => click(optionNamed('Spain'))],
+    ['a blur', (input: HTMLInputElement) => blur(input)],
+  ])('reports the list as collapsed again once %s closes it', async (_closedBy, close) => {
+    const { input } = await mountField({ options: COUNTRIES });
+    await focus(input);
+    expect(isOpen()).toBe(true);
+    await close(input);
+    expect(isOpen()).toBe(false);
+    expectCollapsed(input);
   });
 
   test('lists every option on focus and filters them as the user types', async () => {
