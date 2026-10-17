@@ -57,6 +57,15 @@ describe('scanItems', () => {
     expect(alpha?.hasMdx).toBe(true);
   });
 
+  test('lists the extras of an item in name order', () => {
+    write('components/alpha/component.radix.tsx');
+    for (const filename of ['zeta.css', 'mid.ts', 'alpha.action.ts']) write(`components/alpha/extras/${filename}`);
+
+    const [alpha] = scanItems(itemsDir);
+
+    expect(alpha?.extras.map((e) => e.filename)).toEqual(['alpha.action.ts', 'mid.ts', 'zeta.css']);
+  });
+
   test('skips an item without component.radix.tsx and warns', () => {
     write('components/alpha/component.radix.tsx');
     write('components/orphan/default.example.radix.tsx');

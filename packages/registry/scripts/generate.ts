@@ -259,7 +259,10 @@ export const scanItems = (itemsDir: string = ITEMS_DIR): ScannedItem[] => {
       const overridePath = path.join(itemDir, BASE_UI_COMPONENT_FILENAME);
       const extrasDir = path.join(itemDir, 'extras');
       const extras = fs.existsSync(extrasDir)
-        ? fs.readdirSync(extrasDir).map((filename) => ({ filename, absPath: path.join(extrasDir, filename) }))
+        ? fs
+            .readdirSync(extrasDir)
+            .sort()
+            .map((filename) => ({ filename, absPath: path.join(extrasDir, filename) }))
         : [];
       const hasMdx = fs.existsSync(path.join(itemDir, 'index.mdx'));
       out.push({
