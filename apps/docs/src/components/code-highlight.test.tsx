@@ -1,7 +1,11 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
 import { GlobalRegistrator } from '@happy-dom/global-registrator';
+import { highlightHast } from 'fumadocs-core/highlight';
 import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { hastToHtml } from 'shiki';
+import { codeHighlightOptions } from '@/lib/code-themes';
 import { CodeHighlight } from './code-highlight';
 
 const render = async (code: string) => renderToStaticMarkup(await CodeHighlight({ code }));
@@ -71,6 +75,23 @@ export function PaginationControls({ pageIndex, pageCount, onPageChange, classNa
 }
 `;
 
+const registrySource = (file: string) =>
+  readFileSync(`${import.meta.dir}/../../../../packages/registry/items/${file}`, 'utf-8');
+
+const SOURCES_TO_MIRROR: Record<string, string> = {
+  'astral characters': "const label = '𝒳 😀 𝒳𝒳';\nconst next = label + '😀';",
+  'CJK characters': "const title = '你好，世界';\n// 日本語のコメント\nconst 名前 = 'テスト';",
+  'tab indentation': 'function f() {\n\treturn {\n\t\ta: 1,\n\t};\n}',
+  'empty lines': 'const a = 1;\n\n\nconst b = 2;',
+  'a line without tokens': 'const a = 1;\n  \t \nconst b = 2;',
+  'a trailing newline': 'const a = 1;\n',
+  'no code': '',
+  'CRLF line endings': 'const a = 1;\r\n\r\nconst b = 2;\r\n',
+  'CR line endings': 'const a = 1;\rconst b = 2;',
+  'the data-table source': registrySource('blocks/data-table/component.radix.tsx'),
+  'the rhf-address-field source': registrySource('react-hook-form/address-field/component.radix.tsx'),
+};
+
 describe('CodeHighlight', () => {
   beforeAll(() => GlobalRegistrator.register());
   afterAll(() => GlobalRegistrator.unregister());
@@ -105,5 +126,23 @@ describe('CodeHighlight', () => {
 
   test('keeps the exact source as the text the copy button reads', async () => {
     expect(copiedTextOf(await render(SOURCE))).toBe(SOURCE);
+  });
+
+  describe('markup', () => {
+    for (const [name, source] of Object.entries(SOURCES_TO_MIRROR)) {
+      test(`is the markup Shiki produces for ${name}`, async () => {
+        const root = await highlightHast(source, { lang: 'tsx', ...codeHighlightOptions });
+        const pre = root.children[0];
+        if (pre?.type !== 'element' || pre.children[0]?.type !== 'element') throw new Error('Shiki returned no code');
+        const shikiCode = document.createElement('div');
+        shikiCode.innerHTML = hastToHtml(pre.children[0]);
+
+        document.body.innerHTML = await render(source);
+
+        expect(document.querySelector('pre > code')?.innerHTML).toBe(shikiCode.firstElementChild?.innerHTML);
+        expect(document.querySelector('figure')?.getAttribute('style')).toBe(String(pre.properties.style));
+        expect(document.querySelector('figure')?.className).toContain(String(pre.properties.class));
+      });
+    }
   });
 });

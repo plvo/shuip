@@ -10,6 +10,9 @@ export interface HighlightedLinesProps {
   runs: number[][];
 }
 
+/** The line breaks Shiki splits a source on. */
+const LINE_BREAK = /\r?\n/;
+
 /** The tokens of a line: each run paints the next characters of the line, the characters left over stay plain. */
 const tokensOf = (text: string, lineRuns: number[], styles: Record<string, string>[]): React.ReactNode[] => {
   const tokens: React.ReactNode[] = [];
@@ -34,7 +37,7 @@ const tokensOf = (text: string, lineRuns: number[], styles: Record<string, strin
 export function HighlightedLines({ code, styles, runs }: HighlightedLinesProps): React.JSX.Element {
   return (
     <code>
-      {code.split('\n').map((text, index) => (
+      {code.split(LINE_BREAK).map((text, index) => (
         <React.Fragment key={index}>
           {index > 0 && '\n'}
           <span className='line'>{tokensOf(text, runs[index] ?? [], styles)}</span>
