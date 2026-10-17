@@ -6,6 +6,8 @@ const READABLE_COLORS: Record<string, string> = {
   '#22863a': '#1e7734',
   '#d73a49': '#c52837',
   '#e36209': '#ac4a07',
+  '#fafbfc': '#506a85',
+  '#f6f8fa': '#4c6a89',
 };
 
 const readable = (color: string | undefined): string | undefined =>
@@ -18,7 +20,7 @@ const lightTheme: ThemeRegistration = {
   name: 'shuip-light',
   tokenColors: githubLight.tokenColors?.map(({ settings, ...rule }) => ({
     ...rule,
-    settings: { ...settings, foreground: readable(settings?.foreground), background: readable(settings?.background) },
+    settings: { ...settings, foreground: readable(settings?.foreground) },
   })),
 };
 

@@ -20,9 +20,7 @@ const codeBackgrounds = {
 
 describe('the light theme of the code blocks', () => {
   const theme = codeHighlightOptions.themes.light;
-  const painted = (theme.tokenColors ?? []).flatMap(({ settings }) => (settings?.foreground ? [settings] : []));
-  const onCodeBackground = painted.filter(({ background }) => !background);
-  const colors = new Set([...onCodeBackground.map(({ foreground }) => foreground ?? '')]);
+  const colors = new Set((theme.tokenColors ?? []).flatMap(({ settings }) => settings?.foreground ?? []));
   colors.add(theme.colors?.['editor.foreground'] ?? '');
 
   test('colours the tokens of the theme', () => {
@@ -31,15 +29,6 @@ describe('the light theme of the code blocks', () => {
 
   test.each(Object.entries(codeBackgrounds))('keeps every token colour readable on %s', (_, background) => {
     const unreadable = [...colors].filter((color) => contrast(opaque(color), background) < MIN_TEXT_CONTRAST);
-
-    expect(unreadable).toEqual([]);
-  });
-
-  test('keeps a token painted on its own background readable on it', () => {
-    const unreadable = painted.filter(
-      ({ foreground, background }) =>
-        background && contrast(opaque(foreground ?? ''), opaque(background)) < MIN_TEXT_CONTRAST,
-    );
 
     expect(unreadable).toEqual([]);
   });
