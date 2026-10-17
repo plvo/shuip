@@ -83,7 +83,7 @@
         "fumadocs-ui": "^16.9.0",
         "next-mdx-remote": "^6.0.0",
         "@types/mdx": "^2.0.13",
-        "prism-react-renderer": "^2.4.1"
+        "shiki": "^4.0.2"
       },
       "radix": {
         "radix-ui": "^1.8.1"

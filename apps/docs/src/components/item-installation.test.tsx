@@ -48,4 +48,19 @@ describe('InstallationCmd tabs', () => {
   test('remember the package manager beyond the session', () => {
     expect(tabs?.props.persist).toBe(true);
   });
+
+  test('show the manual source in a manual tab', () => {
+    const element = InstallationCmd({ itemName: 'side-dialog', manualSource: 'MANUAL SOURCE' }) as ReactElement<{
+      children: ReactElement<{ items: string[]; children: ReactElement<{ children: unknown }>[] }>[];
+    }>;
+    const [manualTabs] = element.props.children;
+    const manual = manualTabs?.props.children.at(-1);
+
+    expect(manualTabs?.props.items).toEqual(['npm', 'pnpm', 'bun', 'manual']);
+    expect(manual?.props.children).toBe('MANUAL SOURCE');
+  });
+
+  test('offer no manual tab without a manual source', () => {
+    expect(tabs?.props.items).toEqual(['npm', 'pnpm', 'bun']);
+  });
 });

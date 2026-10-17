@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { compositeOver, contrast, MIN_TEXT_CONTRAST, type Mode, type Rgb, tokenReader } from './contrast';
+import { compositeOver, contrast, MIN_TEXT_CONTRAST, type Mode, type Rgb, tokenReader } from '../src/lib/contrast';
 
 function palette(mode: Mode) {
   const { color } = tokenReader(mode);

@@ -7,7 +7,8 @@
     "./components/ui/*": "./src/components/ui/*",
     "./components/ui-base/*": "./src/components/ui-base/*",
     "./lib/utils": "./src/lib/utils.ts",
-    "./styles/base.css": "./src/styles/base.css"
+    "./styles/base.css": "./src/styles/base.css",
+    "./lib/contrast": "./src/lib/contrast.ts"
   },
   "scripts": {
     "primitives:sync": "bun run scripts/sync-primitives.ts",

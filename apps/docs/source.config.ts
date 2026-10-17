@@ -1,5 +1,6 @@
 import { defineConfig, defineDocs, frontmatterSchema, metaSchema } from 'fumadocs-mdx/config';
 import { z } from 'zod';
+import { codeHighlightOptions } from './src/lib/code-themes';
 
 const schema = frontmatterSchema.extend({
   registryName: z.string().optional(),
@@ -28,4 +29,4 @@ export const components = defineDocs({
   ...defaultOptions,
 });
 
-export default defineConfig({ mdxOptions: {} });
+export default defineConfig({ mdxOptions: { rehypeCodeOptions: codeHighlightOptions } });

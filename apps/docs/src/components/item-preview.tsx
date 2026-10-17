@@ -1,50 +1,22 @@
 'use client';
 
-import { CodeBlock } from 'fumadocs-ui/components/codeblock';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
-import { Highlight, themes } from 'prism-react-renderer';
 import type * as React from 'react';
 import { previewGroupId } from '@/lib/tab-groups';
 
 export interface ItemPreviewProps {
   /** The registry key of the example, which names the group that remembers its tab. */
   exampleKey: string;
-  code: string;
+  /** The highlighted source of the example. */
+  source: React.ReactNode;
   children: React.ReactNode;
 }
 
-export function ItemPreview({ exampleKey, code, children }: ItemPreviewProps) {
+export function ItemPreview({ exampleKey, source, children }: ItemPreviewProps) {
   return (
     <Tabs items={['preview', 'code']} groupId={previewGroupId(exampleKey)} persist>
       <Tab className='p-0'>{children}</Tab>
-      <Tab>
-        <CodeBlock className='px-4'>
-          <CodeHighlight code={code} language='tsx' />
-        </CodeBlock>
-      </Tab>
+      <Tab>{source}</Tab>
     </Tabs>
-  );
-}
-
-export interface CodeHighlightProps {
-  code: string;
-  language?: string;
-}
-
-export function CodeHighlight({ code, language = 'tsx' }: CodeHighlightProps) {
-  return (
-    <Highlight theme={themes.vsDark} code={code} language={language}>
-      {({ style: _, tokens, getLineProps, getTokenProps }) => (
-        <pre className='text-xs'>
-          {tokens.map((line, i) => (
-            <div key={i} {...getLineProps({ line })}>
-              {line.map((token, key) => (
-                <span key={key} {...getTokenProps({ token })} />
-              ))}
-            </div>
-          ))}
-        </pre>
-      )}
-    </Highlight>
   );
 }
