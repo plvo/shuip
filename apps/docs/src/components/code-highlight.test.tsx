@@ -1,4 +1,5 @@
-import { describe, expect, test } from 'bun:test';
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import { GlobalRegistrator } from '@happy-dom/global-registrator';
 import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { CodeHighlight } from './code-highlight';
@@ -16,15 +17,10 @@ const payloadOf = (node: React.ReactNode): unknown =>
         ]
       : node;
 
+/** The text the copy button of fumadocs copies: the text content of the first `pre` of the code block. */
 const copiedTextOf = (markup: string): string => {
-  const pre = markup.slice(markup.indexOf('<pre'), markup.indexOf('</pre>'));
-  return pre
-    .replace(/<[^>]*>/g, '')
-    .replace(/&#x3C;|&lt;/g, '<')
-    .replace(/&#x3E;|&gt;/g, '>')
-    .replace(/&#x22;|&quot;/g, '"')
-    .replace(/&#x27;|&#39;/g, "'")
-    .replace(/&#x26;|&amp;/g, '&');
+  document.body.innerHTML = markup;
+  return document.getElementsByTagName('pre').item(0)?.textContent ?? '';
 };
 
 const SOURCE = `import type * as React from 'react';
@@ -76,6 +72,9 @@ export function PaginationControls({ pageIndex, pageCount, onPageChange, classNa
 `;
 
 describe('CodeHighlight', () => {
+  beforeAll(() => GlobalRegistrator.register());
+  afterAll(() => GlobalRegistrator.unregister());
+
   test('colours the tokens for both color schemes, like the MDX code blocks', async () => {
     const markup = await render('const field = 1;');
 

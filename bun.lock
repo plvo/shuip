@@ -37,6 +37,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@happy-dom/global-registrator": "catalog:",
         "@repo/config": "workspace:*",
         "@tailwindcss/postcss": "catalog:",
         "@types/mdx": "catalog:fumadocs",

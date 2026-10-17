@@ -32,6 +32,7 @@
     "sonner": "catalog:"
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "catalog:",
     "@repo/config": "workspace:*",
     "@types/mdx": "catalog:fumadocs",
     "@types/node": "^25.6.0",
