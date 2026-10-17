@@ -104,7 +104,7 @@ Model on a sibling item's `index.mdx` for prose style and prop documentation pat
 
 - `extras/<file>.action.ts` → installed at `./actions/shuip/<file>.ts` on the consumer side.
 - `extras/<file>.<ext>` → installed at `./components/ui/shuip/<file>.<ext>`.
-- `meta.shuip.json` with `{ "dependsOn": ["<other-shuip-item>"] }` for cross-item registry deps that the import scanner cannot detect.
+- `meta.shuip.json` with `{ "dependsOn": ["<other-shuip-item>"] }` for cross-item registry deps that the import scanner cannot detect. It also takes the authored registry fields `title`, `description`, `author`, `categories`, `docs`, `meta`, `cssVars`, `css` and `envVars`; the generator merges them into both registries and fails on `dependencies`, `registryDependencies`, `files` or `target`.
 - If an extras file is referenced from `component.radix.tsx` via a new alias not already mapped (the only precedent is `@/actions/shuip/places`), add the path mapping to `apps/docs/tsconfig.json`, `packages/registry/tsconfig.json` and `packages/registry/items/tsconfig.json` (a test checks the last against the second). Forgetting one breaks IDE resolution or the docs build.
 
 ### 7. Run the generator and verify
@@ -144,7 +144,7 @@ A `base-*` style is served the Base UI variant, and the run fails on any Radix p
 
 ## Generated Artifacts — Don't Edit
 
-`registry.json`, `registry.base.json`, `__index__.ts`, `stubs/**`, `generated/**`, `apps/docs/public/r/<variant>/**`, the MDX symlinks under `apps/docs/content/components/` and the `.gitignore` files listing them are all regenerated. Edits are clobbered. Always edit the source under `items/`.
+`registry.json`, `registry.base.json`, `__index__.ts`, `stubs/**`, `generated/**`, `apps/docs/public/r/<variant>/**`, the MDX symlinks under `apps/docs/content/components/` and the `.gitignore` files listing them are all regenerated. Edits are clobbered. Always edit the source under `items/`. `registry.json` and `registry.base.json` are the two committed ones: commit them regenerated with the item, because CI fails when they drift from `bun registry:generate`.
 
 ## Common Mistakes
 

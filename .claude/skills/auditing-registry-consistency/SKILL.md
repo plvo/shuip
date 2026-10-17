@@ -222,7 +222,7 @@ WARNING
 |---------|----------------|
 | Running `bun registry:generate` before recording findings | Generator may rewrite the `.gitignore` lists or clear stale stubs before you've inspected them. Inspect first, regen after. |
 | Treating `[generate] skipping ...` as benign | That warning means an item is invisible. Always investigate. |
-| Trusting `git status` to surface drift in generated files | `registry.json`, `__index__.ts`, `stubs/` are gitignored. Read the file contents directly. |
+| Trusting `git status` to surface drift in generated files | `__index__.ts` and `stubs/` are gitignored (`registry.json` and `registry.base.json` are committed, and CI checks them for drift). Read the file contents directly. |
 | Auto-fixing during the audit | Conflates discovery with triage. Many "findings" turn out to be intentional once context is added. |
 | Reporting only the file path | Include the silent-failure mode (what breaks, not just "X is wrong"). Pelavo triages by impact. |
 
