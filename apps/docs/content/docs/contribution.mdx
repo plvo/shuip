@@ -51,7 +51,7 @@ packages/registry/                # SOURCE OF TRUTH for published items
 packages/config/                  # Shared tsconfig presets
 ```
 
-The generator emits `registry.json`, `registry.base.json`, `__index__.ts`, the stubs, the MDX symlinks, and the Base UI copies of the component, block, form and query items under `packages/registry/generated/base/` (`lib` items such as `lib/time` have no Base UI copy). `bun registry:build` then writes `apps/docs/public/r/<variant>/*.json`, one folder per base: `radix/` and `base/`. These files are git-ignored and **never edited by hand**; they are regenerated from `items/`.
+The generator emits `registry.json`, `registry.base.json`, `__index__.ts`, the stubs, the MDX symlinks, and the Base UI copies of the component, block, form and query items under `packages/registry/generated/base/` (`lib` items such as `lib/time` have no Base UI copy). `bun registry:build` then writes `apps/docs/public/r/<variant>/*.json`, one folder per base: `radix/` and `base/`. `registry.json` and `registry.base.json` are committed, the rest is git-ignored. None of them is **ever edited by hand**; they are regenerated from `items/`, and CI fails when the committed registry files differ from a fresh `bun registry:generate`.
 
 ## Add an item
 
@@ -82,7 +82,7 @@ packages/registry/items/<category>/<name>/
 ├── extras/                      # Optional. Files copied alongside on install:
 │   ├── <file>.action.ts         # → installs at ./actions/shuip/<file>.ts
 │   └── <file>.<ext>             # → installs at ./components/ui/shuip/<file>.<ext>
-└── meta.shuip.json              # Optional. { "dependsOn": ["<other-shuip-item>"] }
+└── meta.shuip.json              # Optional. { "dependsOn": ["<other-shuip-item>"], "title": "…", "description": "…" }
 ```
 
 ### Detailed steps
@@ -94,6 +94,8 @@ Create the folder `packages/registry/items/<category>/<name>/` (unprefixed name)
 
 <Step>
 Write `component.radix.tsx`. Import shadcn primitives via `@/components/ui/<name>` (these become `registryDependencies` automatically). Don't import `@/components/ui/shuip/*` unless your item composes another shuip item — in that case, also declare it in `meta.shuip.json` with `dependsOn`.
+
+`meta.shuip.json` also takes the registry fields a scan cannot infer: `title`, `description`, `author`, `categories`, `docs`, `meta`, `cssVars`, `css` and `envVars`. They are merged into the item of both registries and published with it. The fields the generator derives (`dependencies`, `registryDependencies`, `files`, `target`) cannot be set there: the generator fails on them.
 
 Add `'use client'` at the top only when the component uses client-only React features (state, refs, effects, browser APIs).
 </Step>
@@ -293,10 +295,10 @@ A test fails when a Radix-only API such as `asChild` appears outside a Radix blo
 
 ## Submit your contribution
 
-Stage the item folder, and for a block its page at `apps/docs/content/blocks/<name>.mdx`. The generated files are git-ignored.
+Run `bun registry:generate`, then stage the item folder, for a block its page at `apps/docs/content/blocks/<name>.mdx`, and the regenerated `packages/registry/registry.json` and `registry.base.json`. The other generated files are git-ignored.
 
 ```bash
-git add packages/registry/items/<category>/<name>
+git add packages/registry/items/<category>/<name> packages/registry/registry.json packages/registry/registry.base.json
 git commit -m "feat(registry): add my-component"
 git push origin feat/my-component
 ```

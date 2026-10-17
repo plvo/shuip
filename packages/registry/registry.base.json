@@ -1,0 +1,1039 @@
+{
+  "name": "shuip",
+  "homepage": "https://shuip.plvo.dev",
+  "items": [
+    {
+      "name": "calendar",
+      "type": "registry:block",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/blocks/calendar/component.base.tsx",
+          "type": "registry:block",
+          "target": "./components/block/shuip/calendar.tsx"
+        }
+      ],
+      "dependencies": [
+        "@dnd-kit/core@^6.3.1",
+        "@dnd-kit/utilities@^3.2.2",
+        "date-fns@^4.2.1",
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "button",
+        "select"
+      ]
+    },
+    {
+      "name": "confirmation-dialog",
+      "type": "registry:ui",
+      "title": "Confirmation Dialog",
+      "description": "A standardized way to ask for user confirmation before executing critical actions like deleting data, logging out, or making irreversible changes.",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/components/confirmation-dialog/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/confirmation-dialog.tsx"
+        }
+      ],
+      "dependencies": [
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "button",
+        "dialog"
+      ]
+    },
+    {
+      "name": "copy-button",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/components/copy-button/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/copy-button.tsx"
+        }
+      ],
+      "dependencies": [
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "button"
+      ]
+    },
+    {
+      "name": "data-board",
+      "type": "registry:block",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/blocks/data-board/component.base.tsx",
+          "type": "registry:block",
+          "target": "./components/block/shuip/data-board.tsx"
+        }
+      ],
+      "dependencies": [
+        "@dnd-kit/core@^6.3.1",
+        "@dnd-kit/sortable@^10.0.0",
+        "@dnd-kit/utilities@^3.2.2",
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "button",
+        "card",
+        "input",
+        "select",
+        "tooltip"
+      ]
+    },
+    {
+      "name": "data-table",
+      "type": "registry:block",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/blocks/data-table/component.base.tsx",
+          "type": "registry:block",
+          "target": "./components/block/shuip/data-table.tsx"
+        }
+      ],
+      "dependencies": [
+        "@dnd-kit/core@^6.3.1",
+        "@dnd-kit/sortable@^10.0.0",
+        "@dnd-kit/utilities@^3.2.2",
+        "@tanstack/react-table@^8.21.3",
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "button",
+        "checkbox",
+        "command",
+        "dialog",
+        "input",
+        "popover",
+        "select",
+        "separator",
+        "table"
+      ]
+    },
+    {
+      "name": "hover-reveal",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/components/hover-reveal/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/hover-reveal.tsx"
+        }
+      ],
+      "registryDependencies": [
+        "hover-card"
+      ]
+    },
+    {
+      "name": "kanban",
+      "type": "registry:block",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/blocks/kanban/component.base.tsx",
+          "type": "registry:block",
+          "target": "./components/block/shuip/kanban.tsx"
+        }
+      ],
+      "dependencies": [
+        "@dnd-kit/core@^6.3.1",
+        "@dnd-kit/sortable@^10.0.0",
+        "@dnd-kit/utilities@^3.2.2",
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "button",
+        "card",
+        "input"
+      ]
+    },
+    {
+      "name": "responsive-dialog",
+      "type": "registry:block",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/blocks/responsive-dialog/component.base.tsx",
+          "type": "registry:block",
+          "target": "./components/block/shuip/responsive-dialog.tsx"
+        }
+      ],
+      "registryDependencies": [
+        "@shuip/side-dialog",
+        "drawer"
+      ]
+    },
+    {
+      "name": "rhf-address-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/address-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/address-field.tsx"
+        },
+        {
+          "path": "./items/react-hook-form/address-field/extras/places.action.ts",
+          "type": "registry:file",
+          "target": "./actions/shuip/places.ts"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react@^1.9.0",
+        "@hookform/lenses@^0.9.0",
+        "lucide-react@^1.16.0",
+        "react-hook-form@^7.76.0",
+        "zod@^4.4.3"
+      ],
+      "registryDependencies": [
+        "@shuip/suggestion-list",
+        "field",
+        "input",
+        "popover"
+      ]
+    },
+    {
+      "name": "rhf-autocomplete-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/autocomplete-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/autocomplete-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react@^1.9.0",
+        "@hookform/lenses@^0.9.0",
+        "lucide-react@^1.16.0",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "@shuip/suggestion-list",
+        "field",
+        "input",
+        "popover"
+      ]
+    },
+    {
+      "name": "rhf-checkbox-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/checkbox-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/checkbox-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "checkbox",
+        "field"
+      ]
+    },
+    {
+      "name": "rhf-combobox-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/combobox-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/combobox-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react@^1.9.0",
+        "@hookform/lenses@^0.9.0",
+        "cmdk@^1.1.1",
+        "lucide-react@^1.16.0",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "badge",
+        "command",
+        "field",
+        "popover"
+      ]
+    },
+    {
+      "name": "rhf-date-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/date-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/date-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "date-fns@^4.2.1",
+        "lucide-react@^1.16.0",
+        "react-day-picker@^10.0.1",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "button",
+        "calendar",
+        "field",
+        "popover"
+      ]
+    },
+    {
+      "name": "rhf-date-range-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/date-range-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/date-range-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "date-fns@^4.2.1",
+        "lucide-react@^1.16.0",
+        "react-day-picker@^10.0.1",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "button",
+        "calendar",
+        "field",
+        "popover"
+      ]
+    },
+    {
+      "name": "rhf-datetime-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/datetime-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/datetime-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "date-fns@^4.2.1",
+        "lucide-react@^1.16.0",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "button",
+        "calendar",
+        "field",
+        "input-group",
+        "popover"
+      ]
+    },
+    {
+      "name": "rhf-inline-edit",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/inline-edit/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/inline-edit.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "lucide-react@^1.16.0",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "field",
+        "input",
+        "popover",
+        "textarea"
+      ]
+    },
+    {
+      "name": "rhf-input-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/input-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/input-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "lucide-react@^1.16.0",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "field",
+        "input-group",
+        "tooltip"
+      ]
+    },
+    {
+      "name": "rhf-month-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/month-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/month-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "date-fns@^4.2.1",
+        "lucide-react@^1.16.0",
+        "react-day-picker@^10.0.1",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "button",
+        "calendar",
+        "field",
+        "popover"
+      ]
+    },
+    {
+      "name": "rhf-number-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/number-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/number-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "lucide-react@^1.16.0",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "field",
+        "input-group",
+        "tooltip"
+      ]
+    },
+    {
+      "name": "rhf-password-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/password-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/password-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "lucide-react@^1.16.0",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "field",
+        "input-group",
+        "tooltip"
+      ]
+    },
+    {
+      "name": "rhf-radio-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/radio-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/radio-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "field",
+        "label",
+        "radio-group"
+      ]
+    },
+    {
+      "name": "rhf-select-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/select-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/select-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "field",
+        "select"
+      ]
+    },
+    {
+      "name": "rhf-textarea-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/textarea-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/textarea-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "lucide-react@^1.16.0",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "field",
+        "input-group",
+        "tooltip"
+      ]
+    },
+    {
+      "name": "rhf-time-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/time-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/time-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "@shuip/time",
+        "field",
+        "select"
+      ]
+    },
+    {
+      "name": "rhf-time-range",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/react-hook-form/time-range/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/react-hook-form/time-range.tsx"
+        }
+      ],
+      "dependencies": [
+        "@hookform/lenses@^0.9.0",
+        "react-hook-form@^7.76.0"
+      ],
+      "registryDependencies": [
+        "@shuip/time",
+        "field",
+        "select"
+      ]
+    },
+    {
+      "name": "search-input",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/components/search-input/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/search-input.tsx"
+        }
+      ],
+      "dependencies": [
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "input",
+        "popover"
+      ]
+    },
+    {
+      "name": "shuip-components",
+      "type": "registry:item",
+      "files": [
+        {
+          "path": "./skills/.generated/shuip-components/SKILL.md",
+          "type": "registry:file",
+          "target": ".claude/skills/shuip-components/SKILL.md"
+        }
+      ]
+    },
+    {
+      "name": "shuip-forms",
+      "type": "registry:item",
+      "files": [
+        {
+          "path": "./skills/.generated/shuip-forms/SKILL.md",
+          "type": "registry:file",
+          "target": ".claude/skills/shuip-forms/SKILL.md"
+        }
+      ]
+    },
+    {
+      "name": "shuip-overview",
+      "type": "registry:item",
+      "files": [
+        {
+          "path": "./skills/.generated/shuip-overview/SKILL.md",
+          "type": "registry:file",
+          "target": ".claude/skills/shuip-overview/SKILL.md"
+        }
+      ]
+    },
+    {
+      "name": "shuip-skills",
+      "type": "registry:item",
+      "registryDependencies": [
+        "@shuip/shuip-components",
+        "@shuip/shuip-forms",
+        "@shuip/shuip-overview"
+      ]
+    },
+    {
+      "name": "side-dialog",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/components/side-dialog/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/side-dialog.tsx"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react@^1.9.0",
+        "lucide-react@^1.16.0"
+      ]
+    },
+    {
+      "name": "submit-button",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/components/submit-button/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/submit-button.tsx"
+        }
+      ],
+      "dependencies": [
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "button"
+      ]
+    },
+    {
+      "name": "suggestion-list",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/components/suggestion-list/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/suggestion-list.tsx"
+        }
+      ]
+    },
+    {
+      "name": "theme-button",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/components/theme-button/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/theme-button.tsx"
+        }
+      ],
+      "dependencies": [
+        "lucide-react@^1.16.0",
+        "next-themes@^0.4.6"
+      ],
+      "registryDependencies": [
+        "button"
+      ]
+    },
+    {
+      "name": "time",
+      "type": "registry:lib",
+      "files": [
+        {
+          "path": "./items/lib/time/time.ts",
+          "type": "registry:lib",
+          "target": "./lib/time.ts"
+        }
+      ]
+    },
+    {
+      "name": "title-section",
+      "type": "registry:block",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/blocks/title-section/component.base.tsx",
+          "type": "registry:block",
+          "target": "./components/block/shuip/title-section.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tsf-autocomplete-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/autocomplete-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/autocomplete-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react@^1.9.0",
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "@shuip/suggestion-list",
+        "@shuip/tsf-form-context",
+        "field",
+        "input",
+        "popover"
+      ]
+    },
+    {
+      "name": "tsf-checkbox-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/checkbox-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/checkbox-field.tsx"
+        }
+      ],
+      "registryDependencies": [
+        "@shuip/tsf-form-context",
+        "checkbox",
+        "field"
+      ]
+    },
+    {
+      "name": "tsf-combobox-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/combobox-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/combobox-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "@base-ui/react@^1.9.0",
+        "cmdk@^1.1.1",
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "@shuip/tsf-form-context",
+        "badge",
+        "command",
+        "field",
+        "popover"
+      ]
+    },
+    {
+      "name": "tsf-date-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/date-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/date-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "date-fns@^4.2.1",
+        "lucide-react@^1.16.0",
+        "react-day-picker@^10.0.1"
+      ],
+      "registryDependencies": [
+        "@shuip/tsf-form-context",
+        "button",
+        "calendar",
+        "field",
+        "popover"
+      ]
+    },
+    {
+      "name": "tsf-date-range-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/date-range-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/date-range-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "date-fns@^4.2.1",
+        "lucide-react@^1.16.0",
+        "react-day-picker@^10.0.1"
+      ],
+      "registryDependencies": [
+        "@shuip/tsf-form-context",
+        "button",
+        "calendar",
+        "field",
+        "popover"
+      ]
+    },
+    {
+      "name": "tsf-datetime-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/datetime-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/datetime-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "date-fns@^4.2.1",
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "@shuip/tsf-form-context",
+        "button",
+        "calendar",
+        "field",
+        "input-group",
+        "popover"
+      ]
+    },
+    {
+      "name": "tsf-form-context",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/form-context/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/form-context.tsx"
+        }
+      ],
+      "dependencies": [
+        "@tanstack/react-form@^1.32.0"
+      ]
+    },
+    {
+      "name": "tsf-inline-edit",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/inline-edit/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/inline-edit.tsx"
+        }
+      ],
+      "dependencies": [
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "@shuip/tsf-form-context",
+        "field",
+        "input",
+        "popover",
+        "textarea"
+      ]
+    },
+    {
+      "name": "tsf-input-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/input-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/input-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "@shuip/tsf-form-context",
+        "field",
+        "input-group",
+        "tooltip"
+      ]
+    },
+    {
+      "name": "tsf-month-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/month-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/month-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "date-fns@^4.2.1",
+        "lucide-react@^1.16.0",
+        "react-day-picker@^10.0.1"
+      ],
+      "registryDependencies": [
+        "@shuip/tsf-form-context",
+        "button",
+        "calendar",
+        "field",
+        "popover"
+      ]
+    },
+    {
+      "name": "tsf-password-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/password-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/password-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "@shuip/tsf-form-context",
+        "field",
+        "input-group",
+        "tooltip"
+      ]
+    },
+    {
+      "name": "tsf-radio-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/radio-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/radio-field.tsx"
+        }
+      ],
+      "registryDependencies": [
+        "@shuip/tsf-form-context",
+        "field",
+        "label",
+        "radio-group"
+      ]
+    },
+    {
+      "name": "tsf-select-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/select-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/select-field.tsx"
+        }
+      ],
+      "registryDependencies": [
+        "@shuip/tsf-form-context",
+        "field",
+        "select"
+      ]
+    },
+    {
+      "name": "tsf-submit-button",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/submit-button/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/submit-button.tsx"
+        }
+      ],
+      "dependencies": [
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "@shuip/tsf-form-context",
+        "button"
+      ]
+    },
+    {
+      "name": "tsf-textarea-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/textarea-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/textarea-field.tsx"
+        }
+      ],
+      "dependencies": [
+        "lucide-react@^1.16.0"
+      ],
+      "registryDependencies": [
+        "@shuip/tsf-form-context",
+        "field",
+        "input-group",
+        "tooltip"
+      ]
+    },
+    {
+      "name": "tsf-time-field",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/time-field/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/time-field.tsx"
+        }
+      ],
+      "registryDependencies": [
+        "@shuip/time",
+        "@shuip/tsf-form-context",
+        "field",
+        "select"
+      ]
+    },
+    {
+      "name": "tsf-time-range",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-form/time-range/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-form/time-range.tsx"
+        }
+      ],
+      "registryDependencies": [
+        "@shuip/time",
+        "@shuip/tsf-form-context",
+        "field",
+        "select"
+      ]
+    },
+    {
+      "name": "tsq-query-boundary",
+      "type": "registry:ui",
+      "files": [
+        {
+          "path": "./generated/base/consumer/items/tanstack-query/query-boundary/component.base.tsx",
+          "type": "registry:ui",
+          "target": "./components/ui/shuip/tanstack-query/query-boundary.tsx"
+        }
+      ],
+      "dependencies": [
+        "@tanstack/react-query@^5.100.11",
+        "lucide-react@^1.16.0",
+        "react-error-boundary@^6.1.1"
+      ],
+      "registryDependencies": [
+        "button"
+      ]
+    }
+  ]
+}

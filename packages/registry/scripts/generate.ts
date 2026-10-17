@@ -2,6 +2,7 @@
 /** biome-ignore-all lint/suspicious/noAssignInExpressions: script */
 import fs from 'node:fs';
 import path from 'node:path';
+import type { AuthoredFields } from '../src/authored-fields';
 import { exampleKey } from '../src/example-key';
 import { SHUIP_ORIGIN } from '../src/namespace';
 import { registryFilename } from '../src/registry-file';
@@ -18,6 +19,7 @@ import {
   toDocsSource,
 } from './base-variant';
 import { buildRegistryDependencies, type Catalog, flattenCatalogs, pinDependencies } from './dependencies';
+import { readItemMeta } from './item-meta';
 import { applySkillSourcesToDocs, assertUniqueNames, emitSkills, resolveCatalog } from './skills';
 
 const ROOT = path.resolve(import.meta.dir, '..');
@@ -38,7 +40,7 @@ export interface RegistryFile {
   target?: string;
 }
 
-export interface RegistryItem {
+export interface RegistryItem extends AuthoredFields {
   name: string;
   type: 'registry:ui' | 'registry:block' | 'registry:lib' | 'registry:item';
   dependencies?: string[];
@@ -54,10 +56,6 @@ const BASE_UI_COMPONENT_FILENAME = `component.${BASE_UI_VARIANT}.tsx`;
 const UNSUFFIXED_COMPONENT_FILENAME = 'component.tsx';
 const RECOGNISED_EXAMPLE_BASES: readonly string[] = [CANONICAL_VARIANT, BASE_UI_VARIANT];
 const EXAMPLE_FILE_PATTERN = /^(.+)\.example(?:\.([^.]+))?\.tsx$/;
-
-interface ItemMeta {
-  dependsOn?: string[];
-}
 
 interface CategoryConfig {
   itemType: 'registry:ui' | 'registry:block' | 'registry:lib';
@@ -172,14 +170,6 @@ const parseLibDeps = (source: string): string[] => {
   return Array.from(out).sort();
 };
 
-const readMeta = (itemDir: string): ItemMeta => {
-  const metaPath = path.join(itemDir, 'meta.shuip.json');
-  if (fs.existsSync(metaPath)) {
-    return JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
-  }
-  return {};
-};
-
 interface ExampleFile {
   filename: string;
   variant: string;
@@ -269,7 +259,10 @@ export const scanItems = (itemsDir: string = ITEMS_DIR): ScannedItem[] => {
       const overridePath = path.join(itemDir, BASE_UI_COMPONENT_FILENAME);
       const extrasDir = path.join(itemDir, 'extras');
       const extras = fs.existsSync(extrasDir)
-        ? fs.readdirSync(extrasDir).map((filename) => ({ filename, absPath: path.join(extrasDir, filename) }))
+        ? fs
+            .readdirSync(extrasDir)
+            .sort()
+            .map((filename) => ({ filename, absPath: path.join(extrasDir, filename) }))
         : [];
       const hasMdx = fs.existsSync(path.join(itemDir, 'index.mdx'));
       out.push({
@@ -301,6 +294,9 @@ export interface RegistryJson {
   items: RegistryItem[];
 }
 
+/** Code-unit order, so the committed registry files do not depend on the locale of the machine that generates them. */
+const byName = (a: { name: string }, b: { name: string }): number => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+
 export const buildRegistryJson = (
   items: ScannedItem[],
   catalog: Catalog,
@@ -313,10 +309,10 @@ export const buildRegistryJson = (
     const source = fs.readFileSync(componentPath, 'utf-8');
     const itemName = namePrefix(category, folderName);
     const dependencies = pinDependencies(parseImports(source), catalog, itemName);
-    const meta = readMeta(item.itemDir);
+    const { dependsOn, ...authored } = readItemMeta(item.itemDir);
     const fullDeps = buildRegistryDependencies({
       primitives: parseRegistryDeps(source),
-      shuipItems: [...parseShuipDeps(source), ...parseLibDeps(source), ...(meta.dependsOn ?? [])],
+      shuipItems: [...parseShuipDeps(source), ...parseLibDeps(source), ...(dependsOn ?? [])],
     });
     const target = computeTarget(category, folderName);
     const componentRelPath = path.relative(ROOT, componentPath).replace(/\\/g, '/');
@@ -341,13 +337,14 @@ export const buildRegistryJson = (
     const entry: RegistryItem = {
       name: itemName,
       type: categoryToType(category),
+      ...authored,
       files,
     };
     if (dependencies.length) entry.dependencies = dependencies;
     if (fullDeps.length) entry.registryDependencies = fullDeps;
     out.push(entry);
   }
-  out.sort((a, b) => a.name.localeCompare(b.name));
+  out.sort(byName);
   return { name: 'shuip', homepage: SHUIP_ORIGIN, items: out };
 };
 
@@ -543,7 +540,7 @@ export const buildRegistries = ({
       registry.items.map((item) => item.name),
       extraItems.map((item) => item.name),
     );
-    return { ...registry, items: [...registry.items, ...extraItems].sort((a, b) => a.name.localeCompare(b.name)) };
+    return { ...registry, items: [...registry.items, ...extraItems].sort(byName) };
   };
   return {
     [CANONICAL_VARIANT]: withExtraItems(buildRegistryJson(items, catalog)),

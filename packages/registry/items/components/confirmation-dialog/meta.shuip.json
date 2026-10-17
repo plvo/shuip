@@ -1,0 +1,4 @@
+{
+  "title": "Confirmation Dialog",
+  "description": "A standardized way to ask for user confirmation before executing critical actions like deleting data, logging out, or making irreversible changes."
+}

@@ -1,5 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { authoredFieldsSchema } from '@repo/registry/authored-fields';
 import { registryFilename } from '@repo/registry/registry-file';
 import { PUBLISHED_VARIANTS } from '@repo/registry/style-base';
 import { z } from 'zod';
@@ -44,7 +45,7 @@ const registryItemFileSchema = z.discriminatedUnion('type', [
   }),
 ]);
 
-const registryItemCommonSchema = z.object({
+const registryItemCommonSchema = authoredFieldsSchema.extend({
   $schema: z.string().optional(),
   name: z.string(),
   type: registryItemTypeSchema,

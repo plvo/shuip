@@ -41,6 +41,11 @@ jobs:
       - name: "📦 Install Dependencies"
         run: bun install
 
+      - name: "🧬 Check Registry Files Are In Sync"
+        run: |
+          bun run registry:generate
+          git diff --exit-code -- packages/registry/registry.json packages/registry/registry.base.json
+
       - name: "🧪 Run Tests"
         run: bun run test
 

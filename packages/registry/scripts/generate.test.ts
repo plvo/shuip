@@ -57,6 +57,15 @@ describe('scanItems', () => {
     expect(alpha?.hasMdx).toBe(true);
   });
 
+  test('lists the extras of an item in name order', () => {
+    write('components/alpha/component.radix.tsx');
+    for (const filename of ['zeta.css', 'mid.ts', 'alpha.action.ts']) write(`components/alpha/extras/${filename}`);
+
+    const [alpha] = scanItems(itemsDir);
+
+    expect(alpha?.extras.map((e) => e.filename)).toEqual(['alpha.action.ts', 'mid.ts', 'zeta.css']);
+  });
+
   test('skips an item without component.radix.tsx and warns', () => {
     write('components/alpha/component.radix.tsx');
     write('components/orphan/default.example.radix.tsx');
@@ -246,6 +255,31 @@ describe('buildRegistryJson', () => {
       '@shuip/title-section',
       'button',
     ]);
+  });
+
+  test('merges the authored fields of meta.shuip.json next to the derived ones', () => {
+    const item = writeItem(root, 'components', 'described', "import { Button } from '@/components/ui/button';", {
+      title: 'Described',
+      description: 'An item with authored metadata.',
+      categories: ['demo'],
+    });
+
+    const [entry] = buildRegistryJson([item], {}).items;
+
+    expect(entry).toMatchObject({
+      name: 'described',
+      title: 'Described',
+      description: 'An item with authored metadata.',
+      categories: ['demo'],
+      registryDependencies: ['button'],
+    });
+    expect(entry?.files).toHaveLength(1);
+  });
+
+  test('fails when meta.shuip.json sets a derived field', () => {
+    const item = writeItem(root, 'components', 'overriding', '', { registryDependencies: ['button'] });
+
+    expect(() => buildRegistryJson([item], {})).toThrow('"registryDependencies"');
   });
 
   test('fails when an imported package has no catalog entry', () => {
