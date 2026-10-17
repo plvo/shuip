@@ -9,14 +9,16 @@ const modes = {
 
 describe.each(['light', 'dark'] as const)('the %s theme of the code blocks', (mode) => {
   const theme = codeHighlightOptions.themes[mode];
+  const editorForeground = theme.colors?.['editor.foreground'];
   const colors = new Set((theme.tokenColors ?? []).flatMap(({ settings }) => settings?.foreground ?? []));
-  colors.add(theme.colors?.['editor.foreground'] ?? '');
+  if (editorForeground) colors.add(editorForeground);
   const codeBackgrounds = {
     'a code block': modes[mode].color('--card'),
     'a code block in a tab': modes[mode].color('--secondary'),
   };
 
   test('colours the tokens of the theme', () => {
+    expect(editorForeground).toMatch(/^#[0-9a-f]{6}$/i);
     expect(colors.size).toBeGreaterThan(5);
   });
 
