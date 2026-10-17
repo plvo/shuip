@@ -18,4 +18,11 @@ describe('ItemPreview', () => {
   test('remembers the tab beyond the session', () => {
     expect(tabsOf('side-dialog.example').persist).toBe(true);
   });
+
+  test('shows the preview in the first tab and the source in the second', () => {
+    const [preview, source] = tabsOf('side-dialog.example').children as ReactElement<{ children: unknown }>[];
+
+    expect(preview?.props.children).toBe('preview');
+    expect(source?.props.children).toBe('const a = 1;');
+  });
 });
