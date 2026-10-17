@@ -4,7 +4,7 @@ import { previewGroupId } from '@/lib/tab-groups';
 import { ItemPreview } from './item-preview';
 
 const tabsOf = (exampleKey: string) =>
-  (ItemPreview({ exampleKey, code: 'const a = 1;', children: 'preview' }) as ReactElement<Record<string, unknown>>)
+  (ItemPreview({ exampleKey, source: 'const a = 1;', children: 'preview' }) as ReactElement<Record<string, unknown>>)
     .props;
 
 describe('ItemPreview', () => {

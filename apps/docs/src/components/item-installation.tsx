@@ -13,17 +13,17 @@ import {
 import Link from 'next/link';
 import type React from 'react';
 import { TAB_GROUPS } from '@/lib/tab-groups';
-import { CodeHighlight } from './item-preview';
 
 const registriesSnippet = JSON.stringify({ registries: { [SHUIP_NAMESPACE]: SHUIP_REGISTRY_URL } }, null, 2);
 
 export interface InstallationCmdProps extends React.RefAttributes<HTMLDivElement> {
   itemName: string;
-  manualCode?: string;
+  /** The highlighted source of the item, shown in the manual tab. */
+  manualSource?: React.ReactNode;
 }
 
-export function InstallationCmd({ itemName, manualCode, ...props }: InstallationCmdProps) {
-  const choices = ['npm', 'pnpm', 'bun', manualCode && 'manual'].filter(Boolean) as string[];
+export function InstallationCmd({ itemName, manualSource, ...props }: InstallationCmdProps) {
+  const choices = ['npm', 'pnpm', 'bun', manualSource && 'manual'].filter(Boolean) as string[];
 
   const itemRef = shuipItemRef(itemName);
 
@@ -51,13 +51,7 @@ export function InstallationCmd({ itemName, manualCode, ...props }: Installation
             <Pre>bun x shadcn@latest add {itemRef}</Pre>
           </CodeBlock>
         </Tab>
-        {manualCode && (
-          <Tab>
-            <CodeBlock keepBackground data-code>
-              <CodeHighlight code={manualCode} language='tsx' />
-            </CodeBlock>
-          </Tab>
-        )}
+        {manualSource && <Tab>{manualSource}</Tab>}
       </Tabs>
       <p className='text-sm text-fd-muted-foreground'>
         The command is the same for Base UI and Radix: the CLI reads the style in your <code>components.json</code> and

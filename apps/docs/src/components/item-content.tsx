@@ -2,6 +2,7 @@ import type { Base } from '@/lib/base-routes';
 import { itemSourcesFor } from '@/lib/item-sources';
 import { exampleTitle } from '@/lib/preview-routes';
 import { useMDXComponents } from '@/mdx-components';
+import { CodeHighlight } from './code-highlight';
 import { InstallationCmd } from './item-installation';
 import { ItemPreview } from './item-preview';
 import { Preview } from './preview/preview';
@@ -18,7 +19,7 @@ export async function ItemHeader({ base, registryName, text }: ItemHeaderProps) 
   return (
     <div className='space-y-4'>
       {text && <p>{text}</p>}
-      <InstallationCmd itemName={registryName} manualCode={code} />
+      <InstallationCmd itemName={registryName} manualSource={<CodeHighlight code={code} />} />
       <Preview base={base} registryName={`${registryName}.example`} slot='header' />
     </div>
   );
@@ -41,7 +42,7 @@ export async function ItemExamples({ base, registryName }: ItemExamplesProps) {
   return examples.map(({ key, code }) => (
     <div key={key} className='my-6 space-y-4'>
       <H3>{exampleTitle(key)}</H3>
-      <ItemPreview exampleKey={key} code={code}>
+      <ItemPreview exampleKey={key} source={<CodeHighlight code={code} />}>
         <Preview base={base} registryName={key} />
       </ItemPreview>
     </div>
