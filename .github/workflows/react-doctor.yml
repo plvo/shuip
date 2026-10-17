@@ -15,6 +15,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # The action fetches the PR base with --depth=1 and ignores a failure. On a
+      # full clone that fetch marks the base commit as a shallow boundary, so the
+      # merge base with the PR head is no longer reachable once main has moved
+      # past the branch point. Making the fetch fail keeps the full history.
+      - name: Keep the full history for the react-doctor base comparison
+        run: git config --local url."invalid://".insteadOf "https://github.com/"
       - uses: millionco/react-doctor@695e46eee203a5d1855020191aa7e9c010a1250e # v2.4.0
         with:
           blocking: none
