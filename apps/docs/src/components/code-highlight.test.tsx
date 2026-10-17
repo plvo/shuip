@@ -2,24 +2,43 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { GlobalRegistrator } from '@happy-dom/global-registrator';
 import { highlightHast } from 'fumadocs-core/highlight';
+import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
 import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { hastToHtml } from 'shiki';
 import { codeHighlightOptions } from '@/lib/code-themes';
 import { CodeHighlight } from './code-highlight';
+import { HighlightedLines } from './highlighted-lines';
 
 const render = async (code: string) => renderToStaticMarkup(await CodeHighlight({ code }));
 
-/** What the server sends to the client for a node: the props of every element, as the RSC payload carries them. */
-const payloadOf = (node: React.ReactNode): unknown =>
-  Array.isArray(node)
-    ? node.map(payloadOf)
-    : React.isValidElement<Record<string, unknown>>(node)
-      ? [
-          node.type,
-          Object.fromEntries(Object.entries(node.props).map(([name, value]) => [name, payloadOf(value as never)])),
-        ]
-      : node;
+const hasUseClientDirective = (file: string): boolean => /^\s*['"]use client['"]/.test(readFileSync(file, 'utf-8'));
+
+/** The components the code block renders on the client, with the module each one comes from. */
+const clientModuleOf = new Map<unknown, string>([
+  [HighlightedLines, `${import.meta.dir}/highlighted-lines.tsx`],
+  [CodeBlock, Bun.resolveSync('fumadocs-ui/components/codeblock', import.meta.dir)],
+  [Pre, Bun.resolveSync('fumadocs-ui/components/codeblock', import.meta.dir)],
+]);
+
+/**
+ * What the server sends to the client for a node, as the RSC payload carries it: a component of a module with the
+ * `'use client'` directive is sent with its props, any other component runs on the server and its output is sent.
+ */
+const payloadOf = (node: React.ReactNode): unknown => {
+  if (Array.isArray(node)) return node.map(payloadOf);
+  if (!React.isValidElement<Record<string, unknown>>(node)) return node;
+
+  const { type, props } = node;
+  const module = clientModuleOf.get(type);
+  if (typeof type === 'function' && !(module && hasUseClientDirective(module))) {
+    return payloadOf((type as (props: unknown) => React.ReactNode)(props));
+  }
+  return [
+    typeof type === 'function' ? type.name : type,
+    Object.fromEntries(Object.entries(props).map(([name, value]) => [name, payloadOf(value as never)])),
+  ];
+};
 
 /** The text the copy button of fumadocs copies: the text content of the first `pre` of the code block. */
 const copiedTextOf = (markup: string): string => {
