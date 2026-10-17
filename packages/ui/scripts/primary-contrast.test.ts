@@ -7,7 +7,7 @@ import {
   type Mode,
   type Rgb,
   tokenReader,
-} from './contrast';
+} from '../src/lib/contrast';
 
 const MIN_NON_TEXT_CONTRAST = 3;
 

@@ -5,7 +5,7 @@ export type Rgb = readonly [number, number, number];
 export type Mode = 'root' | 'dark';
 
 export const MIN_TEXT_CONTRAST = 4.5;
-const BASE_CSS = path.join(import.meta.dir, '../src/styles/base.css');
+const BASE_CSS = path.join(import.meta.dir, '../styles/base.css');
 
 const blockSelector: Record<Mode, RegExp> = {
   root: /^\s*:root\s*\{/,
@@ -80,4 +80,10 @@ export function contrast(foreground: Rgb, background: Rgb): number {
 
 export function compositeOver(color: Rgb, backdrop: Rgb, alpha: number): Rgb {
   return [0, 1, 2].map((i) => alpha * color[i] + (1 - alpha) * backdrop[i]) as unknown as Rgb;
+}
+
+/** The colour of `#rrggbb` or `#rrggbbaa`, the latter composited over `backdrop`. */
+export function hexToRgb(hex: string, backdrop: Rgb): Rgb {
+  const [r, g, b, a] = (hex.slice(1).match(/../g) ?? []).map((channel) => Number.parseInt(channel, 16) / 255);
+  return compositeOver([r, g, b], backdrop, a ?? 1);
 }
