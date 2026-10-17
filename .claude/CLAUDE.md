@@ -77,7 +77,7 @@ items/<category>/<name>/
                                See "Authored metadata" below.
 ```
 
-**Authored metadata:** `meta.shuip.json` carries `dependsOn` and the shadcn registry-item fields no scan can infer: `title`, `description`, `author`, `categories`, `docs`, `meta`, `cssVars`, `css` and `envVars` (schema in `packages/registry/src/authored-fields.ts`, read by `scripts/item-meta.ts`). The generator merges them into the item of both `registry.json` and `registry.base.json`, and `shadcn-build.ts` carries them into `public/r/<variant>/<name>.json` and the `registry.json` next to it. The derived fields (`dependencies`, `registryDependencies`, `files`, `target`) cannot be set there: the generator fails on them, and on any unknown key or malformed value.
+**Authored metadata:** `meta.shuip.json` carries `dependsOn` and the shadcn registry-item fields no scan can infer: `title`, `description`, `author`, `categories`, `docs`, `meta`, `cssVars`, `css` and `envVars` (schema in `packages/registry/src/authored-fields.ts`, read by `scripts/item-meta.ts`). The generator merges them into the item of both `registry.json` and `registry.base.json`, and `shadcn-build.ts` carries them into `public/r/<variant>/<name>.json` and the `registry.json` next to it. The derived fields (`name`, `type`, `dependencies`, `registryDependencies`, `files`, `target`) cannot be set there: the generator fails on them, and on any unknown key or malformed value.
 
 **Auto-detected from `component.radix.tsx` imports:**
 - `import ... from '@/components/ui/<name>'` → `registryDependencies` (consumer installs that shadcn primitive)
