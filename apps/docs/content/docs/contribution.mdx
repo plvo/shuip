@@ -95,7 +95,7 @@ Create the folder `packages/registry/items/<category>/<name>/` (unprefixed name)
 <Step>
 Write `component.radix.tsx`. Import shadcn primitives via `@/components/ui/<name>` (these become `registryDependencies` automatically). Don't import `@/components/ui/shuip/*` unless your item composes another shuip item — in that case, also declare it in `meta.shuip.json` with `dependsOn`.
 
-`meta.shuip.json` also takes the registry fields a scan cannot infer: `title`, `description`, `author`, `categories`, `docs`, `meta`, `cssVars`, `css` and `envVars`. They are merged into the item of both registries and published with it. The fields the generator derives (`dependencies`, `registryDependencies`, `files`, `target`) cannot be set there: the generator fails on them.
+`meta.shuip.json` also takes the registry fields a scan cannot infer: `title`, `description`, `author`, `categories`, `docs`, `meta`, `cssVars`, `css` and `envVars`. They are merged into the item of both registries and published with it. The fields the generator derives (`name`, `type`, `dependencies`, `registryDependencies`, `files`, `target`) cannot be set there: the generator fails on them.
 
 Add `'use client'` at the top only when the component uses client-only React features (state, refs, effects, browser APIs).
 </Step>
