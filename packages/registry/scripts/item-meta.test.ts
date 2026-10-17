@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { readItemMeta } from './item-meta';
+import { DERIVED_FIELDS, readItemMeta } from './item-meta';
 
 describe('readItemMeta', () => {
   let itemDir: string;
@@ -36,10 +36,10 @@ describe('readItemMeta', () => {
     expect(readItemMeta(itemDir)).toEqual(meta);
   });
 
-  test.each(['dependencies', 'registryDependencies', 'files', 'target'])('rejects the derived field %s', (field) => {
+  test.each(DERIVED_FIELDS)('rejects the derived field %s', (field) => {
     writeMeta({ title: 'Demo', [field]: [] });
 
-    expect(() => readItemMeta(itemDir)).toThrow(`"${field}"`);
+    expect(() => readItemMeta(itemDir)).toThrow(`sets "${field}", which the generator derives`);
   });
 
   test('rejects a field the registry schema does not know', () => {

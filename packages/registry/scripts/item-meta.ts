@@ -3,7 +3,7 @@ import path from 'node:path';
 import { z } from 'zod';
 import { authoredFieldsSchema } from '../src/authored-fields';
 
-const DERIVED_FIELDS = ['dependencies', 'registryDependencies', 'files', 'target'];
+export const DERIVED_FIELDS = ['name', 'type', 'dependencies', 'registryDependencies', 'files', 'target'];
 
 const itemMetaSchema = z.strictObject({
   dependsOn: z.array(z.string()).optional(),
