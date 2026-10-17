@@ -29,7 +29,7 @@ const cssDeclarationsOf = (css: string): Record<string, string> =>
       }),
   );
 
-const compactLinesOf = (lineElements: HighlightedElement[]): Pick<HighlightedLinesProps, 'styles' | 'lines'> => {
+const tokenRunsOf = (lineElements: HighlightedElement[]): Pick<HighlightedLinesProps, 'styles' | 'runs'> => {
   const styles: Record<string, string>[] = [];
   const styleIndexes = new Map<string, number>();
   const styleIndexOf = (css: string): number => {
@@ -40,18 +40,17 @@ const compactLinesOf = (lineElements: HighlightedElement[]): Pick<HighlightedLin
     return styles.length - 1;
   };
 
-  const lines = lineElements.map((line) =>
+  const runs = lineElements.map((line) =>
     line.children
       .filter(isElement)
       .flatMap((token) => [styleIndexOf(String(token.properties.style ?? '')), textOf(token).length]),
   );
-  return { styles, lines };
+  return { styles, runs };
 };
 
 /**
  * The TSX source of an item or an example, highlighted with the themes of the MDX code blocks.
- * The client receives the source and the runs of its tokens, a payload close to the plain source,
- * where one element per token would weigh about ten times as much.
+ * The client receives the source, the styles of its tokens and, per line, the runs (style and length) of the tokens.
  */
 export async function CodeHighlight({ code }: CodeHighlightProps): Promise<React.ReactNode> {
   const root = await highlightHast(code, { lang: 'tsx', ...codeHighlightOptions });
@@ -64,7 +63,7 @@ export async function CodeHighlight({ code }: CodeHighlightProps): Promise<React
   return (
     <CodeBlock className={String(className)} style={cssDeclarationsOf(String(style))}>
       <Pre>
-        <HighlightedLines code={code} {...compactLinesOf(codeElement.children.filter(isElement))} />
+        <HighlightedLines code={code} {...tokenRunsOf(codeElement.children.filter(isElement))} />
       </Pre>
     </CodeBlock>
   );

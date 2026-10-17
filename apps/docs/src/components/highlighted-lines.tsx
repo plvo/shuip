@@ -7,17 +7,17 @@ export interface HighlightedLinesProps {
   /** The inline styles the tokens are painted with. */
   styles: Record<string, string>[];
   /** For each line of the code, the pairs (index in `styles`, length of the token) of its tokens, in order. */
-  lines: number[][];
+  runs: number[][];
 }
 
 /** The tokens of a line: each run paints the next characters of the line, the characters left over stay plain. */
-const tokensOf = (text: string, runs: number[], styles: Record<string, string>[]): React.ReactNode[] => {
+const tokensOf = (text: string, lineRuns: number[], styles: Record<string, string>[]): React.ReactNode[] => {
   const tokens: React.ReactNode[] = [];
   let start = 0;
-  for (let run = 0; run < runs.length; run += 2) {
-    const end = start + runs[run + 1];
+  for (let run = 0; run < lineRuns.length; run += 2) {
+    const end = start + lineRuns[run + 1];
     tokens.push(
-      <span key={run} style={styles[runs[run]]}>
+      <span key={run} style={styles[lineRuns[run]]}>
         {text.slice(start, end)}
       </span>,
     );
@@ -29,15 +29,15 @@ const tokensOf = (text: string, runs: number[], styles: Record<string, string>[]
 
 /**
  * The lines of a highlighted source, built from the source and the runs of its tokens.
- * The server sends these compact runs instead of one element per token, and the markup is the one Shiki produces.
+ * Its markup is the one Shiki produces: a `line` span per line, a styled span per token.
  */
-export function HighlightedLines({ code, styles, lines }: HighlightedLinesProps): React.JSX.Element {
+export function HighlightedLines({ code, styles, runs }: HighlightedLinesProps): React.JSX.Element {
   return (
     <code>
       {code.split('\n').map((text, index) => (
         <React.Fragment key={index}>
           {index > 0 && '\n'}
-          <span className='line'>{tokensOf(text, lines[index] ?? [], styles)}</span>
+          <span className='line'>{tokensOf(text, runs[index] ?? [], styles)}</span>
         </React.Fragment>
       ))}
     </code>
