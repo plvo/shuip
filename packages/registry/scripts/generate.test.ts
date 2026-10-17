@@ -248,6 +248,31 @@ describe('buildRegistryJson', () => {
     ]);
   });
 
+  test('merges the authored fields of meta.shuip.json next to the derived ones', () => {
+    const item = writeItem(root, 'components', 'described', "import { Button } from '@/components/ui/button';", {
+      title: 'Described',
+      description: 'An item with authored metadata.',
+      categories: ['demo'],
+    });
+
+    const [entry] = buildRegistryJson([item], {}).items;
+
+    expect(entry).toMatchObject({
+      name: 'described',
+      title: 'Described',
+      description: 'An item with authored metadata.',
+      categories: ['demo'],
+      registryDependencies: ['button'],
+    });
+    expect(entry?.files).toHaveLength(1);
+  });
+
+  test('fails when meta.shuip.json sets a derived field', () => {
+    const item = writeItem(root, 'components', 'overriding', '', { registryDependencies: ['button'] });
+
+    expect(() => buildRegistryJson([item], {})).toThrow('"registryDependencies"');
+  });
+
   test('fails when an imported package has no catalog entry', () => {
     const item = writeItem(root, 'components', 'orphan', "import x from 'left-pad';");
     expect(() => buildRegistryJson([item], {})).toThrow('orphan imports "left-pad"');

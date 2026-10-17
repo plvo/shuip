@@ -6,7 +6,9 @@
   "exports": {
     "./__index__": "./__index__.ts",
     "./__index__.base": "./generated/base/__index__.ts",
+    "./authored-fields": "./src/authored-fields.ts",
     "./example-key": "./src/example-key.ts",
+    "./generate": "./scripts/generate.ts",
     "./item-source": "./src/item-source.ts",
     "./namespace": "./src/namespace.ts",
     "./registry-file": "./src/registry-file.ts",
