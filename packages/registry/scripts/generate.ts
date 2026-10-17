@@ -294,6 +294,9 @@ export interface RegistryJson {
   items: RegistryItem[];
 }
 
+/** Code-unit order, so the committed registry files do not depend on the locale of the machine that generates them. */
+const byName = (a: { name: string }, b: { name: string }): number => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+
 export const buildRegistryJson = (
   items: ScannedItem[],
   catalog: Catalog,
@@ -341,7 +344,7 @@ export const buildRegistryJson = (
     if (fullDeps.length) entry.registryDependencies = fullDeps;
     out.push(entry);
   }
-  out.sort((a, b) => a.name.localeCompare(b.name));
+  out.sort(byName);
   return { name: 'shuip', homepage: SHUIP_ORIGIN, items: out };
 };
 
@@ -537,7 +540,7 @@ export const buildRegistries = ({
       registry.items.map((item) => item.name),
       extraItems.map((item) => item.name),
     );
-    return { ...registry, items: [...registry.items, ...extraItems].sort((a, b) => a.name.localeCompare(b.name)) };
+    return { ...registry, items: [...registry.items, ...extraItems].sort(byName) };
   };
   return {
     [CANONICAL_VARIANT]: withExtraItems(buildRegistryJson(items, catalog)),

@@ -342,6 +342,13 @@ describe('the published registries', () => {
     expect(registries.radix.items.map((item) => item.name)).toEqual(['aaa-skill', 'alpha', 'beta']);
   });
 
+  test('orders items by code unit, whatever the locale of the machine', () => {
+    const registries = publish([EXTRA_ITEM, { name: 'Zed', type: 'registry:item' }]);
+
+    expect(registries.radix.items.map((item) => item.name)).toEqual(['Zed', 'aaa-skill', 'alpha', 'beta']);
+    expect(registries.base.items.map((item) => item.name)).toEqual(['Zed', 'aaa-skill', 'alpha', 'beta']);
+  });
+
   test('rejects an extra item named like an item', () => {
     expect(() => publish([{ name: 'alpha', type: 'registry:item' }])).toThrow();
   });
