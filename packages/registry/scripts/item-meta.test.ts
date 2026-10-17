@@ -42,6 +42,18 @@ describe('readItemMeta', () => {
     expect(() => readItemMeta(itemDir)).toThrow(`sets "${field}", which the generator derives`);
   });
 
+  test('names the file when it is not valid JSON', () => {
+    fs.writeFileSync(path.join(itemDir, 'meta.shuip.json'), '{ "title": ');
+
+    expect(() => readItemMeta(itemDir)).toThrow(path.join(itemDir, 'meta.shuip.json'));
+  });
+
+  test.each(['[]', 'null'])('names the file when the root is %s instead of an object', (root) => {
+    fs.writeFileSync(path.join(itemDir, 'meta.shuip.json'), root);
+
+    expect(() => readItemMeta(itemDir)).toThrow(path.join(itemDir, 'meta.shuip.json'));
+  });
+
   test('rejects a field the registry schema does not know', () => {
     writeMeta({ titel: 'Demo' });
 

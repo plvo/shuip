@@ -36,7 +36,10 @@ describe('authored metadata of meta.shuip.json', () => {
     const itemDir = path.join(itemsDir, 'components', 'demo');
     fs.mkdirSync(itemDir, { recursive: true });
     fs.writeFileSync(path.join(itemDir, 'component.radix.tsx'), 'export const Demo = () => null;\n');
-    fs.writeFileSync(path.join(itemDir, 'meta.shuip.json'), JSON.stringify(AUTHORED_FIELDS));
+    fs.writeFileSync(
+      path.join(itemDir, 'meta.shuip.json'),
+      JSON.stringify({ ...AUTHORED_FIELDS, dependsOn: ['side-dialog'] }),
+    );
 
     const items = scanItems(itemsDir);
     const baseVariant = writeBaseVariant(items, { outDir: path.join(registryDir, 'generated', 'base'), itemsDir });
@@ -50,8 +53,11 @@ describe('authored metadata of meta.shuip.json', () => {
       }),
     );
     const logs = spyOn(console, 'log').mockImplementation(() => {});
-    await build({ cwd: REGISTRY_ROOT, registryDir, outputDir });
-    logs.mockRestore();
+    try {
+      await build({ cwd: REGISTRY_ROOT, registryDir, outputDir });
+    } finally {
+      logs.mockRestore();
+    }
   });
 
   afterAll(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -60,6 +66,15 @@ describe('authored metadata of meta.shuip.json', () => {
     const registry = readJson(registryDir, registryFilename(variant));
 
     expect(registry.items[0]).toMatchObject({ name: 'demo', ...AUTHORED_FIELDS });
+  });
+
+  test.each(PUBLISHED_VARIANTS)('leave dependsOn out of the %s registry and turn it into a dependency', (variant) => {
+    const [entry] = readJson(registryDir, registryFilename(variant)).items;
+    const published = readJson(outputDir, variant, 'demo.json');
+
+    expect(entry).not.toHaveProperty('dependsOn');
+    expect(entry.registryDependencies).toEqual(['@shuip/side-dialog']);
+    expect(published).not.toHaveProperty('dependsOn');
   });
 
   test.each(PUBLISHED_VARIANTS)('reach the %s item and registry index that are published', (variant) => {
