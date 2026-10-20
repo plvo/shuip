@@ -186,6 +186,13 @@ export function resolveDropTarget({
 
 type BoardDroppableData = { zone?: boolean; columnId: string; groupId?: string };
 
+// What a drop zone registers with dnd-kit, so that a collision knows which cards belong to it.
+export const dropZoneData = (columnId: string, groupId?: string): BoardDroppableData => ({
+  zone: true,
+  columnId,
+  groupId,
+});
+
 const dataOf = (container: { data: { current?: unknown } }) => container.data.current as BoardDroppableData | undefined;
 
 // The target is the column (or grouped cell) under the pointer, then the card
@@ -203,9 +210,9 @@ export const detectBoardCollision: CollisionDetection = (args) => {
     y: collisionRect.top + collisionRect.height / 2,
   };
   const [hit] = (pointerCoordinates ? pointerWithin : rectIntersection)({ ...args, droppableContainers: zones });
-  const zone = zones.find((container) => container.id === hit?.id);
-  const zoneData = zone && dataOf(zone);
-  if (!zone || !zoneData) return [];
+  const zone = hit?.data?.droppableContainer as (typeof zones)[number] | undefined;
+  if (!zone) return [];
+  const zoneData = zone.data.current as BoardDroppableData;
 
   let closest: { id: string | number; distance: number } | null = null;
   let lowestEdge = Number.NEGATIVE_INFINITY;
@@ -594,15 +601,20 @@ export function DataBoardColumnHeader({
 }
 
 export function DataBoardColumnBody({
-  zoneId,
+  columnId,
+  groupId,
   scrollable,
   children,
 }: {
-  zoneId: string;
+  columnId: string;
+  groupId?: string;
   scrollable?: boolean;
   children: React.ReactNode;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: zoneId, data: { zone: true, ...parseDropZoneId(zoneId) } });
+  const { setNodeRef, isOver } = useDroppable({
+    id: dropZoneId(columnId, groupId),
+    data: dropZoneData(columnId, groupId),
+  });
   return (
     <div
       ref={setNodeRef}
@@ -1219,7 +1231,7 @@ export function DataBoard<T extends object>({
     key: string,
     groupId?: string,
   ) => (
-    <DataBoardColumnBody key={column.id} zoneId={dropZoneId(column.id, groupId)} scrollable={groupId == null}>
+    <DataBoardColumnBody key={column.id} columnId={column.id} groupId={groupId} scrollable={groupId == null}>
       <SortableContext items={rendered.map(getId)} strategy={verticalListSortingStrategy}>
         {rendered.length === 0 ? (
           <p className='rounded-md border border-dashed p-3 text-center text-xs text-muted-foreground'>
