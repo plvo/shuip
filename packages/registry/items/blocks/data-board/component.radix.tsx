@@ -9,6 +9,7 @@ import {
   type DragStartEvent,
   KeyboardSensor,
   PointerSensor,
+  pointerWithin,
   rectIntersection,
   useDroppable,
   useSensor,
@@ -183,8 +184,9 @@ export function resolveDropTarget({
   return null;
 }
 
-const isDropZone = (container: { data: { current?: unknown } }) =>
-  (container.data.current as { zone?: boolean } | undefined)?.zone === true;
+type BoardDroppableData = { zone?: boolean; columnId: string; groupId?: string };
+
+const dataOf = (container: { data: { current?: unknown } }) => container.data.current as BoardDroppableData | undefined;
 
 // The target is the column (or grouped cell) under the pointer, then the card
 // closest to the pointer in it, or the column itself when it is empty or the
@@ -194,29 +196,24 @@ const isDropZone = (container: { data: { current?: unknown } }) =>
 // targets nothing.
 export const detectBoardCollision: CollisionDetection = (args) => {
   const { droppableContainers, droppableRects, pointerCoordinates, collisionRect } = args;
-  const zones = droppableContainers.filter(isDropZone);
+  const zones = droppableContainers.filter((container) => dataOf(container)?.zone === true);
 
   const point = pointerCoordinates ?? {
     x: collisionRect.left + collisionRect.width / 2,
     y: collisionRect.top + collisionRect.height / 2,
   };
-  const zone = pointerCoordinates
-    ? zones.find((container) => {
-        const rect = droppableRects.get(container.id);
-        return (
-          rect != null && point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom
-        );
-      })
-    : zones.find((container) => container.id === rectIntersection({ ...args, droppableContainers: zones })[0]?.id);
-  if (!zone) return [];
+  const [hit] = (pointerCoordinates ? pointerWithin : rectIntersection)({ ...args, droppableContainers: zones });
+  const zone = zones.find((container) => container.id === hit?.id);
+  const zoneData = zone && dataOf(zone);
+  if (!zone || !zoneData) return [];
 
-  const { columnId, groupId } = parseDropZoneId(String(zone.id));
   let closest: { id: string | number; distance: number } | null = null;
   let lowestEdge = Number.NEGATIVE_INFINITY;
   for (const container of droppableContainers) {
     const rect = droppableRects.get(container.id);
-    const data = container.data.current as { columnId?: string; groupId?: string } | undefined;
-    if (!rect || isDropZone(container) || data?.columnId !== columnId || data.groupId !== groupId) continue;
+    const data = dataOf(container);
+    if (!rect || !data || data.zone) continue;
+    if (data.columnId !== zoneData.columnId || data.groupId !== zoneData.groupId) continue;
     lowestEdge = Math.max(lowestEdge, rect.bottom);
     const distance = Math.abs(point.y - (rect.top + rect.height / 2));
     if (!closest || distance < closest.distance) closest = { id: container.id, distance };
@@ -605,7 +602,7 @@ export function DataBoardColumnBody({
   scrollable?: boolean;
   children: React.ReactNode;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: zoneId, data: { zone: true } });
+  const { setNodeRef, isOver } = useDroppable({ id: zoneId, data: { zone: true, ...parseDropZoneId(zoneId) } });
   return (
     <div
       ref={setNodeRef}

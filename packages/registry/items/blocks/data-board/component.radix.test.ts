@@ -363,7 +363,7 @@ describe('detectBoardCollision', () => {
     const args = {
       droppableContainers: droppables.map(({ id, data }) => ({
         id,
-        data: { current: data ?? { zone: true } },
+        data: { current: data ?? { zone: true, ...parseDropZoneId(id) } },
         disabled: false,
       })),
       droppableRects: new Map(droppables.map(({ id, rect }) => [id, toClientRect(rect)])),
@@ -375,8 +375,7 @@ describe('detectBoardCollision', () => {
 
   const cardRect = (left: number, top: number): Rect => ({ left, top, width: 280, height: 80 });
 
-  // Column `todo` holds three cards, column `done` is empty and 900px tall: the case where the cards of the
-  // neighbour used to win over the column the pointer is in.
+  // Column `todo` holds three cards, column `done` beside it is empty and 900px tall.
   const flat = [
     zone('todo', { left: 0, top: 0, width: 300, height: 900 }),
     card('a', 'todo', cardRect(10, 10)),
@@ -423,6 +422,16 @@ describe('detectBoardCollision', () => {
     expect(collide(grouped, { pointer: { x: 400, y: 300 } })).toEqual(['s1::done']);
     expect(collide(grouped, { pointer: { x: 100, y: 440 } })).toEqual(['e']);
     expect(collide(grouped, { pointer: { x: 100, y: 120 } })).toEqual(['b']);
+  });
+
+  test('ignores the cards of the same column in another band', () => {
+    const bands = [
+      zone('s1::done', { left: 0, top: 0, width: 300, height: 400 }),
+      zone('s2::done', { left: 0, top: 420, width: 300, height: 200 }),
+      card('f', 'done', cardRect(10, 430), 's2'),
+    ];
+    expect(collide(bands, { pointer: { x: 100, y: 300 } })).toEqual(['s1::done']);
+    expect(collide(bands, { pointer: { x: 100, y: 440 } })).toEqual(['f']);
   });
 
   test('resolves the column by rectangle intersection without a pointer', () => {
