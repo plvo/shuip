@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  closestCorners,
+  type CollisionDetection,
   DndContext,
   type DragEndEvent,
   type DragOverEvent,
@@ -9,6 +9,7 @@ import {
   type DragStartEvent,
   KeyboardSensor,
   PointerSensor,
+  rectIntersection,
   useDroppable,
   useSensor,
   useSensors,
@@ -181,6 +182,50 @@ export function resolveDropTarget({
   if (overItem) return { ...overItem };
   return null;
 }
+
+const isDropZone = (container: { data: { current?: unknown } }) =>
+  (container.data.current as { zone?: boolean } | undefined)?.zone === true;
+
+// The target is the column (or grouped cell) under the pointer, then the card
+// closest to the pointer in it, or the column itself when it is empty or the
+// pointer is below its last card. Without a pointer (keyboard sensor) the
+// column is the one the dragged rectangle overlaps most, and the centre of
+// that rectangle stands for the pointer. A pointer outside every column
+// targets nothing.
+export const detectBoardCollision: CollisionDetection = (args) => {
+  const { droppableContainers, droppableRects, pointerCoordinates, collisionRect } = args;
+  const zones = droppableContainers.filter(isDropZone);
+
+  const point = pointerCoordinates ?? {
+    x: collisionRect.left + collisionRect.width / 2,
+    y: collisionRect.top + collisionRect.height / 2,
+  };
+  const zone = pointerCoordinates
+    ? zones.find((container) => {
+        const rect = droppableRects.get(container.id);
+        return (
+          rect != null && point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom
+        );
+      })
+    : zones.find((container) => container.id === rectIntersection({ ...args, droppableContainers: zones })[0]?.id);
+  if (!zone) return [];
+
+  const { columnId, groupId } = parseDropZoneId(String(zone.id));
+  let closest: { id: string | number; distance: number } | null = null;
+  let lowestEdge = Number.NEGATIVE_INFINITY;
+  for (const container of droppableContainers) {
+    const rect = droppableRects.get(container.id);
+    const data = container.data.current as { columnId?: string; groupId?: string } | undefined;
+    if (!rect || isDropZone(container) || data?.columnId !== columnId || data.groupId !== groupId) continue;
+    lowestEdge = Math.max(lowestEdge, rect.bottom);
+    const distance = Math.abs(point.y - (rect.top + rect.height / 2));
+    if (!closest || distance < closest.distance) closest = { id: container.id, distance };
+  }
+
+  const target = closest && point.y <= lowestEdge ? closest : { id: zone.id, distance: 0 };
+  const container = droppableContainers.find(({ id }) => id === target.id);
+  return [{ id: target.id, data: { droppableContainer: container, value: target.distance } }];
+};
 
 // A move that changes neither column, rank nor band has nothing to report.
 // `fromGroup` and `toGroup` are both undefined outside grouped mode, which
@@ -560,7 +605,7 @@ export function DataBoardColumnBody({
   scrollable?: boolean;
   children: React.ReactNode;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: zoneId });
+  const { setNodeRef, isOver } = useDroppable({ id: zoneId, data: { zone: true } });
   return (
     <div
       ref={setNodeRef}
@@ -1210,7 +1255,7 @@ export function DataBoard<T extends object>({
         labels={labels}
       />
 
-      <DndContext id={dndId} sensors={sensors} collisionDetection={closestCorners} {...handlers}>
+      <DndContext id={dndId} sensors={sensors} collisionDetection={detectBoardCollision} {...handlers}>
         <div className='flex min-h-0 flex-1'>
           <div className='min-h-0 flex-1 overflow-x-auto overflow-y-hidden'>
             {shownColumns.length === 0 ? (

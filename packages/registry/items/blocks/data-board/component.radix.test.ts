@@ -1,5 +1,14 @@
 import { describe, expect, test } from 'bun:test';
-import { buildGroups, groupIdOf, limitFor, paginate, UNGROUPED_ID, visibleColumns } from './component.radix';
+import type { CollisionDetection } from '@dnd-kit/core';
+import {
+  buildGroups,
+  detectBoardCollision,
+  groupIdOf,
+  limitFor,
+  paginate,
+  UNGROUPED_ID,
+  visibleColumns,
+} from './component.radix';
 
 type Task = { id: string; status: string; sprint?: number | null; team?: string };
 
@@ -324,5 +333,104 @@ describe('parseStoredView', () => {
 
   test('ignores unknown keys', () => {
     expect(parseStoredView(JSON.stringify({ nope: 1 }), known)).toEqual({});
+  });
+});
+
+describe('detectBoardCollision', () => {
+  type Rect = { top: number; left: number; width: number; height: number };
+  type Droppable = { id: string; rect: Rect; data?: { columnId: string; groupId?: string } };
+
+  const toClientRect = ({ top, left, width, height }: Rect) => ({
+    top,
+    left,
+    width,
+    height,
+    right: left + width,
+    bottom: top + height,
+  });
+
+  const zone = (id: string, rect: Rect): Droppable => ({ id, rect });
+  const card = (id: string, columnId: string, rect: Rect, groupId?: string): Droppable => ({
+    id,
+    rect,
+    data: { columnId, groupId },
+  });
+
+  const collide = (
+    droppables: Droppable[],
+    input: { pointer?: { x: number; y: number }; collisionRect?: Rect },
+  ): string[] => {
+    const args = {
+      droppableContainers: droppables.map(({ id, data }) => ({
+        id,
+        data: { current: data ?? { zone: true } },
+        disabled: false,
+      })),
+      droppableRects: new Map(droppables.map(({ id, rect }) => [id, toClientRect(rect)])),
+      pointerCoordinates: input.pointer ?? null,
+      collisionRect: toClientRect(input.collisionRect ?? { top: 0, left: 0, width: 0, height: 0 }),
+    };
+    return detectBoardCollision(args as unknown as Parameters<CollisionDetection>[0]).map(({ id }) => String(id));
+  };
+
+  const cardRect = (left: number, top: number): Rect => ({ left, top, width: 280, height: 80 });
+
+  // Column `todo` holds three cards, column `done` is empty and 900px tall: the case where the cards of the
+  // neighbour used to win over the column the pointer is in.
+  const flat = [
+    zone('todo', { left: 0, top: 0, width: 300, height: 900 }),
+    card('a', 'todo', cardRect(10, 10)),
+    card('b', 'todo', cardRect(10, 100)),
+    card('c', 'todo', cardRect(10, 190)),
+    zone('done', { left: 320, top: 0, width: 300, height: 900 }),
+  ];
+
+  test('targets a tall empty column whatever the cards of its neighbour', () => {
+    expect(collide(flat, { pointer: { x: 400, y: 700 } })).toEqual(['done']);
+    expect(collide(flat, { pointer: { x: 400, y: 5 } })).toEqual(['done']);
+  });
+
+  test('targets the closest card of the column under the pointer', () => {
+    expect(collide(flat, { pointer: { x: 100, y: 120 } })).toEqual(['b']);
+    expect(collide(flat, { pointer: { x: 100, y: 3 } })).toEqual(['a']);
+  });
+
+  test('targets the closest card when the pointer is in the gap between two cards', () => {
+    expect(collide(flat, { pointer: { x: 100, y: 92 } })).toEqual(['a']);
+    expect(collide(flat, { pointer: { x: 100, y: 96 } })).toEqual(['b']);
+  });
+
+  test('targets the column itself when the pointer is below its last card', () => {
+    expect(collide(flat, { pointer: { x: 100, y: 600 } })).toEqual(['todo']);
+  });
+
+  test('targets nothing when the pointer is outside every column', () => {
+    expect(collide(flat, { pointer: { x: 310, y: 100 } })).toEqual([]);
+    expect(collide(flat, { pointer: { x: 100, y: 950 } })).toEqual([]);
+  });
+
+  test('targets an empty cell of a band whose other cells are full', () => {
+    const grouped = [
+      zone('s1::todo', { left: 0, top: 0, width: 300, height: 400 }),
+      card('a', 'todo', cardRect(10, 10), 's1'),
+      card('b', 'todo', cardRect(10, 100), 's1'),
+      card('c', 'todo', cardRect(10, 190), 's1'),
+      card('d', 'todo', cardRect(10, 280), 's1'),
+      zone('s1::done', { left: 320, top: 0, width: 300, height: 400 }),
+      zone('s2::todo', { left: 0, top: 420, width: 300, height: 100 }),
+      card('e', 'todo', cardRect(10, 430), 's2'),
+    ];
+    expect(collide(grouped, { pointer: { x: 400, y: 300 } })).toEqual(['s1::done']);
+    expect(collide(grouped, { pointer: { x: 100, y: 440 } })).toEqual(['e']);
+    expect(collide(grouped, { pointer: { x: 100, y: 120 } })).toEqual(['b']);
+  });
+
+  test('resolves the column by rectangle intersection without a pointer', () => {
+    expect(collide(flat, { collisionRect: { left: 330, top: 600, width: 280, height: 80 } })).toEqual(['done']);
+  });
+
+  test('picks the column the dragged rectangle overlaps most without a pointer', () => {
+    expect(collide(flat, { collisionRect: { left: 100, top: 100, width: 280, height: 80 } })).toEqual(['b']);
+    expect(collide(flat, { collisionRect: { left: 290, top: 100, width: 280, height: 80 } })).toEqual(['done']);
   });
 });
