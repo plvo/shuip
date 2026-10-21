@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noUncheckedIndexedAccess": true },
+  "include": ["items/blocks/kanban/component.radix.tsx", "items/blocks/data-board/component.radix.tsx"],
+  "exclude": ["node_modules"]
+}

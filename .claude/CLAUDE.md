@@ -50,7 +50,9 @@ bun smoke [style]      # Consumer smoke test: install every @shuip item in a fre
                        #   --items a,b restricts the installed items, e.g. bun smoke base-vega --items search-input
                        #   base-* styles are served the Base UI variant, and the smoke test then fails on any Radix package
 bun typecheck:base     # Type-check the Base UI primitives, the Base UI overrides and the generated Base UI copies of every item
+                       #   also checks the kanban and data-board copies with noUncheckedIndexedAccess (items/tsconfig.strict.json)
 bun typecheck:radix    # Regenerate, then type-check every canonical Radix source (component.radix.tsx, *.example.radix.tsx) against the Radix primitives
+                       #   also checks the kanban and data-board sources with noUncheckedIndexedAccess (tsconfig.strict.json)
 bun clean              # Wipe node_modules, .next, .turbo, .source, bun.lock
 ```
 
