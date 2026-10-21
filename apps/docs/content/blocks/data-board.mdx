@@ -91,10 +91,13 @@ const columns: DataBoardColumn[] = [
   to learn the field's real type, so a card dropped there receives the group's `id` as a string. If
   the grouped field is numeric, coerce the value in `onCardMove` until the group holds at least one
   item.
-- **Releasing a card outside any drop zone commits the last hovered position.** The board does not
-  revert the move when a card is released outside a valid drop zone; it keeps the position the card
-  last hovered over and fires `onCardMove` with that position. Implement your own revert inside
-  `onCardMove` if you need Trello-style cancellation on an out-of-bounds release.
+- **Cards move on drop, not on hover.** While a card is held, the others stay where they are and a
+  drop slot of the card's height shows where it would land. The move is applied once, when the card
+  is released: right after the card it was held below, right before the card it was held above, or at
+  right after the last card shown when it is released on the column itself, so it never jumps over
+  a card hidden by pagination or search. Releasing a card outside any
+  column, on its own slot, or pressing Escape leaves the board as it was and fires neither
+  `onCardMove` nor `onDataChange`.
 
 ## Props
 
