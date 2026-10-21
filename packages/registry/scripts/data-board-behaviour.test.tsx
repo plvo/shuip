@@ -785,6 +785,58 @@ describe.each(VARIANTS)('data-board drag on %s', (variant) => {
       });
     });
 
+    test('lists the cards of onDataChange by position, not in the order of the data', async () => {
+      const { moves, dataChanges } = await mount(boards[variant], { ...withPositions, data: RANKED });
+
+      await drag(handleOf('Task D'), [
+        { x: 650, y: 120 },
+        { x: 640, y: 140 },
+        { x: 150, y: 260 },
+      ]);
+
+      expect(moves[0]).toMatchObject({ position: 2.5, beforeId: 'c', afterId: 'a' });
+      expect(dataChanges[0]?.map(({ id }) => id)).toEqual(['b', 'c', 'd', 'a']);
+      expect(columnTitles()[0]).toEqual(['Task B', 'Task C', 'Task D', 'Task A']);
+    });
+
+    test('lists a card that took over an empty column at its new position', async () => {
+      const { dataChanges } = await mount(boards[variant], { ...withPositions, data: RANKED });
+
+      await drag(handleOf('Task C'), [
+        { x: 150, y: 232 },
+        { x: 160, y: 250 },
+        { x: 420, y: 900 },
+      ]);
+
+      expect(dataChanges[0]?.map(({ id, rank }) => `${id}:${rank}`)).toEqual(['c:0', 'b:1', 'a:3', 'd:5']);
+    });
+
+    test('takes the neighbours and the position from a data update received mid-drag', async () => {
+      const { rerender, moves, dataChanges } = await mount(boards[variant], { ...withPositions, data: RANKED });
+      await hold(handleOf('Task D'), [
+        { x: 650, y: 120 },
+        { x: 640, y: 140 },
+        { x: 150, y: 200 },
+      ]);
+      expect(dropSlotPlace()).toEqual({ column: 0, index: 1 });
+
+      await rerender([...RANKED, ranked('n', 'todo', 1.75)]);
+      expect(columnTitles()[0]).toEqual(['Task B', 'Task C', 'Task A']);
+      await release({ x: 150, y: 200 });
+
+      expect(moves).toHaveLength(1);
+      expect(moves[0]).toMatchObject({
+        item: { id: 'd', rank: 1.875 },
+        toIndex: 2,
+        position: 1.875,
+        beforeId: 'n',
+        afterId: 'c',
+      });
+      expect(dataChanges).toHaveLength(1);
+      expect(dataChanges[0]?.map(({ id }) => id)).toEqual(['b', 'n', 'd', 'c', 'a']);
+      expect(columnTitles()[0]).toEqual(['Task B', 'Task N', 'Task D', 'Task C', 'Task A']);
+    });
+
     test('computes the position against the cards the pagination hides', async () => {
       const data = [ranked('a', 'todo', 1), ranked('b', 'todo', 2), ranked('c', 'todo', 3), ranked('d', 'done', 9)];
       const { moves } = await mount(boards[variant], { ...withPositions, data, pageSize: 2 });
