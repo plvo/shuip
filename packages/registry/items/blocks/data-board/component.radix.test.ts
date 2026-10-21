@@ -253,6 +253,30 @@ describe('landingIndex', () => {
   test('lands at the end of the cell when the card is not in it', () => {
     expect(landingIndex({ order, overId: 'zzz', below: false })).toBe(3);
   });
+
+  describe('with cards left out of the rendered list', () => {
+    const cell = ['a', 'b', 'c', 'd'];
+
+    test('a drop on the column lands right after the last rendered card, before the hidden ones', () => {
+      expect(landingIndex({ order: cell, overId: null, below: false, visibleIds: new Set(['a', 'b']) })).toBe(2);
+    });
+
+    test('a drop below the last rendered card lands right after it', () => {
+      expect(landingIndex({ order: cell, overId: 'b', below: true, visibleIds: new Set(['a', 'b']) })).toBe(2);
+    });
+
+    test('cards hidden before the last rendered card do not count', () => {
+      expect(landingIndex({ order: cell, overId: null, below: false, visibleIds: new Set(['a', 'c']) })).toBe(3);
+    });
+
+    test('a drop on a column with nothing rendered lands at the end of the cell', () => {
+      expect(landingIndex({ order: cell, overId: null, below: false, visibleIds: new Set() })).toBe(4);
+    });
+
+    test('a drop on a column with every card rendered lands at its end', () => {
+      expect(landingIndex({ order: cell, overId: null, below: false, visibleIds: new Set(cell) })).toBe(4);
+    });
+  });
 });
 
 describe('previewTarget', () => {
@@ -278,6 +302,32 @@ describe('previewTarget', () => {
     expect(preview('d', zoneOver('todo'))).toEqual({ columnId: 'todo', index: 3 });
     expect(preview('a', zoneOver('todo'))).toEqual({ columnId: 'todo', index: 2 });
     expect(preview('a', zoneOver('doing'))).toEqual({ columnId: 'doing', index: 0 });
+  });
+
+  test('previews the slot right after the last rendered card when the cell has hidden cards', () => {
+    const visibleIds = new Set(['a', 'b']);
+    expect(previewTarget({ items, activeId: 'd', over: zoneOver('todo'), accessors, visibleIds })).toEqual({
+      columnId: 'todo',
+      index: 2,
+    });
+  });
+
+  test('previews that slot in a band as well', () => {
+    const banded = [
+      cardOf('a', 'todo', 's1'),
+      cardOf('b', 'todo', 's1'),
+      cardOf('c', 'todo', 's1'),
+      cardOf('d', 'done', 's1'),
+    ];
+    expect(
+      previewTarget({
+        items: banded,
+        activeId: 'd',
+        over: zoneOver('todo', 's1'),
+        accessors,
+        visibleIds: new Set(['a']),
+      }),
+    ).toEqual({ columnId: 'todo', groupId: 's1', index: 1 });
   });
 
   test('previews the original slot when over the dragged card itself', () => {

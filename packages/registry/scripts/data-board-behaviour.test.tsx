@@ -437,18 +437,20 @@ describe.each(VARIANTS)('data-board drag on %s', (variant) => {
     expect(dataChanges).toEqual([]);
   });
 
-  test('reveals a card dropped past the paginated window of its column', async () => {
+  test('drops a card below the last visible card of a paginated column right after it and reveals it', async () => {
     const { moves } = await mount(boards[variant], { pageSize: 2 });
     expect(columnTitles()[0]).toEqual(['Task A', 'Task B']);
 
-    await drag(handleOf('Task D'), [
+    await hold(handleOf('Task D'), [
       { x: 650, y: 120 },
       { x: 640, y: 140 },
       { x: 150, y: 400 },
     ]);
+    expect(dropSlotPlace()).toEqual({ column: 0, index: 2 });
+    await release({ x: 150, y: 400 });
 
-    expect(moves[0]).toMatchObject({ item: { id: 'd' }, toColumn: 'todo', toIndex: 3 });
-    expect(columnTitles()[0]).toEqual(['Task A', 'Task B', 'Task C', 'Task D']);
+    expect(moves[0]).toMatchObject({ item: { id: 'd' }, toColumn: 'todo', toIndex: 2 });
+    expect(columnTitles()[0]).toEqual(['Task A', 'Task B', 'Task D', 'Task C']);
   });
 
   test('drops a card into a cell of another band and writes the band value', async () => {
@@ -579,7 +581,7 @@ describe.each(VARIANTS)('data-board drag on %s', (variant) => {
     ]);
 
     expect(moves).toHaveLength(1);
-    expect(moves[0]).toMatchObject({ item: { id: 'a', sprint: 2 }, toGroup: '2', toIndex: 2 });
-    expect(columnTitles()).toEqual([['Task C', 'Task E', 'Task A'], [], []]);
+    expect(moves[0]).toMatchObject({ item: { id: 'a', sprint: 2 }, toGroup: '2', toIndex: 1 });
+    expect(columnTitles()).toEqual([['Task C', 'Task A'], [], []]);
   });
 });
