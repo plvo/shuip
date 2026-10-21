@@ -205,6 +205,8 @@ const columnTitles = () =>
 
 const dropSlot = () => document.querySelector<HTMLElement>(DROP_SLOT);
 
+const slotFades = () => dropSlot()?.className.includes('animate-in') === true;
+
 const dropSlotPlace = () => {
   const slot = dropSlot();
   const column = slot?.parentElement;
@@ -242,13 +244,6 @@ async function hold(handle: HTMLElement, path: Point[]) {
 async function release({ x, y }: Point) {
   await act(async () => {
     pointerEvent('pointerup', document, x, y);
-    await settle();
-  });
-}
-
-async function pressEscape() {
-  await act(async () => {
-    document.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', bubbles: true }));
     await settle();
   });
 }
@@ -314,6 +309,7 @@ describe.each(VARIANTS)('data-board drag on %s', (variant) => {
     await moveTo({ x: 700, y: 170 });
     expect(columnTitles()).toEqual(INITIAL_COLUMNS);
     expect(dropSlotPlace()).toEqual({ column: 2, index: 1 });
+    expect(slotFades()).toBe(true);
     const slot = dropSlot() as HTMLElement;
     expect(slot.style.height).toBe(`${CARD_HEIGHT}px`);
     expect(slot.getAttribute('aria-hidden')).toBe('true');
@@ -322,13 +318,18 @@ describe.each(VARIANTS)('data-board drag on %s', (variant) => {
 
     await moveTo({ x: 700, y: 120 });
     expect(dropSlotPlace()).toEqual({ column: 2, index: 0 });
+    expect(slotFades()).toBe(false);
 
     await moveTo({ x: 700, y: 400 });
     expect(dropSlotPlace()).toEqual({ column: 2, index: 1 });
+    expect(slotFades()).toBe(false);
 
     await moveTo({ x: 150, y: 230 });
     expect(dropSlot()).toBeNull();
     expect(columnTitles()).toEqual(INITIAL_COLUMNS);
+
+    await moveTo({ x: 700, y: 170 });
+    expect(slotFades()).toBe(true);
   });
 
   test('shows the drop slot next to the dragged card, which stays rendered, inside its own column', async () => {
@@ -427,7 +428,7 @@ describe.each(VARIANTS)('data-board drag on %s', (variant) => {
     await moveTo({ x: 700, y: 120 });
     expect(dropSlot()).not.toBeNull();
 
-    await pressEscape();
+    await pressKey('Escape');
     expect(dropSlot()).toBeNull();
     expect(columnTitles()).toEqual(INITIAL_COLUMNS);
 
@@ -476,7 +477,7 @@ describe.each(VARIANTS)('data-board drag on %s', (variant) => {
   });
 
   test.each([
-    ['Escape is pressed', () => pressEscape()],
+    ['Escape is pressed', () => pressKey('Escape')],
     ['the card is dropped on its original slot', () => release({ x: 150, y: 230 })],
   ])('applies a data update received mid-drag once %s', async (_name, finish) => {
     const { rerender, moves } = await mount(boards[variant]);
@@ -511,6 +512,20 @@ describe.each(VARIANTS)('data-board drag on %s', (variant) => {
       'e:doing',
     ]);
     expect(columnTitles()).toEqual([['Task A', 'Task C'], ['Task E'], ['Task B', 'Task D']]);
+  });
+
+  test('rebases the move between the neighbours it was previewed between', async () => {
+    const { rerender, moves, dataChanges } = await mount(boards[variant]);
+    await pickUpB();
+    await moveTo({ x: 700, y: 170 });
+    expect(dropSlotPlace()).toEqual({ column: 2, index: 1 });
+
+    await rerender([...TASKS.slice(0, 3), { id: 'e', status: 'done', title: 'Task E' }, TASKS[3] as Task]);
+    await release({ x: 700, y: 170 });
+
+    expect(moves).toHaveLength(1);
+    expect(dataChanges).toHaveLength(1);
+    expect(columnTitles()).toEqual([['Task A', 'Task C'], [], ['Task E', 'Task D', 'Task B']]);
   });
 
   test('applies a data update that removed the dragged card and reports no move', async () => {

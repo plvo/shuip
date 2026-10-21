@@ -404,8 +404,8 @@ describe('applyCardMove', () => {
 describe('rebaseSlot', () => {
   const todo = (...names: string[]) => names.map((name) => cardOf(name, 'todo'));
   const dropped = { columnId: 'todo', index: 2 };
-  const rebase = (pending: Card[], target = dropped) =>
-    rebaseSlot({ items: [...todo('a', 'b', 'c'), cardOf('d', 'done')], pending, activeId: 'd', target, accessors });
+  const rebase = (fresh: Card[], target = dropped) =>
+    rebaseSlot({ items: [...todo('a', 'b', 'c'), cardOf('d', 'done')], fresh, activeId: 'd', target, accessors });
 
   test('keeps the slot between the neighbours it was previewed between', () => {
     expect(rebase([...todo('x', 'a', 'b', 'c'), cardOf('d', 'done')])).toEqual({ columnId: 'todo', index: 3 });
@@ -417,6 +417,10 @@ describe('rebaseSlot', () => {
 
   test('follows the card before the slot when the card after it is gone', () => {
     expect(rebase([...todo('a', 'b'), cardOf('d', 'done')])).toEqual({ columnId: 'todo', index: 2 });
+  });
+
+  test('lands after the card before the slot, whatever was added ahead of it', () => {
+    expect(rebase([...todo('n1', 'n2', 'a', 'b'), cardOf('d', 'done')])).toEqual({ columnId: 'todo', index: 4 });
   });
 
   test('follows the last card of the cell when the slot was at its end', () => {
@@ -435,7 +439,7 @@ describe('rebaseSlot', () => {
     expect(
       rebaseSlot({
         items: banded,
-        pending: banded,
+        fresh: banded,
         activeId: 'd',
         target: { columnId: 'todo', groupId: 's1', index: 1 },
         accessors,

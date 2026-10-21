@@ -308,30 +308,30 @@ export function isSameSlot(a: DropSlot | null, b: DropSlot | null): boolean {
   return a.columnId === b.columnId && a.groupId === b.groupId && a.index === b.index;
 }
 
-// Finds in `pending`, a newer list than `items`, the slot between the cards
-// that `target` was previewed between: right before the card that followed it,
-// else right after the card that preceded it, else at the same rank clamped to
-// the cell.
+// Finds in `fresh`, a newer list than `items`, the slot between the cards that
+// `target` was previewed between: right before the card that followed it, else
+// right after the card that preceded it, else at the same rank clamped to the
+// cell. On identical lists the slot is `target` itself.
 export function rebaseSlot<T>({
   items,
-  pending,
+  fresh,
   activeId,
   target,
   accessors,
 }: {
   items: T[];
-  pending: T[];
+  fresh: T[];
   activeId: string;
   target: DropSlot;
   accessors: CardAccessors<T>;
 }): DropSlot {
-  const seen = cellOrder(items, target, activeId, accessors);
-  const order = cellOrder(pending, target, activeId, accessors);
-  const before = seen[target.index - 1];
-  const after = seen[target.index];
-  const afterAt = after === undefined ? -1 : order.indexOf(after);
-  const beforeAt = before === undefined ? -1 : order.indexOf(before);
-  let index = Math.min(target.index, order.length);
+  const previousOrder = cellOrder(items, target, activeId, accessors);
+  const freshOrder = cellOrder(fresh, target, activeId, accessors);
+  const before = previousOrder[target.index - 1];
+  const after = previousOrder[target.index];
+  const afterAt = after === undefined ? -1 : freshOrder.indexOf(after);
+  const beforeAt = before === undefined ? -1 : freshOrder.indexOf(before);
+  let index = Math.min(target.index, freshOrder.length);
   if (afterAt >= 0) index = afterAt;
   else if (beforeAt >= 0) index = beforeAt + 1;
   return { columnId: target.columnId, groupId: target.groupId, index };
@@ -653,14 +653,17 @@ export function DataBoardCard({
 
 // The placeholder for the card being dragged, at the place where it would land.
 // Its height is the one measured on the source card, not on the overlay.
-export function DataBoardDropSlot() {
+export function DataBoardDropSlot({ fade }: { fade: boolean }) {
   const { activeNodeRect } = useDndContext();
   return (
     <div
       aria-hidden='true'
       data-slot='data-board-drop-slot'
       style={{ height: activeNodeRect?.height }}
-      className='min-h-10 shrink-0 rounded-xl border border-dashed border-primary/50 bg-primary/10 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-150'
+      className={cn(
+        'min-h-10 shrink-0 rounded-xl border border-dashed border-primary bg-primary/10',
+        fade && 'motion-safe:animate-in motion-safe:fade-in motion-safe:duration-150',
+      )}
     />
   );
 }
@@ -959,7 +962,9 @@ function useDataBoardDrag<T extends object>({
   }, [data]);
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
-  const [preview, setPreview] = React.useState<DropSlot | null>(null);
+  // `entering` tells that the slot just came into its cell, as opposed to having
+  // moved inside it.
+  const [previewState, setPreview] = React.useState<{ slot: DropSlot; entering: boolean } | null>(null);
 
   const bands = React.useMemo(
     () => (groupBy ? buildGroups(items, groupBy, ungroupedLabel) : null),
@@ -1011,7 +1016,12 @@ function useDataBoardDrag<T extends object>({
       accessors,
     });
     const next = isSameSlot(target, originRef.current) ? null : target;
-    setPreview((current) => (isSameSlot(current, next) ? current : next));
+    setPreview((current) => {
+      if (!next) return null;
+      if (current && isSameSlot(current.slot, next)) return current;
+      const entering = current?.slot.columnId !== next.columnId || current.slot.groupId !== next.groupId;
+      return { slot: next, entering };
+    });
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -1025,16 +1035,11 @@ function useDataBoardDrag<T extends object>({
       return;
     }
 
-    const pending = pendingDataRef.current;
-    if (pending && !pending.some((item) => getId(item) === activeCardId)) {
-      drainPendingData(true);
-      return;
-    }
-
+    const fresh = pendingDataRef.current ?? items;
     const next = applyCardMove({
-      items: pending ?? items,
+      items: fresh,
       activeId: activeCardId,
-      target: pending ? rebaseSlot({ items, pending, activeId: activeCardId, target, accessors }) : target,
+      target: rebaseSlot({ items, fresh, activeId: activeCardId, target, accessors }),
       accessors,
       withCell,
     });
@@ -1079,7 +1084,8 @@ function useDataBoardDrag<T extends object>({
   return {
     items,
     activeId,
-    preview,
+    preview: previewState?.slot ?? null,
+    slotEntering: previewState?.entering ?? false,
     bands,
     handlers: {
       onDragStart: handleDragStart,
@@ -1184,7 +1190,7 @@ export function DataBoard<T extends object>({
     [getId, getColumn, getGroup],
   );
 
-  const { items, activeId, preview, bands, handlers } = useDataBoardDrag<T>({
+  const { items, activeId, preview, slotEntering, bands, handlers } = useDataBoardDrag<T>({
     data,
     defaultData,
     columnField,
@@ -1262,6 +1268,9 @@ export function DataBoard<T extends object>({
     [items, preview, activeId, accessors],
   );
 
+  // `key` carries the pagination: a column in flat mode, a whole band in grouped mode.
+  const pageOf = (all: T[], key: string) => paginate(all, limitFor(view.pageSize, view.revealedFor(key)));
+
   const renderCards = (
     list: T[],
     column: DataBoardColumn,
@@ -1283,12 +1292,12 @@ export function DataBoard<T extends object>({
       );
       return (
         <React.Fragment key={getId(item)}>
-          {slotBeforeId === getId(item) ? <DataBoardDropSlot /> : null}
+          {slotBeforeId === getId(item) ? <DataBoardDropSlot fade={slotEntering} /> : null}
           {wrapCard ? wrapCard(item, card) : card}
         </React.Fragment>
       );
     });
-    return slotBeforeId === null ? [...cards, <DataBoardDropSlot key={DROP_SLOT_KEY} />] : cards;
+    return slotBeforeId === null ? [...cards, <DataBoardDropSlot key={DROP_SLOT_KEY} fade={slotEntering} />] : cards;
   };
 
   const renderMoreButton = (key: string, remaining: number, buttonClassName: string) => (
@@ -1382,7 +1391,7 @@ export function DataBoard<T extends object>({
                       );
                       const cells = shownColumns.map((column) => {
                         const all = bandItems.filter((item) => getColumn(item) === column.id);
-                        return { column, ...paginate(all, limitFor(view.pageSize, view.revealedFor(key))) };
+                        return { column, ...pageOf(all, key) };
                       });
                       const remainingInBand = cells.reduce((total, cell) => total + cell.hidden, 0);
                       return (
@@ -1405,7 +1414,7 @@ export function DataBoard<T extends object>({
                     {shownColumns.map((column) => {
                       const all = itemsByColumn.get(column.id) ?? [];
                       const key = columnKey(column.id);
-                      const { shown, hidden } = paginate(all, limitFor(view.pageSize, view.revealedFor(key)));
+                      const { shown, hidden } = pageOf(all, key);
                       return renderColumnBody(column, shown, hidden, key);
                     })}
                   </div>
