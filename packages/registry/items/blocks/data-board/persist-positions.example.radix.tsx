@@ -57,7 +57,7 @@ export default function DataBoardPersistPositionsExample() {
           columnField='status'
           positionField='position'
           title={(task) => task.title}
-          fields={[{ key: 'position', label: 'position' }]}
+          fields={[{ key: 'position', label: 'Position' }]}
           pageSize={false}
           onCardMove={(event) => void persist(event)}
         />
