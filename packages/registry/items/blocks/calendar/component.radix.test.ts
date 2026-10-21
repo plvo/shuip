@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import { isResizeMove, layoutDay, pressedSlotRange, resizedEnd } from './component.radix';
 import { isResizeMove, layoutDay, resizedEnd } from './component.radix';
 
 type Slot = { id: string; start: Date; end: Date };
@@ -90,5 +91,42 @@ describe('resizedEnd', () => {
 
   test('never ends an event less than a snap step after its start', () => {
     expect(resizedEnd(start, at(10, 0), -480)).toEqual(at(9, 15));
+  });
+});
+
+const minutesAt = (hours: number, minutes: number) => hours * 60 + minutes;
+
+describe('pressedSlotRange', () => {
+  test('gives a click the hour from the snap step under the press', () => {
+    expect(pressedSlotRange(minutesAt(9, 53), minutesAt(9, 53))).toEqual({ startMin: minutesAt(9, 45), endMin: minutesAt(10, 45) });
+  });
+
+  test('gives a release within 5 minutes of the press the same hour', () => {
+    expect(pressedSlotRange(minutesAt(9, 53), minutesAt(9, 57))).toEqual({ startMin: minutesAt(9, 45), endMin: minutesAt(10, 45) });
+    expect(pressedSlotRange(minutesAt(9, 53), minutesAt(9, 49))).toEqual({ startMin: minutesAt(9, 45), endMin: minutesAt(10, 45) });
+  });
+
+  test('floors the press and keeps the release on a drag down', () => {
+    expect(pressedSlotRange(minutesAt(9, 53), minutesAt(11, 0))).toEqual({ startMin: minutesAt(9, 45), endMin: minutesAt(11, 0) });
+  });
+
+  test('keeps the release and ends at the end of the pressed slot on a drag up', () => {
+    expect(pressedSlotRange(minutesAt(9, 53), minutesAt(9, 0))).toEqual({ startMin: minutesAt(9, 0), endMin: minutesAt(10, 0) });
+    expect(pressedSlotRange(minutesAt(9, 46), minutesAt(9, 0))).toEqual({ startMin: minutesAt(9, 0), endMin: minutesAt(10, 0) });
+  });
+
+  test('keeps the slot of a press on a boundary on a drag up', () => {
+    expect(pressedSlotRange(minutesAt(10, 0), minutesAt(9, 54))).toEqual({ startMin: minutesAt(10, 0), endMin: minutesAt(10, 15) });
+    expect(pressedSlotRange(minutesAt(10, 0), minutesAt(9, 0))).toEqual({ startMin: minutesAt(9, 0), endMin: minutesAt(10, 15) });
+  });
+
+  test('keeps a press on a slot boundary as the start of a click and a drag down', () => {
+    expect(pressedSlotRange(minutesAt(10, 0), minutesAt(10, 0))).toEqual({ startMin: minutesAt(10, 0), endMin: minutesAt(11, 0) });
+    expect(pressedSlotRange(minutesAt(10, 0), minutesAt(11, 30))).toEqual({ startMin: minutesAt(10, 0), endMin: minutesAt(11, 30) });
+  });
+
+  test('snaps the release and keeps the 15-minute minimum', () => {
+    expect(pressedSlotRange(minutesAt(9, 53), minutesAt(10, 6))).toEqual({ startMin: minutesAt(9, 45), endMin: minutesAt(10, 0) });
+    expect(pressedSlotRange(minutesAt(9, 46), minutesAt(9, 52))).toEqual({ startMin: minutesAt(9, 45), endMin: minutesAt(10, 0) });
   });
 });

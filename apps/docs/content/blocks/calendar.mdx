@@ -34,7 +34,7 @@ import { Calendar, useCalendar } from '@/components/block/shuip/calendar';
 - **Hybrid state**: works standalone from `defaultEvents`, or controlled via `events` + `onEventsChange`.
 - **Drag to move**: drag an event to another day (month) or time slot (week/day) when `editable`.
 - **Resize**: drag an event's bottom edge in week/day to change its end time when `editable`. A tap on the resize handle changes nothing: the pointer has to move at least half a snap step (7.5 minutes) first.
-- **Drag to create**: drag across an empty range to emit `onSlotSelect` when `editable`.
+- **Drag to create**: drag across an empty range in week/day to emit `onSlotSelect` when `editable`. The range always includes the slot under the press: a click gives an hour from the start of that slot (a click at 09:53 gives 09:45 to 10:45), a drag down starts at the start of that slot and a drag up ends at its end. Only the primary button starts it, and a press inside a portal of `renderEvent` does not.
 - **Per-event colors**: derive a color per event with `color(item)`.
 - **Custom event content**: replace the default event label with `renderEvent(item)`. A click from a portal mounted inside it (a menu, a popover) does not call `onEventClick`; only a click on the event itself does.
 
@@ -137,7 +137,7 @@ Props are passed to `Calendar.Root`.
       type: '(item: T) => void',
     },
     onSlotSelect: {
-      description: 'Called with the selected range when an empty slot or range is picked.',
+      description: 'Called with the selected range when an empty slot or range is picked. A drag in week/day includes the slot under the press.',
       type: '(range: { start: Date; end: Date; allDay: boolean }) => void',
     },
   }}

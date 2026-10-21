@@ -91,9 +91,11 @@ export function createCalendarHarness() {
   }
 
   const captureCalls: string[] = [];
+  let captured = false;
 
   async function cleanup() {
     captureCalls.length = 0;
+    captured = false;
     await reactMount.cleanup();
   }
 
@@ -183,28 +185,77 @@ export function createCalendarHarness() {
   /** The height the grid draws for the event. */
   const drawnHeight = (id: string) => eventBlock(id)?.style.height;
 
+  // happy-dom computes no layout, so the day columns get the geometry of the grid: top at 0 and 48px per hour.
+  const HOUR_HEIGHT = 48;
+
+  /** The `clientY` of a pointer that is `minute` minutes after the start of the day of a column. */
+  const yAtMinute = (minute: number) => (minute / 60) * HOUR_HEIGHT;
+
+  function giveColumnsGeometry(): void {
+    for (const column of document.querySelectorAll<HTMLElement>('[data-slot="calendar-day-column"]')) {
+      column.getBoundingClientRect = () => new DOMRect(0, 0, 100, 24 * HOUR_HEIGHT);
+    }
+  }
+
+  /** The day column of the time grid at `index`. */
+  function dayColumn(index: number): HTMLElement {
+    const column = document.querySelectorAll<HTMLElement>('[data-slot="calendar-day-column"]')[index];
+    if (!column) throw new Error(`No day column at ${index}`);
+    return column;
+  }
+
+  const showsOverlay = () => document.querySelector('[data-slot="calendar-creating-overlay"]') !== null;
+
+  /** The range the overlay draws, in minutes after the start of the day. */
+  function overlayRange(): { startMin: number; endMin: number } {
+    const overlay = document.querySelector<HTMLElement>('[data-slot="calendar-creating-overlay"]');
+    if (!overlay) throw new Error('No overlay');
+    const startMin = (Number.parseFloat(overlay.style.top) / HOUR_HEIGHT) * 60;
+    return { startMin, endMin: startMin + (Number.parseFloat(overlay.style.height) / HOUR_HEIGHT) * 60 };
+  }
+
   /**
-   * Pointer events with a chosen `clientY` and button, which is all the resize handle reads. The DOM does not
-   * implement capture, so the handle gets stand-ins that log into `captureCalls`.
+   * Pointer events with a chosen `clientY` and button, which is all the resize handle and the day columns read. The
+   * DOM does not implement capture, so the target gets stand-ins that log into `captureCalls` and answer
+   * `hasPointerCapture` for the pointer they hold.
    */
   async function pointer(
     type: 'pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel',
-    handle: HTMLElement,
+    target: Element,
     y: number,
     button = 0,
   ) {
-    handle.setPointerCapture = () => {
+    giveColumnsGeometry();
+    target.setPointerCapture = () => {
+      captured = true;
       captureCalls.push('set');
     };
-    handle.releasePointerCapture = () => {
+    target.releasePointerCapture = () => {
+      captured = false;
       captureCalls.push('release');
     };
+    target.hasPointerCapture = () => captured;
     await act(async () => {
-      handle.dispatchEvent(
+      target.dispatchEvent(
         new PointerEvent(type, { bubbles: true, cancelable: true, clientY: y, pointerId: 1, button }),
       );
     });
   }
 
-  return { load, cleanup, mount, eventLabel, portalMenu, click, resizeHandle, drawnHeight, pointer, captureCalls };
+  return {
+    load,
+    cleanup,
+    mount,
+    eventLabel,
+    portalMenu,
+    click,
+    resizeHandle,
+    drawnHeight,
+    dayColumn,
+    showsOverlay,
+    overlayRange,
+    yAtMinute,
+    pointer,
+    captureCalls,
+  };
 }
