@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test';
 import type { ComponentType } from 'react';
-import type { Root } from 'react-dom/client';
+import { CARD_HEIGHT, createBoardHarness } from './board-behaviour-harness';
 import { installDom, resolveCanonicalAliases } from './dom-environment';
 
 type Task = { id: string; status: string; title: string; rank?: number };
@@ -23,6 +23,11 @@ type BoardProps = {
   searchableFields?: (keyof Task)[];
   positionField?: keyof Task;
 };
+type MountOptions = {
+  data?: Task[];
+  searchableFields?: BoardProps['searchableFields'];
+  positionField?: BoardProps['positionField'];
+};
 
 const COLUMNS = [
   { id: 'todo', label: 'To do' },
@@ -43,84 +48,40 @@ const VARIANTS = ['Radix', 'Base UI'] as const;
 type Variant = (typeof VARIANTS)[number];
 
 const boards = {} as Record<Variant, ComponentType<BoardProps>>;
-const roots: Root[] = [];
-const originalConsoleError = console.error;
 let uninstallDom: () => Promise<void>;
 let restoreGeometry: () => void;
-let act: typeof import('react').act;
-let createElement: typeof import('react').createElement;
-let createRoot: typeof import('react-dom/client').createRoot;
 
-type Rect = { top: number; left: number; width: number; height: number };
-
-const COLUMN_SLOT = '[data-slot="kanban-column-body"]';
-const DROP_SLOT = '[data-slot="kanban-drop-slot"]';
-const COLUMN_WIDTH = 300;
-const COLUMN_TOP = 100;
-const COLUMN_HEIGHTS = [400, 1000, 400];
-const CARD_HEIGHT = 80;
-const CARD_STRIDE = 86;
-const NO_RECT: Rect = { top: 0, left: 0, width: 0, height: 0 };
-
-/**
- * dnd-kit measures every droppable and draggable with `getBoundingClientRect`, which a DOM without a layout
- * engine answers with zeros. The board is laid out here as a browser would: three columns side by side, the
- * second one far taller than the others, and the cards stacked in the column that holds them.
- */
-function rectOf(element: Element): Rect {
-  const overlay = [element, element.parentElement].find(
-    (candidate): candidate is HTMLElement => candidate instanceof HTMLElement && candidate.style.position === 'fixed',
-  );
-  if (overlay) {
-    const { style } = overlay;
-    return {
-      top: Number.parseFloat(style.top),
-      left: Number.parseFloat(style.left),
-      width: Number.parseFloat(style.width),
-      height: Number.parseFloat(style.height),
-    };
-  }
-  if (element.matches(COLUMN_SLOT)) {
-    const index = [...document.querySelectorAll(COLUMN_SLOT)].indexOf(element);
-    return {
-      left: index * COLUMN_WIDTH,
-      top: COLUMN_TOP,
-      width: COLUMN_WIDTH - 20,
-      height: COLUMN_HEIGHTS[index] ?? 0,
-    };
-  }
-  const column = element.parentElement;
-  if (column?.matches(COLUMN_SLOT) && element.tagName === 'DIV') {
-    const body = rectOf(column);
-    const position = [...column.children].filter((child) => child.tagName === 'DIV').indexOf(element);
-    return {
-      left: body.left + 6,
-      top: body.top + 6 + position * CARD_STRIDE,
-      width: body.width - 12,
-      height: CARD_HEIGHT,
-    };
-  }
-  return NO_RECT;
-}
-
-function stubGeometry(): () => void {
-  const original = Element.prototype.getBoundingClientRect;
-  Element.prototype.getBoundingClientRect = function getBoundingClientRect(this: Element) {
-    const { top, left, width, height } = rectOf(this);
-    return { top, left, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => ({}) };
-  };
-  return () => {
-    Element.prototype.getBoundingClientRect = original;
-  };
-}
+const {
+  stubGeometry,
+  load,
+  cleanup,
+  mount,
+  handleOf,
+  columnTitles,
+  dropSlot,
+  slotFades,
+  dropSlotPlace,
+  moveTo,
+  hold,
+  release,
+  search,
+  pressKey,
+  drag,
+  inAct,
+} = createBoardHarness<Task, MoveEvent, BoardProps, MountOptions>({
+  columnSlot: '[data-slot="kanban-column-body"]',
+  dropSlot: '[data-slot="kanban-drop-slot"]',
+  columns: COLUMNS,
+  tasks: TASKS,
+  boardProps: ({ searchableFields, positionField }) => ({ searchableFields, positionField }),
+});
 
 // The browser and the components are loaded here, not at the top of the file, so that no other test file sees them.
 beforeAll(async () => {
   uninstallDom = installDom();
   restoreGeometry = stubGeometry();
   resolveCanonicalAliases(/kanban\/component\.radix\.tsx$/);
-  ({ act, createElement } = await import('react'));
-  ({ createRoot } = await import('react-dom/client'));
+  await load();
   const radix = await import('../items/blocks/kanban/component.radix');
   const base = await import('../generated/base/items/blocks/kanban/component.base');
   boards.Radix = radix.Kanban as unknown as ComponentType<BoardProps>;
@@ -132,134 +93,7 @@ afterAll(async () => {
   await uninstallDom();
 });
 
-afterEach(async () => {
-  await act(async () => {
-    for (const root of roots.splice(0)) root.unmount();
-  });
-  document.body.innerHTML = '';
-  console.error = originalConsoleError;
-});
-
-const settle = (ms = 20) => new Promise((resolve) => setTimeout(resolve, ms));
-
-type MountedBoard = {
-  moves: MoveEvent[];
-  dataChanges: Task[][];
-  errors: unknown[][];
-  rerender: (data: Task[]) => Promise<void>;
-};
-
-type MountOptions = {
-  data?: Task[];
-  searchableFields?: BoardProps['searchableFields'];
-  positionField?: BoardProps['positionField'];
-};
-
-async function mount(Board: ComponentType<BoardProps>, options: MountOptions = {}) {
-  const board: MountedBoard = { moves: [], dataChanges: [], errors: [], rerender: async () => {} };
-  console.error = (...args: unknown[]) => {
-    board.errors.push(args);
-  };
-  const container = document.createElement('div');
-  document.body.append(container);
-  const root = createRoot(container);
-  roots.push(root);
-  board.rerender = (data) =>
-    act(async () => {
-      root.render(
-        createElement(Board, {
-          columns: COLUMNS,
-          data,
-          columnField: 'status',
-          title: (task: Task) => task.title,
-          onCardMove: (event) => board.moves.push(event),
-          onDataChange: (next) => board.dataChanges.push(next),
-          searchableFields: options.searchableFields,
-          positionField: options.positionField,
-        }),
-      );
-    });
-  await board.rerender(options.data ?? TASKS);
-  return board;
-}
-
-const handleOf = (title: string) => {
-  const card = [...document.querySelectorAll(`${COLUMN_SLOT} > div`)].find((element) =>
-    element.textContent?.includes(title),
-  );
-  return card?.querySelector('button') as HTMLButtonElement;
-};
-
-const columnTitles = () =>
-  [...document.querySelectorAll(COLUMN_SLOT)].map((body) =>
-    [...body.querySelectorAll(`:scope > div:not(${DROP_SLOT})`)].map((card) => card.textContent?.trim()),
-  );
-
-const dropSlot = () => document.querySelector<HTMLElement>(DROP_SLOT);
-
-const slotFades = () => dropSlot()?.className.includes('animate-in') === true;
-
-const dropSlotPlace = () => {
-  const slot = dropSlot();
-  const column = slot?.parentElement;
-  if (!slot || !column) return null;
-  return {
-    column: [...document.querySelectorAll(COLUMN_SLOT)].indexOf(column),
-    index: [...column.children].filter((child) => child.tagName === 'DIV').indexOf(slot),
-  };
-};
-
-type Point = { x: number; y: number };
-
-function pointerEvent(type: string, target: EventTarget, x: number, y: number) {
-  const event = new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0 });
-  Object.defineProperty(event, 'isPrimary', { value: true });
-  target.dispatchEvent(event);
-}
-
-async function moveTo({ x, y }: Point) {
-  await act(async () => {
-    pointerEvent('pointermove', document, x, y);
-    await settle();
-  });
-}
-
-async function hold(handle: HTMLElement, path: Point[]) {
-  const [start, ...rest] = path;
-  if (!start) return;
-  await act(async () => {
-    pointerEvent('pointerdown', handle, start.x, start.y);
-  });
-  for (const point of rest) await moveTo(point);
-}
-
-async function release({ x, y }: Point) {
-  await act(async () => {
-    pointerEvent('pointerup', document, x, y);
-    await settle();
-  });
-}
-
-async function search(query: string) {
-  const input = document.querySelector('input') as HTMLInputElement;
-  await act(async () => {
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, query);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    await settle();
-  });
-}
-
-async function pressKey(code: string, target: EventTarget = document) {
-  await act(async () => {
-    target.dispatchEvent(new KeyboardEvent('keydown', { code, bubbles: true, cancelable: true }));
-    await settle();
-  });
-}
-
-async function drag(handle: HTMLElement, path: Point[]) {
-  await hold(handle, path);
-  await release(path.at(-1) ?? { x: 0, y: 0 });
-}
+afterEach(cleanup);
 
 // A first move of a few pixels activates the drag of Task B, the second card of the first column.
 const pickUpB = () =>
@@ -506,7 +340,7 @@ describe.each(VARIANTS)('kanban drag on %s', (variant) => {
   test('drops a card picked up and moved with the keyboard', async () => {
     const { moves, dataChanges } = await mount(boards[variant]);
     const handle = handleOf('Task B');
-    await act(async () => {
+    await inAct(async () => {
       handle.focus();
     });
 

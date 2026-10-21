@@ -734,6 +734,7 @@ export function DataBoardDropSlot({ fade }: { fade: boolean }) {
     <div
       aria-hidden='true'
       data-slot='data-board-drop-slot'
+      data-entering={fade || undefined}
       style={{ height: activeNodeRect?.height }}
       className={cn(
         'min-h-10 shrink-0 rounded-xl border border-dashed border-primary bg-primary/10',
