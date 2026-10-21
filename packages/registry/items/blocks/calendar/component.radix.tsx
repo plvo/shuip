@@ -3,6 +3,7 @@
 import {
   DndContext,
   type DragEndEvent,
+  type Modifier,
   PointerSensor,
   useDraggable,
   useDroppable,
@@ -13,7 +14,6 @@ import { CSS } from '@dnd-kit/utilities';
 import type { Locale } from 'date-fns';
 import {
   addDays,
-  addMinutes,
   addMonths,
   differenceInCalendarDays,
   eachDayOfInterval,
@@ -22,8 +22,6 @@ import {
   format,
   isSameDay,
   isSameMonth,
-  setHours,
-  setMinutes,
   startOfDay,
   startOfMonth,
   startOfWeek,
@@ -126,7 +124,8 @@ type CalendarContextValue<T extends CalendarEventLike = CalendarEventLike> = {
   onEventClick?: (item: T) => void;
   onSlotSelect?: (range: CalendarSlot) => void;
   resizeEvent: (id: string, end: Date) => void;
-  draggedRef: React.MutableRefObject<boolean>;
+  swallowClickRef: React.MutableRefObject<boolean>;
+  dayColumnsRef: React.RefObject<HTMLDivElement | null>;
 };
 
 const CalendarContext = React.createContext<CalendarContextValue | null>(null);
@@ -211,7 +210,9 @@ function CalendarRoot<T extends CalendarEventLike>({
 
   const isMobile = useIsMobile();
   const effectiveView = isMobile && view === 'week' ? 'day' : view;
-  const draggedRef = React.useRef(false);
+  const swallowClickRef = React.useRef(false);
+  const dayColumnsRef = React.useRef<HTMLDivElement | null>(null);
+  const modifiers = React.useMemo(() => [restrictToDayColumns(dayColumnsRef)], []);
 
   const getStart = React.useCallback((it: T) => it[startField] as unknown as Date, [startField]);
   const getEnd = React.useCallback((it: T) => it[endField] as unknown as Date, [endField]);
@@ -226,7 +227,7 @@ function CalendarRoot<T extends CalendarEventLike>({
   const handleDragEnd = React.useCallback(
     (e: DragEndEvent) => {
       const { active, over, delta } = e;
-      draggedRef.current = Math.abs(delta.x) > 4 || Math.abs(delta.y) > 4;
+      swallowClickRef.current = Math.abs(delta.x) > 4 || Math.abs(delta.y) > 4;
       const id = String(active.id);
       const item = items.find((it) => getId(it) === id);
       if (!item) return;
@@ -235,13 +236,10 @@ function CalendarRoot<T extends CalendarEventLike>({
       const duration = oldEnd.getTime() - oldStart.getTime();
       const overDay = (over?.data.current?.day as Date | undefined) ?? oldStart;
 
-      let newStart: Date;
-      if (effectiveView === 'month') {
-        newStart = setMinutes(setHours(startOfDay(overDay), oldStart.getHours()), oldStart.getMinutes());
-      } else {
-        const movedMinutes = minutesSinceDayStart(oldStart) + (delta.y / HOUR_HEIGHT) * 60;
-        newStart = snapToMinutes(addMinutes(startOfDay(overDay), movedMinutes));
-      }
+      const newStart =
+        effectiveView === 'month'
+          ? wallClockDate(overDay, minutesSinceDayStart(oldStart))
+          : movedStart(oldStart, oldEnd, delta.y, overDay);
       if (newStart.getTime() === oldStart.getTime()) return;
       const next = items.map((it) =>
         getId(it) === id
@@ -326,7 +324,8 @@ function CalendarRoot<T extends CalendarEventLike>({
       onEventClick,
       onSlotSelect,
       resizeEvent,
-      draggedRef,
+      swallowClickRef,
+      dayColumnsRef,
     }),
     [
       view,
@@ -361,7 +360,7 @@ function CalendarRoot<T extends CalendarEventLike>({
   return (
     <CalendarContext.Provider value={value as unknown as CalendarContextValue}>
       {editable ? (
-        <DndContext id={dndId} sensors={sensors} onDragEnd={handleDragEnd}>
+        <DndContext id={dndId} sensors={sensors} modifiers={modifiers} onDragEnd={handleDragEnd}>
           {children}
         </DndContext>
       ) : (
@@ -419,7 +418,8 @@ function CalendarViewComponent({ className }: { className?: string }) {
     getColor,
     renderEvent,
     editable,
-    draggedRef,
+    swallowClickRef,
+    dayColumnsRef,
     resizeEvent,
     onEventClick,
     onSlotSelect,
@@ -451,7 +451,7 @@ function CalendarViewComponent({ className }: { className?: string }) {
             color={getColor}
             renderEvent={renderEvent}
             editable={editable}
-            draggedRef={draggedRef}
+            swallowClickRef={swallowClickRef}
             onEventClick={onEventClick}
             onSlotSelect={onSlotSelect}
             locale={locale}
@@ -472,7 +472,8 @@ function CalendarViewComponent({ className }: { className?: string }) {
             color={getColor}
             renderEvent={renderEvent}
             editable={editable}
-            draggedRef={draggedRef}
+            swallowClickRef={swallowClickRef}
+            dayColumnsRef={dayColumnsRef}
             onResize={editable ? resizeEvent : undefined}
             onEventClick={onEventClick}
             onSlotSelect={onSlotSelect}
@@ -535,10 +536,6 @@ function snapMinutes(value: number, step = SNAP_MINUTES): number {
   return Math.round(value / step) * step;
 }
 
-function snapToMinutes(date: Date, minutes = SNAP_MINUTES): Date {
-  return new Date(snapMinutes(date.getTime() / 60_000, minutes) * 60_000);
-}
-
 function minutesSinceDayStart(date: Date): number {
   return date.getHours() * 60 + date.getMinutes();
 }
@@ -577,6 +574,42 @@ export function resizedEnd(start: Date, end: Date, deltaY: number): Date | null 
   const nextMin = Math.min(DAY_MINUTES, Math.max(proposedMin, minutesSinceDayStart(start) + SNAP_MINUTES));
   const next = wallClockDate(startDay, nextMin);
   return next.getTime() === end.getTime() ? null : next;
+}
+
+/**
+ * The start a move of `deltaY` pixels gives an event dropped on `day`: the wall-clock time under the pointer, snapped,
+ * and within the day. The event keeps its elapsed duration, so the start stops where the event still ends by 24:00,
+ * and an event of a day or more starts at 00:00.
+ */
+export function movedStart(start: Date, end: Date, deltaY: number, day: Date): Date {
+  const durationMin = Math.max(0, (end.getTime() - start.getTime()) / 60_000);
+  const proposedMin = snapMinutes(minutesSinceDayStart(start) + (deltaY / HOUR_HEIGHT) * 60);
+  const latestMin = Math.max(0, DAY_MINUTES - durationMin);
+  return wallClockDate(day, Math.min(Math.max(proposedMin, 0), latestMin));
+}
+
+type Box = { top: number; left: number; right: number; bottom: number };
+
+/** The translation of a node limited so that the node stays inside `bounds`. */
+export function clampTranslation(
+  translation: { x: number; y: number },
+  node: Box,
+  bounds: Box,
+): { x: number; y: number } {
+  return {
+    x: Math.min(Math.max(translation.x, bounds.left - node.left), bounds.right - node.right),
+    y: Math.min(Math.max(translation.y, bounds.top - node.top), bounds.bottom - node.bottom),
+  };
+}
+
+// A dragged event that leaves the day columns enlarges the area the grid scrolls over, which makes dnd-kit scroll
+// further toward it for as long as the pointer stays near the edge.
+function restrictToDayColumns(dayColumnsRef: React.RefObject<HTMLElement | null>): Modifier {
+  return ({ transform, activeNodeRect }) => {
+    const dayColumns = dayColumnsRef.current;
+    if (!dayColumns || !activeNodeRect) return transform;
+    return { ...transform, ...clampTranslation(transform, activeNodeRect, dayColumns.getBoundingClientRect()) };
+  };
 }
 
 function offsetToMinutes(clientY: number, columnEl: HTMLElement): number {
@@ -717,7 +750,7 @@ function DraggableEventBlock({
   label,
   laidOut,
   color,
-  draggedRef,
+  swallowClickRef,
   onClick,
   onResize,
   onPreview,
@@ -730,7 +763,7 @@ function DraggableEventBlock({
   label?: React.ReactNode;
   laidOut: { col: number; cols: number };
   color?: CalendarEventColor;
-  draggedRef: React.MutableRefObject<boolean>;
+  swallowClickRef: React.MutableRefObject<boolean>;
   onClick?: () => void;
   onResize?: (id: string, end: Date) => void;
   onPreview: (end: Date | null) => void;
@@ -744,13 +777,13 @@ function DraggableEventBlock({
       {...attributes}
       {...listeners}
       onPointerDown={(e) => {
-        draggedRef.current = false;
+        swallowClickRef.current = false;
         listeners?.onPointerDown?.(e);
       }}
       onClick={(e) => {
         if (!startedInside(e)) return;
-        if (draggedRef.current) {
-          draggedRef.current = false;
+        if (swallowClickRef.current) {
+          swallowClickRef.current = false;
           return;
         }
         onClick?.();
@@ -768,7 +801,7 @@ function DraggableEventBlock({
         id={id}
         start={start}
         end={realEnd}
-        draggedRef={draggedRef}
+        swallowClickRef={swallowClickRef}
         onResize={onResize}
         onPreview={onPreview}
       />
@@ -780,14 +813,14 @@ function ResizeHandle({
   id,
   start,
   end,
-  draggedRef,
+  swallowClickRef,
   onResize,
   onPreview,
 }: {
   id: string;
   start: Date;
   end: Date;
-  draggedRef: React.MutableRefObject<boolean>;
+  swallowClickRef: React.MutableRefObject<boolean>;
   onResize?: (id: string, end: Date) => void;
   onPreview: (end: Date | null) => void;
 }) {
@@ -814,7 +847,7 @@ function ResizeHandle({
       const deltaY = upE.clientY - startY;
       const nextEnd = resizedEnd(start, end, deltaY);
       release();
-      draggedRef.current = isResizeMove(deltaY);
+      swallowClickRef.current = isResizeMove(deltaY);
       if (nextEnd) onResize?.(id, nextEnd);
     };
 
@@ -831,7 +864,7 @@ function ResizeHandle({
       onPointerDown={handlePointerDown}
       onClick={(e) => {
         e.stopPropagation();
-        draggedRef.current = false;
+        swallowClickRef.current = false;
       }}
     />
   );
@@ -861,7 +894,7 @@ function DayColumnContent<T extends Record<string, unknown>>({
   color,
   renderEvent,
   editable,
-  draggedRef,
+  swallowClickRef,
   resizing,
   creatingRange,
   onResize,
@@ -876,7 +909,7 @@ function DayColumnContent<T extends Record<string, unknown>>({
   color?: (item: T) => CalendarEventColor | undefined;
   renderEvent?: (item: T) => React.ReactNode;
   editable: boolean;
-  draggedRef: React.MutableRefObject<boolean>;
+  swallowClickRef: React.MutableRefObject<boolean>;
   resizing: { id: string; end: Date } | null;
   creatingRange?: { startMin: number; endMin: number } | null;
   onResize?: (id: string, end: Date) => void;
@@ -906,7 +939,7 @@ function DayColumnContent<T extends Record<string, unknown>>({
             label={label}
             laidOut={entry}
             color={color?.(entry.item)}
-            draggedRef={draggedRef}
+            swallowClickRef={swallowClickRef}
             onClick={() => onEventClick?.(entry.item)}
             onResize={onResize}
             onPreview={(end) => onPreview(end ? { id, end } : null)}
@@ -951,7 +984,7 @@ function DroppableDayColumn<T extends Record<string, unknown>>({
   color?: (item: T) => CalendarEventColor | undefined;
   renderEvent?: (item: T) => React.ReactNode;
   editable: boolean;
-  draggedRef: React.MutableRefObject<boolean>;
+  swallowClickRef: React.MutableRefObject<boolean>;
   resizing: { id: string; end: Date } | null;
   onResize?: (id: string, end: Date) => void;
   onPreview: (preview: { id: string; end: Date } | null) => void;
@@ -1035,7 +1068,7 @@ function PlainDayColumn<T extends Record<string, unknown>>(content: {
   color?: (item: T) => CalendarEventColor | undefined;
   renderEvent?: (item: T) => React.ReactNode;
   editable: boolean;
-  draggedRef: React.MutableRefObject<boolean>;
+  swallowClickRef: React.MutableRefObject<boolean>;
   resizing: { id: string; end: Date } | null;
   onResize?: (id: string, end: Date) => void;
   onPreview: (preview: { id: string; end: Date } | null) => void;
@@ -1059,7 +1092,8 @@ function TimeGridView<T extends Record<string, unknown>>({
   color,
   renderEvent,
   editable,
-  draggedRef,
+  swallowClickRef,
+  dayColumnsRef,
   onResize,
   onEventClick,
   onSlotSelect: selectSlot,
@@ -1076,7 +1110,8 @@ function TimeGridView<T extends Record<string, unknown>>({
   color?: (item: T) => CalendarEventColor | undefined;
   renderEvent?: (item: T) => React.ReactNode;
   editable: boolean;
-  draggedRef: React.MutableRefObject<boolean>;
+  swallowClickRef: React.MutableRefObject<boolean>;
+  dayColumnsRef: React.RefObject<HTMLDivElement | null>;
   onResize?: (id: string, end: Date) => void;
   onEventClick?: (item: T) => void;
   onSlotSelect?: (range: CalendarSlot) => void;
@@ -1162,38 +1197,40 @@ function TimeGridView<T extends Record<string, unknown>>({
               </div>
             ))}
           </div>
-          {days.map((day, dayIndex) => {
-            const timed = items.filter((item) => !spansAllDay(item) && isSameDay(getStart(item), day));
-            const laidOut = layoutDay(timed, getStart, getEnd);
-            const columnProps = {
-              laidOut,
-              getStart,
-              getEnd,
-              getId,
-              getTitle,
-              color,
-              renderEvent,
-              editable,
-              draggedRef,
-              resizing,
-              onResize,
-              onPreview: setResizing,
-              onEventClick,
-            };
-            return editable ? (
-              <DroppableDayColumn
-                key={day.toISOString()}
-                day={day}
-                dayIndex={dayIndex}
-                creating={creating}
-                onCreatingChange={setCreating}
-                onSlotSelect={selectSlot}
-                {...columnProps}
-              />
-            ) : (
-              <PlainDayColumn key={day.toISOString()} {...columnProps} />
-            );
-          })}
+          <div ref={dayColumnsRef} data-slot='calendar-day-columns' className='flex min-w-0 flex-1'>
+            {days.map((day, dayIndex) => {
+              const timed = items.filter((item) => !spansAllDay(item) && isSameDay(getStart(item), day));
+              const laidOut = layoutDay(timed, getStart, getEnd);
+              const columnProps = {
+                laidOut,
+                getStart,
+                getEnd,
+                getId,
+                getTitle,
+                color,
+                renderEvent,
+                editable,
+                swallowClickRef,
+                resizing,
+                onResize,
+                onPreview: setResizing,
+                onEventClick,
+              };
+              return editable ? (
+                <DroppableDayColumn
+                  key={day.toISOString()}
+                  day={day}
+                  dayIndex={dayIndex}
+                  creating={creating}
+                  onCreatingChange={setCreating}
+                  onSlotSelect={selectSlot}
+                  {...columnProps}
+                />
+              ) : (
+                <PlainDayColumn key={day.toISOString()} {...columnProps} />
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
@@ -1208,7 +1245,7 @@ function MonthEventPill<T>({
   title,
   label,
   color,
-  draggedRef,
+  swallowClickRef,
   onEventClick,
 }: {
   item: T;
@@ -1216,7 +1253,7 @@ function MonthEventPill<T>({
   title: string;
   label?: React.ReactNode;
   color?: CalendarEventColor;
-  draggedRef: React.MutableRefObject<boolean>;
+  swallowClickRef: React.MutableRefObject<boolean>;
   onEventClick?: (item: T) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
@@ -1229,8 +1266,8 @@ function MonthEventPill<T>({
       onClick={(e) => {
         if (!startedInside(e)) return;
         e.stopPropagation();
-        if (draggedRef.current) {
-          draggedRef.current = false;
+        if (swallowClickRef.current) {
+          swallowClickRef.current = false;
           return;
         }
         onEventClick?.(item);
@@ -1252,7 +1289,7 @@ function MonthCell<T extends Record<string, unknown>>({
   getTitle,
   color,
   renderEvent,
-  draggedRef,
+  swallowClickRef,
   onEventClick,
   onSlotSelect,
   more,
@@ -1265,7 +1302,7 @@ function MonthCell<T extends Record<string, unknown>>({
   getTitle: (item: T) => string;
   color?: (item: T) => CalendarEventColor | undefined;
   renderEvent?: (item: T) => React.ReactNode;
-  draggedRef: React.MutableRefObject<boolean>;
+  swallowClickRef: React.MutableRefObject<boolean>;
   onEventClick?: (item: T) => void;
   onSlotSelect?: (range: CalendarSlot) => void;
   more: (count: number) => string;
@@ -1297,7 +1334,7 @@ function MonthCell<T extends Record<string, unknown>>({
           title={getTitle(item)}
           label={renderEvent ? renderEvent(item) : undefined}
           color={color?.(item)}
-          draggedRef={draggedRef}
+          swallowClickRef={swallowClickRef}
           onEventClick={onEventClick}
         />
       ))}
@@ -1359,7 +1396,7 @@ function MonthView<T extends Record<string, unknown>>({
   color,
   renderEvent,
   editable,
-  draggedRef,
+  swallowClickRef,
   onEventClick,
   onSlotSelect,
   locale,
@@ -1374,7 +1411,7 @@ function MonthView<T extends Record<string, unknown>>({
   color?: (item: T) => CalendarEventColor | undefined;
   renderEvent?: (item: T) => React.ReactNode;
   editable: boolean;
-  draggedRef: React.MutableRefObject<boolean>;
+  swallowClickRef: React.MutableRefObject<boolean>;
   onEventClick?: (item: T) => void;
   onSlotSelect?: (range: CalendarSlot) => void;
   locale?: Locale;
@@ -1412,7 +1449,7 @@ function MonthView<T extends Record<string, unknown>>({
               getTitle={getTitle}
               color={color}
               renderEvent={renderEvent}
-              draggedRef={draggedRef}
+              swallowClickRef={swallowClickRef}
               onEventClick={onEventClick}
               onSlotSelect={onSlotSelect}
               more={more}

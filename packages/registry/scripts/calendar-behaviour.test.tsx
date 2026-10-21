@@ -26,6 +26,11 @@ const {
   overlayRange,
   yAtMinute,
   pointer,
+  holdEvent,
+  dropEvent,
+  dragEventBy,
+  translationOf,
+  eventPoint,
   captureCalls,
 } = harness;
 const calendars = {} as Record<Variant, CalendarComponent>;
@@ -389,6 +394,101 @@ describe.each(VARIANTS)('calendar on %s', (variant) => {
       expect(drawnHeight(RESIZABLE_EVENT.id)).toBe(height);
       expect(calendar.changes).toEqual([]);
       expect(calendar.errors).toEqual([]);
+    });
+  });
+
+  describe('event move', () => {
+    const HOUR = 48;
+    const DAY_WIDTH = 100;
+    // The week of CALENDAR_DATE starts on a Monday: the event of March 10 is in the second column.
+    const movable = (start: Date, end: Date): CalendarEvent => ({ ...TIMED_EVENT, id: 'movable', start, end });
+    const tuesday = (hours: number, minutes: number) => new Date(2026, 2, 10, hours, minutes);
+    // dnd-kit stops the clicks of the 50ms after a drag by itself; the click of the block is what is left after that.
+    const outwaitClickGuard = () => new Promise((resolve) => setTimeout(resolve, 60));
+    const mountMovable = (event: CalendarEvent) =>
+      mount(calendars[variant], { view: 'week', editable: true, events: [event] });
+
+    test('moves an event to the time under the pointer', async () => {
+      const event = movable(tuesday(10, 0), tuesday(11, 0));
+      const calendar = await mountMovable(event);
+      await dragEventBy(event.id, { x: 0, y: 2 * HOUR });
+      expect(calendar.changes).toEqual([[{ ...event, start: tuesday(12, 0), end: tuesday(13, 0) }]]);
+      expect(calendar.errors).toEqual([]);
+    });
+
+    test('moves an event to the day under the pointer and keeps its time', async () => {
+      const event = movable(tuesday(10, 0), tuesday(11, 30));
+      const calendar = await mountMovable(event);
+      await dragEventBy(event.id, { x: 2 * DAY_WIDTH, y: 0 });
+      expect(calendar.changes).toEqual([
+        [{ ...event, start: new Date(2026, 2, 12, 10, 0), end: new Date(2026, 2, 12, 11, 30) }],
+      ]);
+    });
+
+    test('lands an event dragged above the top at 00:00 of the same day', async () => {
+      const event = movable(tuesday(0, 30), tuesday(1, 30));
+      const calendar = await mountMovable(event);
+      await dragEventBy(event.id, { x: 0, y: -100 });
+      expect(calendar.changes).toEqual([[{ ...event, start: tuesday(0, 0), end: tuesday(1, 0) }]]);
+    });
+
+    test('lands an event dragged past the bottom at the end of the aimed day', async () => {
+      const event = movable(tuesday(23, 0), tuesday(23, 45));
+      const calendar = await mountMovable(event);
+      await dragEventBy(event.id, { x: DAY_WIDTH, y: 5 * HOUR });
+      expect(calendar.changes).toEqual([
+        [{ ...event, start: new Date(2026, 2, 11, 23, 15), end: new Date(2026, 2, 12, 0, 0) }],
+      ]);
+    });
+
+    test('lands an event dragged far below the grid in the day under it, not in a week away', async () => {
+      const event = movable(tuesday(23, 0), tuesday(23, 45));
+      const calendar = await mountMovable(event);
+      await dragEventBy(event.id, { x: DAY_WIDTH, y: 150 * HOUR });
+      expect(calendar.changes).toEqual([
+        [{ ...event, start: new Date(2026, 2, 11, 23, 15), end: new Date(2026, 2, 12, 0, 0) }],
+      ]);
+    });
+
+    test('draws the dragged event no further than the edges of the day columns', async () => {
+      const event = movable(tuesday(10, 0), tuesday(11, 0));
+      await mountMovable(event);
+      const { x, y } = eventPoint(event.id);
+      await holdEvent(event.id, [{ x: x + 40 * DAY_WIDTH, y: y + 150 * HOUR }]);
+      // The grid is 7 columns of 100px and 1152px tall; the event is 96px wide at 480px with a height of 48px.
+      expect(translationOf(event.id)).toEqual({ x: 7 * DAY_WIDTH - (DAY_WIDTH + 98), y: 24 * HOUR - 480 - HOUR });
+      await holdEvent(event.id, [{ x: x - 40 * DAY_WIDTH, y: y - 150 * HOUR }]);
+      expect(translationOf(event.id)).toEqual({ x: -(DAY_WIDTH + 2), y: -480 });
+      await dropEvent({ x, y });
+    });
+
+    test('does not open the event on the click that ends a move', async () => {
+      const event = movable(tuesday(10, 0), tuesday(11, 0));
+      const calendar = await mountMovable(event);
+      await dragEventBy(event.id, { x: 0, y: HOUR });
+      await outwaitClickGuard();
+      await click(eventLabel(event.id));
+      expect(calendar.eventClicks).toEqual([]);
+      await click(eventLabel(event.id));
+      expect(calendar.eventClicks).toHaveLength(1);
+    });
+  });
+
+  describe('event move on a day with 25 hours', () => {
+    runInTimeZone('Europe/Paris');
+
+    test('lands at the time written in the gutter under the pointer and keeps its duration', async () => {
+      const event = { ...TIMED_EVENT, start: new Date(2026, 9, 25, 20, 0), end: new Date(2026, 9, 25, 21, 0) };
+      const calendar = await mount(calendars[variant], {
+        view: 'day',
+        editable: true,
+        events: [event],
+        date: new Date(2026, 9, 25),
+      });
+      await dragEventBy(event.id, { x: 0, y: 3 * 48 });
+      expect(calendar.changes).toEqual([
+        [{ ...event, start: new Date(2026, 9, 25, 23, 0), end: new Date(2026, 9, 26, 0, 0) }],
+      ]);
     });
   });
 

@@ -10,6 +10,8 @@ export type CalendarEvent = {
   [key: string]: unknown;
 };
 
+type Point = { x: number; y: number };
+
 type CalendarSlot = { start: Date; end: Date; allDay: boolean };
 
 type CalendarRootProps = {
@@ -94,10 +96,15 @@ export function createCalendarHarness() {
   const captureCalls: string[] = [];
   let captured = false;
 
+  // dnd-kit stops every click on the document for 50ms after a drag ends, which would swallow the clicks of the next test.
+  const CLICK_GUARD_MS = 50;
+  let clickGuardEndsAt = 0;
+
   async function cleanup() {
     captureCalls.length = 0;
     captured = false;
     await reactMount.cleanup();
+    await new Promise((resolve) => setTimeout(resolve, Math.max(0, clickGuardEndsAt - Date.now())));
   }
 
   async function mount(
@@ -192,16 +199,33 @@ export function createCalendarHarness() {
   /** The height the grid draws for the event. */
   const drawnHeight = (id: string) => eventBlock(id)?.style.height;
 
-  // happy-dom computes no layout, so the day columns get the geometry of the grid: top at 0 and 48px per hour.
+  // happy-dom computes no layout, so the grid gets the geometry of a browser: day columns of 100px side by side with
+  // the top at 0 and 48px per hour, and the events at the place their style gives them.
   const HOUR_HEIGHT = 48;
+  const DAY_WIDTH = 100;
+  const EVENT_INSET = 2;
 
   /** The `clientY` of a pointer that is `minute` minutes after the start of the day of a column. */
   const yAtMinute = (minute: number) => (minute / 60) * HOUR_HEIGHT;
 
+  const rectOf = (left: number, top: number, width: number, height: number) => () =>
+    new DOMRect(left, top, width, height);
+
   function giveColumnsGeometry(): void {
-    for (const column of document.querySelectorAll<HTMLElement>('[data-slot="calendar-day-column"]')) {
-      column.getBoundingClientRect = () => new DOMRect(0, 0, 100, 24 * HOUR_HEIGHT);
-    }
+    const columns = [...document.querySelectorAll<HTMLElement>('[data-slot="calendar-day-column"]')];
+    columns.forEach((column, index) => {
+      column.getBoundingClientRect = rectOf(index * DAY_WIDTH, 0, DAY_WIDTH, 24 * HOUR_HEIGHT);
+      for (const block of column.querySelectorAll<HTMLElement>('button[data-event]')) {
+        block.getBoundingClientRect = rectOf(
+          index * DAY_WIDTH + EVENT_INSET,
+          Number.parseFloat(block.style.top),
+          DAY_WIDTH - 2 * EVENT_INSET,
+          Number.parseFloat(block.style.height),
+        );
+      }
+    });
+    const grid = document.querySelector<HTMLElement>('[data-slot="calendar-day-columns"]');
+    if (grid) grid.getBoundingClientRect = rectOf(0, 0, columns.length * DAY_WIDTH, 24 * HOUR_HEIGHT);
   }
 
   /** The day column of the time grid at `index`. */
@@ -249,6 +273,64 @@ export function createCalendarHarness() {
     });
   }
 
+  const SETTLE_MS = 20;
+  const settle = () => new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
+
+  function dragPointerEvent(type: string, target: EventTarget, { x, y }: Point) {
+    const event = new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0 });
+    Object.defineProperty(event, 'isPrimary', { value: true });
+    target.dispatchEvent(event);
+  }
+
+  /** A point on the event, where a pointer picks it up. */
+  function eventPoint(id: string): Point {
+    giveColumnsGeometry();
+    const block = eventBlock(id);
+    if (!block) throw new Error(`No event ${id}`);
+    const { left, top } = block.getBoundingClientRect();
+    return { x: left + 10, y: top + 10 };
+  }
+
+  /**
+   * Presses the pointer on an event and moves it through `path` as dnd-kit reads it: the sensor starts the drag at the
+   * first move over its distance and follows the pointer from the next one.
+   */
+  async function holdEvent(id: string, path: Point[]) {
+    const start = eventPoint(id);
+    const block = eventBlock(id) as HTMLElement;
+    await act(async () => {
+      dragPointerEvent('pointerdown', block, start);
+    });
+    for (const point of [{ x: start.x, y: start.y + 8 }, ...path]) {
+      await act(async () => {
+        dragPointerEvent('pointermove', document, point);
+        await settle();
+      });
+    }
+  }
+
+  async function dropEvent(at: Point) {
+    clickGuardEndsAt = Date.now() + CLICK_GUARD_MS;
+    await act(async () => {
+      dragPointerEvent('pointerup', document, at);
+      await settle();
+    });
+  }
+
+  /** Drags an event by `by` pixels and drops it there. */
+  async function dragEventBy(id: string, by: Point) {
+    const start = eventPoint(id);
+    const end = { x: start.x + by.x, y: start.y + by.y };
+    await holdEvent(id, [end]);
+    await dropEvent(end);
+  }
+
+  /** The translation the event is drawn with while it is dragged. */
+  function translationOf(id: string): Point {
+    const match = /translate3d\((-?[\d.]+)px, (-?[\d.]+)px/.exec(eventBlock(id)?.style.transform ?? '');
+    return { x: Number(match?.[1] ?? 0), y: Number(match?.[2] ?? 0) };
+  }
+
   return {
     load,
     cleanup,
@@ -264,6 +346,11 @@ export function createCalendarHarness() {
     overlayRange,
     yAtMinute,
     pointer,
+    eventPoint,
+    holdEvent,
+    dropEvent,
+    dragEventBy,
+    translationOf,
     captureCalls,
   };
 }

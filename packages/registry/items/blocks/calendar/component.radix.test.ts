@@ -1,6 +1,14 @@
 import { describe, expect, test } from 'bun:test';
 import { runInTimeZone } from '../../../scripts/time-zone';
-import { isResizeMove, layoutDay, pressedSlotRange, resizedEnd, wallClockDate } from './component.radix';
+import {
+  clampTranslation,
+  isResizeMove,
+  layoutDay,
+  movedStart,
+  pressedSlotRange,
+  resizedEnd,
+  wallClockDate,
+} from './component.radix';
 
 type Slot = { id: string; start: Date; end: Date };
 
@@ -244,5 +252,81 @@ describe('resizedEnd on a day with daylight saving', () => {
 
   test('stops at the start of the next day on a day with 25 hours', () => {
     expect(resizedEnd(new Date(2026, 9, 25, 22, 0), new Date(2026, 9, 25, 23, 0), 480)).toEqual(new Date(2026, 9, 26));
+  });
+});
+
+// The hour is 48px tall, so 48px is one hour and 12px is one snap step.
+describe('movedStart', () => {
+  const day = new Date(2026, 2, 11);
+  const nextDay = new Date(2026, 2, 12);
+
+  test('moves the start by the vertical move, snapped to the snap step', () => {
+    expect(movedStart(at(10, 0), at(11, 0), 48, day)).toEqual(new Date(2026, 2, 11, 11, 0));
+    expect(movedStart(at(10, 0), at(11, 0), 20, day)).toEqual(new Date(2026, 2, 11, 10, 30));
+    expect(movedStart(at(10, 0), at(11, 0), -9, day)).toEqual(new Date(2026, 2, 11, 9, 45));
+  });
+
+  test('keeps the time of the start on the day it is dropped on', () => {
+    expect(movedStart(at(10, 0), at(11, 0), 0, nextDay)).toEqual(new Date(2026, 2, 12, 10, 0));
+  });
+
+  test('starts an event dragged above the top at the start of the aimed day', () => {
+    expect(movedStart(at(0, 30), at(1, 30), -100, day)).toEqual(new Date(2026, 2, 11, 0, 0));
+    expect(movedStart(at(0, 30), at(1, 30), -100, nextDay)).toEqual(new Date(2026, 2, 12, 0, 0));
+  });
+
+  test('ends an event dragged past the bottom at the end of the aimed day', () => {
+    expect(movedStart(at(10, 0), at(11, 0), 5000, day)).toEqual(new Date(2026, 2, 11, 23, 0));
+    expect(movedStart(at(23, 0), at(23, 45), 200, day)).toEqual(new Date(2026, 2, 11, 23, 15));
+  });
+
+  test('stops an event longer than the space left so that it still ends in the day', () => {
+    expect(movedStart(at(20, 0), at(23, 0), 96, day)).toEqual(new Date(2026, 2, 11, 21, 0));
+  });
+
+  test('starts an event of a day or more at the start of the day', () => {
+    expect(movedStart(at(10, 0), new Date(2026, 2, 11, 12, 0), 96, day)).toEqual(new Date(2026, 2, 11, 0, 0));
+  });
+
+  test('clamps an event that crosses midnight into the day it is moved to', () => {
+    expect(movedStart(at(23, 0), new Date(2026, 2, 11, 1, 0), 0, day)).toEqual(new Date(2026, 2, 11, 22, 0));
+    expect(movedStart(at(23, 0), new Date(2026, 2, 11, 1, 0), 0, nextDay)).toEqual(new Date(2026, 2, 12, 22, 0));
+  });
+});
+
+describe('movedStart on a day with daylight saving', () => {
+  runInTimeZone('Europe/Paris');
+
+  test('lands at the time written on the clock under the pointer on a day with 25 hours', () => {
+    const day = new Date(2026, 9, 25);
+    const start = new Date(2026, 9, 25, 20, 0);
+    expect(movedStart(start, new Date(2026, 9, 25, 21, 0), 144, day)).toEqual(new Date(2026, 9, 25, 23, 0));
+  });
+
+  test('lands at the time written on the clock under the pointer on a day with 23 hours', () => {
+    const day = new Date(2026, 2, 29);
+    const start = new Date(2026, 2, 29, 1, 0);
+    expect(movedStart(start, new Date(2026, 2, 29, 2, 0), 144, day)).toEqual(new Date(2026, 2, 29, 4, 0));
+  });
+
+  test('keeps the time written on the clock when the event moves to a day with 25 hours', () => {
+    const start = new Date(2026, 9, 24, 23, 0);
+    expect(movedStart(start, new Date(2026, 9, 25, 0, 0), 0, new Date(2026, 9, 25))).toEqual(
+      new Date(2026, 9, 25, 23, 0),
+    );
+  });
+});
+
+describe('clampTranslation', () => {
+  const grid = { left: 100, top: 200, right: 800, bottom: 1400 };
+  const node = { left: 300, top: 400, right: 400, bottom: 448 };
+
+  test('leaves a translation that keeps the node in the grid', () => {
+    expect(clampTranslation({ x: 50, y: -100 }, node, grid)).toEqual({ x: 50, y: -100 });
+  });
+
+  test('stops the node at each edge of the grid', () => {
+    expect(clampTranslation({ x: -900, y: -900 }, node, grid)).toEqual({ x: -200, y: -200 });
+    expect(clampTranslation({ x: 9000, y: 9000 }, node, grid)).toEqual({ x: 400, y: 952 });
   });
 });
