@@ -600,6 +600,15 @@ function EventBlockContent({
   );
 }
 
+// React bubbles a click out of a portal through the component tree; the DOM target tells where it really started.
+function startedInside(e: React.SyntheticEvent): boolean {
+  return e.currentTarget.contains(e.target as Node);
+}
+
+function allDaySlot(day: Date): CalendarSlot {
+  return { start: startOfDay(day), end: addDays(startOfDay(day), 1), allDay: true };
+}
+
 const eventBlockClass = 'absolute z-10 overflow-hidden rounded px-1 py-0.5 text-left text-xs';
 
 function EventBlock({
@@ -623,7 +632,9 @@ function EventBlock({
     <button
       type='button'
       data-event=''
-      onClick={onClick}
+      onClick={(e) => {
+        if (startedInside(e)) onClick?.();
+      }}
       style={eventBlockStyle(start, end, laidOut)}
       className={cn(eventBlockClass, colorClasses(color))}
     >
@@ -667,7 +678,8 @@ function DraggableEventBlock({
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      onClick={() => {
+      onClick={(e) => {
+        if (!startedInside(e)) return;
         if (draggedRef.current) {
           draggedRef.current = false;
           return;
@@ -837,7 +849,7 @@ function DayColumnContent<T extends Record<string, unknown>>({
   );
 }
 
-const dayColumnClass = 'relative flex-1 border-l first:border-l-0';
+const dayColumnClass = 'relative min-w-0 flex-1 border-l first:border-l-0';
 
 function DroppableDayColumn<T extends Record<string, unknown>>({
   day,
@@ -1010,7 +1022,7 @@ function TimeGridView<T extends Record<string, unknown>>({
             {days.map((day) => (
               <div
                 key={day.toISOString()}
-                className='flex-1 border-l p-2 text-center text-xs font-medium first:border-l-0'
+                className='min-w-0 flex-1 border-l p-2 text-center text-xs font-medium first:border-l-0'
               >
                 {format(day, 'EEE d', { locale })}
               </div>
@@ -1026,13 +1038,16 @@ function TimeGridView<T extends Record<string, unknown>>({
               return (
                 <div
                   key={day.toISOString()}
+                  data-slot='calendar-all-day-cell'
                   className={cn(
-                    'flex min-h-7 flex-1 flex-col gap-1 border-l p-1 first:border-l-0',
+                    'flex min-h-7 min-w-0 flex-1 flex-col gap-1 border-l p-1 first:border-l-0',
                     canCreateAllDay && 'cursor-pointer',
                   )}
                   onClick={
                     canCreateAllDay
-                      ? () => selectSlot?.({ start: startOfDay(day), end: addDays(startOfDay(day), 1), allDay: true })
+                      ? (e) => {
+                          if (startedInside(e)) selectSlot?.(allDaySlot(day));
+                        }
                       : undefined
                   }
                 >
@@ -1041,6 +1056,7 @@ function TimeGridView<T extends Record<string, unknown>>({
                       type='button'
                       key={getId(item)}
                       onClick={(e) => {
+                        if (!startedInside(e)) return;
                         e.stopPropagation();
                         onEventClick?.(item);
                       }}
@@ -1131,6 +1147,7 @@ function MonthEventPill<T>({
       {...attributes}
       {...listeners}
       onClick={(e) => {
+        if (!startedInside(e)) return;
         e.stopPropagation();
         if (draggedRef.current) {
           draggedRef.current = false;
@@ -1174,11 +1191,22 @@ function MonthCell<T extends Record<string, unknown>>({
   more: (count: number) => string;
 }) {
   const { setNodeRef } = useDroppable({ id: `cell-${day.toISOString()}`, data: { day } });
+  const canCreateAllDay = Boolean(onSlotSelect);
   return (
     <div
       ref={setNodeRef}
-      className='flex min-h-24 cursor-pointer flex-col gap-1 border-b border-l p-1 hover:bg-accent/50 [&:nth-child(7n+1)]:border-l-0'
-      onClick={() => onSlotSelect?.({ start: startOfDay(day), end: addDays(startOfDay(day), 1), allDay: true })}
+      data-slot='calendar-month-cell'
+      className={cn(
+        'flex min-h-24 flex-col gap-1 border-b border-l p-1 [&:nth-child(7n+1)]:border-l-0',
+        canCreateAllDay && 'cursor-pointer hover:bg-accent/50',
+      )}
+      onClick={
+        canCreateAllDay
+          ? (e) => {
+              if (startedInside(e)) onSlotSelect?.(allDaySlot(day));
+            }
+          : undefined
+      }
     >
       <span className={cn('text-xs', !isSameMonth(day, date) && 'text-muted-foreground')}>{format(day, 'd')}</span>
       {visible.map((item) => (
@@ -1229,7 +1257,9 @@ function PlainMonthCell<T extends Record<string, unknown>>({
           type='button'
           key={getId(item)}
           className={cn(monthPillClass, colorClasses(color?.(item)))}
-          onClick={() => onEventClick?.(item)}
+          onClick={(e) => {
+            if (startedInside(e)) onEventClick?.(item);
+          }}
         >
           {renderEvent ? renderEvent(item) : getTitle(item)}
         </button>
@@ -1375,7 +1405,9 @@ function AgendaView<T extends Record<string, unknown>>({
             <button
               type='button'
               key={getId(item)}
-              onClick={() => onEventClick?.(item)}
+              onClick={(e) => {
+                if (startedInside(e)) onEventClick?.(item);
+              }}
               className='flex w-full items-center gap-2 text-left text-sm'
             >
               <span className={cn('size-2 rounded-full', colorClasses(color?.(item)))} />

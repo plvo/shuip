@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import { type BoardTask, VARIANTS } from './board-behaviour-harness';
+import type { BoardTask } from './board-behaviour-harness';
 import { defineBoardDragSuite, ranked, WITH_POSITIONS } from './board-drag-suite';
+import { VARIANTS } from './react-mount';
 
 const { boards, mount, handleOf, columnTitles, dropSlotPlace, hold, release, drag } = defineBoardDragSuite({
   name: 'data-board',
