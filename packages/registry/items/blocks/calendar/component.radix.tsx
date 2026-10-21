@@ -553,7 +553,7 @@ export function isResizeMove(deltaY: number): boolean {
 }
 
 /** The end a resize of `deltaY` pixels gives the event, or null when the move is no resize or leaves the end as it is. */
-export function resizeEndOnRelease(start: Date, end: Date, deltaY: number): Date | null {
+export function resizedEnd(start: Date, end: Date, deltaY: number): Date | null {
   if (!isResizeMove(deltaY)) return null;
   const minEnd = new Date(start.getTime() + SNAP_MINUTES * 60_000);
   const proposed = snapToMinutes(new Date(end.getTime() + (deltaY / HOUR_HEIGHT) * 3_600_000));
@@ -575,13 +575,14 @@ export function layoutDay<T>(dayEvents: T[], getStart: (t: T) => Date, getEnd: (
   const sorted = [...dayEvents].sort((a, b) => getStart(a).getTime() - getStart(b).getTime());
   const colEnds: number[] = [];
   const placed = sorted.map((item) => {
-    const s = getStart(item).getTime();
+    const start = getStart(item);
+    const s = start.getTime();
     let col = colEnds.findIndex((end) => end <= s);
     if (col === -1) {
       col = colEnds.length;
       colEnds.push(0);
     }
-    colEnds[col] = s + drawnMinutes(getStart(item), getEnd(item)) * 60_000;
+    colEnds[col] = s + drawnMinutes(start, getEnd(item)) * 60_000;
     return { item, col };
   });
   const cols = Math.max(1, colEnds.length);
@@ -734,6 +735,7 @@ function ResizeHandle({
   onPreview: (end: Date | null) => void;
 }) {
   const handlePointerDown = (e: React.PointerEvent<HTMLSpanElement>) => {
+    if (e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
     const target = e.target as HTMLElement;
@@ -749,10 +751,10 @@ function ResizeHandle({
       onPreview(null);
     };
 
-    const onMove = (moveE: PointerEvent) => onPreview(resizeEndOnRelease(start, end, moveE.clientY - startY));
+    const onMove = (moveE: PointerEvent) => onPreview(resizedEnd(start, end, moveE.clientY - startY));
 
     const onUp = (upE: PointerEvent) => {
-      const nextEnd = resizeEndOnRelease(start, end, upE.clientY - startY);
+      const nextEnd = resizedEnd(start, end, upE.clientY - startY);
       release();
       if (nextEnd) onResize?.(id, nextEnd);
     };
@@ -765,6 +767,7 @@ function ResizeHandle({
   return (
     <span
       data-event=''
+      data-slot='calendar-resize-handle'
       className='absolute inset-x-0 bottom-0 z-20 h-1.5 cursor-ns-resize'
       onPointerDown={handlePointerDown}
       onClick={(e) => e.stopPropagation()}

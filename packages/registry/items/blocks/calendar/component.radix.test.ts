@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { isResizeMove, layoutDay, resizeEndOnRelease } from './component.radix';
+import { isResizeMove, layoutDay, resizedEnd } from './component.radix';
 
 type Slot = { id: string; start: Date; end: Date };
 
@@ -67,28 +67,28 @@ describe('isResizeMove', () => {
   });
 });
 
-describe('resizeEndOnRelease', () => {
+describe('resizedEnd', () => {
   const start = at(9, 0);
 
   test('keeps the end of a tap, even when the end is off the snap grid', () => {
-    expect(resizeEndOnRelease(start, at(10, 7), 0)).toBeNull();
+    expect(resizedEnd(start, at(10, 7), 0)).toBeNull();
   });
 
   test('keeps the end under half a snap step, in both directions', () => {
-    expect(resizeEndOnRelease(start, at(10, 7), 5.9)).toBeNull();
-    expect(resizeEndOnRelease(start, at(10, 7), -5.9)).toBeNull();
+    expect(resizedEnd(start, at(10, 7), 5.9)).toBeNull();
+    expect(resizedEnd(start, at(10, 7), -5.9)).toBeNull();
   });
 
   test('snaps the end over half a snap step, in both directions', () => {
-    expect(resizeEndOnRelease(start, at(10, 0), 6.1)).toEqual(at(10, 15));
-    expect(resizeEndOnRelease(start, at(10, 0), -6.1)).toEqual(at(9, 45));
+    expect(resizedEnd(start, at(10, 0), 6.1)).toEqual(at(10, 15));
+    expect(resizedEnd(start, at(10, 0), -6.1)).toEqual(at(9, 45));
   });
 
   test('returns nothing when the end stays where it is', () => {
-    expect(resizeEndOnRelease(at(9, 45), at(10, 0), -24)).toBeNull();
+    expect(resizedEnd(at(9, 45), at(10, 0), -24)).toBeNull();
   });
 
   test('never ends an event less than a snap step after its start', () => {
-    expect(resizeEndOnRelease(start, at(10, 0), -480)).toEqual(at(9, 15));
+    expect(resizedEnd(start, at(10, 0), -480)).toEqual(at(9, 15));
   });
 });
