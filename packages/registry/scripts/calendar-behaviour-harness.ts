@@ -42,6 +42,7 @@ type MountOptions = {
   editable?: boolean;
   withSlotSelect?: boolean;
   events?: CalendarEvent[];
+  date?: Date;
 };
 
 // A Tuesday in the middle of a month, so that every view shows the events below.
@@ -101,7 +102,13 @@ export function createCalendarHarness() {
 
   async function mount(
     Calendar: CalendarComponent,
-    { view, editable = false, withSlotSelect = false, events = [TIMED_EVENT, ALL_DAY_EVENT] }: MountOptions,
+    {
+      view,
+      editable = false,
+      withSlotSelect = false,
+      events = [TIMED_EVENT, ALL_DAY_EVENT],
+      date = CALENDAR_DATE,
+    }: MountOptions,
   ) {
     const { errors, render } = reactMount.mount();
     const calendar = {
@@ -152,7 +159,7 @@ export function createCalendarHarness() {
             allDayField: 'allDay',
             renderEvent,
             view,
-            date: CALENDAR_DATE,
+            date,
             editable,
             onEventClick: (item: CalendarEvent) => calendar.eventClicks.push(item),
             onEventsChange: (next: CalendarEvent[]) => calendar.changes.push(next),
@@ -247,6 +254,7 @@ export function createCalendarHarness() {
     cleanup,
     mount,
     eventLabel,
+    eventBlock,
     portalMenu,
     click,
     resizeHandle,

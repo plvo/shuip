@@ -10,11 +10,13 @@ import {
 } from './calendar-behaviour-harness';
 import { installDom, resolveCanonicalAliases } from './dom-environment';
 import { VARIANTS, type Variant } from './react-mount';
+import { useTimeZone } from './time-zone';
 
 const harness = createCalendarHarness();
 const {
   mount,
   eventLabel,
+  eventBlock,
   portalMenu,
   click,
   resizeHandle,
@@ -210,6 +212,60 @@ describe.each(VARIANTS)('calendar on %s', (variant) => {
     });
   });
 
+  describe('editable day column within the day', () => {
+    const wednesday = () => dayColumn(2);
+    const at = (hours: number, minutes: number) => hours * 60 + minutes;
+
+    test('ends a click at 23:50 at the end of the day', async () => {
+      const calendar = await mount(calendars[variant], { view: 'week', editable: true, withSlotSelect: true });
+      await pointer('pointerdown', wednesday(), yAtMinute(at(23, 50)));
+      expect(overlayRange()).toEqual({ startMin: at(23, 45), endMin: at(24, 0) });
+      await pointer('pointerup', wednesday(), yAtMinute(at(23, 50)));
+      expect(calendar.slots).toEqual([
+        { start: new Date(2026, 2, 11, 23, 45), end: new Date(2026, 2, 12, 0, 0), allDay: false },
+      ]);
+    });
+
+    test('ends a creation dragged below the column at the end of the day', async () => {
+      const calendar = await mount(calendars[variant], { view: 'week', editable: true, withSlotSelect: true });
+      await pointer('pointerdown', wednesday(), yAtMinute(at(23, 10)));
+      await pointer('pointermove', wednesday(), yAtMinute(at(26, 0)));
+      await pointer('pointerup', wednesday(), yAtMinute(at(26, 0)));
+      expect(calendar.slots).toEqual([
+        { start: new Date(2026, 2, 11, 23, 0), end: new Date(2026, 2, 12, 0, 0), allDay: false },
+      ]);
+    });
+
+    test('starts a creation dragged above the top at 00:00 of the same day', async () => {
+      const calendar = await mount(calendars[variant], { view: 'week', editable: true, withSlotSelect: true });
+      await pointer('pointerdown', wednesday(), yAtMinute(at(0, 20)));
+      await pointer('pointermove', wednesday(), yAtMinute(-at(1, 0)));
+      await pointer('pointerup', wednesday(), yAtMinute(-at(1, 0)));
+      expect(calendar.slots).toEqual([
+        { start: new Date(2026, 2, 11, 0, 0), end: new Date(2026, 2, 11, 0, 30), allDay: false },
+      ]);
+    });
+  });
+
+  describe('editable day column on a day with 25 hours', () => {
+    useTimeZone('Europe/Paris');
+
+    test('creates at the hour of the press', async () => {
+      const calendar = await mount(calendars[variant], {
+        view: 'day',
+        editable: true,
+        withSlotSelect: true,
+        events: [],
+        date: new Date(2026, 9, 25),
+      });
+      await pointer('pointerdown', dayColumn(0), yAtMinute(23 * 60));
+      await pointer('pointerup', dayColumn(0), yAtMinute(23 * 60));
+      expect(calendar.slots).toEqual([
+        { start: new Date(2026, 9, 25, 23, 0), end: new Date(2026, 9, 26, 0, 0), allDay: false },
+      ]);
+    });
+  });
+
   describe('editable all-day cell', () => {
     // The week of CALENDAR_DATE starts on a Monday, so the third cell is the Wednesday after the event.
     const wednesdayCell = () => cellsOf('calendar-all-day-cell')[2] ?? null;
@@ -252,6 +308,57 @@ describe.each(VARIANTS)('calendar on %s', (variant) => {
       await pointer('pointerup', handle, 100 + HOUR);
       expect(calendar.changes).toEqual([[{ ...RESIZABLE_EVENT, end: new Date(2026, 2, 10, 11, 0) }]]);
       expect(calendar.errors).toEqual([]);
+    });
+
+    // The pointer is captured by the handle, which a mouse click follows; a touch click goes to what lies under the finger.
+    test('opens nothing when the click of a touch resize reaches the event', async () => {
+      const calendar = await mountResizable();
+      const handle = resizeHandle(RESIZABLE_EVENT.id) as HTMLElement;
+      await pointer('pointerdown', handle, 100);
+      await pointer('pointermove', handle, 108);
+      await pointer('pointerup', handle, 108);
+      await click(eventBlock(RESIZABLE_EVENT.id));
+      expect(calendar.changes).toEqual([[{ ...RESIZABLE_EVENT, end: new Date(2026, 2, 10, 10, 15) }]]);
+      expect(calendar.eventClicks).toEqual([]);
+      await click(eventBlock(RESIZABLE_EVENT.id));
+      expect(calendar.eventClicks).toEqual([RESIZABLE_EVENT]);
+      expect(calendar.errors).toEqual([]);
+    });
+
+    test('opens nothing when the click of a mouse resize reaches the handle, then opens on the next click', async () => {
+      const calendar = await mountResizable();
+      const handle = resizeHandle(RESIZABLE_EVENT.id) as HTMLElement;
+      await pointer('pointerdown', handle, 100);
+      await pointer('pointerup', handle, 100 + HOUR);
+      await click(handle);
+      expect(calendar.changes).toHaveLength(1);
+      expect(calendar.eventClicks).toEqual([]);
+      await click(eventBlock(RESIZABLE_EVENT.id));
+      expect(calendar.eventClicks).toEqual([RESIZABLE_EVENT]);
+    });
+
+    test('opens the event on a press and click after a resize that was followed by no click', async () => {
+      const calendar = await mountResizable();
+      const handle = resizeHandle(RESIZABLE_EVENT.id) as HTMLElement;
+      await pointer('pointerdown', handle, 100);
+      await pointer('pointerup', handle, 100 + 4 * HOUR);
+      const block = eventBlock(RESIZABLE_EVENT.id) as HTMLElement;
+      await pointer('pointerdown', block, 10);
+      await pointer('pointerup', block, 10);
+      await click(block);
+      expect(calendar.eventClicks).toEqual([RESIZABLE_EVENT]);
+    });
+
+    test('stops a resize dragged below the grid at the end of the day', async () => {
+      const calendar = await mount(calendars[variant], {
+        view: 'week',
+        editable: true,
+        events: [{ ...RESIZABLE_EVENT, start: new Date(2026, 2, 10, 23, 0), end: new Date(2026, 2, 10, 23, 45) }],
+      });
+      const handle = resizeHandle(RESIZABLE_EVENT.id) as HTMLElement;
+      await pointer('pointerdown', handle, 100);
+      await pointer('pointerup', handle, 100 + 3 * HOUR);
+      expect(calendar.changes[0]?.[0]?.end).toEqual(new Date(2026, 2, 11, 0, 0));
     });
 
     test('ignores a press of a button other than the main one', async () => {
