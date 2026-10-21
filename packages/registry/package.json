@@ -19,8 +19,8 @@
   },
   "scripts": {
     "registry:generate": "bun run scripts/generate.ts",
-    "typecheck:base": "bun run scripts/generate.ts && tsc --noEmit -p items",
-    "typecheck:radix": "bun run scripts/generate.ts && tsc --noEmit -p .",
+    "typecheck:base": "bun run scripts/generate.ts && tsc --noEmit -p items && tsc --noEmit -p items/tsconfig.indexed-access.json",
+    "typecheck:radix": "bun run scripts/generate.ts && tsc --noEmit -p . && tsc --noEmit -p tsconfig.indexed-access.json",
     "test": "bun test --isolate"
   },
   "dependencies": {

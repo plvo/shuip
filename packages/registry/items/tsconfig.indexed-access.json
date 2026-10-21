@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noUncheckedIndexedAccess": true },
+  "include": [
+    "../generated/base/items/blocks/kanban/component.base.tsx",
+    "../generated/base/items/blocks/data-board/component.base.tsx"
+  ],
+  "exclude": ["node_modules"]
+}
