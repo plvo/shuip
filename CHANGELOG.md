@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/plvo/shuip/compare/v2.0.0...v2.0.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **calendar:** keep created and resized events in their day ([#184](https://github.com/plvo/shuip/issues/184)) ([e03a7ef](https://github.com/plvo/shuip/commit/e03a7ef5a2873082092e917071c5687e3253f839))
+
 ## [2.0.0](https://github.com/plvo/shuip/compare/v1.3.0...v2.0.0) (2026-10-21)
 
 
