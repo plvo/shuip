@@ -125,10 +125,11 @@ type CalendarContextValue<T extends CalendarEventLike = CalendarEventLike> = {
   onSlotSelect?: (range: CalendarSlot) => void;
   resizeEvent: (id: string, end: Date) => void;
   draggedRef: React.MutableRefObject<boolean>;
-  dayColumnsRef: React.RefObject<HTMLDivElement | null>;
 };
 
 const CalendarContext = React.createContext<CalendarContextValue | null>(null);
+
+const DayColumnsContext = React.createContext<React.RefObject<HTMLDivElement | null> | null>(null);
 
 export function useCalendar<T extends CalendarEventLike = CalendarEventLike>(): CalendarContextValue<T> {
   const ctx = React.use(CalendarContext);
@@ -325,7 +326,6 @@ function CalendarRoot<T extends CalendarEventLike>({
       onSlotSelect,
       resizeEvent,
       draggedRef,
-      dayColumnsRef,
     }),
     [
       view,
@@ -359,13 +359,15 @@ function CalendarRoot<T extends CalendarEventLike>({
 
   return (
     <CalendarContext.Provider value={value as unknown as CalendarContextValue}>
-      {editable ? (
-        <DndContext id={dndId} sensors={sensors} modifiers={modifiers} onDragEnd={handleDragEnd}>
-          {children}
-        </DndContext>
-      ) : (
-        children
-      )}
+      <DayColumnsContext.Provider value={dayColumnsRef}>
+        {editable ? (
+          <DndContext id={dndId} sensors={sensors} modifiers={modifiers} onDragEnd={handleDragEnd}>
+            {children}
+          </DndContext>
+        ) : (
+          children
+        )}
+      </DayColumnsContext.Provider>
     </CalendarContext.Provider>
   );
 }
@@ -419,7 +421,6 @@ function CalendarViewComponent({ className }: { className?: string }) {
     renderEvent,
     editable,
     draggedRef,
-    dayColumnsRef,
     resizeEvent,
     onEventClick,
     onSlotSelect,
@@ -473,7 +474,6 @@ function CalendarViewComponent({ className }: { className?: string }) {
             renderEvent={renderEvent}
             editable={editable}
             draggedRef={draggedRef}
-            dayColumnsRef={dayColumnsRef}
             onResize={editable ? resizeEvent : undefined}
             onEventClick={onEventClick}
             onSlotSelect={onSlotSelect}
@@ -1097,7 +1097,6 @@ function TimeGridView<T extends Record<string, unknown>>({
   renderEvent,
   editable,
   draggedRef,
-  dayColumnsRef,
   onResize,
   onEventClick,
   onSlotSelect: selectSlot,
@@ -1115,13 +1114,13 @@ function TimeGridView<T extends Record<string, unknown>>({
   renderEvent?: (item: T) => React.ReactNode;
   editable: boolean;
   draggedRef: React.MutableRefObject<boolean>;
-  dayColumnsRef: React.RefObject<HTMLDivElement | null>;
   onResize?: (id: string, end: Date) => void;
   onEventClick?: (item: T) => void;
   onSlotSelect?: (range: CalendarSlot) => void;
   locale?: Locale;
   allDayLabel: string;
 }) {
+  const dayColumnsRef = React.use(DayColumnsContext);
   const [resizing, setResizing] = React.useState<{ id: string; end: Date } | null>(null);
   const [creating, setCreating] = React.useState<Creating | null>(null);
 
