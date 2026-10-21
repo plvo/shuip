@@ -55,7 +55,7 @@ export default function KanbanPersistPositionsExample() {
         columnField='status'
         positionField='position'
         title={(task) => task.title}
-        fields={[{ key: 'position', label: 'position' }]}
+        fields={[{ key: 'position', label: 'Position' }]}
         onCardMove={(event) => void persist(event)}
       />
       <div className='space-y-1'>
