@@ -1,4 +1,5 @@
 import type { ComponentType, ReactNode } from 'react';
+import { createPointerDriver, type Point } from './dnd-pointer';
 import { createReactMount } from './react-mount';
 
 export type CalendarEvent = {
@@ -9,8 +10,6 @@ export type CalendarEvent = {
   allDay: boolean;
   [key: string]: unknown;
 };
-
-type Point = { x: number; y: number };
 
 type CalendarSlot = { start: Date; end: Date; allDay: boolean };
 
@@ -46,6 +45,9 @@ type MountOptions = {
   events?: CalendarEvent[];
   date?: Date;
 };
+
+export const HOUR_HEIGHT = 48;
+export const DAY_WIDTH = 100;
 
 // A Tuesday in the middle of a month, so that every view shows the events below.
 const CALENDAR_DATE = new Date(2026, 2, 10);
@@ -96,15 +98,24 @@ export function createCalendarHarness() {
   const captureCalls: string[] = [];
   let captured = false;
 
-  // dnd-kit stops every click on the document for 50ms after a drag ends, which would swallow the clicks of the next test.
-  const CLICK_GUARD_MS = 50;
+  // dnd-kit stops every click on the document for 50ms after a drag ends, which would swallow the clicks that follow.
+  const DND_CLICK_GUARD_MS = 50;
+  const CLICK_GUARD_MARGIN_MS = 10;
   let clickGuardEndsAt = 0;
+
+  const startClickGuard = () => {
+    clickGuardEndsAt = Date.now() + DND_CLICK_GUARD_MS + CLICK_GUARD_MARGIN_MS;
+  };
+
+  /** Waits until dnd-kit lets the clicks of the document through again. */
+  const outwaitClickGuard = () =>
+    new Promise((resolve) => setTimeout(resolve, Math.max(0, clickGuardEndsAt - Date.now())));
 
   async function cleanup() {
     captureCalls.length = 0;
     captured = false;
     await reactMount.cleanup();
-    await new Promise((resolve) => setTimeout(resolve, Math.max(0, clickGuardEndsAt - Date.now())));
+    await outwaitClickGuard();
   }
 
   async function mount(
@@ -128,6 +139,8 @@ export function createCalendarHarness() {
           context?.resizeEvent(id, end);
         });
       },
+      /** The fields of the value `useCalendar` returns. */
+      contextKeys: () => Object.keys(context ?? {}),
       portalClicks: [] as string[],
       ancestorClicks: 0,
       errors,
@@ -199,11 +212,12 @@ export function createCalendarHarness() {
   /** The height the grid draws for the event. */
   const drawnHeight = (id: string) => eventBlock(id)?.style.height;
 
-  // happy-dom computes no layout, so the grid gets the geometry of a browser: day columns of 100px side by side with
-  // the top at 0 and 48px per hour, and the events at the place their style gives them.
-  const HOUR_HEIGHT = 48;
-  const DAY_WIDTH = 100;
+  // happy-dom computes no layout, so the grids get the geometry of a browser: day columns of 100px side by side with
+  // the top at 0 and 48px per hour, or month cells of 100px, and the events at the place their style gives them.
   const EVENT_INSET = 2;
+  const MONTH_CELL_HEIGHT = 100;
+  const MONTH_PILL_TOP = 20;
+  const MONTH_PILL_HEIGHT = 18;
 
   /** The `clientY` of a pointer that is `minute` minutes after the start of the day of a column. */
   const yAtMinute = (minute: number) => (minute / 60) * HOUR_HEIGHT;
@@ -226,6 +240,23 @@ export function createCalendarHarness() {
     });
     const grid = document.querySelector<HTMLElement>('[data-slot="calendar-day-columns"]');
     if (grid) grid.getBoundingClientRect = rectOf(0, 0, columns.length * DAY_WIDTH, 24 * HOUR_HEIGHT);
+  }
+
+  function giveMonthGeometry(): void {
+    const cells = document.querySelectorAll<HTMLElement>('[data-slot="calendar-month-cell"]');
+    cells.forEach((cell, index) => {
+      const left = (index % 7) * DAY_WIDTH;
+      const top = Math.floor(index / 7) * MONTH_CELL_HEIGHT;
+      cell.getBoundingClientRect = rectOf(left, top, DAY_WIDTH, MONTH_CELL_HEIGHT);
+      for (const pill of cell.querySelectorAll<HTMLElement>('button')) {
+        pill.getBoundingClientRect = rectOf(
+          left + EVENT_INSET,
+          top + MONTH_PILL_TOP,
+          DAY_WIDTH - 2 * EVENT_INSET,
+          MONTH_PILL_HEIGHT,
+        );
+      }
+    });
   }
 
   /** The day column of the time grid at `index`. */
@@ -273,48 +304,28 @@ export function createCalendarHarness() {
     });
   }
 
-  const SETTLE_MS = 20;
-  const settle = () => new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
-
-  function dragPointerEvent(type: string, target: EventTarget, { x, y }: Point) {
-    const event = new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0 });
-    Object.defineProperty(event, 'isPrimary', { value: true });
-    target.dispatchEvent(event);
-  }
+  const pointerDriver = createPointerDriver(() => act);
 
   /** A point on the event, where a pointer picks it up. */
   function eventPoint(id: string): Point {
     giveColumnsGeometry();
+    giveMonthGeometry();
     const block = eventBlock(id);
     if (!block) throw new Error(`No event ${id}`);
     const { left, top } = block.getBoundingClientRect();
     return { x: left + 10, y: top + 10 };
   }
 
-  /**
-   * Presses the pointer on an event and moves it through `path` as dnd-kit reads it: the sensor starts the drag at the
-   * first move over its distance and follows the pointer from the next one.
-   */
+  /** Presses the pointer on an event and moves it through `path`, after the few pixels that start the drag. */
   async function holdEvent(id: string, path: Point[]) {
     const start = eventPoint(id);
-    const block = eventBlock(id) as HTMLElement;
-    await act(async () => {
-      dragPointerEvent('pointerdown', block, start);
-    });
-    for (const point of [{ x: start.x, y: start.y + 8 }, ...path]) {
-      await act(async () => {
-        dragPointerEvent('pointermove', document, point);
-        await settle();
-      });
-    }
+    startClickGuard();
+    await pointerDriver.hold(eventBlock(id) as HTMLElement, [start, { x: start.x, y: start.y + 8 }, ...path]);
   }
 
   async function dropEvent(at: Point) {
-    clickGuardEndsAt = Date.now() + CLICK_GUARD_MS;
-    await act(async () => {
-      dragPointerEvent('pointerup', document, at);
-      await settle();
-    });
+    startClickGuard();
+    await pointerDriver.release(at);
   }
 
   /** Drags an event by `by` pixels and drops it there. */
@@ -351,6 +362,7 @@ export function createCalendarHarness() {
     dropEvent,
     dragEventBy,
     translationOf,
+    outwaitClickGuard,
     captureCalls,
   };
 }

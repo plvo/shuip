@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react';
+import { createPointerDriver, type Point, settle } from './dnd-pointer';
 import { createReactMount } from './react-mount';
 
 export type BoardTask = { id: string; status: string; title: string; rank?: number; sprint?: number };
@@ -51,7 +52,6 @@ export const INITIAL_COLUMNS = [['Task A', 'Task B', 'Task C'], [], ['Task D']];
 export const CARD_HEIGHT = 80;
 
 type Rect = { top: number; left: number; width: number; height: number };
-type Point = { x: number; y: number };
 
 const COLUMN_WIDTH = 300;
 const COLUMN_TOP = 100;
@@ -162,8 +162,6 @@ export function createBoardHarness({ columnSlot, dropSlot: dropSlotSelector, ban
 
   const { cleanup } = reactMount;
 
-  const settle = (ms = 20) => new Promise((resolve) => setTimeout(resolve, ms));
-
   async function mount(Board: ComponentType<BoardProps>, { data, ...options }: MountOptions = {}) {
     const { errors, render } = reactMount.mount();
     const board = {
@@ -214,34 +212,7 @@ export function createBoardHarness({ columnSlot, dropSlot: dropSlotSelector, ban
     };
   };
 
-  function pointerEvent(type: string, target: EventTarget, x: number, y: number) {
-    const event = new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0 });
-    Object.defineProperty(event, 'isPrimary', { value: true });
-    target.dispatchEvent(event);
-  }
-
-  async function moveTo({ x, y }: Point) {
-    await act(async () => {
-      pointerEvent('pointermove', document, x, y);
-      await settle();
-    });
-  }
-
-  async function hold(handle: HTMLElement, path: Point[]) {
-    const [start, ...rest] = path;
-    if (!start) return;
-    await act(async () => {
-      pointerEvent('pointerdown', handle, start.x, start.y);
-    });
-    for (const point of rest) await moveTo(point);
-  }
-
-  async function release({ x, y }: Point) {
-    await act(async () => {
-      pointerEvent('pointerup', document, x, y);
-      await settle();
-    });
-  }
+  const { moveTo, hold, release } = createPointerDriver(() => act);
 
   async function search(query: string) {
     const input = document.querySelector('input') as HTMLInputElement;
