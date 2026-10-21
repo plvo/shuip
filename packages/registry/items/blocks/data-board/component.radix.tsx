@@ -199,7 +199,7 @@ export const detectBoardCollision: CollisionDetection = (args) => {
     const rect = droppableRects.get(container.id);
     const data = dataOf(container);
     if (!rect || !data || data.zone) continue;
-    if (data.columnId !== zoneData.columnId || data.groupId !== zoneData.groupId) continue;
+    if (!isSameCell(data, zoneData)) continue;
     lowestEdge = Math.max(lowestEdge, rect.bottom);
     const offset = point.y - (rect.top + rect.height / 2);
     const distance = Math.abs(offset);
@@ -212,6 +212,10 @@ export const detectBoardCollision: CollisionDetection = (args) => {
 };
 
 type CardCell = { columnId: string; groupId?: string };
+
+function isSameCell(a: CardCell, b: CardCell): boolean {
+  return a.columnId === b.columnId && a.groupId === b.groupId;
+}
 
 // Where a dragged card would land: the cell, and the rank it takes among the
 // cards of that cell once the dragged card has left it.
@@ -305,7 +309,7 @@ function dropOverOf({ collisions }: { collisions: Collision[] | null }): DropOve
 
 export function isSameSlot(a: DropSlot | null, b: DropSlot | null): boolean {
   if (a == null || b == null) return a === b;
-  return a.columnId === b.columnId && a.groupId === b.groupId && a.index === b.index;
+  return isSameCell(a, b) && a.index === b.index;
 }
 
 // Finds in `fresh`, a newer list than `items`, the slot between the cards that
@@ -964,7 +968,7 @@ function useDataBoardDrag<T extends object>({
   const [activeId, setActiveId] = React.useState<string | null>(null);
   // `entering` tells that the slot just came into its cell, as opposed to having
   // moved inside it.
-  const [previewState, setPreview] = React.useState<{ slot: DropSlot; entering: boolean } | null>(null);
+  const [previewState, setPreviewState] = React.useState<{ slot: DropSlot; entering: boolean } | null>(null);
 
   const bands = React.useMemo(
     () => (groupBy ? buildGroups(items, groupBy, ungroupedLabel) : null),
@@ -998,7 +1002,7 @@ function useDataBoardDrag<T extends object>({
     draggingRef.current = false;
     originRef.current = null;
     setActiveId(null);
-    setPreview(null);
+    setPreviewState(null);
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -1016,10 +1020,10 @@ function useDataBoardDrag<T extends object>({
       accessors,
     });
     const next = isSameSlot(target, originRef.current) ? null : target;
-    setPreview((current) => {
+    setPreviewState((current) => {
       if (!next) return null;
       if (current && isSameSlot(current.slot, next)) return current;
-      const entering = current?.slot.columnId !== next.columnId || current.slot.groupId !== next.groupId;
+      const entering = !current || !isSameCell(current.slot, next);
       return { slot: next, entering };
     });
   }
@@ -1323,7 +1327,7 @@ export function DataBoard<T extends object>({
     groupId?: string,
   ) => {
     const slotBeforeId =
-      activeId != null && preview?.columnId === column.id && preview.groupId === groupId
+      activeId != null && preview != null && isSameCell(preview, { columnId: column.id, groupId })
         ? slotPlacement({ order: previewOrder, renderedIds: rendered.map(getId), activeId, index: preview.index })
         : undefined;
     return (
