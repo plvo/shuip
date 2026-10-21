@@ -244,27 +244,25 @@ export function cellIds<T>(items: T[], cell: CardCell, accessors: CardAccessors<
 // `order` is the cell without the dragged card. A card held above another lands
 // before it, below lands after it, and a drop on the column itself (no `overId`)
 // lands at the end of what is rendered of the cell: right after the last card of
-// `visibleIds`, before the cards the pagination or the search left out, so that
-// the card lands where the drop slot is drawn. Without `visibleIds` every card
+// `renderedIds`, before the cards the pagination or the search left out, so that
+// the card lands where the drop slot is drawn. Without `renderedIds` every card
 // counts.
 export function landingIndex({
   order,
   overId,
   below,
-  visibleIds,
+  renderedIds,
 }: {
   order: string[];
   overId: string | null;
   below: boolean;
-  visibleIds?: ReadonlySet<string>;
+  renderedIds?: ReadonlySet<string>;
 }): number {
   const at = overId == null ? -1 : order.indexOf(overId);
   if (at >= 0) return below ? at + 1 : at;
-  if (!visibleIds) return order.length;
-  for (let index = order.length - 1; index >= 0; index--) {
-    if (visibleIds.has(order[index] as string)) return index + 1;
-  }
-  return order.length;
+  if (!renderedIds) return order.length;
+  const lastRendered = order.findLastIndex((id) => renderedIds.has(id));
+  return lastRendered < 0 ? order.length : lastRendered + 1;
 }
 
 // The cell without the dragged card: the order the slot rank counts in.
@@ -286,18 +284,18 @@ export function previewTarget<T>({
   activeId,
   over,
   accessors,
-  visibleIds,
+  renderedIds,
 }: {
   items: T[];
   activeId: string;
   over: DropOver | null;
   accessors: CardAccessors<T>;
-  visibleIds?: ReadonlySet<string>;
+  renderedIds?: ReadonlySet<string>;
 }): DropSlot | null {
   if (!over) return null;
   if (over.id === activeId) return originSlot(items, activeId, accessors);
   const order = cellOrder(items, over, activeId, accessors);
-  const index = landingIndex({ order, overId: over.zone ? null : over.id, below: over.below, visibleIds });
+  const index = landingIndex({ order, overId: over.zone ? null : over.id, below: over.below, renderedIds });
   return { columnId: over.columnId, groupId: over.groupId, index };
 }
 
@@ -1031,7 +1029,7 @@ function useDataBoardDrag<T extends object>({
       activeId: String(event.active.id),
       over: dropOverOf(event),
       accessors,
-      visibleIds: renderedIdsRef.current,
+      renderedIds: renderedIdsRef.current,
     });
     const next = isSameSlot(target, originRef.current) ? null : target;
     setPreviewState((current) => {
@@ -1052,7 +1050,7 @@ function useDataBoardDrag<T extends object>({
       activeId: activeCardId,
       over: dropOverOf(event),
       accessors,
-      visibleIds: renderedIdsRef.current,
+      renderedIds: renderedIdsRef.current,
     });
     if (!origin || !target || isSameSlot(origin, target)) {
       drainPendingData(true);

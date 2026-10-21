@@ -21,6 +21,7 @@ type BoardProps = {
   onDataChange: (data: Task[]) => void;
   pageSize?: number | false;
   groupBy?: { field: keyof Task };
+  searchableFields?: (keyof Task)[];
 };
 
 const COLUMNS = [
@@ -161,7 +162,12 @@ type MountedBoard = {
   rerender: (data: Task[]) => Promise<void>;
 };
 
-type MountOptions = { pageSize?: number | false; data?: Task[]; groupBy?: BoardProps['groupBy'] };
+type MountOptions = {
+  pageSize?: number | false;
+  data?: Task[];
+  groupBy?: BoardProps['groupBy'];
+  searchableFields?: BoardProps['searchableFields'];
+};
 
 async function mount(Board: ComponentType<BoardProps>, options: MountOptions = {}) {
   const board: MountedBoard = { moves: [], dataChanges: [], errors: [], rerender: async () => {} };
@@ -184,6 +190,7 @@ async function mount(Board: ComponentType<BoardProps>, options: MountOptions = {
           onDataChange: (next) => board.dataChanges.push(next),
           pageSize: options.pageSize,
           groupBy: options.groupBy,
+          searchableFields: options.searchableFields,
         }),
       );
     });
@@ -244,6 +251,15 @@ async function hold(handle: HTMLElement, path: Point[]) {
 async function release({ x, y }: Point) {
   await act(async () => {
     pointerEvent('pointerup', document, x, y);
+    await settle();
+  });
+}
+
+async function search(query: string) {
+  const input = document.querySelector('input') as HTMLInputElement;
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, query);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
     await settle();
   });
 }
@@ -574,14 +590,41 @@ describe.each(VARIANTS)('data-board drag on %s', (variant) => {
     const { moves } = await mount(boards[variant], { data, groupBy: { field: 'sprint' }, pageSize: 1 });
     expect(columnTitles()).toEqual([['Task A'], [], [], ['Task C'], [], []]);
 
-    await drag(handleOf('Task A'), [
+    await hold(handleOf('Task A'), [
       { x: 150, y: 120 },
       { x: 160, y: 140 },
       { x: 150, y: 800 },
     ]);
+    expect(dropSlotPlace()).toEqual({ column: 3, index: 1 });
+    await release({ x: 150, y: 800 });
 
     expect(moves).toHaveLength(1);
     expect(moves[0]).toMatchObject({ item: { id: 'a', sprint: 2 }, toGroup: '2', toIndex: 1 });
     expect(columnTitles()).toEqual([['Task C', 'Task A'], [], []]);
+  });
+
+  test('drops a card below the last card shown by a search right after it, before the cards it hides', async () => {
+    const data: Task[] = [
+      { id: 'a', status: 'todo', title: 'Alpha one' },
+      { id: 'b', status: 'todo', title: 'Alpha two' },
+      { id: 'c', status: 'todo', title: 'Beta three' },
+      { id: 'd', status: 'done', title: 'Alpha four' },
+    ];
+    const { moves, dataChanges } = await mount(boards[variant], { data, searchableFields: ['title'] });
+    await search('alpha');
+    expect(columnTitles()).toEqual([['Alpha one', 'Alpha two'], [], ['Alpha four']]);
+
+    await hold(handleOf('Alpha four'), [
+      { x: 650, y: 120 },
+      { x: 640, y: 140 },
+      { x: 150, y: 400 },
+    ]);
+    expect(dropSlotPlace()).toEqual({ column: 0, index: 2 });
+    await release({ x: 150, y: 400 });
+
+    expect(moves).toHaveLength(1);
+    expect(moves[0]).toMatchObject({ item: { id: 'd' }, toColumn: 'todo', toIndex: 2 });
+    expect(dataChanges[0]?.map(({ id }) => id)).toEqual(['a', 'b', 'd', 'c']);
+    expect(columnTitles()).toEqual([['Alpha one', 'Alpha two', 'Alpha four'], [], []]);
   });
 });

@@ -258,23 +258,19 @@ describe('landingIndex', () => {
     const cell = ['a', 'b', 'c', 'd'];
 
     test('a drop on the column lands right after the last rendered card, before the hidden ones', () => {
-      expect(landingIndex({ order: cell, overId: null, below: false, visibleIds: new Set(['a', 'b']) })).toBe(2);
-    });
-
-    test('a drop below the last rendered card lands right after it', () => {
-      expect(landingIndex({ order: cell, overId: 'b', below: true, visibleIds: new Set(['a', 'b']) })).toBe(2);
+      expect(landingIndex({ order: cell, overId: null, below: false, renderedIds: new Set(['a', 'b']) })).toBe(2);
     });
 
     test('cards hidden before the last rendered card do not count', () => {
-      expect(landingIndex({ order: cell, overId: null, below: false, visibleIds: new Set(['a', 'c']) })).toBe(3);
+      expect(landingIndex({ order: cell, overId: null, below: false, renderedIds: new Set(['a', 'c']) })).toBe(3);
     });
 
     test('a drop on a column with nothing rendered lands at the end of the cell', () => {
-      expect(landingIndex({ order: cell, overId: null, below: false, visibleIds: new Set() })).toBe(4);
+      expect(landingIndex({ order: cell, overId: null, below: false, renderedIds: new Set() })).toBe(4);
     });
 
-    test('a drop on a column with every card rendered lands at its end', () => {
-      expect(landingIndex({ order: cell, overId: null, below: false, visibleIds: new Set(cell) })).toBe(4);
+    test('boundary: a drop on a column with every card rendered lands at the end of the cell', () => {
+      expect(landingIndex({ order: cell, overId: null, below: false, renderedIds: new Set(cell) })).toBe(4);
     });
   });
 });
@@ -305,8 +301,8 @@ describe('previewTarget', () => {
   });
 
   test('previews the slot right after the last rendered card when the cell has hidden cards', () => {
-    const visibleIds = new Set(['a', 'b']);
-    expect(previewTarget({ items, activeId: 'd', over: zoneOver('todo'), accessors, visibleIds })).toEqual({
+    const renderedIds = new Set(['a', 'b']);
+    expect(previewTarget({ items, activeId: 'd', over: zoneOver('todo'), accessors, renderedIds })).toEqual({
       columnId: 'todo',
       index: 2,
     });
@@ -325,7 +321,7 @@ describe('previewTarget', () => {
         activeId: 'd',
         over: zoneOver('todo', 's1'),
         accessors,
-        visibleIds: new Set(['a']),
+        renderedIds: new Set(['a']),
       }),
     ).toEqual({ columnId: 'todo', groupId: 's1', index: 1 });
   });
