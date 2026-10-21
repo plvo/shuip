@@ -1,11 +1,60 @@
 import type { ComponentType } from 'react';
 import type { Root } from 'react-dom/client';
 
-type Rect = { top: number; left: number; width: number; height: number };
+export type BoardTask = { id: string; status: string; title: string; rank?: number; sprint?: number };
 
-export type Point = { x: number; y: number };
+type BoardMove = {
+  item: BoardTask;
+  fromColumn: string;
+  toColumn: string;
+  toIndex: number;
+  fromGroup?: string;
+  toGroup?: string;
+  position?: number;
+  beforeId: string | null;
+  afterId: string | null;
+};
+
+export type BoardProps = {
+  columns: { id: string; label: string }[];
+  data: BoardTask[];
+  columnField: keyof BoardTask;
+  title: (task: BoardTask) => string;
+  onCardMove: (event: BoardMove) => void;
+  onDataChange: (data: BoardTask[]) => void;
+  pageSize?: number | false;
+  groupBy?: { field: keyof BoardTask };
+  searchableFields?: (keyof BoardTask)[];
+  positionField?: keyof BoardTask;
+};
+
+export type MountOptions = Pick<BoardProps, 'pageSize' | 'groupBy' | 'searchableFields' | 'positionField'> & {
+  data?: BoardTask[];
+};
+
+export const VARIANTS = ['Radix', 'Base UI'] as const;
+export type Variant = (typeof VARIANTS)[number];
+
+// The three columns the stub geometry lays out, from left to right.
+const COLUMNS = [
+  { id: 'todo', label: 'To do' },
+  { id: 'doing', label: 'Doing' },
+  { id: 'done', label: 'Done' },
+];
+
+export const TASKS: BoardTask[] = [
+  { id: 'a', status: 'todo', title: 'Task A' },
+  { id: 'b', status: 'todo', title: 'Task B' },
+  { id: 'c', status: 'todo', title: 'Task C' },
+  { id: 'd', status: 'done', title: 'Task D' },
+];
+
+export const INITIAL_COLUMNS = [['Task A', 'Task B', 'Task C'], [], ['Task D']];
 
 export const CARD_HEIGHT = 80;
+
+type Rect = { top: number; left: number; width: number; height: number };
+type Point = { x: number; y: number };
 
 const COLUMN_WIDTH = 300;
 const COLUMN_TOP = 100;
@@ -15,25 +64,13 @@ const BAND_HEIGHT = 400;
 const CARD_STRIDE = 86;
 const NO_RECT: Rect = { top: 0, left: 0, width: 0, height: 0 };
 
-export type BoardHarnessConfig<Task, Options> = {
+type BoardHarnessConfig = {
   /** Selector of the element that holds the cards of a column (or of a cell, on a grouped board). */
   columnSlot: string;
   /** Selector of the drop slot. */
   dropSlot: string;
   /** Selector of the body of a band: a row of cells stacked under the previous band. Flat boards have none. */
   bandSlot?: string;
-  columns: { id: string; label: string }[];
-  /** The props a mount adds to the ones every board takes, from the options of that mount. */
-  boardProps: (options: Options) => Record<string, unknown>;
-  /** Seeds `data` when a mount gives none. */
-  tasks: Task[];
-};
-
-export type MountedBoard<Task, Move> = {
-  moves: Move[];
-  dataChanges: Task[][];
-  errors: unknown[][];
-  rerender: (data: Task[]) => Promise<void>;
 };
 
 /**
@@ -41,22 +78,21 @@ export type MountedBoard<Task, Move> = {
  * installs the DOM and the canonical aliases, then calls `load` before it mounts anything.
  *
  * dnd-kit measures every droppable and draggable with `getBoundingClientRect`, which such a DOM answers with
- * zeros. `stubGeometry` lays the board out as a browser would: three columns side by side, the second one far
- * taller than the others, and the cards stacked in the column that holds them. A grouped board stacks its bands,
- * each one a row of three cells of the same height.
+ * zeros. `stubGeometry` lays the board out as a browser would: `COLUMNS` side by side, the second one far taller
+ * than the others, and the cards stacked in the column that holds them. A grouped board stacks its bands, each
+ * one a row of three cells of the same height.
  */
-export function createBoardHarness<
-  Task extends { title: string },
-  Move,
-  Props extends object,
-  Options extends { data?: Task[] } = { data?: Task[] },
->(config: BoardHarnessConfig<Task, Options>) {
-  const { columnSlot, dropSlot: dropSlotSelector, bandSlot, columns, boardProps, tasks } = config;
+export function createBoardHarness({ columnSlot, dropSlot: dropSlotSelector, bandSlot }: BoardHarnessConfig) {
   const roots: Root[] = [];
   const originalConsoleError = console.error;
   let act: typeof import('react').act;
   let createElement: typeof import('react').createElement;
   let createRoot: typeof import('react-dom/client').createRoot;
+
+  const bandOf = (element: Element) => {
+    const band = bandSlot ? element.closest(bandSlot) : null;
+    return bandSlot && band ? { body: band, bodies: [...document.querySelectorAll(bandSlot)] } : null;
+  };
 
   function rectOf(element: Element): Rect {
     const overlay = [element, element.parentElement].find(
@@ -71,11 +107,11 @@ export function createBoardHarness<
         height: Number.parseFloat(style.height),
       };
     }
-    const band = bandSlot ? element.closest(bandSlot) : null;
-    if (bandSlot && band && element.matches(columnSlot)) {
+    const band = bandOf(element);
+    if (band && element.matches(columnSlot)) {
       return {
-        left: [...band.querySelectorAll(columnSlot)].indexOf(element) * COLUMN_WIDTH,
-        top: COLUMN_TOP + [...document.querySelectorAll(bandSlot)].indexOf(band) * BAND_STRIDE,
+        left: [...band.body.querySelectorAll(columnSlot)].indexOf(element) * COLUMN_WIDTH,
+        top: COLUMN_TOP + band.bodies.indexOf(band.body) * BAND_STRIDE,
         width: COLUMN_WIDTH - 20,
         height: BAND_HEIGHT,
       };
@@ -140,8 +176,13 @@ export function createBoardHarness<
 
   const settle = (ms = 20) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  async function mount(Board: ComponentType<Props>, options: Options = {} as Options) {
-    const board: MountedBoard<Task, Move> = { moves: [], dataChanges: [], errors: [], rerender: async () => {} };
+  async function mount(Board: ComponentType<BoardProps>, { data, ...options }: MountOptions = {}) {
+    const board = {
+      moves: [] as BoardMove[],
+      dataChanges: [] as BoardTask[][],
+      errors: [] as unknown[][],
+      rerender: async (_data: BoardTask[]) => {},
+    };
     console.error = (...args: unknown[]) => {
       board.errors.push(args);
     };
@@ -149,21 +190,21 @@ export function createBoardHarness<
     document.body.append(container);
     const root = createRoot(container);
     roots.push(root);
-    board.rerender = (data) =>
+    board.rerender = (next) =>
       act(async () => {
         root.render(
           createElement(Board, {
-            columns,
-            data,
+            columns: COLUMNS,
+            data: next,
             columnField: 'status',
-            title: (task: Task) => task.title,
-            onCardMove: (event: Move) => board.moves.push(event),
-            onDataChange: (next: Task[]) => board.dataChanges.push(next),
-            ...boardProps(options),
-          } as unknown as Props),
+            title: (task) => task.title,
+            onCardMove: (event) => board.moves.push(event),
+            onDataChange: (changed) => board.dataChanges.push(changed),
+            ...options,
+          }),
         );
       });
-    await board.rerender(options.data ?? tasks);
+    await board.rerender(data ?? TASKS);
     return board;
   }
 
@@ -243,6 +284,13 @@ export function createBoardHarness<
     await release(path.at(-1) ?? { x: 0, y: 0 });
   }
 
+  // A first move of a few pixels activates the drag of Task B, the second card of the first column.
+  const pickUpB = () =>
+    hold(handleOf('Task B'), [
+      { x: 150, y: 200 },
+      { x: 160, y: 215 },
+    ]);
+
   /** Runs `callback` inside React's `act`, for what the suite does to the DOM itself. */
   const inAct = (callback: () => Promise<void>) => act(callback);
 
@@ -262,6 +310,7 @@ export function createBoardHarness<
     search,
     pressKey,
     drag,
+    pickUpB,
     inAct,
   };
 }
