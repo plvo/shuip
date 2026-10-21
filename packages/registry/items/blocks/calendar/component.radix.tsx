@@ -532,6 +532,10 @@ const SNAP_MINUTES = 15;
 const MIN_DRAWN_MINUTES = 15;
 const DAY_MINUTES = 24 * 60;
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
 function snapMinutes(value: number, step = SNAP_MINUTES): number {
   return Math.round(value / step) * step;
 }
@@ -571,7 +575,7 @@ export function resizedEnd(start: Date, end: Date, deltaY: number): Date | null 
   const startDay = startOfDay(start);
   const endMin = differenceInCalendarDays(end, startDay) * DAY_MINUTES + minutesSinceDayStart(end);
   const proposedMin = snapMinutes(endMin + (deltaY / HOUR_HEIGHT) * 60);
-  const nextMin = Math.min(DAY_MINUTES, Math.max(proposedMin, minutesSinceDayStart(start) + SNAP_MINUTES));
+  const nextMin = clamp(proposedMin, minutesSinceDayStart(start) + SNAP_MINUTES, DAY_MINUTES);
   const next = wallClockDate(startDay, nextMin);
   return next.getTime() === end.getTime() ? null : next;
 }
@@ -585,7 +589,7 @@ export function movedStart(start: Date, end: Date, deltaY: number, day: Date): D
   const durationMin = Math.max(0, (end.getTime() - start.getTime()) / 60_000);
   const proposedMin = snapMinutes(minutesSinceDayStart(start) + (deltaY / HOUR_HEIGHT) * 60);
   const latestMin = Math.max(0, DAY_MINUTES - durationMin);
-  return wallClockDate(day, Math.min(Math.max(proposedMin, 0), latestMin));
+  return wallClockDate(day, clamp(proposedMin, 0, latestMin));
 }
 
 type Box = { top: number; left: number; right: number; bottom: number };
@@ -597,8 +601,8 @@ export function clampTranslation(
   bounds: Box,
 ): { x: number; y: number } {
   return {
-    x: Math.min(Math.max(translation.x, bounds.left - node.left), bounds.right - node.right),
-    y: Math.min(Math.max(translation.y, bounds.top - node.top), bounds.bottom - node.bottom),
+    x: clamp(translation.x, bounds.left - node.left, bounds.right - node.right),
+    y: clamp(translation.y, bounds.top - node.top, bounds.bottom - node.bottom),
   };
 }
 
@@ -641,8 +645,8 @@ export function pressedSlotRange(pressMin: number, releaseMin: number): { startM
     startMin = snappedRelease;
     endMin = flooredPress + SNAP_MINUTES;
   }
-  const startInDay = Math.min(Math.max(startMin, 0), DAY_MINUTES - SNAP_MINUTES);
-  return { startMin: startInDay, endMin: Math.min(Math.max(endMin, startInDay + SNAP_MINUTES), DAY_MINUTES) };
+  const startInDay = clamp(startMin, 0, DAY_MINUTES - SNAP_MINUTES);
+  return { startMin: startInDay, endMin: clamp(endMin, startInDay + SNAP_MINUTES, DAY_MINUTES) };
 }
 
 type LaidOut<T> = { item: T; col: number; cols: number };
