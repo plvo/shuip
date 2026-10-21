@@ -237,8 +237,12 @@ function inCell<T>(item: T, cell: CardCell, { getColumn, getGroup }: CardAccesso
   return getColumn(item) === cell.columnId && (cell.groupId == null || getGroup(item) === cell.groupId);
 }
 
+function cellCards<T>(items: T[], cell: CardCell, accessors: CardAccessors<T>): T[] {
+  return items.filter((item) => inCell(item, cell, accessors));
+}
+
 export function cellIds<T>(items: T[], cell: CardCell, accessors: CardAccessors<T>): string[] {
-  return items.filter((item) => inCell(item, cell, accessors)).map((item) => accessors.getId(item));
+  return cellCards(items, cell, accessors).map((item) => accessors.getId(item));
 }
 
 // `order` is the cell without the dragged card. A card held above another lands
@@ -265,9 +269,14 @@ export function landingIndex({
   return lastRendered < 0 ? order.length : lastRendered + 1;
 }
 
-// The cell without the dragged card: the order the slot rank counts in.
+// The cards of the cell without the dragged one: the cards the slot rank counts.
+function othersInCell<T>(items: T[], cell: CardCell, activeId: string, accessors: CardAccessors<T>): T[] {
+  return cellCards(items, cell, accessors).filter((item) => accessors.getId(item) !== activeId);
+}
+
+// The ids of those cards, in order.
 export function cellOrder<T>(items: T[], cell: CardCell, activeId: string, accessors: CardAccessors<T>): string[] {
-  return cellIds(items, cell, accessors).filter((id) => id !== activeId);
+  return othersInCell(items, cell, activeId, accessors).map((item) => accessors.getId(item));
 }
 
 export function originSlot<T>(items: T[], activeId: string, accessors: CardAccessors<T>): DropSlot | null {
@@ -352,19 +361,20 @@ export function rebaseSlot<T>({
 
 // Places the card in `target`, right before the card that holds that rank
 // among the others, or right after the last one. A card moving to an empty
-// cell keeps its place in the list. `withCell` writes the cell into the card.
+// cell keeps its place in the list. `withLanding` returns the card as it stands
+// once it has landed in `target`: the cell, and whatever else the landing writes.
 export function applyCardMove<T>({
   items,
   activeId,
   target,
   accessors,
-  withCell,
+  withLanding,
 }: {
   items: T[];
   activeId: string;
   target: DropSlot;
   accessors: CardAccessors<T>;
-  withCell: (item: T, cell: CardCell) => T;
+  withLanding: (item: T, cell: CardCell) => T;
 }): T[] {
   const active = items.find((item) => accessors.getId(item) === activeId);
   if (!active) return items;
@@ -375,7 +385,59 @@ export function applyCardMove<T>({
   let at = items.indexOf(active);
   if (anchor !== undefined) at = others.indexOf(anchor);
   else if (last !== undefined) at = others.indexOf(last) + 1;
-  return [...others.slice(0, at), withCell(active, target), ...others.slice(at)];
+  return [...others.slice(0, at), withLanding(active, target), ...others.slice(at)];
+}
+
+// The fields of `T` that hold a position: numbers, possibly absent.
+export type DataBoardPositionField<T> = {
+  [K in keyof T]-?: T[K] extends number | null | undefined ? K : never;
+}[keyof T];
+
+// A position that is not a finite number counts as 0, for the order and for the
+// neighbours of a slot alike, so that every slot of a cell can be told apart.
+export function positionOf<T>(item: T, field: keyof T): number {
+  const value = item[field];
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+}
+
+// The one order cards are read in when the board has a `positionField`: by
+// ascending position, cards of equal position in the order of `items`.
+export function sortByPosition<T>(items: T[], field: keyof T): T[] {
+  return items
+    .map((item, rank) => ({ item, rank, position: positionOf(item, field) }))
+    .sort((a, b) => a.position - b.position || a.rank - b.rank)
+    .map(({ item }) => item);
+}
+
+export type SlotNeighbours<T> = { before: T | null; after: T | null };
+
+// The cards on both sides of `target` in the full order of its cell, the
+// dragged card left out; null where the slot meets an edge of the cell.
+export function slotNeighbours<T>({
+  items,
+  activeId,
+  target,
+  accessors,
+}: {
+  items: T[];
+  activeId: string;
+  target: DropSlot;
+  accessors: CardAccessors<T>;
+}): SlotNeighbours<T> {
+  const order = othersInCell(items, target, activeId, accessors);
+  return { before: order[target.index - 1] ?? null, after: order[target.index] ?? null };
+}
+
+// The position that puts a card between two neighbours: 0 in an empty cell, one
+// step off the only neighbour at an edge, the midpoint between two neighbours.
+export function slotPosition<T>({ before, after }: SlotNeighbours<T>, positionField: keyof T): number {
+  if (before && after) {
+    const from = positionOf(before, positionField);
+    return from + (positionOf(after, positionField) - from) / 2;
+  }
+  if (before) return positionOf(before, positionField) + 1;
+  if (after) return positionOf(after, positionField) - 1;
+  return 0;
 }
 
 // The rendered card the drop slot goes before, or null for the end. Cards the
@@ -925,6 +987,9 @@ export type DataBoardMoveEvent<T> = {
   toIndex: number;
   fromGroup?: string;
   toGroup?: string;
+  position?: number;
+  beforeId: string | null;
+  afterId: string | null;
 };
 
 /**
@@ -939,6 +1004,7 @@ function useDataBoardDrag<T extends object>({
   data,
   defaultData,
   columnField,
+  positionField,
   groupBy,
   ungroupedLabel,
   accessors,
@@ -950,6 +1016,7 @@ function useDataBoardDrag<T extends object>({
   data?: T[];
   defaultData?: T[];
   columnField: keyof T;
+  positionField?: keyof T;
   groupBy?: DataBoardGroupBy<T>;
   ungroupedLabel: string;
   accessors: CardAccessors<T>;
@@ -959,7 +1026,7 @@ function useDataBoardDrag<T extends object>({
   onCardMove?: (event: DataBoardMoveEvent<T>) => void;
 }) {
   const { getId, getColumn, getGroup } = accessors;
-  const [items, setItems] = React.useState<T[]>(() => data ?? defaultData ?? []);
+  const [storedItems, setItems] = React.useState<T[]>(() => data ?? defaultData ?? []);
   const draggingRef = React.useRef(false);
   const originRef = React.useRef<DropSlot | null>(null);
   const pendingDataRef = React.useRef<T[] | null>(null);
@@ -975,6 +1042,14 @@ function useDataBoardDrag<T extends object>({
     }
     setItems(data);
   }, [data]);
+
+  // The one order the board reads its cards in: the preview, the landing, the
+  // neighbours and the rendering all follow it.
+  const inBoardOrder = React.useCallback(
+    (list: T[]) => (positionField ? sortByPosition(list, positionField) : list),
+    [positionField],
+  );
+  const items = React.useMemo(() => inBoardOrder(storedItems), [storedItems, inBoardOrder]);
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
   // `entering` tells that the slot just came into its cell, as opposed to having
@@ -1057,14 +1132,17 @@ function useDataBoardDrag<T extends object>({
       return;
     }
 
-    const fresh = pendingDataRef.current ?? items;
-    const next = applyCardMove({
-      items: fresh,
-      activeId: activeCardId,
-      target: rebaseSlot({ items, fresh, activeId: activeCardId, target, accessors }),
-      accessors,
-      withCell,
-    });
+    const fresh = pendingDataRef.current ? inBoardOrder(pendingDataRef.current) : items;
+    const slot = rebaseSlot({ items, fresh, activeId: activeCardId, target, accessors });
+    const neighbours = slotNeighbours({ items: fresh, activeId: activeCardId, target: slot, accessors });
+    const position = positionField ? slotPosition(neighbours, positionField) : undefined;
+    const withLanding = (item: T, cell: CardCell): T => {
+      const landed = withCell(item, cell);
+      return positionField ? ({ ...landed, [positionField]: position } as T) : landed;
+    };
+    const next = inBoardOrder(
+      applyCardMove({ items: fresh, activeId: activeCardId, target: slot, accessors, withLanding }),
+    );
     const movedItem = next.find((item) => getId(item) === activeCardId);
     if (!movedItem) {
       drainPendingData(true);
@@ -1095,6 +1173,9 @@ function useDataBoardDrag<T extends object>({
       toIndex,
       fromGroup: origin.groupId,
       toGroup,
+      position,
+      beforeId: neighbours.before ? getId(neighbours.before) : null,
+      afterId: neighbours.after ? getId(neighbours.after) : null,
     });
   }
 
@@ -1125,6 +1206,7 @@ export type DataBoardProps<T extends object> = {
   onDataChange?: (next: T[]) => void;
   idField?: keyof T;
   columnField: keyof T;
+  positionField?: DataBoardPositionField<T>;
   title?: (item: T) => React.ReactNode;
   fields?: DataBoardField<T>[];
   cardContent?: (item: T) => React.ReactNode;
@@ -1153,6 +1235,7 @@ export function DataBoard<T extends object>({
   onDataChange,
   idField = 'id' as keyof T,
   columnField,
+  positionField,
   title,
   fields,
   cardContent,
@@ -1218,6 +1301,7 @@ export function DataBoard<T extends object>({
     data,
     defaultData,
     columnField,
+    positionField,
     groupBy,
     ungroupedLabel: labels.ungrouped,
     accessors,

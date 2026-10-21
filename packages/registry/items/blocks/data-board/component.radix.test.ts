@@ -155,6 +155,7 @@ import {
   cellOrder,
   columnKey,
   type DropOver,
+  type DropSlot,
   dropZoneId,
   isSameSlot,
   landingIndex,
@@ -162,7 +163,10 @@ import {
   previewTarget,
   rebaseSlot,
   revealStepsFor,
+  slotNeighbours,
   slotPlacement,
+  slotPosition,
+  sortByPosition,
 } from './component.radix';
 
 describe('drop zone ids', () => {
@@ -379,13 +383,13 @@ describe('isSameSlot', () => {
 });
 
 describe('applyCardMove', () => {
-  const withCell = (item: Card, cell: { columnId: string; groupId?: string }): Card => ({
+  const withLanding = (item: Card, cell: { columnId: string; groupId?: string }): Card => ({
     ...item,
     status: cell.columnId,
     team: cell.groupId ?? item.team,
   });
   const move = (items: Card[], activeId: string, target: { columnId: string; groupId?: string; index: number }) =>
-    applyCardMove({ items, activeId, target, accessors, withCell });
+    applyCardMove({ items, activeId, target, accessors, withLanding });
 
   const items = [cardOf('a', 'todo'), cardOf('b', 'todo'), cardOf('c', 'todo'), cardOf('d', 'done')];
 
@@ -491,6 +495,214 @@ describe('rebaseSlot', () => {
         accessors,
       }),
     ).toEqual({ columnId: 'todo', groupId: 's1', index: 1 });
+  });
+});
+
+type Ranked = { id: string; status: string; team?: string; position?: number | null };
+
+const ranked = (id: string, position: number | null | undefined, status = 'todo', team?: string): Ranked => ({
+  id,
+  status,
+  team,
+  position,
+});
+
+describe('sortByPosition', () => {
+  const order = (items: Ranked[]) => sortByPosition(items, 'position').map((item) => item.id);
+
+  test('orders cards by ascending position, negative and zero included', () => {
+    expect(order([ranked('a', 3), ranked('b', -2), ranked('c', 0), ranked('d', 1.5)])).toEqual(['b', 'c', 'd', 'a']);
+  });
+
+  test('keeps the order of the data between cards of equal position', () => {
+    expect(order([ranked('a', 1), ranked('b', 0), ranked('c', 1), ranked('d', 0), ranked('e', 1)])).toEqual([
+      'b',
+      'd',
+      'a',
+      'c',
+      'e',
+    ]);
+  });
+
+  test('counts a position that is not a finite number as zero', () => {
+    const items = [ranked('a', 1), ranked('b', undefined), ranked('c', Number.NaN), ranked('d', null), ranked('e', -1)];
+    expect(order(items)).toEqual(['e', 'b', 'c', 'd', 'a']);
+    expect(order([ranked('a', Number.POSITIVE_INFINITY), ranked('b', 0)])).toEqual(['a', 'b']);
+  });
+
+  test('leaves the input list untouched', () => {
+    const items = [ranked('a', 2), ranked('b', 1)];
+    sortByPosition(items, 'position');
+    expect(items.map((item) => item.id)).toEqual(['a', 'b']);
+  });
+});
+
+const neighbourIds = (args: { items: Ranked[]; activeId: string; target: DropSlot }) => {
+  const { before, after } = slotNeighbours({ ...args, accessors });
+  return { beforeId: before?.id ?? null, afterId: after?.id ?? null };
+};
+
+describe('slotNeighbours', () => {
+  const items = [ranked('a', 1), ranked('b', 2), ranked('c', 3), ranked('x', 0, 'done')];
+  const neighbours = (activeId: string, index: number, columnId = 'todo') =>
+    neighbourIds({ items, activeId, target: { columnId, index } });
+
+  test('names the cards on both sides of the slot', () => {
+    expect(neighbours('x', 1)).toEqual({ beforeId: 'a', afterId: 'b' });
+    expect(neighbours('x', 2)).toEqual({ beforeId: 'b', afterId: 'c' });
+  });
+
+  test('is null on the side where the slot meets the edge of the cell', () => {
+    expect(neighbours('x', 0)).toEqual({ beforeId: null, afterId: 'a' });
+    expect(neighbours('x', 3)).toEqual({ beforeId: 'c', afterId: null });
+  });
+
+  test('is null on both sides in an empty cell', () => {
+    expect(neighbours('a', 0, 'doing')).toEqual({ beforeId: null, afterId: null });
+  });
+
+  test('leaves the dragged card out of the cell it is dragged inside', () => {
+    expect(neighbours('b', 1)).toEqual({ beforeId: 'a', afterId: 'c' });
+  });
+
+  test('only counts the cards of the band of the slot', () => {
+    const banded = [ranked('a', 1, 'todo', 's1'), ranked('b', 2, 'todo', 's2'), ranked('c', 3, 'todo', 's1')];
+    expect(
+      neighbourIds({ items: banded, activeId: 'c', target: { columnId: 'todo', groupId: 's2', index: 1 } }),
+    ).toEqual({ beforeId: 'b', afterId: null });
+  });
+});
+
+describe('slotPosition', () => {
+  const position = (items: Ranked[], activeId: string, target: { columnId: string; groupId?: string; index: number }) =>
+    slotPosition(slotNeighbours({ items, activeId, target, accessors }), 'position');
+  const cell = (...positions: number[]) => positions.map((value, index) => ranked(`c${index}`, value));
+  const incoming = ranked('x', 99, 'done');
+
+  test('is 0 in an empty cell', () => {
+    expect(position([incoming], 'x', { columnId: 'todo', index: 0 })).toBe(0);
+  });
+
+  test('is one below the first card in the first slot', () => {
+    const items = [...cell(5, 6), incoming];
+    expect(position(items, 'x', { columnId: 'todo', index: 0 })).toBe(4);
+  });
+
+  test('is one above the last card in the last slot', () => {
+    const items = [...cell(5, 6), incoming];
+    expect(position(items, 'x', { columnId: 'todo', index: 2 })).toBe(7);
+  });
+
+  test('is the midpoint of the two neighbours in a middle slot', () => {
+    const items = [...cell(1, 2, 6), incoming];
+    expect(position(items, 'x', { columnId: 'todo', index: 1 })).toBe(1.5);
+    expect(position(items, 'x', { columnId: 'todo', index: 2 })).toBe(4);
+  });
+
+  test('works with zero and negative positions', () => {
+    expect(position([...cell(0), incoming], 'x', { columnId: 'todo', index: 0 })).toBe(-1);
+    expect(position([...cell(0), incoming], 'x', { columnId: 'todo', index: 1 })).toBe(1);
+    expect(position([...cell(-3), incoming], 'x', { columnId: 'todo', index: 0 })).toBe(-4);
+    expect(position([...cell(-3), incoming], 'x', { columnId: 'todo', index: 1 })).toBe(-2);
+    expect(position([...cell(-4, -2), incoming], 'x', { columnId: 'todo', index: 1 })).toBe(-3);
+    expect(position([...cell(-1, 1), incoming], 'x', { columnId: 'todo', index: 1 })).toBe(0);
+  });
+
+  test('is that value between two neighbours of equal position', () => {
+    expect(position([...cell(2, 2), incoming], 'x', { columnId: 'todo', index: 1 })).toBe(2);
+    expect(position([...cell(0, 0), incoming], 'x', { columnId: 'todo', index: 1 })).toBe(0);
+  });
+
+  test('steps off the edge card when the cards next to it are tied', () => {
+    expect(position([...cell(2, 2), incoming], 'x', { columnId: 'todo', index: 0 })).toBe(1);
+    expect(position([...cell(2, 2), incoming], 'x', { columnId: 'todo', index: 2 })).toBe(3);
+  });
+
+  test('reads the cell in the order of the positions, not of the data', () => {
+    const items = [ranked('c', 3), ranked('a', 1), ranked('b', 2), incoming];
+    expect(position(sortByPosition(items, 'position'), 'x', { columnId: 'todo', index: 1 })).toBe(1.5);
+  });
+
+  test('leaves the dragged card out of its own cell', () => {
+    const items = [ranked('a', 1), ranked('b', 2), ranked('c', 3)];
+    expect(position(items, 'a', { columnId: 'todo', index: 2 })).toBe(4);
+    expect(position(items, 'c', { columnId: 'todo', index: 0 })).toBe(0);
+    expect(position(items, 'b', { columnId: 'todo', index: 1 })).toBe(2);
+  });
+
+  test('counts a neighbour whose position is not a finite number as zero', () => {
+    const items = [ranked('a', undefined), ranked('b', null), incoming];
+    expect(position(items, 'x', { columnId: 'todo', index: 1 })).toBe(0);
+    expect(position(items, 'x', { columnId: 'todo', index: 2 })).toBe(1);
+  });
+
+  test('scopes the neighbours to the band of the slot', () => {
+    const banded = [
+      ranked('a', 10, 'todo', 's1'),
+      ranked('b', 20, 'todo', 's2'),
+      ranked('c', 30, 'todo', 's1'),
+      ranked('d', 40, 'todo', 's2'),
+      ranked('x', 99, 'done', 's1'),
+    ];
+    expect(position(banded, 'x', { columnId: 'todo', groupId: 's2', index: 1 })).toBe(30);
+    expect(position(banded, 'x', { columnId: 'todo', groupId: 's1', index: 1 })).toBe(20);
+    expect(position(banded, 'x', { columnId: 'done', groupId: 's2', index: 0 })).toBe(0);
+  });
+
+  describe('against the full cell', () => {
+    const items = [ranked('a', 1), ranked('b', 2), ranked('c', 3), ranked('d', 4), ranked('x', 99, 'done')];
+    const slotAt = (renderedIds: string[], hovered: DropOver) => {
+      const target = previewTarget({
+        items,
+        activeId: 'x',
+        over: hovered,
+        accessors,
+        renderedIds: new Set(renderedIds),
+      });
+      if (!target) throw new Error('no slot');
+      return {
+        target,
+        ...neighbourIds({ items, activeId: 'x', target }),
+        position: position(items, 'x', target),
+      };
+    };
+
+    test('a drop below the last card shown by the pagination lands between it and the first hidden one', () => {
+      expect(slotAt(['a', 'b'], zoneOver('todo'))).toMatchObject({ beforeId: 'b', afterId: 'c', position: 2.5 });
+      expect(slotAt(['a', 'b'], over('b', 'todo', true))).toMatchObject({ beforeId: 'b', afterId: 'c', position: 2.5 });
+    });
+
+    test('a drop on the column with nothing shown lands at the end of the cell', () => {
+      expect(slotAt([], zoneOver('todo'))).toMatchObject({ beforeId: 'd', afterId: null, position: 5 });
+    });
+
+    test('a drop above a card shown after cards hidden by a search lands behind those cards', () => {
+      expect(slotAt(['a', 'd'], over('d', 'todo', false))).toMatchObject({
+        beforeId: 'c',
+        afterId: 'd',
+        position: 3.5,
+      });
+    });
+
+    test('a drop below a card shown before cards hidden by a search lands in front of those cards', () => {
+      expect(slotAt(['a', 'd'], over('a', 'todo', true))).toMatchObject({ beforeId: 'a', afterId: 'b', position: 1.5 });
+    });
+  });
+});
+
+describe('a move rebased onto a newer list', () => {
+  test('names the neighbours and the position of the newer list', () => {
+    const previous = [ranked('a', 1), ranked('b', 2), ranked('c', 3), ranked('x', 99, 'done')];
+    const fresh = [ranked('a', 1), ranked('b', 2), ranked('n', 2.25), ranked('c', 3), ranked('x', 99, 'done')];
+    const previewed = { columnId: 'todo', index: 2 };
+    const target = rebaseSlot({ items: previous, fresh, activeId: 'x', target: previewed, accessors });
+
+    expect(neighbourIds({ items: previous, activeId: 'x', target: previewed })).toEqual({
+      beforeId: 'b',
+      afterId: 'c',
+    });
+    expect(neighbourIds({ items: fresh, activeId: 'x', target })).toEqual({ beforeId: 'n', afterId: 'c' });
+    expect(slotPosition(slotNeighbours({ items: fresh, activeId: 'x', target, accessors }), 'position')).toBe(2.625);
   });
 });
 

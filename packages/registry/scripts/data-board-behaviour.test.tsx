@@ -3,7 +3,7 @@ import type { ComponentType } from 'react';
 import type { Root } from 'react-dom/client';
 import { installDom, resolveCanonicalAliases } from './dom-environment';
 
-type Task = { id: string; status: string; title: string; sprint?: number };
+type Task = { id: string; status: string; title: string; sprint?: number; rank?: number };
 type MoveEvent = {
   item: Task;
   fromColumn: string;
@@ -11,6 +11,9 @@ type MoveEvent = {
   toIndex: number;
   fromGroup?: string;
   toGroup?: string;
+  position?: number;
+  beforeId: string | null;
+  afterId: string | null;
 };
 type BoardProps = {
   columns: { id: string; label: string }[];
@@ -22,6 +25,7 @@ type BoardProps = {
   pageSize?: number | false;
   groupBy?: { field: keyof Task };
   searchableFields?: (keyof Task)[];
+  positionField?: keyof Task;
 };
 
 const COLUMNS = [
@@ -167,6 +171,7 @@ type MountOptions = {
   data?: Task[];
   groupBy?: BoardProps['groupBy'];
   searchableFields?: BoardProps['searchableFields'];
+  positionField?: BoardProps['positionField'];
 };
 
 async function mount(Board: ComponentType<BoardProps>, options: MountOptions = {}) {
@@ -191,6 +196,7 @@ async function mount(Board: ComponentType<BoardProps>, options: MountOptions = {
           pageSize: options.pageSize,
           groupBy: options.groupBy,
           searchableFields: options.searchableFields,
+          positionField: options.positionField,
         }),
       );
     });
@@ -626,5 +632,257 @@ describe.each(VARIANTS)('data-board drag on %s', (variant) => {
     expect(moves[0]).toMatchObject({ item: { id: 'd' }, toColumn: 'todo', toIndex: 2 });
     expect(dataChanges[0]?.map(({ id }) => id)).toEqual(['a', 'b', 'd', 'c']);
     expect(columnTitles()).toEqual([['Alpha one', 'Alpha two', 'Alpha four'], [], []]);
+  });
+  describe('with a positionField', () => {
+    const ranked = (id: string, status: string, rank: number, sprint?: number): Task => ({
+      id,
+      status,
+      title: `Task ${id.toUpperCase()}`,
+      rank,
+      sprint,
+    });
+    const RANKED: Task[] = [
+      ranked('a', 'todo', 3),
+      ranked('b', 'todo', 1),
+      ranked('c', 'todo', 2),
+      ranked('d', 'done', 5),
+    ];
+    const withPositions = { positionField: 'rank' } as const;
+    const rankOf = (task: Task[] | undefined, id: string) => task?.find((item) => item.id === id)?.rank;
+
+    test('renders each column by ascending position', async () => {
+      await mount(boards[variant], { ...withPositions, data: RANKED });
+      expect(columnTitles()).toEqual([['Task B', 'Task C', 'Task A'], [], ['Task D']]);
+    });
+
+    test('keeps the data order of cards of equal position', async () => {
+      const tied = [ranked('a', 'todo', 1), ranked('b', 'todo', 0), ranked('c', 'todo', 1), ranked('d', 'todo', 0)];
+      await mount(boards[variant], { ...withPositions, data: tied });
+      expect(columnTitles()[0]).toEqual(['Task B', 'Task D', 'Task A', 'Task C']);
+    });
+
+    test('renders the order of the data when there is no positionField', async () => {
+      await mount(boards[variant], { data: RANKED });
+      expect(columnTitles()[0]).toEqual(['Task A', 'Task B', 'Task C']);
+    });
+
+    test('writes the midpoint of the neighbours into the dropped card and reports it', async () => {
+      const { moves, dataChanges } = await mount(boards[variant], { ...withPositions, data: RANKED });
+
+      await drag(handleOf('Task A'), [
+        { x: 150, y: 318 },
+        { x: 160, y: 300 },
+        { x: 150, y: 200 },
+      ]);
+
+      expect(columnTitles()[0]).toEqual(['Task B', 'Task A', 'Task C']);
+      expect(moves).toHaveLength(1);
+      expect(moves[0]).toMatchObject({
+        item: { id: 'a', rank: 1.5 },
+        toIndex: 1,
+        position: 1.5,
+        beforeId: 'b',
+        afterId: 'c',
+      });
+      expect(dataChanges).toHaveLength(1);
+      expect(rankOf(dataChanges[0], 'a')).toBe(1.5);
+      expect(dataChanges[0]?.map(({ id }) => id)).toEqual(['b', 'a', 'c', 'd']);
+    });
+
+    test('puts a card dropped in an empty column at position 0 without neighbours', async () => {
+      const { moves } = await mount(boards[variant], { ...withPositions, data: RANKED });
+
+      await drag(handleOf('Task B'), [
+        { x: 150, y: 120 },
+        { x: 160, y: 140 },
+        { x: 420, y: 900 },
+      ]);
+
+      expect(moves).toHaveLength(1);
+      expect(moves[0]).toMatchObject({
+        item: { id: 'b', status: 'doing', rank: 0 },
+        position: 0,
+        beforeId: null,
+        afterId: null,
+      });
+    });
+
+    test('puts a card dropped below the last card one above it', async () => {
+      const { moves, dataChanges } = await mount(boards[variant], { ...withPositions, data: RANKED });
+
+      await drag(handleOf('Task D'), [
+        { x: 650, y: 120 },
+        { x: 640, y: 140 },
+        { x: 150, y: 450 },
+      ]);
+
+      expect(moves[0]).toMatchObject({
+        item: { id: 'd', rank: 4 },
+        toIndex: 3,
+        position: 4,
+        beforeId: 'a',
+        afterId: null,
+      });
+      expect(columnTitles()[0]).toEqual(['Task B', 'Task C', 'Task A', 'Task D']);
+      expect(rankOf(dataChanges[0], 'd')).toBe(4);
+    });
+
+    test('puts a card dropped above the first card one below it', async () => {
+      const { moves } = await mount(boards[variant], { ...withPositions, data: RANKED });
+
+      await drag(handleOf('Task D'), [
+        { x: 650, y: 120 },
+        { x: 640, y: 140 },
+        { x: 150, y: 120 },
+      ]);
+
+      expect(moves[0]).toMatchObject({
+        item: { id: 'd', rank: 0 },
+        toIndex: 0,
+        position: 0,
+        beforeId: null,
+        afterId: 'b',
+      });
+      expect(columnTitles()[0]).toEqual(['Task D', 'Task B', 'Task C', 'Task A']);
+    });
+
+    test('keeps a card dropped between two cards of equal position between them', async () => {
+      const tied = [ranked('a', 'todo', 7), ranked('b', 'todo', 7), ranked('c', 'todo', 7)];
+      const { moves, dataChanges } = await mount(boards[variant], { ...withPositions, data: tied });
+
+      await drag(handleOf('Task C'), [
+        { x: 150, y: 290 },
+        { x: 160, y: 270 },
+        { x: 150, y: 200 },
+      ]);
+
+      expect(moves[0]).toMatchObject({ position: 7, beforeId: 'a', afterId: 'b' });
+      expect(dataChanges[0]?.map(({ id }) => id)).toEqual(['a', 'c', 'b']);
+      expect(columnTitles()[0]).toEqual(['Task A', 'Task C', 'Task B']);
+    });
+
+    test('computes the position from the neighbours in the cell of a band only', async () => {
+      const data = [
+        ranked('a', 'todo', 5, 1),
+        ranked('b', 'todo', 6, 1),
+        ranked('c', 'todo', 100, 2),
+        ranked('d', 'done', 7, 2),
+      ];
+      const { moves } = await mount(boards[variant], { ...withPositions, data, groupBy: { field: 'sprint' } });
+
+      await drag(handleOf('Task A'), [
+        { x: 150, y: 120 },
+        { x: 160, y: 140 },
+        { x: 150, y: 620 },
+      ]);
+
+      expect(moves).toHaveLength(1);
+      expect(moves[0]).toMatchObject({
+        item: { id: 'a', sprint: 2, rank: 99 },
+        position: 99,
+        beforeId: null,
+        afterId: 'c',
+      });
+    });
+
+    test('lists the cards of onDataChange by position, not in the order of the data', async () => {
+      const { moves, dataChanges } = await mount(boards[variant], { ...withPositions, data: RANKED });
+
+      await drag(handleOf('Task D'), [
+        { x: 650, y: 120 },
+        { x: 640, y: 140 },
+        { x: 150, y: 260 },
+      ]);
+
+      expect(moves[0]).toMatchObject({ position: 2.5, beforeId: 'c', afterId: 'a' });
+      expect(dataChanges[0]?.map(({ id }) => id)).toEqual(['b', 'c', 'd', 'a']);
+      expect(columnTitles()[0]).toEqual(['Task B', 'Task C', 'Task D', 'Task A']);
+    });
+
+    test('lists a card that took over an empty column at its new position', async () => {
+      const { dataChanges } = await mount(boards[variant], { ...withPositions, data: RANKED });
+
+      await drag(handleOf('Task C'), [
+        { x: 150, y: 232 },
+        { x: 160, y: 250 },
+        { x: 420, y: 900 },
+      ]);
+
+      expect(dataChanges[0]?.map(({ id, rank }) => `${id}:${rank}`)).toEqual(['c:0', 'b:1', 'a:3', 'd:5']);
+    });
+
+    test('takes the neighbours and the position from a data update received mid-drag', async () => {
+      const { rerender, moves, dataChanges } = await mount(boards[variant], { ...withPositions, data: RANKED });
+      await hold(handleOf('Task D'), [
+        { x: 650, y: 120 },
+        { x: 640, y: 140 },
+        { x: 150, y: 200 },
+      ]);
+      expect(dropSlotPlace()).toEqual({ column: 0, index: 1 });
+
+      await rerender([...RANKED, ranked('n', 'todo', 1.75)]);
+      expect(columnTitles()[0]).toEqual(['Task B', 'Task C', 'Task A']);
+      await release({ x: 150, y: 200 });
+
+      expect(moves).toHaveLength(1);
+      expect(moves[0]).toMatchObject({
+        item: { id: 'd', rank: 1.875 },
+        toIndex: 2,
+        position: 1.875,
+        beforeId: 'n',
+        afterId: 'c',
+      });
+      expect(dataChanges).toHaveLength(1);
+      expect(dataChanges[0]?.map(({ id }) => id)).toEqual(['b', 'n', 'd', 'c', 'a']);
+      expect(columnTitles()[0]).toEqual(['Task B', 'Task N', 'Task D', 'Task C', 'Task A']);
+    });
+
+    test('computes the position against the cards the pagination hides', async () => {
+      const data = [ranked('a', 'todo', 1), ranked('b', 'todo', 2), ranked('c', 'todo', 3), ranked('d', 'done', 9)];
+      const { moves } = await mount(boards[variant], { ...withPositions, data, pageSize: 2 });
+      expect(columnTitles()[0]).toEqual(['Task A', 'Task B']);
+
+      await drag(handleOf('Task D'), [
+        { x: 650, y: 120 },
+        { x: 640, y: 140 },
+        { x: 150, y: 400 },
+      ]);
+
+      expect(moves[0]).toMatchObject({ item: { id: 'd', rank: 2.5 }, position: 2.5, beforeId: 'b', afterId: 'c' });
+      expect(columnTitles()[0]).toEqual(['Task A', 'Task B', 'Task D', 'Task C']);
+    });
+
+    test('computes the position against the cards a search hides', async () => {
+      const data: Task[] = [
+        { ...ranked('a', 'todo', 1), title: 'Alpha one' },
+        { ...ranked('b', 'todo', 2), title: 'Beta two' },
+        { ...ranked('c', 'todo', 3), title: 'Alpha three' },
+        { ...ranked('d', 'done', 9), title: 'Alpha four' },
+      ];
+      const { moves } = await mount(boards[variant], { ...withPositions, data, searchableFields: ['title'] });
+      await search('alpha');
+      expect(columnTitles()[0]).toEqual(['Alpha one', 'Alpha three']);
+
+      await drag(handleOf('Alpha four'), [
+        { x: 650, y: 120 },
+        { x: 640, y: 140 },
+        { x: 150, y: 200 },
+      ]);
+
+      expect(moves[0]).toMatchObject({ position: 2.5, beforeId: 'b', afterId: 'c' });
+    });
+  });
+
+  test('names the neighbours of a move and reports no position without a positionField', async () => {
+    const { moves, dataChanges } = await mount(boards[variant]);
+    await drag(handleOf('Task D'), [
+      { x: 650, y: 120 },
+      { x: 640, y: 140 },
+      { x: 150, y: 150 },
+    ]);
+
+    expect(moves[0]).toMatchObject({ item: { id: 'd' }, toIndex: 1, beforeId: 'a', afterId: 'b' });
+    expect(moves[0]?.position).toBeUndefined();
+    expect(dataChanges[0]?.find(({ id }) => id === 'd')).not.toHaveProperty('rank');
   });
 });

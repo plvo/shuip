@@ -21,12 +21,14 @@ configured against your own data shape — nothing is hardcoded to a domain.
 - **Hideable columns**: hide from the header, recall from the right-hand rail.
 - **Persisted view**: hidden columns, page size and collapsed bands survive a reload via `persistKey`.
 - **Global search**: filter cards across `searchableFields`.
+- **Ordered cards**: name a numeric field in `positionField` and each column keeps its cards sorted by it.
 - **Hybrid state**: standalone from `defaultData`, or controlled via `data` + `onDataChange`.
 
 > Cards become draggable as soon as you pass either `onCardMove` or `onDataChange`. A board that passes neither is genuinely read-only — the cards have no drag handle at all.
 
-> Card order is implicit in the `data` array order. On any move the board emits the reordered array
-> via `onDataChange` and a semantic `onCardMove` event; map either to your own persistence.
+> Without `positionField`, card order is implicit in the `data` array order. On any move the board
+> emits the reordered array via `onDataChange` and a semantic `onCardMove` event; map either to your
+> own persistence. To store the order of cards as a number instead, see [Keeping the order of cards](#keeping-the-order-of-cards).
 
 ## Choosing between Kanban and Data Board
 
@@ -75,6 +77,56 @@ const columns: DataBoardColumn[] = [
   { id: 'done', label: 'Done', icon: CircleCheck, accentClassName: 'text-emerald-600' },
 ];
 ```
+
+## Keeping the order of cards
+
+Name a numeric field of your items in `positionField` and the board sorts every cell by it, in
+ascending order. A cell is a column, or one column of a band on a grouped board, so positions never
+interact between bands. Cards of equal position keep their order from `data`, and a value that is not
+a finite number (missing, `null`, `NaN`) counts as `0`.
+
+```tsx
+<DataBoard<Task> positionField='position' {...props} />
+```
+
+On drop, the board writes a new position into the moved card. It is computed from the neighbours of
+the landing slot in the **full** order of the target cell: cards hidden by pagination or by search
+count as neighbours, so a drop never jumps over a card the user cannot see, and the dragged card does
+not count.
+
+| Landing slot | New position |
+| --- | --- |
+| Empty cell | `0` |
+| First | `next - 1` |
+| Last | `previous + 1` |
+| Between two cards | midpoint of their positions |
+
+The moved card comes back from `onDataChange` with the field overwritten, and `onCardMove` carries the
+same value as `position`, so persisting a move is one update of one record:
+
+```tsx
+<DataBoard<Task>
+  columnField='status'
+  positionField='position'
+  onCardMove={({ item, toColumn, position }) => updateTask(item.id, { status: toColumn, position })}
+  {...props}
+/>
+```
+
+`onDataChange` receives the full array: every card, sorted by position (equal positions keep their
+previous order), with the moved card carrying its new position. Pass it back through `data` and the
+board shows exactly that.
+
+The neighbours of the moved card are named on every move event, with or without `positionField`.
+`beforeId` and `afterId` are the ids of the cards right before and right after it in the full order of
+its new cell, and `null` at the edges. Use them to store the order as a linked list, or to call an API
+that takes an `afterId`.
+
+Each move into the same gap halves it, and a float64 holds about 50 halvings. After roughly 50 moves
+into one gap, the midpoint equals the position of a neighbour, and the order of those two cards is then
+only the order of `data`. The board does not renumber positions for you. When the `position` of a move
+equals the position of its `beforeId` or `afterId` card, renumber that cell on your side, for example to
+`1..n` or with a wide step such as `1000`, and save the new values.
 
 ## Examples
 
@@ -164,6 +216,11 @@ const columns: DataBoardColumn[] = [
       description: 'Semantic move event, fired once per move. Together with onDataChange it gates dragging: a board passing neither is read-only.',
       type: '(e: DataBoardMoveEvent<T>) => void',
     },
+    positionField: {
+      description:
+        'Numeric field that orders the cards of each cell, ascending, with ties in `data` order. On drop the board writes the new position into the moved card and reports it in `onCardMove`. Omit to keep the order of the `data` array.',
+      type: 'DataBoardPositionField<T>?',
+    },
     searchableFields: {
       description: 'Fields the search box matches against (the raw stored value, not a custom-rendered label). Omit to hide search.',
       type: '(keyof T)[]?',
@@ -203,6 +260,31 @@ const columns: DataBoardColumn[] = [
     labels: {
       description: 'Overrides any built-in string, aria-labels included.',
       type: 'Partial<DataBoardLabels>?',
+    },
+  }}
+/>
+
+### DataBoardMoveEvent
+
+<TypeTable
+  type={{
+    item: { description: 'The moved card, with its new column, band and position written.', type: 'T' },
+    fromColumn: { description: 'Column id the card came from.', type: 'string' },
+    toColumn: { description: 'Column id the card landed in.', type: 'string' },
+    toIndex: { description: 'Index of the card among the whole target column.', type: 'number' },
+    fromGroup: { description: 'Band id the card came from, on a grouped board.', type: 'string?' },
+    toGroup: { description: 'Band id the card landed in, on a grouped board.', type: 'string?' },
+    position: {
+      description: 'The value written into `positionField`. Present when `positionField` is set.',
+      type: 'number?',
+    },
+    beforeId: {
+      description: 'Id of the card right before the moved card in the full order of its new cell, `null` at the start.',
+      type: 'string | null',
+    },
+    afterId: {
+      description: 'Id of the card right after the moved card in the full order of its new cell, `null` at the end.',
+      type: 'string | null',
     },
   }}
 />
