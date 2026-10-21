@@ -12,21 +12,84 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 - **Generic data model**: works with any item type `T` via `idField` / `columnField`.
 - **Structured cards**: the title is rendered from `title(item)` (as a `CardTitle`, so it can be a string, a link, or any element); the content area is driven by a `fields` config or fully customized with `cardContent`.
-- **Inter and intra-column drag-and-drop**: move cards between columns and reorder within a column.
+- **Inter and intra-column drag-and-drop**: move cards between columns and reorder within a column. A drop slot of the card's height shows where it will land.
 - **Hybrid state**: works standalone from `defaultData`, or controlled via `data` + `onDataChange`.
 - **Global search**: filter cards across `searchableFields`.
 - **Per-column extras**: count, a `renderColumnSummary` slot, color accent, and an add button.
+- **Ordered cards**: name a numeric field in `positionField` and each column keeps its cards sorted by it.
 
-> The card order is implicit in the `data` array order. On any move, the board emits the reordered array via `onDataChange` (and a semantic `onCardMove` event); map that to your own persistence.
+> Without `positionField`, the card order is implicit in the `data` array order. On any move, the board emits the reordered array via `onDataChange` (and a semantic `onCardMove` event); map that to your own persistence. To store the order of cards as a number instead, see [Keeping the order of cards](#keeping-the-order-of-cards).
 
 > Define your item type with a `type` alias, not an `interface` — `Kanban<T>` requires `T extends Record<string, unknown>`, which a TypeScript `interface` does not satisfy.
 
 > For boards that outgrow one screen — hundreds of cards, grouping into bands, hideable columns, a
 > persisted view — see [Data Board](/blocks/data-board).
 
+## Keeping the order of cards
+
+Name a numeric field of your items in `positionField` and the board sorts every column by it, in
+ascending order. Cards of equal position keep their order from `data`, and a value that is not a
+finite number (missing, `null`, `NaN`) counts as `0`.
+
+```tsx
+<Kanban<Task> positionField='position' {...props} />
+```
+
+On drop, the board writes a new position into the moved card. It is computed from the neighbours of
+the landing slot in the **full** order of the target column: cards hidden by the search count as
+neighbours, so a drop never jumps over a card the user cannot see, and the dragged card does not
+count.
+
+| Landing slot | New position |
+| --- | --- |
+| Empty column | `0` |
+| First | `next - 1` |
+| Last | `previous + 1` |
+| Between two cards | midpoint of their positions |
+
+The moved card comes back from `onDataChange` with the field overwritten, and `onCardMove` carries the
+same value as `position`, so persisting a move is one update of one record:
+
+```tsx
+<Kanban<Task>
+  columnField='status'
+  positionField='position'
+  onCardMove={({ item, toColumn, position }) => updateTask(item.id, { status: toColumn, position })}
+  {...props}
+/>
+```
+
+`onDataChange` receives the full array: every card, sorted by position (equal positions keep their
+previous order), with the moved card carrying its new position. Pass it back through `data` and the
+board shows exactly that.
+
+The neighbours of the moved card are named on every move event, with or without `positionField`.
+`beforeId` and `afterId` are the ids of the cards right before and right after it in the full order of
+its new column, and `null` at the edges. Use them to store the order as a linked list, or to call an
+API that takes an `afterId`.
+
+Each move into the same gap halves it, and a float64 holds about 50 halvings. After roughly 50 moves
+into one gap, the midpoint equals the position of a neighbour, and the order of those two cards is then
+only the order of `data`. The board does not renumber positions for you. When the `position` of a move
+equals the position of its `beforeId` or `afterId` card, renumber that column on your side, for example
+to `1..n` or with a wide step such as `1000`, and save the new values.
+
 ## Examples
 
 <ItemExamples registryName={'kanban'} />
+
+## Notes and limitations
+
+- **`toIndex` is the index among the whole column.** Cards hidden by the search count, and with
+  `positionField` the index is counted in the position-sorted list.
+- **Cards move on drop, not on hover.** While a card is held, the others stay where they are and a
+  drop slot of the card's height shows where it would land. The move is applied once, when the card
+  is released: right after the card it was held below, right before the card it was held above, or
+  right after the last card shown when it is released on the column itself, so it never jumps over a
+  card hidden by the search. Releasing a card outside any column, on its own slot, or pressing
+  Escape leaves the board as it was and fires neither `onCardMove` nor `onDataChange`.
+- **A `data` update received mid-drag is kept.** The board applies it once the drag ends; a move
+  dropped meanwhile is replayed between the same neighbours in the new list.
 
 ## Props
 
@@ -91,8 +154,36 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
       type: '(columnId: string) => void',
     },
     onCardMove: {
-      description: 'Semantic move event: { item, fromColumn, toColumn, toIndex }.',
+      description: 'Semantic move event, fired once per move.',
       type: '(e: KanbanMoveEvent<T>) => void',
+    },
+    positionField: {
+      description:
+        'Numeric field that orders the cards of each column, ascending, with ties in `data` order. On drop the board writes the new position into the moved card and reports it in `onCardMove`. Omit to keep the order of the `data` array.',
+      type: 'KanbanPositionField<T>?',
+    },
+  }}
+/>
+
+### KanbanMoveEvent
+
+<TypeTable
+  type={{
+    item: { description: 'The moved card, with its new column and position written.', type: 'T' },
+    fromColumn: { description: 'Column id the card came from.', type: 'string' },
+    toColumn: { description: 'Column id the card landed in.', type: 'string' },
+    toIndex: { description: 'Index of the card among the whole target column.', type: 'number' },
+    position: {
+      description: 'The value written into `positionField`. Present when `positionField` is set.',
+      type: 'number?',
+    },
+    beforeId: {
+      description: 'Id of the card right before the moved card in the full order of its new column, `null` at the start.',
+      type: 'string | null',
+    },
+    afterId: {
+      description: 'Id of the card right after the moved card in the full order of its new column, `null` at the end.',
+      type: 'string | null',
     },
   }}
 />
