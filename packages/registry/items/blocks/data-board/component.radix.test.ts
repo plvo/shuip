@@ -152,6 +152,7 @@ import {
   bandKey,
   type CardAccessors,
   cellIds,
+  cellOrder,
   columnKey,
   type DropOver,
   dropZoneId,
@@ -159,6 +160,7 @@ import {
   landingIndex,
   originSlot,
   previewTarget,
+  rebaseSlot,
   revealStepsFor,
   slotPlacement,
 } from './component.radix';
@@ -219,6 +221,14 @@ describe('cellIds', () => {
 
   test('spans one band of the column when a band is given', () => {
     expect(cellIds(items, { columnId: 'todo', groupId: 's1' }, accessors)).toEqual(['a', 'd']);
+  });
+});
+
+describe('cellOrder', () => {
+  test('is the cell without the dragged card', () => {
+    const items = [cardOf('a', 'todo'), cardOf('b', 'todo'), cardOf('c', 'done')];
+    expect(cellOrder(items, { columnId: 'todo' }, 'a', accessors)).toEqual(['b']);
+    expect(cellOrder(items, { columnId: 'done' }, 'a', accessors)).toEqual(['c']);
   });
 });
 
@@ -388,6 +398,49 @@ describe('applyCardMove', () => {
     const next = move(items, 'a', { columnId: 'done', index: 0 });
     expect(items.map((item) => item.status)).toEqual(['todo', 'todo', 'todo', 'done']);
     expect(next.find((item) => item.id === 'b')).toBe(items[1]);
+  });
+});
+
+describe('rebaseSlot', () => {
+  const todo = (...names: string[]) => names.map((name) => cardOf(name, 'todo'));
+  const dropped = { columnId: 'todo', index: 2 };
+  const rebase = (pending: Card[], target = dropped) =>
+    rebaseSlot({ items: [...todo('a', 'b', 'c'), cardOf('d', 'done')], pending, activeId: 'd', target, accessors });
+
+  test('keeps the slot between the neighbours it was previewed between', () => {
+    expect(rebase([...todo('x', 'a', 'b', 'c'), cardOf('d', 'done')])).toEqual({ columnId: 'todo', index: 3 });
+  });
+
+  test('lands before the card it was held above, whatever was added before it', () => {
+    expect(rebase([...todo('a', 'b', 'n', 'c'), cardOf('d', 'done')])).toEqual({ columnId: 'todo', index: 3 });
+  });
+
+  test('follows the card before the slot when the card after it is gone', () => {
+    expect(rebase([...todo('a', 'b'), cardOf('d', 'done')])).toEqual({ columnId: 'todo', index: 2 });
+  });
+
+  test('follows the last card of the cell when the slot was at its end', () => {
+    expect(rebase([...todo('a', 'b', 'c', 'z'), cardOf('d', 'done')], { columnId: 'todo', index: 3 })).toEqual({
+      columnId: 'todo',
+      index: 3,
+    });
+  });
+
+  test('clamps the rank when both neighbours are gone', () => {
+    expect(rebase([...todo('a'), cardOf('d', 'done')])).toEqual({ columnId: 'todo', index: 1 });
+  });
+
+  test('keeps the band of the slot', () => {
+    const banded = [cardOf('a', 'todo', 's1'), cardOf('d', 'done', 's2')];
+    expect(
+      rebaseSlot({
+        items: banded,
+        pending: banded,
+        activeId: 'd',
+        target: { columnId: 'todo', groupId: 's1', index: 1 },
+        accessors,
+      }),
+    ).toEqual({ columnId: 'todo', groupId: 's1', index: 1 });
   });
 });
 

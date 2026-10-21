@@ -254,6 +254,11 @@ export function landingIndex({
   return below ? at + 1 : at;
 }
 
+// The cell without the dragged card: the order the slot rank counts in.
+export function cellOrder<T>(items: T[], cell: CardCell, activeId: string, accessors: CardAccessors<T>): string[] {
+  return cellIds(items, cell, accessors).filter((id) => id !== activeId);
+}
+
 export function originSlot<T>(items: T[], activeId: string, accessors: CardAccessors<T>): DropSlot | null {
   const active = items.find((item) => accessors.getId(item) === activeId);
   if (!active) return null;
@@ -276,7 +281,7 @@ export function previewTarget<T>({
 }): DropSlot | null {
   if (!over) return null;
   if (over.id === activeId) return originSlot(items, activeId, accessors);
-  const order = cellIds(items, over, accessors).filter((id) => id !== activeId);
+  const order = cellOrder(items, over, activeId, accessors);
   const index = landingIndex({ order, overId: over.zone ? null : over.id, below: over.below });
   return { columnId: over.columnId, groupId: over.groupId, index };
 }
@@ -301,6 +306,35 @@ function dropOverOf({ collisions }: { collisions: Collision[] | null }): DropOve
 export function isSameSlot(a: DropSlot | null, b: DropSlot | null): boolean {
   if (a == null || b == null) return a === b;
   return a.columnId === b.columnId && a.groupId === b.groupId && a.index === b.index;
+}
+
+// Finds in `pending`, a newer list than `items`, the slot between the cards
+// that `target` was previewed between: right before the card that followed it,
+// else right after the card that preceded it, else at the same rank clamped to
+// the cell.
+export function rebaseSlot<T>({
+  items,
+  pending,
+  activeId,
+  target,
+  accessors,
+}: {
+  items: T[];
+  pending: T[];
+  activeId: string;
+  target: DropSlot;
+  accessors: CardAccessors<T>;
+}): DropSlot {
+  const seen = cellOrder(items, target, activeId, accessors);
+  const order = cellOrder(pending, target, activeId, accessors);
+  const before = seen[target.index - 1];
+  const after = seen[target.index];
+  const afterAt = after === undefined ? -1 : order.indexOf(after);
+  const beforeAt = before === undefined ? -1 : order.indexOf(before);
+  let index = Math.min(target.index, order.length);
+  if (afterAt >= 0) index = afterAt;
+  else if (beforeAt >= 0) index = beforeAt + 1;
+  return { columnId: target.columnId, groupId: target.groupId, index };
 }
 
 // Places the card in `target`, right before the card that holds that rank
@@ -626,7 +660,7 @@ export function DataBoardDropSlot() {
       aria-hidden='true'
       data-slot='data-board-drop-slot'
       style={{ height: activeNodeRect?.height }}
-      className='shrink-0 rounded-xl border border-dashed bg-muted/50'
+      className='min-h-10 shrink-0 rounded-xl border border-dashed border-primary/50 bg-primary/10 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-150'
     />
   );
 }
@@ -947,9 +981,8 @@ function useDataBoardDrag<T extends object>({
     return next as T;
   };
 
-  // Applied when the drag produced no change. On the success path the board
-  // emits `onDataChange` instead, which makes the parent the source of truth
-  // and leaves any value held here stale.
+  // Applied when the drag produced no change. A drop that moves a card applies
+  // its move to the held value instead, and emits the result.
   const drainPendingData = (apply: boolean) => {
     const pending = pendingDataRef.current;
     pendingDataRef.current = null;
@@ -992,7 +1025,19 @@ function useDataBoardDrag<T extends object>({
       return;
     }
 
-    const next = applyCardMove({ items, activeId: activeCardId, target, accessors, withCell });
+    const pending = pendingDataRef.current;
+    if (pending && !pending.some((item) => getId(item) === activeCardId)) {
+      drainPendingData(true);
+      return;
+    }
+
+    const next = applyCardMove({
+      items: pending ?? items,
+      activeId: activeCardId,
+      target: pending ? rebaseSlot({ items, pending, activeId: activeCardId, target, accessors }) : target,
+      accessors,
+      withCell,
+    });
     const movedItem = next.find((item) => getId(item) === activeCardId);
     if (!movedItem) {
       drainPendingData(true);
@@ -1211,16 +1256,9 @@ export function DataBoard<T extends object>({
     [cardContent, fields],
   );
 
-  // The rendered slice of a cell. `key` carries the pagination: a column in
-  // flat mode, a whole band in grouped mode.
-  const sliceOf = (all: T[], key: string) => {
-    const { shown, hidden } = paginate(all, limitFor(view.pageSize, view.revealedFor(key)));
-    return { rendered: shown, remaining: hidden };
-  };
-
   // The cell the drop slot is in, without the dragged card.
   const previewOrder = React.useMemo(
-    () => (preview ? cellIds(items, preview, accessors).filter((id) => id !== activeId) : []),
+    () => (preview && activeId ? cellOrder(items, preview, activeId, accessors) : []),
     [items, preview, activeId, accessors],
   );
 
@@ -1344,9 +1382,9 @@ export function DataBoard<T extends object>({
                       );
                       const cells = shownColumns.map((column) => {
                         const all = bandItems.filter((item) => getColumn(item) === column.id);
-                        return { column, ...sliceOf(all, key) };
+                        return { column, ...paginate(all, limitFor(view.pageSize, view.revealedFor(key))) };
                       });
-                      const remainingInBand = cells.reduce((total, cell) => total + cell.remaining, 0);
+                      const remainingInBand = cells.reduce((total, cell) => total + cell.hidden, 0);
                       return (
                         <DataBoardBandRow
                           key={band.id}
@@ -1357,9 +1395,7 @@ export function DataBoard<T extends object>({
                           onToggle={() => view.toggleCollapsed(band.id, fallback)}
                           footer={remainingInBand > 0 ? renderMoreButton(key, remainingInBand, 'self-start') : null}
                         >
-                          {cells.map((cell) =>
-                            renderColumnBody(cell.column, cell.rendered, cell.remaining, key, band.id),
-                          )}
+                          {cells.map((cell) => renderColumnBody(cell.column, cell.shown, cell.hidden, key, band.id))}
                         </DataBoardBandRow>
                       );
                     })}
@@ -1369,8 +1405,8 @@ export function DataBoard<T extends object>({
                     {shownColumns.map((column) => {
                       const all = itemsByColumn.get(column.id) ?? [];
                       const key = columnKey(column.id);
-                      const { rendered, remaining } = sliceOf(all, key);
-                      return renderColumnBody(column, rendered, remaining, key);
+                      const { shown, hidden } = paginate(all, limitFor(view.pageSize, view.revealedFor(key)));
+                      return renderColumnBody(column, shown, hidden, key);
                     })}
                   </div>
                 )}

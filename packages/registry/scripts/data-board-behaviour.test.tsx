@@ -71,6 +71,18 @@ const NO_RECT: Rect = { top: 0, left: 0, width: 0, height: 0 };
  * stacks its bands, each one a row of three cells of the same height.
  */
 function rectOf(element: Element): Rect {
+  const overlay = [element, element.parentElement].find(
+    (candidate): candidate is HTMLElement => candidate instanceof HTMLElement && candidate.style.position === 'fixed',
+  );
+  if (overlay) {
+    const { style } = overlay;
+    return {
+      top: Number.parseFloat(style.top),
+      left: Number.parseFloat(style.left),
+      width: Number.parseFloat(style.width),
+      height: Number.parseFloat(style.height),
+    };
+  }
   const band = element.closest(BAND_SLOT);
   if (band && element.matches(COLUMN_SLOT)) {
     return {
@@ -241,6 +253,13 @@ async function pressEscape() {
   });
 }
 
+async function pressKey(code: string, target: EventTarget = document) {
+  await act(async () => {
+    target.dispatchEvent(new KeyboardEvent('keydown', { code, bubbles: true, cancelable: true }));
+    await settle();
+  });
+}
+
 async function drag(handle: HTMLElement, path: Point[]) {
   await hold(handle, path);
   await release(path.at(-1) ?? { x: 0, y: 0 });
@@ -309,6 +328,19 @@ describe.each(VARIANTS)('data-board drag on %s', (variant) => {
 
     await moveTo({ x: 150, y: 230 });
     expect(dropSlot()).toBeNull();
+    expect(columnTitles()).toEqual(INITIAL_COLUMNS);
+  });
+
+  test('shows the drop slot next to the dragged card, which stays rendered, inside its own column', async () => {
+    await mount(boards[variant]);
+    await pickUpB();
+
+    await moveTo({ x: 150, y: 340 });
+    expect(dropSlotPlace()).toEqual({ column: 0, index: 3 });
+    expect(columnTitles()).toEqual(INITIAL_COLUMNS);
+
+    await moveTo({ x: 150, y: 120 });
+    expect(dropSlotPlace()).toEqual({ column: 0, index: 0 });
     expect(columnTitles()).toEqual(INITIAL_COLUMNS);
   });
 
@@ -458,5 +490,81 @@ describe.each(VARIANTS)('data-board drag on %s', (variant) => {
     await finish();
     expect(columnTitles()).toEqual([['Task A', 'Task B', 'Task C'], ['Task E'], ['Task D']]);
     expect(moves).toEqual([]);
+  });
+
+  test('rebases the move onto a data update received mid-drag', async () => {
+    const { rerender, moves, dataChanges } = await mount(boards[variant]);
+    await pickUpB();
+    await moveTo({ x: 700, y: 120 });
+
+    await rerender([...TASKS, { id: 'e', status: 'doing', title: 'Task E' }]);
+    await release({ x: 700, y: 120 });
+
+    expect(moves).toHaveLength(1);
+    expect(moves[0]).toMatchObject({ item: { id: 'b', status: 'done' }, toColumn: 'done', toIndex: 0 });
+    expect(dataChanges).toHaveLength(1);
+    expect(dataChanges[0]?.map(({ id, status }) => `${id}:${status}`)).toEqual([
+      'a:todo',
+      'c:todo',
+      'b:done',
+      'd:done',
+      'e:doing',
+    ]);
+    expect(columnTitles()).toEqual([['Task A', 'Task C'], ['Task E'], ['Task B', 'Task D']]);
+  });
+
+  test('applies a data update that removed the dragged card and reports no move', async () => {
+    const { rerender, moves, dataChanges } = await mount(boards[variant]);
+    await pickUpB();
+    await moveTo({ x: 700, y: 120 });
+
+    await rerender(TASKS.filter(({ id }) => id !== 'b'));
+    await release({ x: 700, y: 120 });
+
+    expect(moves).toEqual([]);
+    expect(dataChanges).toEqual([]);
+    expect(columnTitles()).toEqual([['Task A', 'Task C'], [], ['Task D']]);
+  });
+
+  test('drops a card picked up and moved with the keyboard', async () => {
+    const { moves, dataChanges } = await mount(boards[variant]);
+    const handle = handleOf('Task B');
+    await act(async () => {
+      handle.focus();
+    });
+
+    await pressKey('Space', handle);
+    expect(dropSlot()).toBeNull();
+
+    await pressKey('ArrowRight');
+    expect(columnTitles()).toEqual(INITIAL_COLUMNS);
+    expect(dropSlotPlace()?.column).toBe(1);
+
+    await pressKey('Space');
+    expect(dropSlot()).toBeNull();
+    expect(moves).toHaveLength(1);
+    expect(moves[0]).toMatchObject({ item: { id: 'b' }, fromColumn: 'todo', toColumn: 'doing', toIndex: 0 });
+    expect(dataChanges).toHaveLength(1);
+    expect(columnTitles()).toEqual([['Task A', 'Task C'], ['Task B'], ['Task D']]);
+  });
+
+  test('reveals a card dropped past the paginated window of a band', async () => {
+    const data: Task[] = [
+      { id: 'a', status: 'todo', title: 'Task A', sprint: 1 },
+      { id: 'c', status: 'todo', title: 'Task C', sprint: 2 },
+      { id: 'e', status: 'todo', title: 'Task E', sprint: 2 },
+    ];
+    const { moves } = await mount(boards[variant], { data, groupBy: { field: 'sprint' }, pageSize: 1 });
+    expect(columnTitles()).toEqual([['Task A'], [], [], ['Task C'], [], []]);
+
+    await drag(handleOf('Task A'), [
+      { x: 150, y: 120 },
+      { x: 160, y: 140 },
+      { x: 150, y: 800 },
+    ]);
+
+    expect(moves).toHaveLength(1);
+    expect(moves[0]).toMatchObject({ item: { id: 'a', sprint: 2 }, toGroup: '2', toIndex: 2 });
+    expect(columnTitles()).toEqual([['Task C', 'Task E', 'Task A'], [], []]);
   });
 });
