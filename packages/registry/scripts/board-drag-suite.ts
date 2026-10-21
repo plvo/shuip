@@ -7,10 +7,9 @@ import {
   createBoardHarness,
   INITIAL_COLUMNS,
   TASKS,
-  VARIANTS,
-  type Variant,
 } from './board-behaviour-harness';
 import { installDom, resolveCanonicalAliases } from './dom-environment';
+import { VARIANTS, type Variant } from './react-mount';
 
 export const WITH_POSITIONS = { positionField: 'rank' } as const;
 

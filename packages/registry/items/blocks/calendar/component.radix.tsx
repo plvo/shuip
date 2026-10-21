@@ -605,6 +605,10 @@ function startedInside(e: React.SyntheticEvent): boolean {
   return e.currentTarget.contains(e.target as Node);
 }
 
+function allDaySlot(day: Date): CalendarSlot {
+  return { start: startOfDay(day), end: addDays(startOfDay(day), 1), allDay: true };
+}
+
 const eventBlockClass = 'absolute z-10 overflow-hidden rounded px-1 py-0.5 text-left text-xs';
 
 function EventBlock({
@@ -1034,6 +1038,7 @@ function TimeGridView<T extends Record<string, unknown>>({
               return (
                 <div
                   key={day.toISOString()}
+                  data-slot='calendar-all-day-cell'
                   className={cn(
                     'flex min-h-7 min-w-0 flex-1 flex-col gap-1 border-l p-1 first:border-l-0',
                     canCreateAllDay && 'cursor-pointer',
@@ -1041,9 +1046,7 @@ function TimeGridView<T extends Record<string, unknown>>({
                   onClick={
                     canCreateAllDay
                       ? (e) => {
-                          if (startedInside(e)) {
-                            selectSlot?.({ start: startOfDay(day), end: addDays(startOfDay(day), 1), allDay: true });
-                          }
+                          if (startedInside(e)) selectSlot?.(allDaySlot(day));
                         }
                       : undefined
                   }
@@ -1188,20 +1191,19 @@ function MonthCell<T extends Record<string, unknown>>({
   more: (count: number) => string;
 }) {
   const { setNodeRef } = useDroppable({ id: `cell-${day.toISOString()}`, data: { day } });
-  const canSelect = Boolean(onSlotSelect);
+  const canCreateAllDay = Boolean(onSlotSelect);
   return (
     <div
       ref={setNodeRef}
+      data-slot='calendar-month-cell'
       className={cn(
         'flex min-h-24 flex-col gap-1 border-b border-l p-1 [&:nth-child(7n+1)]:border-l-0',
-        canSelect && 'cursor-pointer hover:bg-accent/50',
+        canCreateAllDay && 'cursor-pointer hover:bg-accent/50',
       )}
       onClick={
-        canSelect
+        canCreateAllDay
           ? (e) => {
-              if (startedInside(e)) {
-                onSlotSelect?.({ start: startOfDay(day), end: addDays(startOfDay(day), 1), allDay: true });
-              }
+              if (startedInside(e)) onSlotSelect?.(allDaySlot(day));
             }
           : undefined
       }

@@ -6,10 +6,9 @@ import {
   type CalendarView,
   createCalendarHarness,
   TIMED_EVENT,
-  VARIANTS,
-  type Variant,
 } from './calendar-behaviour-harness';
 import { installDom, resolveCanonicalAliases } from './dom-environment';
+import { VARIANTS, type Variant } from './react-mount';
 
 const harness = createCalendarHarness();
 const { mount, eventLabel, portalMenu, click } = harness;
@@ -39,24 +38,51 @@ type EventPlace = {
   editable: boolean;
   withSlotSelect: boolean;
   event: CalendarEvent;
+  /** Whether a click on the event ends at the event, which the cell around it must not see as its own. */
+  stopsClick: boolean;
 };
 
 const EVENT_PLACES: EventPlace[] = [
-  { name: 'time grid', view: 'week', editable: false, withSlotSelect: false, event: TIMED_EVENT },
-  { name: 'editable time grid', view: 'week', editable: true, withSlotSelect: true, event: TIMED_EVENT },
-  { name: 'all-day row', view: 'week', editable: true, withSlotSelect: true, event: ALL_DAY_EVENT },
-  { name: 'month pill', view: 'month', editable: false, withSlotSelect: false, event: TIMED_EVENT },
-  { name: 'editable month pill', view: 'month', editable: true, withSlotSelect: true, event: TIMED_EVENT },
-  { name: 'agenda row', view: 'agenda', editable: false, withSlotSelect: false, event: TIMED_EVENT },
+  { name: 'time grid', view: 'week', editable: false, withSlotSelect: false, event: TIMED_EVENT, stopsClick: false },
+  {
+    name: 'editable time grid',
+    view: 'week',
+    editable: true,
+    withSlotSelect: true,
+    event: TIMED_EVENT,
+    stopsClick: false,
+  },
+  { name: 'all-day row', view: 'week', editable: false, withSlotSelect: false, event: ALL_DAY_EVENT, stopsClick: true },
+  {
+    name: 'editable all-day row',
+    view: 'week',
+    editable: true,
+    withSlotSelect: true,
+    event: ALL_DAY_EVENT,
+    stopsClick: true,
+  },
+  { name: 'month pill', view: 'month', editable: false, withSlotSelect: false, event: TIMED_EVENT, stopsClick: false },
+  {
+    name: 'editable month pill',
+    view: 'month',
+    editable: true,
+    withSlotSelect: true,
+    event: TIMED_EVENT,
+    stopsClick: true,
+  },
+  { name: 'agenda row', view: 'agenda', editable: false, withSlotSelect: false, event: TIMED_EVENT, stopsClick: false },
 ];
 
+const cellsOf = (slot: string) => [...document.querySelectorAll(`[data-slot="${slot}"]`)];
+
 describe.each(VARIANTS)('calendar on %s', (variant) => {
-  describe.each(EVENT_PLACES)('$name', ({ view, editable, withSlotSelect, event }) => {
-    test('ignores a click that bubbles from a portal of renderEvent', async () => {
+  describe.each(EVENT_PLACES)('$name', ({ view, editable, withSlotSelect, event, stopsClick }) => {
+    test('ignores a click that bubbles from a portal of renderEvent and lets it go on', async () => {
       const calendar = await mount(calendars[variant], { view, editable, withSlotSelect });
       await click(portalMenu(event.id));
       expect(calendar.portalClicks).toEqual([event.id]);
       expect(calendar.eventClicks).toEqual([]);
+      expect(calendar.ancestorClicks).toBe(1);
       expect(calendar.slots).toEqual([]);
       expect(calendar.errors).toEqual([]);
     });
@@ -66,6 +92,7 @@ describe.each(VARIANTS)('calendar on %s', (variant) => {
       await click(eventLabel(event.id));
       expect(calendar.eventClicks).toEqual([event]);
       expect(calendar.portalClicks).toEqual([]);
+      expect(calendar.ancestorClicks).toBe(stopsClick ? 0 : 1);
       expect(calendar.slots).toEqual([]);
       expect(calendar.errors).toEqual([]);
     });
@@ -73,13 +100,15 @@ describe.each(VARIANTS)('calendar on %s', (variant) => {
 
   describe('editable month cell', () => {
     const cellOfDay = (day: string) =>
-      [...document.querySelectorAll('span')].find((span) => span.textContent === day)?.parentElement ?? null;
+      cellsOf('calendar-month-cell').find((cell) => cell.firstElementChild?.textContent === day) ?? null;
 
-    test('without onSlotSelect shows no pointer cursor and no hover tint', async () => {
-      await mount(calendars[variant], { view: 'month', editable: true });
+    test('without onSlotSelect shows no pointer cursor, no hover tint and emits nothing', async () => {
+      const calendar = await mount(calendars[variant], { view: 'month', editable: true });
       const cell = cellOfDay('15');
       expect(cell?.className).not.toContain('cursor-pointer');
       expect(cell?.className).not.toContain('hover:bg-accent');
+      await click(cell);
+      expect(calendar.slots).toEqual([]);
     });
 
     test('with onSlotSelect emits the all-day slot of a click on the cell', async () => {
@@ -88,6 +117,23 @@ describe.each(VARIANTS)('calendar on %s', (variant) => {
       expect(cell?.className).toContain('cursor-pointer');
       await click(cell);
       expect(calendar.slots).toEqual([{ start: new Date(2026, 2, 15), end: new Date(2026, 2, 16), allDay: true }]);
+    });
+  });
+
+  describe('editable all-day cell', () => {
+    // The week of CALENDAR_DATE starts on a Monday, so the third cell is the Wednesday after the event.
+    const wednesdayCell = () => cellsOf('calendar-all-day-cell')[2] ?? null;
+
+    test('with onSlotSelect emits the all-day slot of a click on an empty cell', async () => {
+      const calendar = await mount(calendars[variant], { view: 'week', editable: true, withSlotSelect: true });
+      await click(wednesdayCell());
+      expect(calendar.slots).toEqual([{ start: new Date(2026, 2, 11), end: new Date(2026, 2, 12), allDay: true }]);
+    });
+
+    test('without onSlotSelect emits nothing', async () => {
+      const calendar = await mount(calendars[variant], { view: 'week', editable: true });
+      await click(wednesdayCell());
+      expect(calendar.slots).toEqual([]);
     });
   });
 });

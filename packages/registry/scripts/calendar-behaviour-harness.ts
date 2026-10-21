@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from 'react';
-import type { Root } from 'react-dom/client';
+import { createReactMount } from './react-mount';
 
 export type CalendarEvent = {
   id: string;
@@ -35,14 +35,11 @@ export type CalendarComponent = {
 
 export type CalendarView = 'month' | 'week' | 'day' | 'agenda';
 
-export type MountOptions = {
+type MountOptions = {
   view: CalendarView;
   editable?: boolean;
   withSlotSelect?: boolean;
 };
-
-export const VARIANTS = ['Radix', 'Base UI'] as const;
-export type Variant = (typeof VARIANTS)[number];
 
 // A Tuesday in the middle of a month, so that every view shows the events below.
 const CALENDAR_DATE = new Date(2026, 2, 10);
@@ -66,40 +63,31 @@ export const ALL_DAY_EVENT: CalendarEvent = {
 /**
  * The drive of a calendar in a DOM without a layout engine. Every event is rendered by `renderEvent` with a menu
  * mounted in a portal on `document.body`, the way a dropdown does, so a click in that menu reaches the event only
- * through React's tree. The suite installs the DOM and the canonical aliases, then calls `load` before it mounts.
+ * through React's tree. A `div` around the calendar counts the clicks that reach it, to tell a click a handler let
+ * pass from one it stopped. The suite installs the DOM and the canonical aliases, then calls `load` before it mounts.
  */
 export function createCalendarHarness() {
-  const roots: Root[] = [];
-  const originalConsoleError = console.error;
+  const reactMount = createReactMount();
   let act: typeof import('react').act;
   let createElement: typeof import('react').createElement;
   let createPortal: typeof import('react-dom').createPortal;
-  let createRoot: typeof import('react-dom/client').createRoot;
 
   /** Loads React once the DOM is installed. */
   async function load(): Promise<void> {
-    ({ act, createElement } = await import('react'));
+    ({ act, createElement } = await reactMount.load());
     ({ createPortal } = await import('react-dom'));
-    ({ createRoot } = await import('react-dom/client'));
   }
 
-  async function cleanup(): Promise<void> {
-    await act(async () => {
-      for (const root of roots.splice(0)) root.unmount();
-    });
-    document.body.innerHTML = '';
-    console.error = originalConsoleError;
-  }
+  const { cleanup } = reactMount;
 
   async function mount(Calendar: CalendarComponent, { view, editable = false, withSlotSelect = false }: MountOptions) {
+    const { errors, render } = reactMount.mount();
     const calendar = {
       eventClicks: [] as CalendarEvent[],
       slots: [] as CalendarSlot[],
       portalClicks: [] as string[],
-      errors: [] as unknown[][],
-    };
-    console.error = (...args: unknown[]) => {
-      calendar.errors.push(args);
+      ancestorClicks: 0,
+      errors,
     };
     const renderEvent = (item: CalendarEvent) =>
       createElement(
@@ -115,12 +103,10 @@ export function createCalendarHarness() {
           document.body,
         ),
       );
-    const container = document.createElement('div');
-    document.body.append(container);
-    const root = createRoot(container);
-    roots.push(root);
-    await act(async () => {
-      root.render(
+    await render(
+      createElement(
+        'div',
+        { onClick: () => calendar.ancestorClicks++ },
         createElement(
           Calendar.Root,
           {
@@ -139,8 +125,8 @@ export function createCalendarHarness() {
           } as Omit<CalendarRootProps, 'children'> as CalendarRootProps,
           createElement(Calendar.View, {}),
         ),
-      );
-    });
+      ),
+    );
     return calendar;
   }
 

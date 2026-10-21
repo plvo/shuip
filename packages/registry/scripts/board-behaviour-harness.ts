@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import type { Root } from 'react-dom/client';
+import { createReactMount } from './react-mount';
 
 export type BoardTask = { id: string; status: string; title: string; rank?: number; sprint?: number };
 
@@ -31,9 +31,6 @@ export type BoardProps = {
 export type MountOptions = Pick<BoardProps, 'pageSize' | 'groupBy' | 'searchableFields' | 'positionField'> & {
   data?: BoardTask[];
 };
-
-export const VARIANTS = ['Radix', 'Base UI'] as const;
-export type Variant = (typeof VARIANTS)[number];
 
 // The three columns the stub geometry lays out, from left to right.
 const COLUMNS = [
@@ -83,11 +80,9 @@ type BoardHarnessConfig = {
  * one a row of three cells of the same height.
  */
 export function createBoardHarness({ columnSlot, dropSlot: dropSlotSelector, bandSlot }: BoardHarnessConfig) {
-  const roots: Root[] = [];
-  const originalConsoleError = console.error;
+  const reactMount = createReactMount();
   let act: typeof import('react').act;
   let createElement: typeof import('react').createElement;
-  let createRoot: typeof import('react-dom/client').createRoot;
 
   const bandOf = (element: Element) => {
     const band = bandSlot ? element.closest(bandSlot) : null;
@@ -162,48 +157,33 @@ export function createBoardHarness({ columnSlot, dropSlot: dropSlotSelector, ban
 
   /** Loads React once the DOM is installed. */
   async function load(): Promise<void> {
-    ({ act, createElement } = await import('react'));
-    ({ createRoot } = await import('react-dom/client'));
+    ({ act, createElement } = await reactMount.load());
   }
 
-  async function cleanup(): Promise<void> {
-    await act(async () => {
-      for (const root of roots.splice(0)) root.unmount();
-    });
-    document.body.innerHTML = '';
-    console.error = originalConsoleError;
-  }
+  const { cleanup } = reactMount;
 
   const settle = (ms = 20) => new Promise((resolve) => setTimeout(resolve, ms));
 
   async function mount(Board: ComponentType<BoardProps>, { data, ...options }: MountOptions = {}) {
+    const { errors, render } = reactMount.mount();
     const board = {
       moves: [] as BoardMove[],
       dataChanges: [] as BoardTask[][],
-      errors: [] as unknown[][],
+      errors,
       rerender: async (_data: BoardTask[]) => {},
     };
-    console.error = (...args: unknown[]) => {
-      board.errors.push(args);
-    };
-    const container = document.createElement('div');
-    document.body.append(container);
-    const root = createRoot(container);
-    roots.push(root);
     board.rerender = (next) =>
-      act(async () => {
-        root.render(
-          createElement(Board, {
-            columns: COLUMNS,
-            data: next,
-            columnField: 'status',
-            title: (task) => task.title,
-            onCardMove: (event) => board.moves.push(event),
-            onDataChange: (changed) => board.dataChanges.push(changed),
-            ...options,
-          }),
-        );
-      });
+      render(
+        createElement(Board, {
+          columns: COLUMNS,
+          data: next,
+          columnField: 'status',
+          title: (task) => task.title,
+          onCardMove: (event) => board.moves.push(event),
+          onDataChange: (changed) => board.dataChanges.push(changed),
+          ...options,
+        }),
+      );
     await board.rerender(data ?? TASKS);
     return board;
   }
