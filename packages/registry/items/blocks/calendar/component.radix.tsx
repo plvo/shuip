@@ -15,6 +15,7 @@ import {
   addDays,
   addMinutes,
   addMonths,
+  differenceInCalendarDays,
   eachDayOfInterval,
   endOfMonth,
   endOfWeek,
@@ -528,6 +529,7 @@ function colorClasses(c?: CalendarEventColor): string {
 const HOUR_HEIGHT = 48;
 const SNAP_MINUTES = 15;
 const MIN_DRAWN_MINUTES = 15;
+const DAY_MINUTES = 24 * 60;
 
 function snapMinutes(value: number, step = SNAP_MINUTES): number {
   return Math.round(value / step) * step;
@@ -555,12 +557,25 @@ export function isResizeMove(deltaY: number): boolean {
   return (Math.abs(deltaY) / HOUR_HEIGHT) * 60 >= SNAP_MINUTES / 2;
 }
 
-/** The end a resize of `deltaY` pixels gives the event, or null when the move is no resize or leaves the end as it is. */
+/**
+ * The Date of the wall-clock time `minutes` after the top of the grid on `day`: the day with its hours and minutes
+ * set, and the start of the next day for 1440. It follows the hour gutter on a day with 23 or 25 hours.
+ */
+export function wallClockDate(day: Date, minutes: number): Date {
+  return new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, minutes);
+}
+
+/**
+ * The end a resize of `deltaY` pixels gives the event, or null when the move is no resize or leaves the end as it is.
+ * The end is the wall-clock time under the pointer, no later than the end of the day of the start.
+ */
 export function resizedEnd(start: Date, end: Date, deltaY: number): Date | null {
   if (!isResizeMove(deltaY)) return null;
-  const minEnd = new Date(start.getTime() + SNAP_MINUTES * 60_000);
-  const proposed = snapToMinutes(new Date(end.getTime() + (deltaY / HOUR_HEIGHT) * 3_600_000));
-  const next = proposed.getTime() < minEnd.getTime() ? minEnd : proposed;
+  const startDay = startOfDay(start);
+  const endMin = differenceInCalendarDays(end, startDay) * DAY_MINUTES + minutesSinceDayStart(end);
+  const proposedMin = snapMinutes(endMin + (deltaY / HOUR_HEIGHT) * 60);
+  const nextMin = Math.min(DAY_MINUTES, Math.max(proposedMin, minutesSinceDayStart(start) + SNAP_MINUTES));
+  const next = wallClockDate(startDay, nextMin);
   return next.getTime() === end.getTime() ? null : next;
 }
 
@@ -576,7 +591,7 @@ const CLICK_MINUTES = 5;
 /**
  * The range a press and a release cover, in minutes after the start of the day. The slot under the press is always
  * part of it: a click gives the hour from the start of the slot under the press, a drag down starts at that start and
- * a drag up ends at the end of that slot.
+ * a drag up ends at the end of that slot. The range stays within the day, so a click in the last hour ends at 24:00.
  */
 export function pressedSlotRange(pressMin: number, releaseMin: number): { startMin: number; endMin: number } {
   const flooredPress = Math.floor(pressMin / SNAP_MINUTES) * SNAP_MINUTES;
@@ -593,7 +608,8 @@ export function pressedSlotRange(pressMin: number, releaseMin: number): { startM
     startMin = snappedRelease;
     endMin = flooredPress + SNAP_MINUTES;
   }
-  return { startMin, endMin: Math.max(endMin, startMin + SNAP_MINUTES) };
+  const startInDay = Math.min(Math.max(startMin, 0), DAY_MINUTES - SNAP_MINUTES);
+  return { startMin: startInDay, endMin: Math.min(Math.max(endMin, startInDay + SNAP_MINUTES), DAY_MINUTES) };
 }
 
 type LaidOut<T> = { item: T; col: number; cols: number };
@@ -727,6 +743,10 @@ function DraggableEventBlock({
       ref={setNodeRef}
       {...attributes}
       {...listeners}
+      onPointerDown={(e) => {
+        draggedRef.current = false;
+        listeners?.onPointerDown?.(e);
+      }}
       onClick={(e) => {
         if (!startedInside(e)) return;
         if (draggedRef.current) {
@@ -744,7 +764,14 @@ function DraggableEventBlock({
       className={cn(eventBlockClass, colorClasses(color))}
     >
       <EventBlockContent title={title} start={start} end={end} label={label} />
-      <ResizeHandle id={id} start={start} end={realEnd} onResize={onResize} onPreview={onPreview} />
+      <ResizeHandle
+        id={id}
+        start={start}
+        end={realEnd}
+        draggedRef={draggedRef}
+        onResize={onResize}
+        onPreview={onPreview}
+      />
     </button>
   );
 }
@@ -753,12 +780,14 @@ function ResizeHandle({
   id,
   start,
   end,
+  draggedRef,
   onResize,
   onPreview,
 }: {
   id: string;
   start: Date;
   end: Date;
+  draggedRef: React.MutableRefObject<boolean>;
   onResize?: (id: string, end: Date) => void;
   onPreview: (end: Date | null) => void;
 }) {
@@ -782,8 +811,10 @@ function ResizeHandle({
     const onMove = (moveE: PointerEvent) => onPreview(resizedEnd(start, end, moveE.clientY - startY));
 
     const onUp = (upE: PointerEvent) => {
-      const nextEnd = resizedEnd(start, end, upE.clientY - startY);
+      const deltaY = upE.clientY - startY;
+      const nextEnd = resizedEnd(start, end, deltaY);
       release();
+      draggedRef.current = isResizeMove(deltaY);
       if (nextEnd) onResize?.(id, nextEnd);
     };
 
@@ -798,7 +829,10 @@ function ResizeHandle({
       data-slot='calendar-resize-handle'
       className='absolute inset-x-0 bottom-0 z-20 h-1.5 cursor-ns-resize'
       onPointerDown={handlePointerDown}
-      onClick={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation();
+        draggedRef.current = false;
+      }}
     />
   );
 }
@@ -964,11 +998,8 @@ function DroppableDayColumn<T extends Record<string, unknown>>({
     if (!creating || creating.dayIndex !== dayIndex) return;
     releaseCapture(e);
     const { startMin, endMin } = pressedSlotRange(creating.startMin, creating.endMin);
-    const base = startOfDay(day);
-    const start = addMinutes(base, startMin);
-    const end = addMinutes(base, endMin);
     onCreatingChange(null);
-    onSlotSelect?.({ start, end, allDay: false });
+    onSlotSelect?.({ start: wallClockDate(day, startMin), end: wallClockDate(day, endMin), allDay: false });
   };
 
   const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
