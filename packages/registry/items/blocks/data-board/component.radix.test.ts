@@ -148,31 +148,28 @@ describe('visibleColumns', () => {
 });
 
 import {
+  applyCardMove,
   bandKey,
+  type CardAccessors,
+  cellIds,
   columnKey,
+  type DropOver,
   dropZoneId,
-  isSamePosition,
-  parseDropZoneId,
-  resolveDropTarget,
+  isSameSlot,
+  landingIndex,
+  originSlot,
+  previewTarget,
   revealStepsFor,
-  withActiveCard,
-  withPinnedBands,
+  slotPlacement,
 } from './component.radix';
 
 describe('drop zone ids', () => {
   test('a flat zone id is the column id', () => {
     expect(dropZoneId('todo')).toBe('todo');
-    expect(parseDropZoneId('todo')).toEqual({ columnId: 'todo' });
   });
 
-  test('a grouped zone id round-trips group and column', () => {
-    const id = dropZoneId('todo', '3');
-    expect(parseDropZoneId(id)).toEqual({ groupId: '3', columnId: 'todo' });
-  });
-
-  test('a group id containing the separator still round-trips the column', () => {
-    const id = dropZoneId('todo', 'a::b');
-    expect(parseDropZoneId(id)).toEqual({ groupId: 'a', columnId: 'b::todo' });
+  test('a grouped zone id names group and column', () => {
+    expect(dropZoneId('todo', '3')).toBe('3::todo');
   });
 
   test('column and band pagination keys never collide', () => {
@@ -180,87 +177,244 @@ describe('drop zone ids', () => {
   });
 });
 
-describe('resolveDropTarget', () => {
-  const zones = new Set(['todo', 'done']);
+type Card = { id: string; status: string; team?: string };
 
-  test('prefers the hovered zone', () => {
-    expect(resolveDropTarget({ overId: 'done', zones, overItem: { columnId: 'todo' } })).toEqual({ columnId: 'done' });
+const cardOf = (id: string, status: string, team?: string): Card => ({ id, status, team });
+
+const accessors: CardAccessors<Card> = {
+  getId: (item) => item.id,
+  getColumn: (item) => item.status,
+  getGroup: (item) => item.team,
+};
+
+const ids = (items: Card[]) => items.map((item) => item.id);
+
+const over = (id: string, columnId: string, below: boolean, groupId?: string): DropOver => ({
+  id,
+  columnId,
+  groupId,
+  zone: false,
+  below,
+});
+
+const zoneOver = (columnId: string, groupId?: string): DropOver => ({
+  id: dropZoneId(columnId, groupId),
+  columnId,
+  groupId,
+  zone: true,
+  below: false,
+});
+
+describe('cellIds', () => {
+  const items = [
+    cardOf('a', 'todo', 's1'),
+    cardOf('b', 'done', 's1'),
+    cardOf('c', 'todo', 's2'),
+    cardOf('d', 'todo', 's1'),
+  ];
+
+  test('spans the whole column when no band is given', () => {
+    expect(cellIds(items, { columnId: 'todo' }, accessors)).toEqual(['a', 'c', 'd']);
   });
 
-  test('falls back to the hovered card cell', () => {
-    expect(resolveDropTarget({ overId: 'card-1', zones, overItem: { columnId: 'todo', groupId: '2' } })).toEqual({
+  test('spans one band of the column when a band is given', () => {
+    expect(cellIds(items, { columnId: 'todo', groupId: 's1' }, accessors)).toEqual(['a', 'd']);
+  });
+});
+
+describe('landingIndex', () => {
+  const order = ['a', 'b', 'c'];
+
+  test('lands right before the card it is held above', () => {
+    expect(landingIndex({ order, overId: 'b', below: false })).toBe(1);
+    expect(landingIndex({ order, overId: 'a', below: false })).toBe(0);
+  });
+
+  test('lands right after the card it is held below', () => {
+    expect(landingIndex({ order, overId: 'b', below: true })).toBe(2);
+    expect(landingIndex({ order, overId: 'c', below: true })).toBe(3);
+  });
+
+  test('lands at the end of the cell when dropped on the column itself', () => {
+    expect(landingIndex({ order, overId: null, below: false })).toBe(3);
+    expect(landingIndex({ order: [], overId: null, below: false })).toBe(0);
+  });
+
+  test('lands at the end of the cell when the card is not in it', () => {
+    expect(landingIndex({ order, overId: 'zzz', below: false })).toBe(3);
+  });
+});
+
+describe('previewTarget', () => {
+  const items = [cardOf('a', 'todo'), cardOf('b', 'todo'), cardOf('c', 'todo'), cardOf('d', 'done')];
+  const preview = (activeId: string, hovered: DropOver | null) =>
+    previewTarget({ items, activeId, over: hovered, accessors });
+
+  test('previews nothing when the pointer is over no target', () => {
+    expect(preview('a', null)).toBeNull();
+  });
+
+  test('previews the slot right after the card held below, counted without the dragged card', () => {
+    expect(preview('a', over('c', 'todo', true))).toEqual({ columnId: 'todo', index: 2 });
+    expect(preview('d', over('a', 'todo', true))).toEqual({ columnId: 'todo', index: 1 });
+  });
+
+  test('previews the slot right before the card held above', () => {
+    expect(preview('c', over('a', 'todo', false))).toEqual({ columnId: 'todo', index: 0 });
+    expect(preview('d', over('c', 'todo', false))).toEqual({ columnId: 'todo', index: 2 });
+  });
+
+  test('previews the end of the cell when over the column itself', () => {
+    expect(preview('d', zoneOver('todo'))).toEqual({ columnId: 'todo', index: 3 });
+    expect(preview('a', zoneOver('todo'))).toEqual({ columnId: 'todo', index: 2 });
+    expect(preview('a', zoneOver('doing'))).toEqual({ columnId: 'doing', index: 0 });
+  });
+
+  test('previews the original slot when over the dragged card itself', () => {
+    expect(preview('b', over('b', 'todo', true))).toEqual({ columnId: 'todo', index: 1 });
+  });
+
+  test('both neighbours of the dragged card preview its original slot', () => {
+    const origin = originSlot(items, 'b', accessors);
+    expect(isSameSlot(preview('b', over('a', 'todo', true)), origin)).toBe(true);
+    expect(isSameSlot(preview('b', over('c', 'todo', false)), origin)).toBe(true);
+    expect(isSameSlot(preview('b', zoneOver('todo')), origin)).toBe(false);
+  });
+
+  test('keeps the band of the target cell', () => {
+    const banded = [cardOf('a', 'todo', 's1'), cardOf('b', 'todo', 's2'), cardOf('c', 'todo', 's2')];
+    expect(previewTarget({ items: banded, activeId: 'a', over: over('b', 'todo', true, 's2'), accessors })).toEqual({
       columnId: 'todo',
-      groupId: '2',
+      groupId: 's2',
+      index: 1,
+    });
+    expect(previewTarget({ items: banded, activeId: 'a', over: zoneOver('todo', 's2'), accessors })).toEqual({
+      columnId: 'todo',
+      groupId: 's2',
+      index: 2,
     });
   });
+});
 
-  test('resolves nothing when hovering neither a zone nor a card', () => {
-    expect(resolveDropTarget({ overId: 'elsewhere', zones, overItem: null })).toBeNull();
+describe('originSlot', () => {
+  test('is the rank of the card inside its own cell', () => {
+    const items = [cardOf('a', 'todo', 's1'), cardOf('b', 'todo', 's2'), cardOf('c', 'todo', 's2')];
+    expect(originSlot(items, 'c', accessors)).toEqual({ columnId: 'todo', groupId: 's2', index: 1 });
+  });
+
+  test('is null for an unknown card', () => {
+    expect(originSlot([cardOf('a', 'todo')], 'zzz', accessors)).toBeNull();
   });
 });
 
-describe('isSamePosition', () => {
-  test('is true when column, index and band are unchanged', () => {
-    expect(isSamePosition({ fromColumn: 'a', toColumn: 'a', fromIndex: 2, toIndex: 2 })).toBe(true);
+describe('isSameSlot', () => {
+  test('compares column, band and index', () => {
+    const slot = { columnId: 'todo', groupId: 's1', index: 2 };
+    expect(isSameSlot(slot, { ...slot })).toBe(true);
+    expect(isSameSlot(slot, { ...slot, index: 1 })).toBe(false);
+    expect(isSameSlot(slot, { ...slot, groupId: 's2' })).toBe(false);
+    expect(isSameSlot(slot, { ...slot, columnId: 'done' })).toBe(false);
   });
 
-  test('is false when only the band changed', () => {
-    expect(
-      isSamePosition({ fromColumn: 'a', toColumn: 'a', fromIndex: 2, toIndex: 2, fromGroup: '1', toGroup: '2' }),
-    ).toBe(false);
-  });
-
-  test('is false when only the index changed', () => {
-    expect(isSamePosition({ fromColumn: 'a', toColumn: 'a', fromIndex: 1, toIndex: 2 })).toBe(false);
-  });
-
-  test('is false when the card had no known origin index', () => {
-    expect(isSamePosition({ fromColumn: 'a', toColumn: 'a', fromIndex: null, toIndex: 0 })).toBe(false);
+  test('two missing slots are the same, a missing and a present one are not', () => {
+    expect(isSameSlot(null, null)).toBe(true);
+    expect(isSameSlot(null, { columnId: 'todo', index: 0 })).toBe(false);
   });
 });
 
-describe('withActiveCard', () => {
-  const all = ['a', 'b', 'c', 'd'];
-  const id = (value: string) => value;
+describe('applyCardMove', () => {
+  const withCell = (item: Card, cell: { columnId: string; groupId?: string }): Card => ({
+    ...item,
+    status: cell.columnId,
+    team: cell.groupId ?? item.team,
+  });
+  const move = (items: Card[], activeId: string, target: { columnId: string; groupId?: string; index: number }) =>
+    applyCardMove({ items, activeId, target, accessors, withCell });
 
-  test('appends the dragged card when it fell outside the slice', () => {
-    expect(withActiveCard(all, ['a', 'b'], 2, 'd', id)).toEqual({ rendered: ['a', 'b', 'd'], remaining: 1 });
+  const items = [cardOf('a', 'todo'), cardOf('b', 'todo'), cardOf('c', 'todo'), cardOf('d', 'done')];
+
+  test('a card from an earlier index lands right after the card it was held below', () => {
+    const next = move(items, 'a', { columnId: 'todo', index: 2 });
+    expect(cellIds(next, { columnId: 'todo' }, accessors)).toEqual(['b', 'c', 'a']);
   });
 
-  test('leaves the slice untouched when the dragged card is already in it', () => {
-    expect(withActiveCard(all, ['a', 'b'], 2, 'a', id)).toEqual({ rendered: ['a', 'b'], remaining: 2 });
+  test('a card from an earlier index lands right before the card it was held above', () => {
+    const next = move(items, 'a', { columnId: 'todo', index: 1 });
+    expect(cellIds(next, { columnId: 'todo' }, accessors)).toEqual(['b', 'a', 'c']);
   });
 
-  test('leaves the slice untouched when nothing is being dragged', () => {
-    expect(withActiveCard(all, ['a', 'b'], 2, null, id)).toEqual({ rendered: ['a', 'b'], remaining: 2 });
+  test('a card from a later index lands right after the card it was held below', () => {
+    const next = move(items, 'c', { columnId: 'todo', index: 1 });
+    expect(cellIds(next, { columnId: 'todo' }, accessors)).toEqual(['a', 'c', 'b']);
   });
 
-  test('leaves the slice untouched when the dragged card belongs to another cell', () => {
-    expect(withActiveCard(all, ['a', 'b'], 2, 'zzz', id)).toEqual({ rendered: ['a', 'b'], remaining: 2 });
+  test('a card from a later index lands right before the card it was held above', () => {
+    const next = move(items, 'c', { columnId: 'todo', index: 0 });
+    expect(cellIds(next, { columnId: 'todo' }, accessors)).toEqual(['c', 'a', 'b']);
+  });
+
+  test('a card from another column lands in the slot whatever its place in the data', () => {
+    const before = move(items, 'd', { columnId: 'todo', index: 1 });
+    expect(ids(before)).toEqual(['a', 'd', 'b', 'c']);
+    expect(before.find((item) => item.id === 'd')?.status).toBe('todo');
+    const after = move([cardOf('d', 'done'), ...items.slice(0, 3)], 'd', { columnId: 'todo', index: 3 });
+    expect(cellIds(after, { columnId: 'todo' }, accessors)).toEqual(['a', 'b', 'c', 'd']);
+  });
+
+  test('a card dropped on a column itself lands at the end of the cell', () => {
+    const next = move([cardOf('x', 'done'), ...items], 'x', { columnId: 'todo', index: 3 });
+    expect(cellIds(next, { columnId: 'todo' }, accessors)).toEqual(['a', 'b', 'c', 'x']);
+  });
+
+  test('a card dropped in an empty cell takes it over without moving in the data', () => {
+    const next = move(items, 'b', { columnId: 'doing', index: 0 });
+    expect(ids(next)).toEqual(['a', 'b', 'c', 'd']);
+    expect(next.find((item) => item.id === 'b')?.status).toBe('doing');
+  });
+
+  test('only the cell of the target counts for the rank', () => {
+    const banded = [
+      cardOf('a', 'todo', 's1'),
+      cardOf('b', 'todo', 's2'),
+      cardOf('c', 'todo', 's1'),
+      cardOf('d', 'todo', 's2'),
+    ];
+    const next = move(banded, 'a', { columnId: 'todo', groupId: 's2', index: 1 });
+    expect(cellIds(next, { columnId: 'todo', groupId: 's2' }, accessors)).toEqual(['b', 'a', 'd']);
+    expect(cellIds(next, { columnId: 'todo', groupId: 's1' }, accessors)).toEqual(['c']);
+  });
+
+  test('leaves the other cards and the input list untouched', () => {
+    const next = move(items, 'a', { columnId: 'done', index: 0 });
+    expect(items.map((item) => item.status)).toEqual(['todo', 'todo', 'todo', 'done']);
+    expect(next.find((item) => item.id === 'b')).toBe(items[1]);
   });
 });
 
-describe('withPinnedBands', () => {
-  const band = (id: string, items: string[] = []) => ({ id, label: id, value: id, items });
+describe('slotPlacement', () => {
+  const order = ['b', 'c', 'd'];
+  const renderedIds = ['a', 'b', 'c', 'd'];
 
-  test('is a passthrough when no drag is in progress', () => {
-    const bands = [band('1'), band('2')];
-    expect(withPinnedBands(bands, null)).toBe(bands);
+  test('goes before the first rendered card that ranks at or after the index', () => {
+    expect(slotPlacement({ order, renderedIds, activeId: 'a', index: 1 })).toBe('c');
+    expect(slotPlacement({ order, renderedIds, activeId: 'a', index: 0 })).toBe('b');
   });
 
-  test('keeps a band that emptied mid-drag, in place and empty', () => {
-    const pinned = [band('1', ['x']), band('2', ['y'])];
-    const live = [band('2', ['y', 'x'])];
-    const result = withPinnedBands(live, pinned);
-    expect(result.map((b) => b.id)).toEqual(['1', '2']);
-    expect(result[0].items).toEqual([]);
-    expect(result[1].items).toEqual(['y', 'x']);
+  test('goes at the end when every rendered card ranks before the index', () => {
+    expect(slotPlacement({ order, renderedIds, activeId: 'a', index: 3 })).toBeNull();
   });
 
-  test('appends a band born during the drag', () => {
-    const pinned = [band('1', ['x'])];
-    const live = [band('1'), band('2', ['x'])];
-    expect(withPinnedBands(live, pinned).map((b) => b.id)).toEqual(['1', '2']);
+  test('ignores the dragged card, which stays rendered in its own place', () => {
+    expect(slotPlacement({ order: ['a', 'c'], renderedIds: ['a', 'b', 'c'], activeId: 'b', index: 1 })).toBe('c');
+  });
+
+  test('goes at the end of the rendered cards when the index is past the paginated window', () => {
+    expect(slotPlacement({ order: ['a', 'b', 'c', 'd'], renderedIds: ['a', 'b'], activeId: 'x', index: 4 })).toBeNull();
+  });
+
+  test('goes before the first rendered card when search hides the cards before the index', () => {
+    expect(slotPlacement({ order: ['a', 'b', 'c'], renderedIds: ['c'], activeId: 'x', index: 2 })).toBe('c');
+    expect(slotPlacement({ order: ['a', 'b', 'c'], renderedIds: ['c'], activeId: 'x', index: 1 })).toBe('c');
   });
 });
 
@@ -361,10 +515,7 @@ describe('detectBoardCollision', () => {
     data: { columnId, groupId },
   });
 
-  const collide = (
-    droppables: Droppable[],
-    input: { pointer?: { x: number; y: number }; collisionRect?: Rect },
-  ): string[] => {
+  const detect = (droppables: Droppable[], input: { pointer?: { x: number; y: number }; collisionRect?: Rect }) => {
     const args = {
       droppableContainers: droppables.map(({ id, data }) => ({
         id,
@@ -375,8 +526,13 @@ describe('detectBoardCollision', () => {
       pointerCoordinates: input.pointer ?? null,
       collisionRect: toClientRect(input.collisionRect ?? { top: 0, left: 0, width: 0, height: 0 }),
     };
-    return detectBoardCollision(args as unknown as Parameters<CollisionDetection>[0]).map(({ id }) => String(id));
+    return detectBoardCollision(args as unknown as Parameters<CollisionDetection>[0]);
   };
+
+  const collide = (
+    droppables: Droppable[],
+    input: { pointer?: { x: number; y: number }; collisionRect?: Rect },
+  ): string[] => detect(droppables, input).map(({ id }) => String(id));
 
   const cardRect = (left: number, top: number): Rect => ({ left, top, width: 280, height: 80 });
 
@@ -456,5 +612,11 @@ describe('detectBoardCollision', () => {
   test('picks the column the dragged rectangle overlaps most without a pointer', () => {
     expect(collide(flat, { collisionRect: { left: 100, top: 100, width: 280, height: 80 } })).toEqual(['b']);
     expect(collide(flat, { collisionRect: { left: 290, top: 100, width: 280, height: 80 } })).toEqual(['done']);
+  });
+
+  test('tells whether the pointer is below the vertical centre of the card it targets', () => {
+    expect(detect(flat, { pointer: { x: 100, y: 120 } }).map(({ data }) => data?.below)).toEqual([false]);
+    expect(detect(flat, { pointer: { x: 100, y: 150 } }).map(({ data }) => data?.below)).toEqual([true]);
+    expect(detect(flat, { pointer: { x: 100, y: 3 } }).map(({ data }) => data?.below)).toEqual([false]);
   });
 });

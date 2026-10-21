@@ -1,28 +1,26 @@
 'use client';
 
 import {
+  type Collision,
   type CollisionDetection,
   DndContext,
   type DragEndEvent,
-  type DragOverEvent,
+  type DragMoveEvent,
   DragOverlay,
   type DragStartEvent,
+  type DroppableContainer,
   KeyboardSensor,
   PointerSensor,
   pointerWithin,
   rectIntersection,
+  useDndContext,
+  useDraggable,
   useDroppable,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { useCombinedRefs } from '@dnd-kit/utilities';
 import { ChevronDown, CircleDashed, Eye, EyeOff, GripVertical, type LucideIcon, Plus, Search } from 'lucide-react';
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
@@ -152,6 +150,8 @@ export function visibleColumns(columns: DataBoardColumn[], hidden: string[]): Da
 
 const DROP_SEPARATOR = '::';
 
+const DROP_SLOT_KEY = '__drop-slot__';
+
 export const columnKey = (columnId: string) => `col:${columnId}`;
 
 // Pagination applies per cell (column x band) but the key is the band's:
@@ -160,28 +160,6 @@ export const bandKey = (groupId: string) => `band:${groupId}`;
 
 export function dropZoneId(columnId: string, groupId?: string): string {
   return groupId == null ? columnId : `${groupId}${DROP_SEPARATOR}${columnId}`;
-}
-
-export function parseDropZoneId(id: string): { columnId: string; groupId?: string } {
-  const at = id.indexOf(DROP_SEPARATOR);
-  if (at === -1) return { columnId: id };
-  return { groupId: id.slice(0, at), columnId: id.slice(at + DROP_SEPARATOR.length) };
-}
-
-// The hovered zone when there is one, otherwise the cell of the hovered card.
-// `groupId` stays absent outside grouped mode.
-export function resolveDropTarget({
-  overId,
-  zones,
-  overItem,
-}: {
-  overId: string;
-  zones: Set<string>;
-  overItem: { columnId: string; groupId?: string } | null;
-}): { columnId: string; groupId?: string } | null {
-  if (zones.has(overId)) return parseDropZoneId(overId);
-  if (overItem) return { ...overItem };
-  return null;
 }
 
 type BoardDroppableData = { zone?: boolean; columnId: string; groupId?: string };
@@ -200,7 +178,8 @@ const dataOf = (container: { data: { current?: unknown } }) => container.data.cu
 // pointer is below its last card. Without a pointer (keyboard sensor) the
 // column is the one the dragged rectangle overlaps most, and the centre of
 // that rectangle stands for the pointer. A pointer outside every column
-// targets nothing.
+// targets nothing. The collision data tells whether the point is below the
+// vertical centre of the targeted card.
 export const detectBoardCollision: CollisionDetection = (args) => {
   const { droppableContainers, droppableRects, pointerCoordinates, collisionRect } = args;
   const zones = droppableContainers.filter((container) => dataOf(container)?.zone === true);
@@ -214,7 +193,7 @@ export const detectBoardCollision: CollisionDetection = (args) => {
   if (!zone) return [];
   const zoneData = zone.data.current as BoardDroppableData;
 
-  let closest: { id: string | number; distance: number } | null = null;
+  let closest: { id: string | number; distance: number; below: boolean } | null = null;
   let lowestEdge = Number.NEGATIVE_INFINITY;
   for (const container of droppableContainers) {
     const rect = droppableRects.get(container.id);
@@ -222,56 +201,152 @@ export const detectBoardCollision: CollisionDetection = (args) => {
     if (!rect || !data || data.zone) continue;
     if (data.columnId !== zoneData.columnId || data.groupId !== zoneData.groupId) continue;
     lowestEdge = Math.max(lowestEdge, rect.bottom);
-    const distance = Math.abs(point.y - (rect.top + rect.height / 2));
-    if (!closest || distance < closest.distance) closest = { id: container.id, distance };
+    const offset = point.y - (rect.top + rect.height / 2);
+    const distance = Math.abs(offset);
+    if (!closest || distance < closest.distance) closest = { id: container.id, distance, below: offset > 0 };
   }
 
-  const target = closest && point.y <= lowestEdge ? closest : { id: zone.id, distance: 0 };
+  const target = closest && point.y <= lowestEdge ? closest : { id: zone.id, distance: 0, below: false };
   const container = droppableContainers.find(({ id }) => id === target.id);
-  return [{ id: target.id, data: { droppableContainer: container, value: target.distance } }];
+  return [{ id: target.id, data: { droppableContainer: container, value: target.distance, below: target.below } }];
 };
 
-// A move that changes neither column, rank nor band has nothing to report.
-// `fromGroup` and `toGroup` are both undefined outside grouped mode, which
-// neutralises their comparison.
-export function isSamePosition(move: {
-  fromColumn: string;
-  toColumn: string;
-  fromIndex: number | null;
-  toIndex: number;
-  fromGroup?: string;
-  toGroup?: string;
-}): boolean {
-  return move.fromColumn === move.toColumn && move.fromIndex === move.toIndex && move.fromGroup === move.toGroup;
+type CardCell = { columnId: string; groupId?: string };
+
+// Where a dragged card would land: the cell, and the rank it takes among the
+// cards of that cell once the dragged card has left it.
+export type DropSlot = CardCell & { index: number };
+
+// What the pointer is over: a column zone or a card, and whether the pointer is
+// below the vertical centre of that card.
+export type DropOver = CardCell & { id: string; zone: boolean; below: boolean };
+
+export type CardAccessors<T> = {
+  getId: (item: T) => string;
+  getColumn: (item: T) => string;
+  getGroup: (item: T) => string | undefined;
+};
+
+// With no `groupId`, the cell spans the whole column (flat mode); with one, it
+// spans only the column x band cell, which is the paginated unit.
+function inCell<T>(item: T, cell: CardCell, { getColumn, getGroup }: CardAccessors<T>): boolean {
+  return getColumn(item) === cell.columnId && (cell.groupId == null || getGroup(item) === cell.groupId);
 }
 
-// A card dropped outside the paginated slice must stay mounted: unmounting it
-// mid-drag would make it vanish until the next "show more" and would deprive
-// dnd-kit of its active node. `shown` is a prefix of `all`, so appending the
-// card preserves order.
-export function withActiveCard<T>(
-  all: T[],
-  shown: T[],
-  hidden: number,
-  activeId: string | null,
-  getId: (item: T) => string,
-): { rendered: T[]; remaining: number } {
-  if (activeId == null || shown.some((item) => getId(item) === activeId)) return { rendered: shown, remaining: hidden };
-  const active = all.find((item) => getId(item) === activeId);
-  if (!active) return { rendered: shown, remaining: hidden };
-  return { rendered: [...shown, active], remaining: hidden - 1 };
+export function cellIds<T>(items: T[], cell: CardCell, accessors: CardAccessors<T>): string[] {
+  return items.filter((item) => inCell(item, cell, accessors)).map((item) => accessors.getId(item));
 }
 
-// A band emptied mid-drag would disappear under the cursor: the layout would
-// jump, dnd-kit's measurements would go stale, and the card could no longer
-// return to its original band. Bands present at drag start stay rendered —
-// empty, in place — until the drag ends. A band born during the drag is added.
-export function withPinnedBands<T>(bands: DataBoardBand<T>[], pinned: DataBoardBand<T>[] | null): DataBoardBand<T>[] {
-  if (!pinned) return bands;
-  const live = new Map(bands.map((band) => [band.id, band]));
-  const pinnedIds = new Set(pinned.map((band) => band.id));
-  const kept = pinned.map((band) => live.get(band.id) ?? { ...band, items: [] });
-  return [...kept, ...bands.filter((band) => !pinnedIds.has(band.id))];
+// `order` is the cell without the dragged card. A card held above another lands
+// before it, below lands after it, and a drop on the column itself (no `overId`)
+// lands at the end.
+export function landingIndex({
+  order,
+  overId,
+  below,
+}: {
+  order: string[];
+  overId: string | null;
+  below: boolean;
+}): number {
+  const at = overId == null ? -1 : order.indexOf(overId);
+  if (at < 0) return order.length;
+  return below ? at + 1 : at;
+}
+
+export function originSlot<T>(items: T[], activeId: string, accessors: CardAccessors<T>): DropSlot | null {
+  const active = items.find((item) => accessors.getId(item) === activeId);
+  if (!active) return null;
+  const cell = { columnId: accessors.getColumn(active), groupId: accessors.getGroup(active) };
+  return { ...cell, index: cellIds(items, cell, accessors).indexOf(activeId) };
+}
+
+// Hovering the dragged card, or its neighbours on their facing side, previews
+// the slot it already occupies.
+export function previewTarget<T>({
+  items,
+  activeId,
+  over,
+  accessors,
+}: {
+  items: T[];
+  activeId: string;
+  over: DropOver | null;
+  accessors: CardAccessors<T>;
+}): DropSlot | null {
+  if (!over) return null;
+  if (over.id === activeId) return originSlot(items, activeId, accessors);
+  const order = cellIds(items, over, accessors).filter((id) => id !== activeId);
+  const index = landingIndex({ order, overId: over.zone ? null : over.id, below: over.below });
+  return { columnId: over.columnId, groupId: over.groupId, index };
+}
+
+// Read from the collisions, which belong to the render the pointer is in: the
+// `over` of an event can be one render behind them.
+function dropOverOf({ collisions }: { collisions: Collision[] | null }): DropOver | null {
+  const hit = collisions?.[0];
+  const cell = (hit?.data?.droppableContainer as DroppableContainer | undefined)?.data.current as
+    | BoardDroppableData
+    | undefined;
+  if (!hit || !cell) return null;
+  return {
+    id: String(hit.id),
+    columnId: cell.columnId,
+    groupId: cell.groupId,
+    zone: cell.zone === true,
+    below: hit.data?.below === true,
+  };
+}
+
+export function isSameSlot(a: DropSlot | null, b: DropSlot | null): boolean {
+  if (a == null || b == null) return a === b;
+  return a.columnId === b.columnId && a.groupId === b.groupId && a.index === b.index;
+}
+
+// Places the card in `target`, right before the card that holds that rank
+// among the others, or right after the last one. A card moving to an empty
+// cell keeps its place in the list. `withCell` writes the cell into the card.
+export function applyCardMove<T>({
+  items,
+  activeId,
+  target,
+  accessors,
+  withCell,
+}: {
+  items: T[];
+  activeId: string;
+  target: DropSlot;
+  accessors: CardAccessors<T>;
+  withCell: (item: T, cell: CardCell) => T;
+}): T[] {
+  const active = items.find((item) => accessors.getId(item) === activeId);
+  if (!active) return items;
+  const others = items.filter((item) => item !== active);
+  const order = others.filter((item) => inCell(item, target, accessors));
+  const anchor = order[target.index];
+  const last = order.at(-1);
+  let at = items.indexOf(active);
+  if (anchor !== undefined) at = others.indexOf(anchor);
+  else if (last !== undefined) at = others.indexOf(last) + 1;
+  return [...others.slice(0, at), withCell(active, target), ...others.slice(at)];
+}
+
+// The rendered card the drop slot goes before, or null for the end. Cards the
+// pagination or the search left out of `renderedIds` still count for their
+// rank, and the dragged card, which stays rendered in place, does not.
+export function slotPlacement({
+  order,
+  renderedIds,
+  activeId,
+  index,
+}: {
+  order: string[];
+  renderedIds: string[];
+  activeId: string;
+  index: number;
+}): string | null {
+  const rank = new Map(order.map((id, position) => [id, position]));
+  return renderedIds.find((id) => id !== activeId && (rank.get(id) ?? -1) >= index) ?? null;
 }
 
 // How many steps to open so the card at `index` enters the paginated window.
@@ -514,17 +589,11 @@ export function DataBoardCard({
   onClick?: () => void;
   className?: string;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id,
-    data: { columnId, groupId },
-    disabled: !draggable,
-  });
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  const { attributes, listeners, setNodeRef: setDraggableRef, isDragging } = useDraggable({ id, disabled: !draggable });
+  const { setNodeRef: setDroppableRef } = useDroppable({ id, data: { columnId, groupId }, disabled: !draggable });
+  const setNodeRef = useCombinedRefs(setDraggableRef, setDroppableRef);
   return (
-    <div ref={setNodeRef} style={style} className={cn(isDragging && 'opacity-50')}>
+    <div ref={setNodeRef} className={cn(isDragging && 'opacity-50')}>
       <DataBoardCardFace
         title={title}
         body={body}
@@ -545,6 +614,20 @@ export function DataBoardCard({
         }
       />
     </div>
+  );
+}
+
+// The placeholder for the card being dragged, at the place where it would land.
+// Its height is the one measured on the source card, not on the overlay.
+export function DataBoardDropSlot() {
+  const { activeNodeRect } = useDndContext();
+  return (
+    <div
+      aria-hidden='true'
+      data-slot='data-board-drop-slot'
+      style={{ height: activeNodeRect?.height }}
+      className='shrink-0 rounded-xl border border-dashed bg-muted/50'
+    />
   );
 }
 
@@ -797,9 +880,10 @@ export type DataBoardMoveEvent<T> = {
 /**
  * The board's live card list and the drag state machine that mutates it.
  *
- * Hovering reorders optimistically; `onCardMove` fires on drop and only when
- * the position actually changed. Every decision that does not need the DOM
- * lives in the pure helpers above and is tested separately.
+ * Hovering only previews where the card would land; the list changes once, on
+ * drop, and `onCardMove` fires then, only when the card actually moved. Every
+ * decision that does not need the DOM lives in the pure helpers above and is
+ * tested separately.
  */
 function useDataBoardDrag<T extends object>({
   data,
@@ -807,10 +891,7 @@ function useDataBoardDrag<T extends object>({
   columnField,
   groupBy,
   ungroupedLabel,
-  getId,
-  getColumn,
-  getGroup,
-  shownColumns,
+  accessors,
   view,
   onDataChange,
   onCardMove,
@@ -820,20 +901,15 @@ function useDataBoardDrag<T extends object>({
   columnField: keyof T;
   groupBy?: DataBoardGroupBy<T>;
   ungroupedLabel: string;
-  getId: (item: T) => string;
-  getColumn: (item: T) => string;
-  getGroup: (item: T) => string | undefined;
-  shownColumns: DataBoardColumn[];
+  accessors: CardAccessors<T>;
   view: DataBoardView;
   onDataChange?: (items: T[]) => void;
   onCardMove?: (event: DataBoardMoveEvent<T>) => void;
 }) {
+  const { getId, getColumn, getGroup } = accessors;
   const [items, setItems] = React.useState<T[]>(() => data ?? defaultData ?? []);
   const draggingRef = React.useRef(false);
-  const fromColumnRef = React.useRef<string | null>(null);
-  const fromIndexRef = React.useRef<number | null>(null);
-  const fromGroupRef = React.useRef<string | undefined>(undefined);
-  const startItemsRef = React.useRef<T[] | null>(null);
+  const originRef = React.useRef<DropSlot | null>(null);
   const pendingDataRef = React.useRef<T[] | null>(null);
 
   // A `data` update that lands mid-drag must not be dropped: the guard is a
@@ -849,31 +925,27 @@ function useDataBoardDrag<T extends object>({
   }, [data]);
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
-  const [pinnedBands, setPinnedBands] = React.useState<DataBoardBand<T>[] | null>(null);
+  const [preview, setPreview] = React.useState<DropSlot | null>(null);
 
   const bands = React.useMemo(
-    () => (groupBy ? withPinnedBands(buildGroups(items, groupBy, ungroupedLabel), pinnedBands) : null),
-    [items, groupBy, ungroupedLabel, pinnedBands],
+    () => (groupBy ? buildGroups(items, groupBy, ungroupedLabel) : null),
+    [items, groupBy, ungroupedLabel],
   );
 
-  const zoneIds = React.useMemo(() => {
-    const ids = new Set<string>();
-    for (const column of shownColumns) {
-      if (bands) for (const band of bands) ids.add(dropZoneId(column.id, band.id));
-      else ids.add(dropZoneId(column.id));
+  // Writes the target cell into the card. The band's value is written, not its
+  // id: a board grouped by a numeric field expects the number back, not its
+  // string form.
+  const withCell = (item: T, cell: CardCell): T => {
+    const columnChanged = getColumn(item) !== cell.columnId;
+    const groupChanged = cell.groupId != null && getGroup(item) !== cell.groupId;
+    if (!columnChanged && !groupChanged) return item;
+    const next = { ...item } as Record<string, unknown>;
+    if (columnChanged) next[columnField as string] = cell.columnId;
+    if (groupChanged && groupBy) {
+      next[groupBy.field as string] = bands?.find((band) => band.id === cell.groupId)?.value ?? null;
     }
-    return ids;
-  }, [shownColumns, bands]);
-
-  // With no `groupId`, the index spans the whole column (flat mode); with one,
-  // it spans only the column x band cell, which is the paginated unit.
-  const cellIndexOf = React.useCallback(
-    (list: T[], columnId: string, groupId: string | undefined, cardId: string) =>
-      list
-        .filter((item) => getColumn(item) === columnId && (groupId == null || getGroup(item) === groupId))
-        .findIndex((item) => getId(item) === cardId),
-    [getColumn, getGroup, getId],
-  );
+    return next as T;
+  };
 
   // Applied when the drag produced no change. On the success path the board
   // emits `onDataChange` instead, which makes the parent the source of truth
@@ -884,139 +956,89 @@ function useDataBoardDrag<T extends object>({
     if (apply && pending) setItems(pending);
   };
 
+  function endDrag() {
+    draggingRef.current = false;
+    originRef.current = null;
+    setActiveId(null);
+    setPreview(null);
+  }
+
   function handleDragStart(event: DragStartEvent) {
     draggingRef.current = true;
     const id = String(event.active.id);
-    const startItem = items.find((item) => getId(item) === id);
-    const startColumn = startItem ? getColumn(startItem) : null;
-    fromColumnRef.current = startColumn;
-    fromIndexRef.current = startColumn == null ? null : cellIndexOf(items, startColumn, undefined, id);
-    fromGroupRef.current = startItem ? getGroup(startItem) : undefined;
-    startItemsRef.current = items;
-    setPinnedBands(bands);
+    originRef.current = originSlot(items, id, accessors);
     setActiveId(id);
   }
 
-  function handleDragOver(event: DragOverEvent) {
-    const { active, over } = event;
-    if (!over) return;
-    const activeCardId = String(active.id);
-    const overId = String(over.id);
-    if (activeCardId === overId) return;
-
-    setItems((prev) => {
-      const activeIndex = prev.findIndex((item) => getId(item) === activeCardId);
-      if (activeIndex < 0) return prev;
-
-      const overIsZone = zoneIds.has(overId);
-      const overItem = overIsZone ? undefined : prev.find((item) => getId(item) === overId);
-      const target = resolveDropTarget({
-        overId,
-        zones: zoneIds,
-        overItem: overItem ? { columnId: getColumn(overItem), groupId: getGroup(overItem) } : null,
-      });
-      if (!target) return prev;
-
-      const current = prev[activeIndex];
-      const columnChanged = getColumn(current) !== target.columnId;
-      const groupChanged = target.groupId != null && getGroup(current) !== target.groupId;
-      // Write the band's value, not its id: a board grouped by a numeric field
-      // expects the number back, not its string form.
-      const bandValue = bands?.find((band) => band.id === target.groupId)?.value ?? null;
-
-      const updated =
-        columnChanged || groupChanged
-          ? prev.map((item, index) => {
-              if (index !== activeIndex) return item;
-              const next = { ...item } as Record<string, unknown>;
-              if (columnChanged) next[columnField as string] = target.columnId;
-              if (groupChanged && groupBy) next[groupBy.field as string] = bandValue;
-              return next as T;
-            })
-          : prev;
-      const activeIndexNow =
-        columnChanged || groupChanged ? updated.findIndex((item) => getId(item) === activeCardId) : activeIndex;
-
-      const inTargetCell = (item: T) =>
-        getColumn(item) === target.columnId && (target.groupId == null || getGroup(item) === target.groupId);
-
-      let overIndex = activeIndexNow;
-      if (overIsZone) {
-        for (let index = 0; index < updated.length; index++) {
-          if (getId(updated[index]) !== activeCardId && inTargetCell(updated[index])) overIndex = index;
-        }
-      } else {
-        overIndex = updated.findIndex((item) => getId(item) === overId);
-      }
-
-      if (overIndex < 0 || (!columnChanged && !groupChanged && overIndex === activeIndexNow)) return updated;
-      return arrayMove(updated, activeIndexNow, overIndex);
+  function handleDragMove(event: DragMoveEvent) {
+    const target = previewTarget({
+      items,
+      activeId: String(event.active.id),
+      over: dropOverOf(event),
+      accessors,
     });
+    const next = isSameSlot(target, originRef.current) ? null : target;
+    setPreview((current) => (isSameSlot(current, next) ? current : next));
   }
 
   function handleDragEnd(event: DragEndEvent) {
-    draggingRef.current = false;
-    setActiveId(null);
-    setPinnedBands(null);
-    const fromColumn = fromColumnRef.current;
-    const fromIndex = fromIndexRef.current;
-    const fromGroup = fromGroupRef.current;
-    fromColumnRef.current = null;
-    fromIndexRef.current = null;
-    fromGroupRef.current = undefined;
-    if (fromColumn == null) {
+    const origin = originRef.current;
+    endDrag();
+
+    const activeCardId = String(event.active.id);
+    const target = previewTarget({ items, activeId: activeCardId, over: dropOverOf(event), accessors });
+    if (!origin || !target || isSameSlot(origin, target)) {
       drainPendingData(true);
       return;
     }
 
-    const activeCardId = String(event.active.id);
-    const movedItem = items.find((item) => getId(item) === activeCardId);
+    const next = applyCardMove({ items, activeId: activeCardId, target, accessors, withCell });
+    const movedItem = next.find((item) => getId(item) === activeCardId);
     if (!movedItem) {
       drainPendingData(true);
       return;
     }
 
     const toColumn = getColumn(movedItem);
-    const toIndex = cellIndexOf(items, toColumn, undefined, activeCardId);
     const toGroup = getGroup(movedItem);
-    startItemsRef.current = null;
-    if (isSamePosition({ fromColumn, toColumn, fromIndex, toIndex, fromGroup, toGroup })) {
-      drainPendingData(true);
-      return;
-    }
+    const toIndex = cellIds(next, { columnId: toColumn }, accessors).indexOf(activeCardId);
 
     // A card dropped past its target cell's paginated window would be invisible
     // until the next "show more": open just enough steps to reveal it.
     const key = toGroup == null ? columnKey(toColumn) : bandKey(toGroup);
-    const indexInCell = toGroup == null ? toIndex : cellIndexOf(items, toColumn, toGroup, activeCardId);
+    const indexInCell =
+      toGroup == null
+        ? toIndex
+        : cellIds(next, { columnId: toColumn, groupId: toGroup }, accessors).indexOf(activeCardId);
     const steps = revealStepsFor(view.pageSize, view.revealedFor(key), indexInCell);
     for (let step = 0; step < steps; step++) view.revealMore(key);
 
+    setItems(next);
     drainPendingData(false);
-    onDataChange?.(items);
-    onCardMove?.({ item: movedItem, fromColumn, toColumn, toIndex, fromGroup, toGroup });
+    onDataChange?.(next);
+    onCardMove?.({
+      item: movedItem,
+      fromColumn: origin.columnId,
+      toColumn,
+      toIndex,
+      fromGroup: origin.groupId,
+      toGroup,
+    });
   }
 
   function handleDragCancel() {
-    draggingRef.current = false;
-    const snapshot = startItemsRef.current;
-    startItemsRef.current = null;
-    fromColumnRef.current = null;
-    fromIndexRef.current = null;
-    fromGroupRef.current = undefined;
-    setActiveId(null);
-    setPinnedBands(null);
-    if (snapshot) setItems(snapshot);
+    endDrag();
     drainPendingData(true);
   }
 
   return {
     items,
     activeId,
+    preview,
     bands,
     handlers: {
       onDragStart: handleDragStart,
-      onDragOver: handleDragOver,
+      onDragMove: handleDragMove,
       onDragEnd: handleDragEnd,
       onDragCancel: handleDragCancel,
     },
@@ -1112,16 +1134,18 @@ export function DataBoard<T extends object>({
     return columns.filter((column) => hiddenSet.has(column.id));
   }, [columns, view.hidden]);
 
-  const { items, activeId, bands, handlers } = useDataBoardDrag<T>({
+  const accessors = React.useMemo<CardAccessors<T>>(
+    () => ({ getId, getColumn, getGroup }),
+    [getId, getColumn, getGroup],
+  );
+
+  const { items, activeId, preview, bands, handlers } = useDataBoardDrag<T>({
     data,
     defaultData,
     columnField,
     groupBy,
     ungroupedLabel: labels.ungrouped,
-    getId,
-    getColumn,
-    getGroup,
-    shownColumns,
+    accessors,
     view,
     onDataChange,
     onCardMove,
@@ -1191,11 +1215,22 @@ export function DataBoard<T extends object>({
   // flat mode, a whole band in grouped mode.
   const sliceOf = (all: T[], key: string) => {
     const { shown, hidden } = paginate(all, limitFor(view.pageSize, view.revealedFor(key)));
-    return withActiveCard(all, shown, hidden, activeId, getId);
+    return { rendered: shown, remaining: hidden };
   };
 
-  const renderCards = (list: T[], column: DataBoardColumn, groupId?: string) =>
-    list.map((item) => {
+  // The cell the drop slot is in, without the dragged card.
+  const previewOrder = React.useMemo(
+    () => (preview ? cellIds(items, preview, accessors).filter((id) => id !== activeId) : []),
+    [items, preview, activeId, accessors],
+  );
+
+  const renderCards = (
+    list: T[],
+    column: DataBoardColumn,
+    groupId: string | undefined,
+    slotBeforeId: string | null | undefined,
+  ) => {
+    const cards = list.map((item) => {
       const card = (
         <DataBoardCard
           id={getId(item)}
@@ -1208,8 +1243,15 @@ export function DataBoard<T extends object>({
           onClick={onCardClick ? () => onCardClick(item) : undefined}
         />
       );
-      return <React.Fragment key={getId(item)}>{wrapCard ? wrapCard(item, card) : card}</React.Fragment>;
+      return (
+        <React.Fragment key={getId(item)}>
+          {slotBeforeId === getId(item) ? <DataBoardDropSlot /> : null}
+          {wrapCard ? wrapCard(item, card) : card}
+        </React.Fragment>
+      );
     });
+    return slotBeforeId === null ? [...cards, <DataBoardDropSlot key={DROP_SLOT_KEY} />] : cards;
+  };
 
   const renderMoreButton = (key: string, remaining: number, buttonClassName: string) => (
     <Button
@@ -1223,27 +1265,33 @@ export function DataBoard<T extends object>({
   );
 
   // A flat-mode column scrolls on its own and carries its own "show more";
-  // a grouped-mode cell delegates both to its band.
+  // a grouped-mode cell delegates both to its band. `slotBeforeId` is the card
+  // the drop slot goes before, null for the end of the cell, and undefined when
+  // the slot is in another cell.
   const renderColumnBody = (
     column: DataBoardColumn,
     rendered: T[],
     remaining: number,
     key: string,
     groupId?: string,
-  ) => (
-    <DataBoardColumnBody key={column.id} columnId={column.id} groupId={groupId} scrollable={groupId == null}>
-      <SortableContext items={rendered.map(getId)} strategy={verticalListSortingStrategy}>
-        {rendered.length === 0 ? (
+  ) => {
+    const slotBeforeId =
+      activeId != null && preview?.columnId === column.id && preview.groupId === groupId
+        ? slotPlacement({ order: previewOrder, renderedIds: rendered.map(getId), activeId, index: preview.index })
+        : undefined;
+    return (
+      <DataBoardColumnBody key={column.id} columnId={column.id} groupId={groupId} scrollable={groupId == null}>
+        {rendered.length === 0 && slotBeforeId === undefined ? (
           <p className='rounded-md border border-dashed p-3 text-center text-xs text-muted-foreground'>
             {labels.empty}
           </p>
         ) : (
-          renderCards(rendered, column, groupId)
+          renderCards(rendered, column, groupId, slotBeforeId)
         )}
-      </SortableContext>
-      {groupId == null && remaining > 0 ? renderMoreButton(key, remaining, 'w-full') : null}
-    </DataBoardColumnBody>
-  );
+        {groupId == null && remaining > 0 ? renderMoreButton(key, remaining, 'w-full') : null}
+      </DataBoardColumnBody>
+    );
+  };
 
   const rootStyle: React.CSSProperties =
     height == null ? {} : { height: typeof height === 'number' ? `${height}px` : height };
