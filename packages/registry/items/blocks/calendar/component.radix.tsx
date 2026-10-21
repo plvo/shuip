@@ -3,6 +3,7 @@
 import {
   DndContext,
   type DragEndEvent,
+  type Modifier,
   PointerSensor,
   useDraggable,
   useDroppable,
@@ -13,7 +14,6 @@ import { CSS } from '@dnd-kit/utilities';
 import type { Locale } from 'date-fns';
 import {
   addDays,
-  addMinutes,
   addMonths,
   differenceInCalendarDays,
   eachDayOfInterval,
@@ -22,8 +22,6 @@ import {
   format,
   isSameDay,
   isSameMonth,
-  setHours,
-  setMinutes,
   startOfDay,
   startOfMonth,
   startOfWeek,
@@ -131,6 +129,8 @@ type CalendarContextValue<T extends CalendarEventLike = CalendarEventLike> = {
 
 const CalendarContext = React.createContext<CalendarContextValue | null>(null);
 
+const DayColumnsContext = React.createContext<React.RefObject<HTMLDivElement | null> | null>(null);
+
 export function useCalendar<T extends CalendarEventLike = CalendarEventLike>(): CalendarContextValue<T> {
   const ctx = React.use(CalendarContext);
   if (!ctx) throw new Error('useCalendar must be used within <Calendar.Root>');
@@ -212,6 +212,8 @@ function CalendarRoot<T extends CalendarEventLike>({
   const isMobile = useIsMobile();
   const effectiveView = isMobile && view === 'week' ? 'day' : view;
   const draggedRef = React.useRef(false);
+  const dayColumnsRef = React.useRef<HTMLDivElement | null>(null);
+  const modifiers = React.useMemo(() => [restrictToDayColumns(dayColumnsRef)], []);
 
   const getStart = React.useCallback((it: T) => it[startField] as unknown as Date, [startField]);
   const getEnd = React.useCallback((it: T) => it[endField] as unknown as Date, [endField]);
@@ -235,13 +237,10 @@ function CalendarRoot<T extends CalendarEventLike>({
       const duration = oldEnd.getTime() - oldStart.getTime();
       const overDay = (over?.data.current?.day as Date | undefined) ?? oldStart;
 
-      let newStart: Date;
-      if (effectiveView === 'month') {
-        newStart = setMinutes(setHours(startOfDay(overDay), oldStart.getHours()), oldStart.getMinutes());
-      } else {
-        const movedMinutes = minutesSinceDayStart(oldStart) + (delta.y / HOUR_HEIGHT) * 60;
-        newStart = snapToMinutes(addMinutes(startOfDay(overDay), movedMinutes));
-      }
+      const newStart =
+        effectiveView === 'month'
+          ? wallClockDate(overDay, minutesSinceDayStart(oldStart))
+          : movedStart(oldStart, oldEnd, delta.y, overDay);
       if (newStart.getTime() === oldStart.getTime()) return;
       const next = items.map((it) =>
         getId(it) === id
@@ -360,13 +359,15 @@ function CalendarRoot<T extends CalendarEventLike>({
 
   return (
     <CalendarContext.Provider value={value as unknown as CalendarContextValue}>
-      {editable ? (
-        <DndContext id={dndId} sensors={sensors} onDragEnd={handleDragEnd}>
-          {children}
-        </DndContext>
-      ) : (
-        children
-      )}
+      <DayColumnsContext.Provider value={dayColumnsRef}>
+        {editable ? (
+          <DndContext id={dndId} sensors={sensors} modifiers={modifiers} onDragEnd={handleDragEnd}>
+            {children}
+          </DndContext>
+        ) : (
+          children
+        )}
+      </DayColumnsContext.Provider>
     </CalendarContext.Provider>
   );
 }
@@ -531,12 +532,12 @@ const SNAP_MINUTES = 15;
 const MIN_DRAWN_MINUTES = 15;
 const DAY_MINUTES = 24 * 60;
 
-function snapMinutes(value: number, step = SNAP_MINUTES): number {
-  return Math.round(value / step) * step;
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
 }
 
-function snapToMinutes(date: Date, minutes = SNAP_MINUTES): Date {
-  return new Date(snapMinutes(date.getTime() / 60_000, minutes) * 60_000);
+function snapMinutes(value: number, step = SNAP_MINUTES): number {
+  return Math.round(value / step) * step;
 }
 
 function minutesSinceDayStart(date: Date): number {
@@ -574,9 +575,45 @@ export function resizedEnd(start: Date, end: Date, deltaY: number): Date | null 
   const startDay = startOfDay(start);
   const endMin = differenceInCalendarDays(end, startDay) * DAY_MINUTES + minutesSinceDayStart(end);
   const proposedMin = snapMinutes(endMin + (deltaY / HOUR_HEIGHT) * 60);
-  const nextMin = Math.min(DAY_MINUTES, Math.max(proposedMin, minutesSinceDayStart(start) + SNAP_MINUTES));
+  const nextMin = clamp(proposedMin, minutesSinceDayStart(start) + SNAP_MINUTES, DAY_MINUTES);
   const next = wallClockDate(startDay, nextMin);
   return next.getTime() === end.getTime() ? null : next;
+}
+
+/**
+ * The start a move of `deltaY` pixels gives an event dropped on `day`: the wall-clock time under the pointer, snapped,
+ * and within the day. The event keeps its elapsed duration, so the start stops where the event still ends by 24:00,
+ * and an event of a day or more starts at 00:00.
+ */
+export function movedStart(start: Date, end: Date, deltaY: number, day: Date): Date {
+  const durationMin = Math.max(0, (end.getTime() - start.getTime()) / 60_000);
+  const proposedMin = snapMinutes(minutesSinceDayStart(start) + (deltaY / HOUR_HEIGHT) * 60);
+  const latestMin = Math.max(0, DAY_MINUTES - durationMin);
+  return wallClockDate(day, clamp(proposedMin, 0, latestMin));
+}
+
+type Box = { top: number; left: number; right: number; bottom: number };
+
+/** The translation of a node limited so that the node stays inside `bounds`. */
+export function clampTranslation(
+  translation: { x: number; y: number },
+  node: Box,
+  bounds: Box,
+): { x: number; y: number } {
+  return {
+    x: clamp(translation.x, bounds.left - node.left, bounds.right - node.right),
+    y: clamp(translation.y, bounds.top - node.top, bounds.bottom - node.bottom),
+  };
+}
+
+// A dragged event that leaves the day columns enlarges the area the grid scrolls over, which makes dnd-kit scroll
+// further toward it for as long as the pointer stays near the edge.
+function restrictToDayColumns(dayColumnsRef: React.RefObject<HTMLElement | null>): Modifier {
+  return ({ transform, activeNodeRect }) => {
+    const dayColumns = dayColumnsRef.current;
+    if (!dayColumns || !activeNodeRect) return transform;
+    return { ...transform, ...clampTranslation(transform, activeNodeRect, dayColumns.getBoundingClientRect()) };
+  };
 }
 
 function offsetToMinutes(clientY: number, columnEl: HTMLElement): number {
@@ -608,8 +645,8 @@ export function pressedSlotRange(pressMin: number, releaseMin: number): { startM
     startMin = snappedRelease;
     endMin = flooredPress + SNAP_MINUTES;
   }
-  const startInDay = Math.min(Math.max(startMin, 0), DAY_MINUTES - SNAP_MINUTES);
-  return { startMin: startInDay, endMin: Math.min(Math.max(endMin, startInDay + SNAP_MINUTES), DAY_MINUTES) };
+  const startInDay = clamp(startMin, 0, DAY_MINUTES - SNAP_MINUTES);
+  return { startMin: startInDay, endMin: clamp(endMin, startInDay + SNAP_MINUTES, DAY_MINUTES) };
 }
 
 type LaidOut<T> = { item: T; col: number; cols: number };
@@ -1083,6 +1120,7 @@ function TimeGridView<T extends Record<string, unknown>>({
   locale?: Locale;
   allDayLabel: string;
 }) {
+  const dayColumnsRef = React.use(DayColumnsContext);
   const [resizing, setResizing] = React.useState<{ id: string; end: Date } | null>(null);
   const [creating, setCreating] = React.useState<Creating | null>(null);
 
@@ -1162,38 +1200,40 @@ function TimeGridView<T extends Record<string, unknown>>({
               </div>
             ))}
           </div>
-          {days.map((day, dayIndex) => {
-            const timed = items.filter((item) => !spansAllDay(item) && isSameDay(getStart(item), day));
-            const laidOut = layoutDay(timed, getStart, getEnd);
-            const columnProps = {
-              laidOut,
-              getStart,
-              getEnd,
-              getId,
-              getTitle,
-              color,
-              renderEvent,
-              editable,
-              draggedRef,
-              resizing,
-              onResize,
-              onPreview: setResizing,
-              onEventClick,
-            };
-            return editable ? (
-              <DroppableDayColumn
-                key={day.toISOString()}
-                day={day}
-                dayIndex={dayIndex}
-                creating={creating}
-                onCreatingChange={setCreating}
-                onSlotSelect={selectSlot}
-                {...columnProps}
-              />
-            ) : (
-              <PlainDayColumn key={day.toISOString()} {...columnProps} />
-            );
-          })}
+          <div ref={dayColumnsRef} data-slot='calendar-day-columns' className='flex min-w-0 flex-1'>
+            {days.map((day, dayIndex) => {
+              const timed = items.filter((item) => !spansAllDay(item) && isSameDay(getStart(item), day));
+              const laidOut = layoutDay(timed, getStart, getEnd);
+              const columnProps = {
+                laidOut,
+                getStart,
+                getEnd,
+                getId,
+                getTitle,
+                color,
+                renderEvent,
+                editable,
+                draggedRef,
+                resizing,
+                onResize,
+                onPreview: setResizing,
+                onEventClick,
+              };
+              return editable ? (
+                <DroppableDayColumn
+                  key={day.toISOString()}
+                  day={day}
+                  dayIndex={dayIndex}
+                  creating={creating}
+                  onCreatingChange={setCreating}
+                  onSlotSelect={selectSlot}
+                  {...columnProps}
+                />
+              ) : (
+                <PlainDayColumn key={day.toISOString()} {...columnProps} />
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
