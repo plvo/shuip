@@ -237,8 +237,12 @@ function inCell<T>(item: T, cell: CardCell, { getColumn, getGroup }: CardAccesso
   return getColumn(item) === cell.columnId && (cell.groupId == null || getGroup(item) === cell.groupId);
 }
 
+function cellCards<T>(items: T[], cell: CardCell, accessors: CardAccessors<T>): T[] {
+  return items.filter((item) => inCell(item, cell, accessors));
+}
+
 export function cellIds<T>(items: T[], cell: CardCell, accessors: CardAccessors<T>): string[] {
-  return items.filter((item) => inCell(item, cell, accessors)).map((item) => accessors.getId(item));
+  return cellCards(items, cell, accessors).map((item) => accessors.getId(item));
 }
 
 // `order` is the cell without the dragged card. A card held above another lands
@@ -352,19 +356,20 @@ export function rebaseSlot<T>({
 
 // Places the card in `target`, right before the card that holds that rank
 // among the others, or right after the last one. A card moving to an empty
-// cell keeps its place in the list. `withCell` writes the cell into the card.
+// cell keeps its place in the list. `withLanding` returns the card as it stands
+// once it has landed in `target`: the cell, and whatever else the landing writes.
 export function applyCardMove<T>({
   items,
   activeId,
   target,
   accessors,
-  withCell,
+  withLanding,
 }: {
   items: T[];
   activeId: string;
   target: DropSlot;
   accessors: CardAccessors<T>;
-  withCell: (item: T, cell: CardCell) => T;
+  withLanding: (item: T, cell: CardCell) => T;
 }): T[] {
   const active = items.find((item) => accessors.getId(item) === activeId);
   if (!active) return items;
@@ -375,7 +380,7 @@ export function applyCardMove<T>({
   let at = items.indexOf(active);
   if (anchor !== undefined) at = others.indexOf(anchor);
   else if (last !== undefined) at = others.indexOf(last) + 1;
-  return [...others.slice(0, at), withCell(active, target), ...others.slice(at)];
+  return [...others.slice(0, at), withLanding(active, target), ...others.slice(at)];
 }
 
 // The fields of `T` that hold a position: numbers, possibly absent.
@@ -401,6 +406,8 @@ export function sortByPosition<T>(items: T[], field: keyof T): T[] {
 
 // The cards on both sides of `target` in the full order of its cell, the
 // dragged card left out; null where the slot meets an edge of the cell.
+export type SlotNeighbours<T> = { before: T | null; after: T | null };
+
 export function slotNeighbours<T>({
   items,
   activeId,
@@ -411,36 +418,20 @@ export function slotNeighbours<T>({
   activeId: string;
   target: DropSlot;
   accessors: CardAccessors<T>;
-}): { beforeId: string | null; afterId: string | null } {
-  const order = cellOrder(items, target, activeId, accessors);
-  return { beforeId: order[target.index - 1] ?? null, afterId: order[target.index] ?? null };
+}): SlotNeighbours<T> {
+  const order = cellCards(items, target, accessors).filter((item) => accessors.getId(item) !== activeId);
+  return { before: order[target.index - 1] ?? null, after: order[target.index] ?? null };
 }
 
-// The position that puts a card in `target`: 0 in an empty cell, one step off
-// the only neighbour at an edge, the midpoint between two neighbours.
-export function slotPosition<T>({
-  items,
-  activeId,
-  target,
-  accessors,
-  positionField,
-}: {
-  items: T[];
-  activeId: string;
-  target: DropSlot;
-  accessors: CardAccessors<T>;
-  positionField: keyof T;
-}): number {
-  const { beforeId, afterId } = slotNeighbours({ items, activeId, target, accessors });
-  const positionById = (id: string | null) => {
-    const item = id == null ? undefined : items.find((candidate) => accessors.getId(candidate) === id);
-    return item === undefined ? undefined : positionOf(item, positionField);
-  };
-  const before = positionById(beforeId);
-  const after = positionById(afterId);
-  if (before !== undefined && after !== undefined) return before + (after - before) / 2;
-  if (before !== undefined) return before + 1;
-  if (after !== undefined) return after - 1;
+// The position that puts a card between two neighbours: 0 in an empty cell, one
+// step off the only neighbour at an edge, the midpoint between two neighbours.
+export function slotPosition<T>({ before, after }: SlotNeighbours<T>, positionField: keyof T): number {
+  if (before && after) {
+    const from = positionOf(before, positionField);
+    return from + (positionOf(after, positionField) - from) / 2;
+  }
+  if (before) return positionOf(before, positionField) + 1;
+  if (after) return positionOf(after, positionField) - 1;
   return 0;
 }
 
@@ -1138,21 +1129,14 @@ function useDataBoardDrag<T extends object>({
 
     const fresh = pendingDataRef.current ? inBoardOrder(pendingDataRef.current) : items;
     const slot = rebaseSlot({ items, fresh, activeId: activeCardId, target, accessors });
-    const { beforeId, afterId } = slotNeighbours({ items: fresh, activeId: activeCardId, target: slot, accessors });
-    const position = positionField
-      ? slotPosition({ items: fresh, activeId: activeCardId, target: slot, accessors, positionField })
-      : undefined;
+    const neighbours = slotNeighbours({ items: fresh, activeId: activeCardId, target: slot, accessors });
+    const position = positionField ? slotPosition(neighbours, positionField) : undefined;
+    const withLanding = (item: T, cell: CardCell): T => {
+      const landed = withCell(item, cell);
+      return positionField ? ({ ...landed, [positionField]: position } as T) : landed;
+    };
     const next = inBoardOrder(
-      applyCardMove({
-        items: fresh,
-        activeId: activeCardId,
-        target: slot,
-        accessors,
-        withCell: (item, cell) => {
-          const moved = withCell(item, cell);
-          return positionField ? ({ ...moved, [positionField]: position } as T) : moved;
-        },
-      }),
+      applyCardMove({ items: fresh, activeId: activeCardId, target: slot, accessors, withLanding }),
     );
     const movedItem = next.find((item) => getId(item) === activeCardId);
     if (!movedItem) {
@@ -1185,8 +1169,8 @@ function useDataBoardDrag<T extends object>({
       fromGroup: origin.groupId,
       toGroup,
       position,
-      beforeId,
-      afterId,
+      beforeId: neighbours.before ? getId(neighbours.before) : null,
+      afterId: neighbours.after ? getId(neighbours.after) : null,
     });
   }
 

@@ -155,6 +155,7 @@ import {
   cellOrder,
   columnKey,
   type DropOver,
+  type DropSlot,
   dropZoneId,
   isSameSlot,
   landingIndex,
@@ -382,13 +383,13 @@ describe('isSameSlot', () => {
 });
 
 describe('applyCardMove', () => {
-  const withCell = (item: Card, cell: { columnId: string; groupId?: string }): Card => ({
+  const withLanding = (item: Card, cell: { columnId: string; groupId?: string }): Card => ({
     ...item,
     status: cell.columnId,
     team: cell.groupId ?? item.team,
   });
   const move = (items: Card[], activeId: string, target: { columnId: string; groupId?: string; index: number }) =>
-    applyCardMove({ items, activeId, target, accessors, withCell });
+    applyCardMove({ items, activeId, target, accessors, withLanding });
 
   const items = [cardOf('a', 'todo'), cardOf('b', 'todo'), cardOf('c', 'todo'), cardOf('d', 'done')];
 
@@ -536,10 +537,15 @@ describe('sortByPosition', () => {
   });
 });
 
+const neighbourIds = (args: { items: Ranked[]; activeId: string; target: DropSlot }) => {
+  const { before, after } = slotNeighbours({ ...args, accessors });
+  return { beforeId: before?.id ?? null, afterId: after?.id ?? null };
+};
+
 describe('slotNeighbours', () => {
   const items = [ranked('a', 1), ranked('b', 2), ranked('c', 3), ranked('x', 0, 'done')];
   const neighbours = (activeId: string, index: number, columnId = 'todo') =>
-    slotNeighbours({ items, activeId, target: { columnId, index }, accessors });
+    neighbourIds({ items, activeId, target: { columnId, index } });
 
   test('names the cards on both sides of the slot', () => {
     expect(neighbours('x', 1)).toEqual({ beforeId: 'a', afterId: 'b' });
@@ -562,19 +568,14 @@ describe('slotNeighbours', () => {
   test('only counts the cards of the band of the slot', () => {
     const banded = [ranked('a', 1, 'todo', 's1'), ranked('b', 2, 'todo', 's2'), ranked('c', 3, 'todo', 's1')];
     expect(
-      slotNeighbours({
-        items: banded,
-        activeId: 'c',
-        target: { columnId: 'todo', groupId: 's2', index: 1 },
-        accessors,
-      }),
+      neighbourIds({ items: banded, activeId: 'c', target: { columnId: 'todo', groupId: 's2', index: 1 } }),
     ).toEqual({ beforeId: 'b', afterId: null });
   });
 });
 
 describe('slotPosition', () => {
   const position = (items: Ranked[], activeId: string, target: { columnId: string; groupId?: string; index: number }) =>
-    slotPosition({ items, activeId, target, accessors, positionField: 'position' });
+    slotPosition(slotNeighbours({ items, activeId, target, accessors }), 'position');
   const cell = (...positions: number[]) => positions.map((value, index) => ranked(`c${index}`, value));
   const incoming = ranked('x', 99, 'done');
 
@@ -661,7 +662,7 @@ describe('slotPosition', () => {
       if (!target) throw new Error('no slot');
       return {
         target,
-        ...slotNeighbours({ items, activeId: 'x', target, accessors }),
+        ...neighbourIds({ items, activeId: 'x', target }),
         position: position(items, 'x', target),
       };
     };
@@ -696,12 +697,12 @@ describe('a move rebased onto a newer list', () => {
     const previewed = { columnId: 'todo', index: 2 };
     const target = rebaseSlot({ items: previous, fresh, activeId: 'x', target: previewed, accessors });
 
-    expect(slotNeighbours({ items: previous, activeId: 'x', target: previewed, accessors })).toEqual({
+    expect(neighbourIds({ items: previous, activeId: 'x', target: previewed })).toEqual({
       beforeId: 'b',
       afterId: 'c',
     });
-    expect(slotNeighbours({ items: fresh, activeId: 'x', target, accessors })).toEqual({ beforeId: 'n', afterId: 'c' });
-    expect(slotPosition({ items: fresh, activeId: 'x', target, accessors, positionField: 'position' })).toBe(2.625);
+    expect(neighbourIds({ items: fresh, activeId: 'x', target })).toEqual({ beforeId: 'n', afterId: 'c' });
+    expect(slotPosition(slotNeighbours({ items: fresh, activeId: 'x', target, accessors }), 'position')).toBe(2.625);
   });
 });
 
