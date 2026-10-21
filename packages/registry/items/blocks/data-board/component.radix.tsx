@@ -269,9 +269,14 @@ export function landingIndex({
   return lastRendered < 0 ? order.length : lastRendered + 1;
 }
 
-// The cell without the dragged card: the order the slot rank counts in.
+// The cards of the cell without the dragged one: the cards the slot rank counts.
+function othersInCell<T>(items: T[], cell: CardCell, activeId: string, accessors: CardAccessors<T>): T[] {
+  return cellCards(items, cell, accessors).filter((item) => accessors.getId(item) !== activeId);
+}
+
+// The ids of those cards, in order.
 export function cellOrder<T>(items: T[], cell: CardCell, activeId: string, accessors: CardAccessors<T>): string[] {
-  return cellIds(items, cell, accessors).filter((id) => id !== activeId);
+  return othersInCell(items, cell, activeId, accessors).map((item) => accessors.getId(item));
 }
 
 export function originSlot<T>(items: T[], activeId: string, accessors: CardAccessors<T>): DropSlot | null {
@@ -404,10 +409,10 @@ export function sortByPosition<T>(items: T[], field: keyof T): T[] {
     .map(({ item }) => item);
 }
 
-// The cards on both sides of `target` in the full order of its cell, the
-// dragged card left out; null where the slot meets an edge of the cell.
 export type SlotNeighbours<T> = { before: T | null; after: T | null };
 
+// The cards on both sides of `target` in the full order of its cell, the
+// dragged card left out; null where the slot meets an edge of the cell.
 export function slotNeighbours<T>({
   items,
   activeId,
@@ -419,7 +424,7 @@ export function slotNeighbours<T>({
   target: DropSlot;
   accessors: CardAccessors<T>;
 }): SlotNeighbours<T> {
-  const order = cellCards(items, target, accessors).filter((item) => accessors.getId(item) !== activeId);
+  const order = othersInCell(items, target, activeId, accessors);
   return { before: order[target.index - 1] ?? null, after: order[target.index] ?? null };
 }
 
