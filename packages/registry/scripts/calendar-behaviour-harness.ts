@@ -26,6 +26,7 @@ type CalendarRootProps = {
   editable: boolean;
   onEventClick: (item: CalendarEvent) => void;
   onSlotSelect?: (range: CalendarSlot) => void;
+  onEventsChange: (next: CalendarEvent[]) => void;
 };
 
 export type CalendarComponent = {
@@ -39,6 +40,7 @@ type MountOptions = {
   view: CalendarView;
   editable?: boolean;
   withSlotSelect?: boolean;
+  events?: CalendarEvent[];
 };
 
 // A Tuesday in the middle of a month, so that every view shows the events below.
@@ -58,6 +60,15 @@ export const ALL_DAY_EVENT: CalendarEvent = {
   start: new Date(2026, 2, 10),
   end: new Date(2026, 2, 11),
   allDay: true,
+};
+
+// Ends off the 15-minute grid, so that a tap on the resize handle has an end to leave alone.
+export const RESIZABLE_EVENT: CalendarEvent = {
+  id: 'resizable',
+  title: 'Resizable',
+  start: new Date(2026, 2, 10, 9, 0),
+  end: new Date(2026, 2, 10, 10, 7),
+  allDay: false,
 };
 
 /**
@@ -80,11 +91,15 @@ export function createCalendarHarness() {
 
   const { cleanup } = reactMount;
 
-  async function mount(Calendar: CalendarComponent, { view, editable = false, withSlotSelect = false }: MountOptions) {
+  async function mount(
+    Calendar: CalendarComponent,
+    { view, editable = false, withSlotSelect = false, events = [TIMED_EVENT, ALL_DAY_EVENT] }: MountOptions,
+  ) {
     const { errors, render } = reactMount.mount();
     const calendar = {
       eventClicks: [] as CalendarEvent[],
       slots: [] as CalendarSlot[],
+      changes: [] as CalendarEvent[][],
       portalClicks: [] as string[],
       ancestorClicks: 0,
       errors,
@@ -110,7 +125,7 @@ export function createCalendarHarness() {
         createElement(
           Calendar.Root,
           {
-            events: [TIMED_EVENT, ALL_DAY_EVENT],
+            events,
             idField: 'id',
             titleField: 'title',
             startField: 'start',
@@ -121,6 +136,7 @@ export function createCalendarHarness() {
             date: CALENDAR_DATE,
             editable,
             onEventClick: (item: CalendarEvent) => calendar.eventClicks.push(item),
+            onEventsChange: (next: CalendarEvent[]) => calendar.changes.push(next),
             onSlotSelect: withSlotSelect ? (range: CalendarSlot) => calendar.slots.push(range) : undefined,
           } as Omit<CalendarRootProps, 'children'> as CalendarRootProps,
           createElement(Calendar.View, {}),
@@ -141,5 +157,25 @@ export function createCalendarHarness() {
     });
   }
 
-  return { load, cleanup, mount, eventLabel, portalMenu, click };
+  const eventBlock = (id: string) => eventLabel(id)?.closest('button') ?? null;
+
+  const resizeHandle = (id: string) => eventBlock(id)?.querySelector<HTMLElement>(':scope > span[data-event]') ?? null;
+
+  /** The height the grid draws for the event. */
+  const drawnHeight = (id: string) => eventBlock(id)?.style.height;
+
+  /** Pointer events with a chosen `clientY`, which is all the resize handle reads; capture is not implemented by the DOM. */
+  async function pointer(
+    type: 'pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel',
+    handle: HTMLElement,
+    y: number,
+  ) {
+    handle.setPointerCapture ??= () => {};
+    handle.releasePointerCapture ??= () => {};
+    await act(async () => {
+      handle.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientY: y, pointerId: 1 }));
+    });
+  }
+
+  return { load, cleanup, mount, eventLabel, portalMenu, click, resizeHandle, drawnHeight, pointer };
 }
