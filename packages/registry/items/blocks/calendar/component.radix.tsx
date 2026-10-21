@@ -254,9 +254,11 @@ function CalendarRoot<T extends CalendarEventLike>({
 
   const resizeEvent = React.useCallback(
     (id: string, newEnd: Date) => {
+      const current = items.find((it) => getId(it) === id);
+      if (current && getEnd(current).getTime() === newEnd.getTime()) return;
       setItems(items.map((it) => (getId(it) === id ? ({ ...it, [endField]: newEnd } as T) : it)));
     },
-    [items, getId, endField, setItems],
+    [items, getId, getEnd, endField, setItems],
   );
 
   const periodLabel = React.useMemo(() => {
@@ -525,6 +527,7 @@ function colorClasses(c?: CalendarEventColor): string {
 
 const HOUR_HEIGHT = 48;
 const SNAP_MINUTES = 15;
+const MIN_DRAWN_MINUTES = 15;
 
 function snapToMinutes(date: Date, minutes = SNAP_MINUTES): Date {
   const ms = minutes * 60_000;
@@ -537,9 +540,25 @@ function minutesSinceDayStart(date: Date): number {
 function eventTop(start: Date): number {
   return (minutesSinceDayStart(start) / 60) * HOUR_HEIGHT;
 }
+function drawnMinutes(start: Date, end: Date): number {
+  return Math.max(MIN_DRAWN_MINUTES, (end.getTime() - start.getTime()) / 60_000);
+}
 function eventHeight(start: Date, end: Date): number {
-  const mins = Math.max(15, (end.getTime() - start.getTime()) / 60_000);
-  return (mins / 60) * HOUR_HEIGHT;
+  return (drawnMinutes(start, end) / 60) * HOUR_HEIGHT;
+}
+
+/** Whether a pointer move of `deltaY` pixels on the resize handle is a resize and not a tap. */
+export function isResizeMove(deltaY: number): boolean {
+  return (Math.abs(deltaY) / HOUR_HEIGHT) * 60 >= SNAP_MINUTES / 2;
+}
+
+/** The end a resize of `deltaY` pixels gives the event, or null when the move is no resize or leaves the end as it is. */
+export function resizedEnd(start: Date, end: Date, deltaY: number): Date | null {
+  if (!isResizeMove(deltaY)) return null;
+  const minEnd = new Date(start.getTime() + SNAP_MINUTES * 60_000);
+  const proposed = snapToMinutes(new Date(end.getTime() + (deltaY / HOUR_HEIGHT) * 3_600_000));
+  const next = proposed.getTime() < minEnd.getTime() ? minEnd : proposed;
+  return next.getTime() === end.getTime() ? null : next;
 }
 
 function offsetToMinutes(clientY: number, columnEl: HTMLElement): number {
@@ -551,17 +570,19 @@ type Creating = { dayIndex: number; startMin: number; endMin: number };
 
 type LaidOut<T> = { item: T; col: number; cols: number };
 
-function layoutDay<T>(dayEvents: T[], getStart: (t: T) => Date, getEnd: (t: T) => Date): LaidOut<T>[] {
+/** Places the events of a day in columns, each measured over the span the grid draws. */
+export function layoutDay<T>(dayEvents: T[], getStart: (t: T) => Date, getEnd: (t: T) => Date): LaidOut<T>[] {
   const sorted = [...dayEvents].sort((a, b) => getStart(a).getTime() - getStart(b).getTime());
   const colEnds: number[] = [];
   const placed = sorted.map((item) => {
-    const s = getStart(item).getTime();
+    const start = getStart(item);
+    const s = start.getTime();
     let col = colEnds.findIndex((end) => end <= s);
     if (col === -1) {
       col = colEnds.length;
       colEnds.push(0);
     }
-    colEnds[col] = getEnd(item).getTime();
+    colEnds[col] = s + drawnMinutes(start, getEnd(item)) * 60_000;
     return { item, col };
   });
   const cols = Math.max(1, colEnds.length);
@@ -714,44 +735,39 @@ function ResizeHandle({
   onPreview: (end: Date | null) => void;
 }) {
   const handlePointerDown = (e: React.PointerEvent<HTMLSpanElement>) => {
+    if (e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
     const target = e.target as HTMLElement;
     target.setPointerCapture(e.pointerId);
 
     const startY = e.clientY;
-    const originalEnd = end;
-    const minEnd = new Date(start.getTime() + SNAP_MINUTES * 60_000);
-    let finalEnd = originalEnd;
 
-    const compute = (clientY: number) => {
-      const deltaMin = ((clientY - startY) / HOUR_HEIGHT) * 60;
-      let proposed = snapToMinutes(new Date(originalEnd.getTime() + deltaMin * 60_000));
-      if (proposed.getTime() - start.getTime() < SNAP_MINUTES * 60_000) proposed = minEnd;
-      return proposed;
-    };
-
-    const onMove = (moveE: PointerEvent) => {
-      finalEnd = compute(moveE.clientY);
-      onPreview(finalEnd);
-    };
-
-    const onUp = (upE: PointerEvent) => {
-      finalEnd = compute(upE.clientY);
+    const release = () => {
       target.releasePointerCapture(e.pointerId);
       target.removeEventListener('pointermove', onMove);
       target.removeEventListener('pointerup', onUp);
-      onResize?.(id, finalEnd);
+      target.removeEventListener('pointercancel', release);
       onPreview(null);
+    };
+
+    const onMove = (moveE: PointerEvent) => onPreview(resizedEnd(start, end, moveE.clientY - startY));
+
+    const onUp = (upE: PointerEvent) => {
+      const nextEnd = resizedEnd(start, end, upE.clientY - startY);
+      release();
+      if (nextEnd) onResize?.(id, nextEnd);
     };
 
     target.addEventListener('pointermove', onMove);
     target.addEventListener('pointerup', onUp);
+    target.addEventListener('pointercancel', release);
   };
 
   return (
     <span
       data-event=''
+      data-slot='calendar-resize-handle'
       className='absolute inset-x-0 bottom-0 z-20 h-1.5 cursor-ns-resize'
       onPointerDown={handlePointerDown}
       onClick={(e) => e.stopPropagation()}
@@ -764,7 +780,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 function CreatingOverlay({ startMin, endMin }: { startMin: number; endMin: number }) {
   const lo = Math.min(startMin, endMin);
-  const span = Math.max(15, Math.abs(endMin - startMin));
+  const span = Math.max(MIN_DRAWN_MINUTES, Math.abs(endMin - startMin));
   return (
     <div
       className='pointer-events-none absolute inset-x-0 z-30 rounded border border-primary bg-primary/30'

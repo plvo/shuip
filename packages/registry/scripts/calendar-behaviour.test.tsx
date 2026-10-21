@@ -5,13 +5,14 @@ import {
   type CalendarEvent,
   type CalendarView,
   createCalendarHarness,
+  RESIZABLE_EVENT,
   TIMED_EVENT,
 } from './calendar-behaviour-harness';
 import { installDom, resolveCanonicalAliases } from './dom-environment';
 import { VARIANTS, type Variant } from './react-mount';
 
 const harness = createCalendarHarness();
-const { mount, eventLabel, portalMenu, click } = harness;
+const { mount, eventLabel, portalMenu, click, resizeHandle, drawnHeight, pointer, captureCalls } = harness;
 const calendars = {} as Record<Variant, CalendarComponent>;
 let uninstallDom: () => Promise<void>;
 
@@ -22,8 +23,8 @@ beforeAll(async () => {
   await harness.load();
   const radix = await import('../items/blocks/calendar/component.radix');
   const base = await import('../generated/base/items/blocks/calendar/component.base');
-  calendars.Radix = radix.Calendar as unknown as CalendarComponent;
-  calendars['Base UI'] = base.Calendar as unknown as CalendarComponent;
+  calendars.Radix = { ...radix.Calendar, useCalendar: radix.useCalendar } as unknown as CalendarComponent;
+  calendars['Base UI'] = { ...base.Calendar, useCalendar: base.useCalendar } as unknown as CalendarComponent;
 });
 
 afterAll(async () => {
@@ -134,6 +135,77 @@ describe.each(VARIANTS)('calendar on %s', (variant) => {
       const calendar = await mount(calendars[variant], { view: 'week', editable: true });
       await click(wednesdayCell());
       expect(calendar.slots).toEqual([]);
+    });
+  });
+
+  describe('resize handle', () => {
+    const HOUR = 48;
+    const mountResizable = () => mount(calendars[variant], { view: 'week', editable: true, events: [RESIZABLE_EVENT] });
+
+    test('leaves the end of an event alone on a tap and emits nothing', async () => {
+      const calendar = await mountResizable();
+      const handle = resizeHandle(RESIZABLE_EVENT.id) as HTMLElement;
+      const height = drawnHeight(RESIZABLE_EVENT.id);
+      await pointer('pointerdown', handle, 100);
+      await pointer('pointerup', handle, 100);
+      expect(calendar.changes).toEqual([]);
+      expect(drawnHeight(RESIZABLE_EVENT.id)).toBe(height);
+      expect(calendar.errors).toEqual([]);
+    });
+
+    test('resizes and emits once on a drag of more than half a snap step', async () => {
+      const calendar = await mountResizable();
+      const handle = resizeHandle(RESIZABLE_EVENT.id) as HTMLElement;
+      const height = drawnHeight(RESIZABLE_EVENT.id);
+      await pointer('pointerdown', handle, 100);
+      await pointer('pointermove', handle, 100 + HOUR);
+      expect(drawnHeight(RESIZABLE_EVENT.id)).not.toBe(height);
+      await pointer('pointerup', handle, 100 + HOUR);
+      expect(calendar.changes).toEqual([[{ ...RESIZABLE_EVENT, end: new Date(2026, 2, 10, 11, 0) }]]);
+      expect(calendar.errors).toEqual([]);
+    });
+
+    test('ignores a press of a button other than the main one', async () => {
+      const calendar = await mountResizable();
+      const handle = resizeHandle(RESIZABLE_EVENT.id) as HTMLElement;
+      const height = drawnHeight(RESIZABLE_EVENT.id);
+      await pointer('pointerdown', handle, 100, 2);
+      await pointer('pointermove', handle, 100 + HOUR, 2);
+      expect(drawnHeight(RESIZABLE_EVENT.id)).toBe(height);
+      await pointer('pointerup', handle, 100 + HOUR, 2);
+      expect(calendar.changes).toEqual([]);
+      expect(captureCalls).toEqual([]);
+      expect(calendar.errors).toEqual([]);
+    });
+
+    test('removes the preview and emits nothing on pointercancel', async () => {
+      const calendar = await mountResizable();
+      const handle = resizeHandle(RESIZABLE_EVENT.id) as HTMLElement;
+      const height = drawnHeight(RESIZABLE_EVENT.id);
+      await pointer('pointerdown', handle, 100);
+      await pointer('pointermove', handle, 100 + HOUR);
+      expect(drawnHeight(RESIZABLE_EVENT.id)).not.toBe(height);
+      expect(captureCalls).toEqual(['set']);
+      await pointer('pointercancel', handle, 100 + HOUR);
+      expect(captureCalls).toEqual(['set', 'release']);
+      expect(drawnHeight(RESIZABLE_EVENT.id)).toBe(height);
+      await pointer('pointermove', handle, 100 + 2 * HOUR);
+      await pointer('pointerup', handle, 100 + 2 * HOUR);
+      expect(drawnHeight(RESIZABLE_EVENT.id)).toBe(height);
+      expect(calendar.changes).toEqual([]);
+      expect(calendar.errors).toEqual([]);
+    });
+  });
+
+  describe('resizeEvent of useCalendar', () => {
+    test('emits nothing when the end is the current end, and once when it differs', async () => {
+      const calendar = await mount(calendars[variant], { view: 'week', editable: true, events: [RESIZABLE_EVENT] });
+      await calendar.resizeEvent(RESIZABLE_EVENT.id, new Date(RESIZABLE_EVENT.end));
+      expect(calendar.changes).toEqual([]);
+      const end = new Date(2026, 2, 10, 11, 0);
+      await calendar.resizeEvent(RESIZABLE_EVENT.id, end);
+      expect(calendar.changes).toEqual([[{ ...RESIZABLE_EVENT, end }]]);
+      expect(calendar.errors).toEqual([]);
     });
   });
 });

@@ -33,7 +33,7 @@ import { Calendar, useCalendar } from '@/components/block/shuip/calendar';
 - **Responsive week → day**: the week view falls back to a single-day view on narrow screens.
 - **Hybrid state**: works standalone from `defaultEvents`, or controlled via `events` + `onEventsChange`.
 - **Drag to move**: drag an event to another day (month) or time slot (week/day) when `editable`.
-- **Resize**: drag an event's bottom edge in week/day to change its end time when `editable`.
+- **Resize**: drag an event's bottom edge in week/day to change its end time when `editable`. A tap on the resize handle changes nothing: the pointer has to move at least half a snap step (7.5 minutes) first.
 - **Drag to create**: drag across an empty range to emit `onSlotSelect` when `editable`.
 - **Per-event colors**: derive a color per event with `color(item)`.
 - **Custom event content**: replace the default event label with `renderEvent(item)`. A click from a portal mounted inside it (a menu, a popover) does not call `onEventClick`; only a click on the event itself does.

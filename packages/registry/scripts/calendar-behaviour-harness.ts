@@ -26,11 +26,13 @@ type CalendarRootProps = {
   editable: boolean;
   onEventClick: (item: CalendarEvent) => void;
   onSlotSelect?: (range: CalendarSlot) => void;
+  onEventsChange: (next: CalendarEvent[]) => void;
 };
 
 export type CalendarComponent = {
   Root: ComponentType<CalendarRootProps>;
   View: ComponentType<Record<string, never>>;
+  useCalendar: () => { resizeEvent: (id: string, end: Date) => void };
 };
 
 export type CalendarView = 'month' | 'week' | 'day' | 'agenda';
@@ -39,6 +41,7 @@ type MountOptions = {
   view: CalendarView;
   editable?: boolean;
   withSlotSelect?: boolean;
+  events?: CalendarEvent[];
 };
 
 // A Tuesday in the middle of a month, so that every view shows the events below.
@@ -60,6 +63,15 @@ export const ALL_DAY_EVENT: CalendarEvent = {
   allDay: true,
 };
 
+// Ends off the 15-minute grid, so that a tap on the resize handle has an end to leave alone.
+export const RESIZABLE_EVENT: CalendarEvent = {
+  id: 'resizable',
+  title: 'Resizable',
+  start: new Date(2026, 2, 10, 9, 0),
+  end: new Date(2026, 2, 10, 10, 7),
+  allDay: false,
+};
+
 /**
  * The drive of a calendar in a DOM without a layout engine. Every event is rendered by `renderEvent` with a menu
  * mounted in a portal on `document.body`, the way a dropdown does, so a click in that menu reaches the event only
@@ -78,16 +90,36 @@ export function createCalendarHarness() {
     ({ createPortal } = await import('react-dom'));
   }
 
-  const { cleanup } = reactMount;
+  const captureCalls: string[] = [];
 
-  async function mount(Calendar: CalendarComponent, { view, editable = false, withSlotSelect = false }: MountOptions) {
+  async function cleanup() {
+    captureCalls.length = 0;
+    await reactMount.cleanup();
+  }
+
+  async function mount(
+    Calendar: CalendarComponent,
+    { view, editable = false, withSlotSelect = false, events = [TIMED_EVENT, ALL_DAY_EVENT] }: MountOptions,
+  ) {
     const { errors, render } = reactMount.mount();
     const calendar = {
       eventClicks: [] as CalendarEvent[],
       slots: [] as CalendarSlot[],
+      changes: [] as CalendarEvent[][],
+      /** Resizes an event the way a consumer does, through `useCalendar` in a child of the root. */
+      resizeEvent: async (id: string, end: Date) => {
+        await act(async () => {
+          context?.resizeEvent(id, end);
+        });
+      },
       portalClicks: [] as string[],
       ancestorClicks: 0,
       errors,
+    };
+    let context: ReturnType<CalendarComponent['useCalendar']> | undefined;
+    const ContextReader = () => {
+      context = Calendar.useCalendar();
+      return null;
     };
     const renderEvent = (item: CalendarEvent) =>
       createElement(
@@ -110,7 +142,7 @@ export function createCalendarHarness() {
         createElement(
           Calendar.Root,
           {
-            events: [TIMED_EVENT, ALL_DAY_EVENT],
+            events,
             idField: 'id',
             titleField: 'title',
             startField: 'start',
@@ -121,9 +153,11 @@ export function createCalendarHarness() {
             date: CALENDAR_DATE,
             editable,
             onEventClick: (item: CalendarEvent) => calendar.eventClicks.push(item),
+            onEventsChange: (next: CalendarEvent[]) => calendar.changes.push(next),
             onSlotSelect: withSlotSelect ? (range: CalendarSlot) => calendar.slots.push(range) : undefined,
           } as Omit<CalendarRootProps, 'children'> as CalendarRootProps,
           createElement(Calendar.View, {}),
+          createElement(ContextReader),
         ),
       ),
     );
@@ -141,5 +175,36 @@ export function createCalendarHarness() {
     });
   }
 
-  return { load, cleanup, mount, eventLabel, portalMenu, click };
+  const eventBlock = (id: string) => eventLabel(id)?.closest('button') ?? null;
+
+  const resizeHandle = (id: string) =>
+    eventBlock(id)?.querySelector<HTMLElement>('[data-slot="calendar-resize-handle"]') ?? null;
+
+  /** The height the grid draws for the event. */
+  const drawnHeight = (id: string) => eventBlock(id)?.style.height;
+
+  /**
+   * Pointer events with a chosen `clientY` and button, which is all the resize handle reads. The DOM does not
+   * implement capture, so the handle gets stand-ins that log into `captureCalls`.
+   */
+  async function pointer(
+    type: 'pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel',
+    handle: HTMLElement,
+    y: number,
+    button = 0,
+  ) {
+    handle.setPointerCapture = () => {
+      captureCalls.push('set');
+    };
+    handle.releasePointerCapture = () => {
+      captureCalls.push('release');
+    };
+    await act(async () => {
+      handle.dispatchEvent(
+        new PointerEvent(type, { bubbles: true, cancelable: true, clientY: y, pointerId: 1, button }),
+      );
+    });
+  }
+
+  return { load, cleanup, mount, eventLabel, portalMenu, click, resizeHandle, drawnHeight, pointer, captureCalls };
 }
