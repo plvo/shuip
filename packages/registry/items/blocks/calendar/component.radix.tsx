@@ -529,9 +529,12 @@ const HOUR_HEIGHT = 48;
 const SNAP_MINUTES = 15;
 const MIN_DRAWN_MINUTES = 15;
 
+function snapMinutes(value: number, step = SNAP_MINUTES): number {
+  return Math.round(value / step) * step;
+}
+
 function snapToMinutes(date: Date, minutes = SNAP_MINUTES): Date {
-  const ms = minutes * 60_000;
-  return new Date(Math.round(date.getTime() / ms) * ms);
+  return new Date(snapMinutes(date.getTime() / 60_000, minutes) * 60_000);
 }
 
 function minutesSinceDayStart(date: Date): number {
@@ -567,6 +570,31 @@ function offsetToMinutes(clientY: number, columnEl: HTMLElement): number {
 }
 
 type Creating = { dayIndex: number; startMin: number; endMin: number };
+
+const CLICK_MINUTES = 5;
+
+/**
+ * The range a press and a release cover, in minutes after the start of the day. The slot under the press is always
+ * part of it: a click gives the hour from the start of the slot under the press, a drag down starts at that start and
+ * a drag up ends at the end of that slot.
+ */
+export function pressedSlotRange(pressMin: number, releaseMin: number): { startMin: number; endMin: number } {
+  const flooredPress = Math.floor(pressMin / SNAP_MINUTES) * SNAP_MINUTES;
+  const snappedRelease = snapMinutes(releaseMin);
+  let startMin: number;
+  let endMin: number;
+  if (Math.abs(releaseMin - pressMin) < CLICK_MINUTES) {
+    startMin = flooredPress;
+    endMin = flooredPress + 60;
+  } else if (releaseMin > pressMin) {
+    startMin = flooredPress;
+    endMin = snappedRelease;
+  } else {
+    startMin = snappedRelease;
+    endMin = flooredPress + SNAP_MINUTES;
+  }
+  return { startMin, endMin: Math.max(endMin, startMin + SNAP_MINUTES) };
+}
 
 type LaidOut<T> = { item: T; col: number; cols: number };
 
@@ -783,6 +811,7 @@ function CreatingOverlay({ startMin, endMin }: { startMin: number; endMin: numbe
   const span = Math.max(MIN_DRAWN_MINUTES, Math.abs(endMin - startMin));
   return (
     <div
+      data-slot='calendar-creating-overlay'
       className='pointer-events-none absolute inset-x-0 z-30 rounded border border-primary bg-primary/30'
       style={{ top: (lo / 60) * HOUR_HEIGHT, height: (span / 60) * HOUR_HEIGHT }}
     />
@@ -907,8 +936,13 @@ function DroppableDayColumn<T extends Record<string, unknown>>({
     [setNodeRef],
   );
 
+  const releaseCapture = (e: React.PointerEvent<HTMLDivElement>) => {
+    const columnEl = columnRef.current;
+    if (columnEl?.hasPointerCapture(e.pointerId)) columnEl.releasePointerCapture(e.pointerId);
+  };
+
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!canCreate) return;
+    if (!canCreate || e.button !== 0 || !startedInside(e)) return;
     if ((e.target as HTMLElement).closest('[data-event]')) return;
     const columnEl = columnRef.current;
     if (!columnEl) return;
@@ -928,34 +962,33 @@ function DroppableDayColumn<T extends Record<string, unknown>>({
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!creating || creating.dayIndex !== dayIndex) return;
-    const columnEl = columnRef.current;
-    if (columnEl?.hasPointerCapture(e.pointerId)) columnEl.releasePointerCapture(e.pointerId);
-    let lo = Math.min(creating.startMin, creating.endMin);
-    let hi = Math.max(creating.startMin, creating.endMin);
-    if (hi - lo < 5) {
-      lo = creating.startMin;
-      hi = creating.startMin + 60;
-    }
+    releaseCapture(e);
+    const { startMin, endMin } = pressedSlotRange(creating.startMin, creating.endMin);
     const base = startOfDay(day);
-    const start = snapToMinutes(addMinutes(base, lo));
-    let end = snapToMinutes(addMinutes(base, hi));
-    if (end.getTime() - start.getTime() < SNAP_MINUTES * 60_000) {
-      end = new Date(start.getTime() + SNAP_MINUTES * 60_000);
-    }
+    const start = addMinutes(base, startMin);
+    const end = addMinutes(base, endMin);
     onCreatingChange(null);
     onSlotSelect?.({ start, end, allDay: false });
   };
 
-  const creatingRange = creating?.dayIndex === dayIndex ? creating : null;
+  const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!creating || creating.dayIndex !== dayIndex) return;
+    releaseCapture(e);
+    onCreatingChange(null);
+  };
+
+  const creatingRange = creating?.dayIndex === dayIndex ? pressedSlotRange(creating.startMin, creating.endMin) : null;
 
   return (
     <div
       ref={mergedRef}
+      data-slot='calendar-day-column'
       className={cn(dayColumnClass, 'cursor-pointer')}
       style={{ height: 24 * HOUR_HEIGHT }}
       onPointerDown={canCreate ? handlePointerDown : undefined}
       onPointerMove={canCreate ? handlePointerMove : undefined}
       onPointerUp={canCreate ? handlePointerUp : undefined}
+      onPointerCancel={canCreate ? handlePointerCancel : undefined}
     >
       <DayColumnContent {...content} creatingRange={creatingRange} />
     </div>

@@ -12,7 +12,20 @@ import { installDom, resolveCanonicalAliases } from './dom-environment';
 import { VARIANTS, type Variant } from './react-mount';
 
 const harness = createCalendarHarness();
-const { mount, eventLabel, portalMenu, click, resizeHandle, drawnHeight, pointer, captureCalls } = harness;
+const {
+  mount,
+  eventLabel,
+  portalMenu,
+  click,
+  resizeHandle,
+  drawnHeight,
+  dayColumn,
+  showsOverlay,
+  overlayRange,
+  yAtMinute,
+  pointer,
+  captureCalls,
+} = harness;
 const calendars = {} as Record<Variant, CalendarComponent>;
 let uninstallDom: () => Promise<void>;
 
@@ -118,6 +131,82 @@ describe.each(VARIANTS)('calendar on %s', (variant) => {
       expect(cell?.className).toContain('cursor-pointer');
       await click(cell);
       expect(calendar.slots).toEqual([{ start: new Date(2026, 2, 15), end: new Date(2026, 2, 16), allDay: true }]);
+    });
+  });
+
+  describe('editable day column', () => {
+    // The week of CALENDAR_DATE starts on a Monday: the third column is the Wednesday, the second holds TIMED_EVENT.
+    const wednesday = () => dayColumn(2);
+    const at = (hours: number, minutes: number) => hours * 60 + minutes;
+    const wednesdayAt = (hours: number, minutes: number, until: Date) => ({
+      start: new Date(2026, 2, 11, hours, minutes),
+      end: until,
+      allDay: false,
+    });
+
+    test('emits nothing for a right press and release on an empty part of the column', async () => {
+      const calendar = await mount(calendars[variant], { view: 'week', editable: true, withSlotSelect: true });
+      await pointer('pointerdown', wednesday(), yAtMinute(at(9, 53)), 2);
+      expect(showsOverlay()).toBe(false);
+      await pointer('pointerup', wednesday(), yAtMinute(at(9, 53)), 2);
+      expect(calendar.slots).toEqual([]);
+    });
+
+    test('emits nothing and shows no overlay for a press inside a portal of renderEvent', async () => {
+      const calendar = await mount(calendars[variant], { view: 'week', editable: true, withSlotSelect: true });
+      const menu = portalMenu(TIMED_EVENT.id);
+      if (!menu) throw new Error('No portal menu');
+      await pointer('pointerdown', menu, yAtMinute(at(10, 30)));
+      expect(showsOverlay()).toBe(false);
+      await pointer('pointerup', menu, yAtMinute(at(10, 30)));
+      expect(calendar.slots).toEqual([]);
+    });
+
+    test('clears the overlay on a pointer cancel without emitting, and the next press starts fresh', async () => {
+      const calendar = await mount(calendars[variant], { view: 'week', editable: true, withSlotSelect: true });
+      await pointer('pointerdown', wednesday(), yAtMinute(at(9, 53)));
+      await pointer('pointermove', wednesday(), yAtMinute(at(11, 0)));
+      expect(showsOverlay()).toBe(true);
+      expect(captureCalls).toEqual(['set']);
+      await pointer('pointercancel', wednesday(), yAtMinute(at(11, 0)));
+      expect(captureCalls).toEqual(['set', 'release']);
+      expect(showsOverlay()).toBe(false);
+      expect(calendar.slots).toEqual([]);
+      await pointer('pointerdown', wednesday(), yAtMinute(at(14, 20)));
+      await pointer('pointerup', wednesday(), yAtMinute(at(14, 20)));
+      expect(calendar.slots).toEqual([wednesdayAt(14, 15, new Date(2026, 2, 11, 15, 15))]);
+    });
+
+    test('draws the range it will emit while the pointer moves', async () => {
+      await mount(calendars[variant], { view: 'week', editable: true, withSlotSelect: true });
+      await pointer('pointerdown', wednesday(), yAtMinute(at(9, 53)));
+      expect(overlayRange()).toEqual({ startMin: at(9, 45), endMin: at(10, 45) });
+      await pointer('pointermove', wednesday(), yAtMinute(at(11, 0)));
+      expect(overlayRange()).toEqual({ startMin: at(9, 45), endMin: at(11, 0) });
+      await pointer('pointermove', wednesday(), yAtMinute(at(9, 0)));
+      expect(overlayRange()).toEqual({ startMin: at(9, 0), endMin: at(10, 0) });
+    });
+
+    test('gives a click the hour from the slot under the press', async () => {
+      const calendar = await mount(calendars[variant], { view: 'week', editable: true, withSlotSelect: true });
+      await pointer('pointerdown', wednesday(), yAtMinute(at(9, 53)));
+      await pointer('pointerup', wednesday(), yAtMinute(at(9, 53)));
+      expect(calendar.slots).toEqual([wednesdayAt(9, 45, new Date(2026, 2, 11, 10, 45))]);
+      expect(calendar.errors).toEqual([]);
+    });
+
+    test('includes the slot under the press on a drag down and on a drag up', async () => {
+      const calendar = await mount(calendars[variant], { view: 'week', editable: true, withSlotSelect: true });
+      await pointer('pointerdown', wednesday(), yAtMinute(at(9, 53)));
+      await pointer('pointermove', wednesday(), yAtMinute(at(11, 0)));
+      await pointer('pointerup', wednesday(), yAtMinute(at(11, 0)));
+      await pointer('pointerdown', wednesday(), yAtMinute(at(9, 53)));
+      await pointer('pointermove', wednesday(), yAtMinute(at(9, 0)));
+      await pointer('pointerup', wednesday(), yAtMinute(at(9, 0)));
+      expect(calendar.slots).toEqual([
+        wednesdayAt(9, 45, new Date(2026, 2, 11, 11, 0)),
+        wednesdayAt(9, 0, new Date(2026, 2, 11, 10, 0)),
+      ]);
     });
   });
 
