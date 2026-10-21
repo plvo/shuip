@@ -25,18 +25,27 @@ const TASKS: Task[] = [
   { id: 'task-5', title: 'Ship the first draft', status: 'done', position: 0 },
 ];
 
+const titleOf = (id: string | null) => TASKS.find((task) => task.id === id)?.title;
+
 // Stands in for the request that updates one record.
-async function updateTask(id: string, patch: Pick<Task, 'status'> & { position?: number }): Promise<string> {
+async function updateTask(id: string, patch: Pick<Task, 'status'> & { position?: number }): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 150));
-  return `PATCH ${id} ${JSON.stringify(patch)}`;
+  console.log('PATCH', id, patch);
 }
 
-export default function DataBoardPersistPositionsExample() {
-  const [requests, setRequests] = React.useState<string[]>([]);
+type SavedMove = { id: number; text: string };
 
-  const persist = async ({ item, toColumn, position }: DataBoardMoveEvent<Task>) => {
-    const request = await updateTask(item.id, { status: toColumn, position });
-    setRequests((previous) => [request, ...previous].slice(0, 3));
+export default function DataBoardPersistPositionsExample() {
+  const [saved, setSaved] = React.useState<SavedMove[]>([]);
+  const savedCount = React.useRef(0);
+  const logId = React.useId();
+
+  const persist = async ({ item, toColumn, position, beforeId, afterId }: DataBoardMoveEvent<Task>) => {
+    await updateTask(item.id, { status: toColumn, position });
+    const between = `after ${titleOf(beforeId) ?? 'nothing'}, before ${titleOf(afterId) ?? 'nothing'}`;
+    savedCount.current += 1;
+    const text = `${item.title}: saved ${toColumn} at position ${position}, ${between}`;
+    setSaved((previous) => [{ id: savedCount.current, text }, ...previous].slice(0, 3));
   };
 
   return (
@@ -48,16 +57,26 @@ export default function DataBoardPersistPositionsExample() {
           columnField='status'
           positionField='position'
           title={(task) => task.title}
+          fields={[{ key: 'position', label: 'position' }]}
           pageSize={false}
           onCardMove={(event) => void persist(event)}
         />
       </div>
-      <ul className='min-h-[4.5rem] space-y-1 font-mono text-xs text-muted-foreground'>
-        {requests.length === 0 ? <li>Drag a card: one request is sent per move.</li> : null}
-        {requests.map((request) => (
-          <li key={request}>{request}</li>
-        ))}
-      </ul>
+      <div className='space-y-1'>
+        <p id={logId} className='text-xs font-medium'>
+          Saved moves, one request each
+        </p>
+        <ul
+          aria-labelledby={logId}
+          aria-live='polite'
+          className='min-h-[4.5rem] space-y-1 text-xs text-muted-foreground'
+        >
+          {saved.length === 0 ? <li>Drag a card to save its position.</li> : null}
+          {saved.map(({ id, text }) => (
+            <li key={id}>{text}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

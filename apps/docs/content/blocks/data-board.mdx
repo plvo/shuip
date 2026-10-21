@@ -97,8 +97,8 @@ not count.
 | Landing slot | New position |
 | --- | --- |
 | Empty cell | `0` |
-| First | next position `- 1` |
-| Last | previous position `+ 1` |
+| First | `next - 1` |
+| Last | `previous + 1` |
 | Between two cards | midpoint of their positions |
 
 The moved card comes back from `onDataChange` with the field overwritten, and `onCardMove` carries the
@@ -113,18 +113,20 @@ same value as `position`, so persisting a move is one update of one record:
 />
 ```
 
-The next list is complete, with the moved card in its place: feed it back through `data` and the
-board shows exactly what you stored. The list comes sorted by position, with equal positions in their
-previous order.
+`onDataChange` receives the full array: every card, sorted by position (equal positions keep their
+previous order), with the moved card carrying its new position. Pass it back through `data` and the
+board shows exactly that.
 
 The neighbours of the moved card are named on every move event, with or without `positionField`.
 `beforeId` and `afterId` are the ids of the cards right before and right after it in the full order of
 its new cell, and `null` at the edges. Use them to store the order as a linked list, or to call an API
 that takes an `afterId`.
 
-Each move halves the gap between two neighbours. A consumer that moves cards into the same gap
-thousands of times eventually runs out of float precision, and the board does not renumber
-positions for you: renumber the cell on your side when the gaps get too small.
+Each move into the same gap halves it, and a float64 holds about 50 halvings. After roughly 50 moves
+into one gap, the midpoint equals the position of a neighbour, and the order of those two cards is then
+only the order of `data`. The board does not renumber positions for you. When the `position` of a move
+equals the position of its `beforeId` or `afterId` card, renumber that cell on your side, for example to
+`1..n` or with a wide step such as `1000`, and save the new values.
 
 ## Examples
 
