@@ -608,8 +608,8 @@ export function pressedSlotRange(pressMin: number, releaseMin: number): { startM
     startMin = snappedRelease;
     endMin = flooredPress + SNAP_MINUTES;
   }
-  const dayStartMin = Math.min(Math.max(startMin, 0), DAY_MINUTES - SNAP_MINUTES);
-  return { startMin: dayStartMin, endMin: Math.min(Math.max(endMin, dayStartMin + SNAP_MINUTES), DAY_MINUTES) };
+  const startInDay = Math.min(Math.max(startMin, 0), DAY_MINUTES - SNAP_MINUTES);
+  return { startMin: startInDay, endMin: Math.min(Math.max(endMin, startInDay + SNAP_MINUTES), DAY_MINUTES) };
 }
 
 type LaidOut<T> = { item: T; col: number; cols: number };

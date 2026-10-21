@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { useTimeZone } from '../../../scripts/time-zone';
+import { runInTimeZone } from '../../../scripts/time-zone';
 import { isResizeMove, layoutDay, pressedSlotRange, resizedEnd, wallClockDate } from './component.radix';
 
 type Slot = { id: string; start: Date; end: Date };
@@ -195,6 +195,16 @@ describe('pressedSlotRange within the day', () => {
     });
   });
 
+  test('keeps a press at or past the end of the day in the last snap step', () => {
+    const lastStep = { startMin: minutesAt(23, 45), endMin: minutesAt(24, 0) };
+    expect(pressedSlotRange(minutesAt(24, 0), minutesAt(24, 0))).toEqual(lastStep);
+    expect(pressedSlotRange(minutesAt(23, 50), minutesAt(23, 50))).toEqual(lastStep);
+    expect(pressedSlotRange(minutesAt(24, 20), minutesAt(23, 0))).toEqual({
+      startMin: minutesAt(23, 0),
+      endMin: minutesAt(24, 0),
+    });
+  });
+
   test('starts a drag above the column at the start of the day, keeping the pressed slot', () => {
     expect(pressedSlotRange(minutesAt(0, 20), -minutesAt(1, 0))).toEqual({
       startMin: minutesAt(0, 0),
@@ -204,7 +214,7 @@ describe('pressedSlotRange within the day', () => {
 });
 
 describe('wallClockDate', () => {
-  useTimeZone('Europe/Paris');
+  runInTimeZone('Europe/Paris');
 
   test('gives the hour and the minute written on the clock of a day with 25 hours', () => {
     const day = new Date(2026, 9, 25);
@@ -225,7 +235,7 @@ describe('wallClockDate', () => {
 });
 
 describe('resizedEnd on a day with daylight saving', () => {
-  useTimeZone('Europe/Paris');
+  runInTimeZone('Europe/Paris');
 
   test('ends at the time of the clock under the pointer when the end moves past the switch', () => {
     const start = new Date(2026, 2, 29, 1, 0);
