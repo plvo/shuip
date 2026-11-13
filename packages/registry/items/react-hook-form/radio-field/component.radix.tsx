@@ -17,10 +17,11 @@ export interface RadioFieldProps
 
 export function RadioField({ lens, options, label, description, ...props }: RadioFieldProps) {
   const { field, fieldState } = useController(lens.interop());
+  const labelId = `${field.name}-label`;
 
   return (
     <Field className='gap-2' data-invalid={fieldState.invalid}>
-      {label && <FieldLabel>{label}</FieldLabel>}
+      {label && <FieldLabel id={labelId}>{label}</FieldLabel>}
       <RadioGroup
         name={field.name}
         value={field.value ?? ''}
@@ -28,6 +29,7 @@ export function RadioField({ lens, options, label, description, ...props }: Radi
         onBlur={field.onBlur}
         className='flex flex-col space-y-1'
         aria-invalid={fieldState.invalid}
+        aria-labelledby={label ? labelId : undefined}
         {...props}
       >
         {options.map((value) => (

@@ -3,6 +3,7 @@ import type { ComponentType } from 'react';
 import type { Root } from 'react-dom/client';
 import type { HarnessProps, Option } from './combobox-field-harness';
 import { installDom, resolveCanonicalAliases } from './dom-environment';
+import { labelledControl } from './labelled-control';
 
 const COUNTRIES: Option[] = [
   { value: 'fr', label: 'France' },
@@ -156,6 +157,11 @@ describe.each(VARIANTS)('ComboboxField, %s', (variant) => {
     await focus(input);
     expect(document.querySelector('[role="dialog"]')).toBeNull();
     expect(listbox()).not.toBeNull();
+  });
+
+  test('binds its visible label to the input', async () => {
+    const { card, input } = await mountField({ options: COUNTRIES });
+    expect(labelledControl(card, 'Country')).toBe(input);
   });
 
   test('reports the list as collapsed, with nothing to control, before it is ever opened', async () => {
