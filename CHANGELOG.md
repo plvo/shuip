@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.0.1](https://github.com/plvo/shuip/compare/v2.0.0...v2.0.1) (2026-11-13)
+
+
+### Bug Fixes
+
+* **calendar:** keep created and resized events in their day ([#184](https://github.com/plvo/shuip/issues/184)) ([e03a7ef](https://github.com/plvo/shuip/commit/e03a7ef5a2873082092e917071c5687e3253f839))
+* **calendar:** keep moved events in their day and in the grid ([#186](https://github.com/plvo/shuip/issues/186)) ([403c2b4](https://github.com/plvo/shuip/commit/403c2b42899afdc6a290287367f0f6e14cbdfaed))
+* **registry:** bind form field labels to their controls ([#187](https://github.com/plvo/shuip/issues/187)) ([af71f97](https://github.com/plvo/shuip/commit/af71f976439477d04af6434faff07b666b53581e))
+
 ## [2.0.0](https://github.com/plvo/shuip/compare/v1.3.0...v2.0.0) (2026-10-21)
 
 
