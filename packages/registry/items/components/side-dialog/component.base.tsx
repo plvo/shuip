@@ -1,9 +1,9 @@
 'use client';
 
-import { Button as ButtonPrimitive } from '@base-ui/react/button';
-import { XIcon } from 'lucide-react';
 import * as React from 'react';
-import { createPortal } from 'react-dom';
+import { XIcon } from 'lucide-react';
+import { DialogPrimitive } from '@/components/ui-base/dialog';
+import { Button } from '@/components/ui-base/button';
 import { cn } from '@/lib/utils';
 
 type SideDialogPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'left' | 'right';
@@ -17,7 +17,9 @@ export interface SideDialogProps {
   children?: React.ReactNode;
 }
 
-export interface SideDialogTriggerProps extends ButtonPrimitive.Props {}
+export interface SideDialogTriggerProps {
+  children: React.ReactNode;
+}
 
 export interface SideDialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
   showCloseButton?: boolean;
@@ -40,36 +42,97 @@ export interface SideDialogFooterProps extends React.HTMLAttributes<HTMLDivEleme
   children: React.ReactNode;
 }
 
-export interface SideDialogCloseProps extends ButtonPrimitive.Props {}
-
-type ButtonClickEvent = Parameters<NonNullable<ButtonPrimitive.Props['onClick']>>[0];
+export interface SideDialogCloseProps {
+  children?: React.ReactNode;
+}
 
 export interface SideDialogBodyProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
 }
 
-// Context for managing dialog state
 const SideDialogContext = React.createContext<{
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   position: SideDialogPosition;
   size: SideDialogSize;
-  openerRef: React.RefObject<HTMLElement | null>;
 }>({
-  open: false,
-  onOpenChange: () => {},
   position: 'bottom-right',
   size: 'sm',
-  openerRef: { current: null },
 });
 
-const getFocusedElement = () => {
-  const { activeElement } = document;
-  return activeElement instanceof HTMLElement &&
-    activeElement !== document.body &&
-    activeElement !== document.documentElement
-    ? activeElement
-    : null;
+const getSizeClasses = (size: SideDialogSize) => {
+  const predefinedSizes = {
+    xs: 'w-full max-w-[min(20rem,calc(100vw-2rem))]',
+    sm: 'w-full max-w-[min(24rem,calc(100vw-2rem))]',
+    md: 'w-full max-w-[min(28rem,calc(100vw-2rem))]',
+    lg: 'w-full max-w-[min(32rem,calc(100vw-2rem))]',
+    xl: 'w-full max-w-[min(36rem,calc(100vw-2rem))]',
+    '2xl': 'w-full max-w-[min(42rem,calc(100vw-2rem))]',
+  };
+
+  return predefinedSizes[size as keyof typeof predefinedSizes] || 'w-full max-w-[min(24rem,calc(100vw-2rem))]';
+};
+
+const getPositionClasses = (pos: SideDialogPosition, size: SideDialogSize) => {
+  const baseClasses = 'fixed z-[100] bg-background border rounded-lg shadow-lg';
+  const sizeClasses = getSizeClasses(size);
+
+  switch (pos) {
+    case 'top-left':
+      return cn(
+        baseClasses,
+        sizeClasses,
+        'top-4 left-4',
+        'data-open:animate-in data-closed:animate-out',
+        'data-closed:slide-out-to-top-52 data-closed:slide-out-to-left-52',
+        'data-open:slide-in-from-top-52 data-open:slide-in-from-left-52',
+      );
+    case 'top-right':
+      return cn(
+        baseClasses,
+        sizeClasses,
+        'top-4 right-4',
+        'data-open:animate-in data-closed:animate-out',
+        'data-closed:slide-out-to-top-52 data-closed:slide-out-to-right-52',
+        'data-open:slide-in-from-top-52 data-open:slide-in-from-right-52',
+      );
+    case 'bottom-left':
+      return cn(
+        baseClasses,
+        sizeClasses,
+        'bottom-4 left-4',
+        'data-open:animate-in data-closed:animate-out',
+        'data-closed:slide-out-to-bottom-52 data-closed:slide-out-to-left-52',
+        'data-open:slide-in-from-bottom-52 data-open:slide-in-from-left-52',
+      );
+    case 'bottom-right':
+      return cn(
+        baseClasses,
+        sizeClasses,
+        'bottom-4 right-4',
+        'data-open:animate-in data-closed:animate-out',
+        'data-closed:slide-out-to-bottom-52 data-closed:slide-out-to-right-52',
+        'data-open:slide-in-from-bottom-52 data-open:slide-in-from-left-52',
+      );
+    case 'left':
+      return cn(
+        baseClasses,
+        sizeClasses,
+        'left-4 top-[50%] translate-y-[-50%]',
+        'data-open:animate-in data-closed:animate-out',
+        'data-closed:slide-out-to-left-52',
+        'data-open:slide-in-from-left-52',
+      );
+    case 'right':
+      return cn(
+        baseClasses,
+        sizeClasses,
+        'right-4 top-[50%] translate-y-[-50%]',
+        'data-open:animate-in data-closed:animate-out',
+        'data-closed:slide-out-to-right-52',
+        'data-open:slide-in-from-right-52',
+      );
+    default:
+      return cn(baseClasses, sizeClasses);
+  }
 };
 
 export function SideDialog({
@@ -79,208 +142,59 @@ export function SideDialog({
   size = 'sm',
   children,
 }: SideDialogProps) {
-  // Internal state for uncontrolled mode
-  const [internalOpen, setInternalOpen] = React.useState(false);
+  const contextValue = React.useMemo(() => ({ position, size }), [position, size]);
 
-  // Use controlled props if provided, otherwise use internal state
-  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
-  const onOpenChange = controlledOnOpenChange !== undefined ? controlledOnOpenChange : setInternalOpen;
-
-  // The element to give focus back to on close. An insertion effect runs before the layout phase, where the content's
-  // `autoFocus` fields take focus, so it still sees the focused element of the opener (a layout effect would not).
-  const openerRef = React.useRef<HTMLElement | null>(null);
-
-  React.useInsertionEffect(() => {
-    if (open) openerRef.current = getFocusedElement();
-  }, [open]);
-
-  const contextValue = React.useMemo(
-    () => ({
-      open,
-      onOpenChange,
-      position,
-      size,
-      openerRef,
-    }),
-    [open, onOpenChange, position, size],
+  return (
+    <DialogPrimitive.Root open={controlledOpen} onOpenChange={controlledOnOpenChange}>
+      <SideDialogContext.Provider value={contextValue}>{children}</SideDialogContext.Provider>
+    </DialogPrimitive.Root>
   );
-
-  return <SideDialogContext.Provider value={contextValue}>{children}</SideDialogContext.Provider>;
 }
 
-export function SideDialogTrigger({ onClick, ...props }: SideDialogTriggerProps) {
-  const { onOpenChange } = React.useContext(SideDialogContext);
-
-  const handleClick = React.useCallback(
-    (e: ButtonClickEvent) => {
-      onClick?.(e);
-      e.currentTarget.focus();
-      onOpenChange(true);
-    },
-    [onClick, onOpenChange],
+export function SideDialogTrigger({ children, ...props }: SideDialogTriggerProps) {
+  return (
+    <DialogPrimitive.Trigger data-slot='side-dialog-trigger' {...props}>
+      {children}
+    </DialogPrimitive.Trigger>
   );
-
-  return <ButtonPrimitive data-slot='side-dialog-trigger' onClick={handleClick} {...props} />;
 }
 
 export function SideDialogContent({ showCloseButton = true, className, children, ...props }: SideDialogContentProps) {
-  const { open, onOpenChange, position, size, openerRef } = React.useContext(SideDialogContext);
-  const [mounted, setMounted] = React.useState(false);
+  const { position, size } = React.useContext(SideDialogContext);
 
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Runs once the dialog is gone, on close and when the content unmounts while open. Focus on `body` then means
-  // nothing else took it, so it goes back to the opener; a field focused by an `onOpenChange(false)` handler stays.
-  React.useEffect(() => {
-    if (!open) return;
-    return () => {
-      const opener = openerRef.current;
-      if (opener?.isConnected && getFocusedElement() === null) {
-        opener.focus();
-      }
-    };
-  }, [open, openerRef]);
-
-  React.useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && open) {
-        onOpenChange(false);
-      }
-    };
-
-    if (open) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = '';
-    };
-  }, [open, onOpenChange]);
-
-  const handleOverlayClick = React.useCallback(
-    (e: React.MouseEvent) => {
-      if (e.target === e.currentTarget) {
-        onOpenChange(false);
-      }
-    },
-    [onOpenChange],
-  );
-
-  const getSizeClasses = (size: SideDialogSize) => {
-    const predefinedSizes = {
-      xs: 'w-full max-w-[min(20rem,calc(100vw-2rem))]',
-      sm: 'w-full max-w-[min(24rem,calc(100vw-2rem))]',
-      md: 'w-full max-w-[min(28rem,calc(100vw-2rem))]',
-      lg: 'w-full max-w-[min(32rem,calc(100vw-2rem))]',
-      xl: 'w-full max-w-[min(36rem,calc(100vw-2rem))]',
-      '2xl': 'w-full max-w-[min(42rem,calc(100vw-2rem))]',
-    };
-
-    return predefinedSizes[size as keyof typeof predefinedSizes] || 'w-full max-w-[min(24rem,calc(100vw-2rem))]';
-  };
-
-  const getPositionClasses = (pos: SideDialogPosition, size: SideDialogSize) => {
-    const baseClasses = 'fixed z-[100] bg-background border rounded-lg shadow-lg';
-    const sizeClasses = getSizeClasses(size);
-
-    switch (pos) {
-      case 'top-left':
-        return cn(
-          baseClasses,
-          sizeClasses,
-          'top-4 left-4',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:slide-out-to-top-52 data-[state=closed]:slide-out-to-left-52',
-          'data-[state=open]:slide-in-from-top-52 data-[state=open]:slide-in-from-left-52',
-        );
-      case 'top-right':
-        return cn(
-          baseClasses,
-          sizeClasses,
-          'top-4 right-4',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:slide-out-to-top-52 data-[state=closed]:slide-out-to-right-52',
-          'data-[state=open]:slide-in-from-top-52 data-[state=open]:slide-in-from-right-52',
-        );
-      case 'bottom-left':
-        return cn(
-          baseClasses,
-          sizeClasses,
-          'bottom-4 left-4',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:slide-out-to-bottom-52 data-[state=closed]:slide-out-to-left-52',
-          'data-[state=open]:slide-in-from-bottom-52 data-[state=open]:slide-in-from-left-52',
-        );
-      case 'bottom-right':
-        return cn(
-          baseClasses,
-          sizeClasses,
-          'bottom-4 right-4',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:slide-out-to-bottom-52 data-[state=closed]:slide-out-to-right-52',
-          'data-[state=open]:slide-in-from-bottom-52 data-[state=open]:slide-in-from-right-52',
-        );
-      case 'left':
-        return cn(
-          baseClasses,
-          sizeClasses,
-          'left-4 top-[50%] translate-y-[-50%]',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:slide-out-to-left-52',
-          'data-[state=open]:slide-in-from-left-52',
-        );
-      case 'right':
-        return cn(
-          baseClasses,
-          sizeClasses,
-          'right-4 top-[50%] translate-y-[-50%]',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out',
-          'data-[state=closed]:slide-out-to-right-52',
-          'data-[state=open]:slide-in-from-right-52',
-        );
-      default:
-        return cn(baseClasses, sizeClasses);
-    }
-  };
-
-  if (!mounted) return null;
-  if (!open) return null;
-
-  return createPortal(
-    <div
-      data-slot='side-dialog-overlay'
-      className='fixed inset-0 z-40 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0'
-      data-state={open ? 'open' : 'closed'}
-      onClick={handleOverlayClick}
-    >
-      <div
+  return (
+    <DialogPrimitive.Portal>
+      <DialogPrimitive.Backdrop
+        data-slot='side-dialog-overlay'
+        className='fixed inset-0 z-40 bg-black/50 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0'
+      />
+      <DialogPrimitive.Popup
         data-slot='side-dialog-content'
-        data-state={open ? 'open' : 'closed'}
         className={cn(
           getPositionClasses(position, size),
-          'flex flex-col max-h-[calc(100dvh-2rem)] p-6 duration-200',
+          'flex flex-col max-h-[calc(100dvh-2rem)] p-6 duration-200 outline-none',
           className,
         )}
         {...props}
-        onClick={(e) => {
-          e.stopPropagation();
-          props.onClick?.(e);
-        }}
       >
         {children}
         {showCloseButton && (
-          <SideDialogClose className='absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden'>
-            <XIcon className='size-4' />
-            <span className='sr-only'>Close</span>
-          </SideDialogClose>
+          <DialogPrimitive.Close
+            render={
+              <Button
+                variant='ghost'
+                size='icon-sm'
+                data-slot='side-dialog-close'
+                className='absolute top-4 right-4 rounded-xs'
+              >
+                <XIcon className='size-4' />
+                <span className='sr-only'>Close</span>
+              </Button>
+            }
+          />
         )}
-      </div>
-    </div>,
-    document.body,
+      </DialogPrimitive.Popup>
+    </DialogPrimitive.Portal>
   );
 }
 
@@ -294,17 +208,25 @@ export function SideDialogHeader({ className, children, ...props }: SideDialogHe
 
 export function SideDialogTitle({ className, children, ...props }: SideDialogTitleProps) {
   return (
-    <h2 data-slot='side-dialog-title' className={cn('text-lg font-semibold leading-none', className)} {...props}>
+    <DialogPrimitive.Title
+      data-slot='side-dialog-title'
+      className={cn('text-lg font-semibold leading-none', className)}
+      {...props}
+    >
       {children}
-    </h2>
+    </DialogPrimitive.Title>
   );
 }
 
 export function SideDialogDescription({ className, children, ...props }: SideDialogDescriptionProps) {
   return (
-    <p data-slot='side-dialog-description' className={cn('text-muted-foreground text-sm', className)} {...props}>
+    <DialogPrimitive.Description
+      data-slot='side-dialog-description'
+      className={cn('text-muted-foreground text-sm', className)}
+      {...props}
+    >
       {children}
-    </p>
+    </DialogPrimitive.Description>
   );
 }
 
@@ -328,16 +250,10 @@ export function SideDialogBody({ className, children, ...props }: SideDialogBody
   );
 }
 
-export function SideDialogClose({ onClick, ...props }: SideDialogCloseProps) {
-  const { onOpenChange } = React.useContext(SideDialogContext);
-
-  const handleClick = React.useCallback(
-    (e: ButtonClickEvent) => {
-      onClick?.(e);
-      onOpenChange(false);
-    },
-    [onClick, onOpenChange],
+export function SideDialogClose({ children, ...props }: SideDialogCloseProps) {
+  return (
+    <DialogPrimitive.Close data-slot='side-dialog-close' {...props}>
+      {children}
+    </DialogPrimitive.Close>
   );
-
-  return <ButtonPrimitive data-slot='side-dialog-close' onClick={handleClick} {...props} />;
 }
