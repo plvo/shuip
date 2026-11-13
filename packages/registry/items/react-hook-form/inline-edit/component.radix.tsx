@@ -15,6 +15,7 @@ type InlineEditVariant = 'ghost' | 'boxed';
 type InlineEditInput = 'text' | 'textarea';
 
 interface InlineEditProps {
+  id?: string;
   value: string;
   onCommit: (next: string) => Promise<string | undefined> | string | undefined;
   input?: InlineEditInput;
@@ -50,6 +51,7 @@ const variantClasses: Record<InlineEditVariant, string> = {
 };
 
 function InlineEdit({
+  id,
   value,
   onCommit,
   input = 'text',
@@ -152,6 +154,7 @@ function InlineEdit({
     ) : input === 'textarea' ? (
       <Textarea
         autoFocus
+        id={id}
         value={draft}
         disabled={isSaving}
         aria-invalid={!!displayedError}
@@ -164,6 +167,7 @@ function InlineEdit({
     ) : (
       <Input
         autoFocus
+        id={id}
         type='text'
         value={draft}
         disabled={isSaving}
@@ -224,7 +228,7 @@ export function InlineEditField({
     >
       {label && <FieldLabel htmlFor={field.name}>{label}</FieldLabel>}
       <div className={cn('flex items-center gap-2', orientation === 'horizontal' && 'flex-1')}>
-        <InlineEdit {...props} value={field.value ?? ''} onCommit={handleCommit} />
+        <InlineEdit {...props} id={field.name} value={field.value ?? ''} onCommit={handleCommit} />
         {description && (
           <Popover>
             <PopoverTrigger aria-label='Info' className='text-muted-foreground transition-colors hover:text-foreground'>

@@ -23,7 +23,7 @@ export function SelectField({ options, label, description, placeholder, fieldPro
 
   return (
     <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
-      {label && <FieldLabel>{label}</FieldLabel>}
+      {label && <FieldLabel htmlFor={field.name}>{label}</FieldLabel>}
       <Select
         name={field.name}
         value={field.state.value}
@@ -31,7 +31,7 @@ export function SelectField({ options, label, description, placeholder, fieldPro
         onValueChange={(value) => field.handleChange(typeof value === 'string' ? value : '')}
         {...props}
       >
-        <SelectTrigger aria-invalid={!isValid}>
+        <SelectTrigger id={field.name} aria-invalid={!isValid}>
           <SelectValue placeholder={placeholder}>{selectedLabel}</SelectValue>
         </SelectTrigger>
         <SelectContent>

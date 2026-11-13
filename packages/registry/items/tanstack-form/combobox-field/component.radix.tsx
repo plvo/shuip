@@ -30,6 +30,13 @@ function useListStateOnInput(inputRef: React.RefObject<HTMLInputElement | null>,
   }, [inputRef, open]);
 }
 
+// cmdk sets an id of its own on its input, over the one it is passed, so the label takes the id from the element.
+function useInputId(inputRef: React.RefObject<HTMLInputElement | null>) {
+  const [inputId, setInputId] = React.useState<string>();
+  React.useLayoutEffect(() => setInputId(inputRef.current?.id), [inputRef]);
+  return inputId;
+}
+
 export interface ComboboxOption {
   value: string;
   label: string;
@@ -100,6 +107,7 @@ export function ComboboxField({
   const containerRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   useListStateOnInput(inputRef, open);
+  const inputId = useInputId(inputRef);
 
   // Static options + presets, resolved during render so a value shows its label on first
   // paint; async results and manual picks live in `cacheRef`. `getOption` reads both.
@@ -252,7 +260,7 @@ export function ComboboxField({
 
   return (
     <Field className='gap-2' data-invalid={!isValid}>
-      {label && <FieldLabel>{label}</FieldLabel>}
+      {label && <FieldLabel htmlFor={inputId}>{label}</FieldLabel>}
       <Command shouldFilter={false} className='h-auto overflow-visible bg-transparent'>
         <Popover open={open}>
           <PopoverAnchor asChild>

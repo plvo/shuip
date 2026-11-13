@@ -21,15 +21,17 @@ export interface RadioFieldProps {
 export function RadioField({ options, label, description, fieldProps, props }: RadioFieldProps) {
   const field = useFieldContext<string>();
   const { isValid, errors } = field.state.meta;
+  const labelId = `${field.name}-label`;
 
   return (
     <Field className='gap-2' data-invalid={!isValid} {...fieldProps}>
-      {label && <FieldLabel>{label}</FieldLabel>}
+      {label && <FieldLabel id={labelId}>{label}</FieldLabel>}
       <RadioGroup
         name={field.name}
         value={field.state.value}
         onValueChange={(value) => field.handleChange(value)}
         onBlur={field.handleBlur}
+        aria-labelledby={label ? labelId : undefined}
         {...props}
       >
         {options.map((option) => (

@@ -88,10 +88,11 @@ export function TimeRangeField({
 }: TimeRangeFieldProps) {
   const { field, fieldState } = useController(lens.interop());
   const value: TimeRangeValue = field.value ?? { start: '', end: '' };
+  const labelId = `${field.name}-label`;
 
   return (
-    <Field className='gap-2' data-invalid={fieldState.invalid}>
-      {label && <FieldLabel>{label}</FieldLabel>}
+    <Field className='gap-2' data-invalid={fieldState.invalid} aria-labelledby={label ? labelId : undefined}>
+      {label && <FieldLabel id={labelId}>{label}</FieldLabel>}
       <div className='flex flex-col gap-3 sm:flex-row sm:items-end'>
         <div className='flex flex-1 flex-col gap-1'>
           <FieldLabel htmlFor={`${field.name}-start`} className='text-xs'>
