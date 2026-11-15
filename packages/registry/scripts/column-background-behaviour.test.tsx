@@ -93,18 +93,18 @@ afterEach(async () => {
 
 describe.each(BOARDS)('$name column background', (board) => {
   describe.each(VARIANTS)('on %s', (variant) => {
+    const boardWith = (props: Partial<BoardProps>) =>
+      createElement(loaded.get(board.name)?.[variant] as ComponentType<BoardProps>, {
+        columns: board.columns,
+        data: TASKS,
+        columnField: 'status',
+        title: (task: Task) => task.title,
+        ...props,
+      });
+
     const show = async (props: Partial<BoardProps> = {}) => {
       const { errors, render } = reactMount.mount();
-      const Board = loaded.get(board.name)?.[variant] as ComponentType<BoardProps>;
-      await render(
-        createElement(Board, {
-          columns: board.columns,
-          data: TASKS,
-          columnField: 'status',
-          title: (task: Task) => task.title,
-          ...props,
-        }),
-      );
+      await render(boardWith(props));
       return { errors };
     };
 
@@ -148,18 +148,11 @@ describe.each(BOARDS)('$name column background', (board) => {
     });
 
     test('hydrates the server markup without a mismatch, then restores the stored background', async () => {
-      const Board = loaded.get(board.name)?.[variant] as ComponentType<BoardProps>;
-      const element = createElement(Board, {
-        columns: board.columns,
-        data: TASKS,
-        columnField: 'status',
-        title: (task: Task) => task.title,
-        backgroundPicker: true,
-        persistKey: 'board',
-      });
+      const element = boardWith({ backgroundPicker: true, persistKey: 'board' });
       const container = document.createElement('div');
       document.body.append(container);
-      container.innerHTML = (await import('react-dom/server')).renderToString(element);
+      const serverMarkup = (await import('react-dom/server')).renderToString(element);
+      container.replaceChildren(...new DOMParser().parseFromString(serverMarkup, 'text/html').body.childNodes);
       seed('board', 'column');
       const logged: unknown[][] = [];
       const original = console.error;
