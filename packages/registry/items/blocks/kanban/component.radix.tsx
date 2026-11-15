@@ -670,6 +670,7 @@ export function Kanban<T extends Record<string, unknown>>({
   const labels = React.useMemo(() => ({ ...DEFAULT_LABELS, ...labelOverrides }), [labelOverrides]);
   const [background, setBackground] = useColumnBackground({ defaultColumnBackground, persistKey });
 
+  const searchable = Boolean(searchableFields?.length);
   const [query, setQuery] = React.useState('');
   const deferredQuery = React.useDeferredValue(query);
 
@@ -759,9 +760,9 @@ export function Kanban<T extends Record<string, unknown>>({
 
   return (
     <div className={cn('flex w-full min-w-0 flex-col gap-4', className)}>
-      {searchableFields?.length || backgroundPicker ? (
-        <div className='flex w-full items-center gap-2'>
-          {searchableFields?.length ? (
+      {searchable || backgroundPicker ? (
+        <div className={cn('flex w-full items-center gap-2', backgroundPicker && 'flex-wrap')}>
+          {searchable ? (
             <div className='relative w-full max-w-xs'>
               <Search className='absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
               <Input
@@ -848,7 +849,7 @@ function ColumnBackgroundSelect({
         if (isColumnBackground(next)) onChange(next);
       }}
     >
-      <SelectTrigger size='sm' className='w-40' aria-label={labels.backgroundLabel}>
+      <SelectTrigger size='sm' className='ml-auto w-40' aria-label={labels.backgroundLabel}>
         <SelectValue>{optionLabels[value]}</SelectValue>
       </SelectTrigger>
       <SelectContent>

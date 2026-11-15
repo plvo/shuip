@@ -227,6 +227,13 @@ describe.each(BOARDS)('$name column background', (board) => {
       expect(picker('Column background')?.textContent).toContain('Muted');
     });
 
+    test('keeps the search box and the picker together in one row of the header', async () => {
+      await show({ backgroundPicker: true, searchableFields: ['title'] });
+      const search = document.querySelector('input');
+      expect(search).not.toBeNull();
+      expect(search?.parentElement?.parentElement).toBe(picker('Column background')?.parentElement);
+    });
+
     test('names the picker and its current option from the labels', async () => {
       await show({
         backgroundPicker: true,
