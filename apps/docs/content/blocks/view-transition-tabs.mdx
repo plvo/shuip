@@ -1,0 +1,124 @@
+---
+title: View Transition Tabs
+description: A tabbed navigation that animates the panel with a directional view transition — vertical sidebar or horizontal, driven by state or the router.
+registryName: view-transition-tabs
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## About
+
+`view-transition-tabs` is two pieces that share a directional contract:
+
+- **`TabsNav`** — the navigation. Renders a vertical sidebar or a horizontal tab bar and, when a tab is selected, fires a directional [view transition type](https://react.dev/reference/react/addTransitionType) (`slide-forward` when moving to a later tab, `slide-backward` when moving back).
+- **`ViewTransitionPanel`** — wraps the content that changes. It animates the in-place content update with directional slide-in / slide-out keyframes, mapped to the transition types through React's `update` view-transition classes (`::view-transition-old` / `::view-transition-new` pseudo-element rules). It ships its own keyframes, so no global CSS is required.
+
+`TabsNav` works in two modes:
+
+- **State** — pass `value` and `onValueChange`. The panel content is swapped in place. This is the self-contained mode used in the examples below.
+- **Router** — omit `value` and give each tab an `href`. The active tab is matched against the current pathname, selection calls `router.push`, and the panel wraps your layout's `children`. Each tab is a real route segment.
+
+> **Requires Next.js App Router.** `ViewTransition` and `addTransitionType` resolve through the React that Next.js vendors for the App Router. In a non–App-Router setup (e.g. Vite on stable React) these exports are unavailable and the component will not render.
+
+> **Avoid layout shift during the transition.** A view transition briefly hides the page scrollbar; in a layout whose width is otherwise flexible, the content can widen by the scrollbar width and shift for the duration of the animation. Reserve the gutter with `html { scrollbar-gutter: stable }` (or give the tabs row a stable width) so the panel slides without nudging the rest of the page.
+
+## Usage
+
+### State (self-contained)
+
+```tsx
+'use client';
+
+import { useState } from 'react';
+import { TabsNav, ViewTransitionPanel } from '@/components/block/shuip/view-transition-tabs';
+
+const TABS = [
+  { value: 'account', label: 'Account' },
+  { value: 'security', label: 'Security' },
+];
+
+export function Settings() {
+  const [tab, setTab] = useState('account');
+  return (
+    <div className="flex gap-8">
+      <TabsNav items={TABS} orientation="vertical" value={tab} onValueChange={setTab} />
+      <ViewTransitionPanel>{tab === 'account' ? <Account /> : <Security />}</ViewTransitionPanel>
+    </div>
+  );
+}
+```
+
+### Router (one route per tab)
+
+Drop `TabsNav` and `ViewTransitionPanel` into a layout. Each tab is a route segment, and `children` is the active page.
+
+```tsx
+// app/profile/layout.tsx
+import { TabsNav, ViewTransitionPanel } from '@/components/block/shuip/view-transition-tabs';
+
+const TABS = [
+  { value: 'account', label: 'Account', href: '/profile/account' },
+  { value: 'security', label: 'Security', href: '/profile/security' },
+];
+
+export default function ProfileLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex gap-8">
+      <TabsNav items={TABS} orientation="vertical" />
+      <ViewTransitionPanel>{children}</ViewTransitionPanel>
+    </div>
+  );
+}
+```
+
+## Examples
+
+The previews below run in **state mode** (a tab swaps content in place). To see **router mode** — where each tab is a real route and the URL changes as the panel slides — open the live demo:
+
+<a href="/demo/view-transition-tabs/account" className="font-medium underline underline-offset-4">Open the live router demo →</a>
+
+<ItemExamples registryName={'view-transition-tabs'} />
+
+## TabsNav props
+
+<TypeTable
+  type={{
+    items: {
+      description:
+        'The tabs to render. Each is { value, label, href? }. Provide href for router mode; value is the stable identity used for selection and active state.',
+      type: 'ViewTransitionTab[]',
+    },
+    orientation: {
+      description: 'Vertical renders a sidebar column; horizontal renders a tab bar.',
+      type: '"horizontal" | "vertical"',
+      default: '"horizontal"',
+    },
+    value: {
+      description: 'Active tab value. Provide it (with onValueChange) for state mode. Omit it for router mode.',
+      type: 'string?',
+    },
+    onValueChange: {
+      description: 'Called with the next value when a tab is selected in state mode.',
+      type: '(value: string) => void',
+    },
+    className: {
+      description: 'Additional classes on the nav container.',
+      type: 'string?',
+    },
+  }}
+/>
+
+## ViewTransitionPanel props
+
+<TypeTable
+  type={{
+    children: {
+      description: 'The content that changes between tabs. It is snapshotted and animated on each transition.',
+      type: 'React.ReactNode',
+    },
+    className: {
+      description: 'Additional classes on the panel wrapper (defaults to min-w-0 flex-1).',
+      type: 'string?',
+    },
+  }}
+/>
