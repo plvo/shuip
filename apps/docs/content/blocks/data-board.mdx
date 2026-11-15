@@ -86,7 +86,7 @@ modes, and an end user can switch between them from the toolbar when you pass `b
 
 | Mode | Column body |
 | --- | --- |
-| `'none'` (default) | No tint. The board looks as it did before the prop existed. |
+| `'none'` (default) | No tint. Only the column under a held card is highlighted. |
 | `'muted'` | `bg-muted/50` on every column. |
 | `'column'` | The `accentClassName` of the column, at 10% opacity. A column without an `accentClassName` falls back to `'muted'`. |
 
@@ -96,8 +96,9 @@ card is held, the column under it keeps its border and takes a stronger fill, in
 
 `defaultColumnBackground` is read when the board mounts, like `defaultData`. The picker's choice
 lives in the same stored view as the page size and the collapsed bands, so `persistKey` keeps it
-across reloads, and a stored value that is not one of the three modes is ignored. Without
-`persistKey` the choice lasts for the session only.
+across reloads, and a stored value that is not one of the three modes is ignored. The stored view
+holds a background only once the picker chose one, so until then the board follows
+`defaultColumnBackground`. Without `persistKey` the choice lasts for the session only.
 
 ```tsx
 const columns: DataBoardColumn[] = [
