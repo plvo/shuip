@@ -174,18 +174,20 @@ describe.each(BOARDS)('$name column background', (board) => {
       expect(bodies().some(board.wearsBackground)).toBe(false);
     });
 
-    test('falls back to the default background for an unknown stored mode', async () => {
-      seed('board', 'rainbow');
+    const expectMutedDefault = async () => {
       const { errors } = await show({ backgroundPicker: true, persistKey: 'board', defaultColumnBackground: 'muted' });
       expect(picker('Column background')?.textContent).toContain('Muted');
       expect(errors).toEqual([]);
+    };
+
+    test('falls back to the default background for an unknown stored mode', async () => {
+      seed('board', 'rainbow');
+      await expectMutedDefault();
     });
 
     test('falls back to the default background for malformed storage', async () => {
       window.localStorage.setItem(board.storageKey('board'), '{not json');
-      const { errors } = await show({ backgroundPicker: true, persistKey: 'board', defaultColumnBackground: 'muted' });
-      expect(picker('Column background')?.textContent).toContain('Muted');
-      expect(errors).toEqual([]);
+      await expectMutedDefault();
     });
 
     test('keeps the default background when the storage cannot be read', async () => {
@@ -194,13 +196,7 @@ describe.each(BOARDS)('$name column background', (board) => {
         throw new Error('blocked');
       };
       try {
-        const { errors } = await show({
-          backgroundPicker: true,
-          persistKey: 'board',
-          defaultColumnBackground: 'muted',
-        });
-        expect(picker('Column background')?.textContent).toContain('Muted');
-        expect(errors).toEqual([]);
+        await expectMutedDefault();
       } finally {
         Storage.prototype.getItem = original;
       }
