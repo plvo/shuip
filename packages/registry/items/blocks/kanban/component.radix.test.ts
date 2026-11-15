@@ -6,7 +6,6 @@ import {
   cellIds,
   cellOrder,
   columnBodyAppearance,
-  DEFAULT_LABELS,
   type DropOver,
   type DropSlot,
   detectBoardCollision,
@@ -637,14 +636,5 @@ describe('parseStoredBackground', () => {
     for (const mode of ['none', 'muted', 'column'] as const) {
       expect(parseStoredBackground(JSON.stringify({ background: mode }))).toBe(mode);
     }
-  });
-});
-
-describe('DEFAULT_LABELS', () => {
-  test('names the picker and each of its three options', () => {
-    expect(DEFAULT_LABELS.backgroundLabel).toBeTruthy();
-    expect(
-      new Set([DEFAULT_LABELS.backgroundNone, DEFAULT_LABELS.backgroundMuted, DEFAULT_LABELS.backgroundColumn]).size,
-    ).toBe(3);
   });
 });

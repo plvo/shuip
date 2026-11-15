@@ -533,7 +533,7 @@ export type StoredView = {
   hidden: string[];
   pageSize: number | false;
   collapsed: Record<string, boolean>;
-  background: ColumnBackground;
+  background?: ColumnBackground;
 };
 
 export function parseStoredView(raw: string | null, knownColumnIds: string[]): Partial<StoredView> {
@@ -609,6 +609,9 @@ export function useDataBoardView({
   const [background, setBackgroundState] = React.useState<ColumnBackground>(defaultBackground);
   const [revealed, setRevealed] = React.useState<Record<string, number>>({});
   const hydrated = React.useRef(false);
+  // The background reaches storage only once the user picked one: a stored view without it keeps following
+  // `defaultColumnBackground`.
+  const backgroundChosen = React.useRef(false);
 
   const controlled = hiddenColumns != null;
   const hidden = controlled ? hiddenColumns : ownHidden;
@@ -617,14 +620,14 @@ export function useDataBoardView({
   // values, which only change on the next render, this ref is also rewritten
   // by each mutator: two mutations batched into one render must both reach
   // storage.
-  const storedRef = React.useRef<StoredView>({ hidden, pageSize, collapsed, background });
+  const storedRef = React.useRef<StoredView>({ hidden, pageSize, collapsed });
 
   // Resynchronised on commit, never during render: React can replay or discard
   // a render, and a ref written in a discarded render would leak state that was
   // never displayed.
   React.useEffect(() => {
     columnIdsRef.current = columnIds;
-    storedRef.current = { hidden, pageSize, collapsed, background };
+    storedRef.current = { hidden, pageSize, collapsed, ...(backgroundChosen.current && { background }) };
   });
 
   // Read after mount only: reading during render would make the server HTML
@@ -644,7 +647,10 @@ export function useDataBoardView({
     if (stored.hidden) setOwnHidden(stored.hidden);
     if (stored.pageSize !== undefined) setPageSizeState(stored.pageSize);
     if (stored.collapsed) setCollapsed(stored.collapsed);
-    if (stored.background) setBackgroundState(stored.background);
+    if (stored.background) {
+      backgroundChosen.current = true;
+      setBackgroundState(stored.background);
+    }
   }, [persistKey]);
 
   const persist = (patch: Partial<StoredView>) => {
@@ -672,6 +678,7 @@ export function useDataBoardView({
   };
 
   const setBackground = (next: ColumnBackground) => {
+    backgroundChosen.current = true;
     setBackgroundState(next);
     persist({ background: next });
   };

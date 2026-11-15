@@ -17,7 +17,7 @@ type BoardMove = {
 };
 
 export type BoardProps = {
-  columns: { id: string; label: string }[];
+  columns: { id: string; label: string; color?: string; accentClassName?: string }[];
   data: BoardTask[];
   columnField: keyof BoardTask;
   title: (task: BoardTask) => string;
@@ -27,9 +27,24 @@ export type BoardProps = {
   groupBy?: { field: keyof BoardTask };
   searchableFields?: (keyof BoardTask)[];
   positionField?: keyof BoardTask;
+  defaultColumnBackground?: 'none' | 'muted' | 'column';
+  backgroundPicker?: boolean;
+  persistKey?: string;
+  labels?: Record<string, string>;
 };
 
-export type MountOptions = Pick<BoardProps, 'pageSize' | 'groupBy' | 'searchableFields' | 'positionField'> & {
+export type MountOptions = Pick<
+  BoardProps,
+  | 'pageSize'
+  | 'groupBy'
+  | 'searchableFields'
+  | 'positionField'
+  | 'columns'
+  | 'defaultColumnBackground'
+  | 'backgroundPicker'
+  | 'persistKey'
+  | 'labels'
+> & {
   data?: BoardTask[];
 };
 

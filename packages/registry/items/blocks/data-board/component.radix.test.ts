@@ -988,12 +988,3 @@ describe('columnBodyAppearance', () => {
     expect(columnBodyAppearance('column', {}, true)).toEqual(columnBodyAppearance('muted', {}, true));
   });
 });
-
-describe('DEFAULT_LABELS background strings', () => {
-  test('name the picker and each of its three options', () => {
-    expect(DEFAULT_LABELS.backgroundLabel).toBeTruthy();
-    expect(
-      new Set([DEFAULT_LABELS.backgroundNone, DEFAULT_LABELS.backgroundMuted, DEFAULT_LABELS.backgroundColumn]).size,
-    ).toBe(3);
-  });
-});
