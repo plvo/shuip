@@ -19,7 +19,8 @@ configured against your own data shape — nothing is hardcoded to a domain.
   in another band emits the new value.
 - **Per-column pagination**: a "show more" step per column, or one per band when grouped.
 - **Hideable columns**: hide from the header, recall from the right-hand rail.
-- **Persisted view**: hidden columns, page size and collapsed bands survive a reload via `persistKey`.
+- **Persisted view**: hidden columns, page size, collapsed bands and the column background survive a reload via `persistKey`.
+- **Column backgrounds**: tint the body of every column with muted or with the column's accent, optionally with a picker in the toolbar.
 - **Global search**: filter cards across `searchableFields`.
 - **Ordered cards**: name a numeric field in `positionField` and each column keeps its cards sorted by it.
 - **Hybrid state**: standalone from `defaultData`, or controlled via `data` + `onDataChange`.
@@ -40,7 +41,7 @@ Both are drag-and-drop boards. Pick on volume and on how much view control your 
 | Volume | tens of cards | hundreds, via pagination |
 | Grouping | none | `groupBy` any field, collapsible bands |
 | Columns | fixed | hideable, with a recall rail |
-| View persistence | none | `localStorage` via `persistKey` |
+| View persistence | the column background only | `localStorage` via `persistKey` |
 | Size | small | larger surface, more props |
 
 If a board fits on one screen and users never need to hide a column, `kanban` is the smaller and
@@ -76,6 +77,35 @@ const columns: DataBoardColumn[] = [
   { id: 'blocked', label: 'Blocked', icon: CircleX, accentClassName: 'text-destructive' },
   { id: 'done', label: 'Done', icon: CircleCheck, accentClassName: 'text-emerald-600' },
 ];
+```
+
+## Column backgrounds
+
+`defaultColumnBackground` tints the body of every column, never its header. It takes one of three
+modes, and an end user can switch between them from the toolbar when you pass `backgroundPicker`.
+
+| Mode | Column body |
+| --- | --- |
+| `'none'` (default) | No tint. The board looks as it did before the prop existed. |
+| `'muted'` | `bg-muted/50` on every column. |
+| `'column'` | The `accentClassName` of the column, at 10% opacity. A column without an `accentClassName` falls back to `'muted'`. |
+
+The accent colours a layer behind the cards, so it never reaches the text of a card, the empty
+state or the "show more" button. On a grouped board each cell (band × column) is tinted. While a
+card is held, the column under it keeps its border and takes a stronger fill, in every mode.
+
+`defaultColumnBackground` is read when the board mounts, like `defaultData`. The picker's choice
+lives in the same stored view as the page size and the collapsed bands, so `persistKey` keeps it
+across reloads, and a stored value that is not one of the three modes is ignored. Without
+`persistKey` the choice lasts for the session only.
+
+```tsx
+const columns: DataBoardColumn[] = [
+  { id: 'todo', label: 'To do', accentClassName: 'text-violet-500' },
+  { id: 'doing', label: 'Doing', accentClassName: 'text-amber-500' },
+];
+
+<DataBoard defaultColumnBackground='column' backgroundPicker persistKey='tickets' {...props} />;
 ```
 
 ## Keeping the order of cards
@@ -250,8 +280,19 @@ equals the position of its `beforeId` or `afterId` card, renumber that cell on y
     },
     persistKey: {
       description:
-        'Persists hidden columns, page size and collapsed bands to localStorage under this key. Hidden columns are only persisted when the board owns them — in controlled mode (hiddenColumns passed) the board does not restore hidden columns from storage, since the consumer keeps that state itself.',
+        'Persists hidden columns, page size, collapsed bands and the column background to localStorage under this key. Hidden columns are only persisted when the board owns them — in controlled mode (hiddenColumns passed) the board does not restore hidden columns from storage, since the consumer keeps that state itself.',
       type: 'string?',
+    },
+    defaultColumnBackground: {
+      description:
+        "Background of every column body: 'none', 'muted', or 'column' (the accent of the column at low opacity, muted for a column without an accentClassName). Read at mount only.",
+      type: "'none' | 'muted' | 'column'",
+      default: "'none'",
+    },
+    backgroundPicker: {
+      description: 'Shows a select in the toolbar that lets the end user switch the column background.',
+      type: 'boolean',
+      default: 'false',
     },
     height: {
       description: 'Bounds the board where the parent constrains nothing. A number is read as pixels.',
@@ -366,6 +407,26 @@ equals the position of its `beforeId` or `afterId` card, renumber that cell on y
       description: 'Accessible name of a hidden column’s recall button in the rail.',
       type: '(label: string) => string',
       default: '`Show ${label}`',
+    },
+    backgroundLabel: {
+      description: 'Accessible name of the column background select.',
+      type: 'string',
+      default: "'Column background'",
+    },
+    backgroundNone: {
+      description: 'Label of the option without a background.',
+      type: 'string',
+      default: "'No background'",
+    },
+    backgroundMuted: {
+      description: 'Label of the muted option.',
+      type: 'string',
+      default: "'Muted'",
+    },
+    backgroundColumn: {
+      description: 'Label of the option that tints each column with its accent.',
+      type: 'string',
+      default: "'Column color'",
     },
   }}
 />

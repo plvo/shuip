@@ -5,6 +5,8 @@ import {
   type CardAccessors,
   cellIds,
   cellOrder,
+  columnBodyAppearance,
+  DEFAULT_LABELS,
   type DropOver,
   type DropSlot,
   detectBoardCollision,
@@ -12,6 +14,7 @@ import {
   isSameSlot,
   landingIndex,
   originSlot,
+  parseStoredBackground,
   previewTarget,
   rebaseSlot,
   slotNeighbours,
@@ -563,5 +566,85 @@ describe('detectBoardCollision', () => {
     expect(detect(columns, { pointer: { x: 100, y: 120 } }).map(({ data }) => data?.below)).toEqual([false]);
     expect(detect(columns, { pointer: { x: 100, y: 150 } }).map(({ data }) => data?.below)).toEqual([true]);
     expect(detect(columns, { pointer: { x: 100, y: 3 } }).map(({ data }) => data?.below)).toEqual([false]);
+  });
+});
+
+describe('columnBodyAppearance', () => {
+  const blue = { color: 'var(--color-blue-500)' };
+
+  test('leaves the body as it is with no background, and only highlights a drop target', () => {
+    expect(columnBodyAppearance('none', blue, false)).toEqual({ className: '' });
+    expect(columnBodyAppearance('none', blue, true)).toEqual({ className: 'border-border bg-muted/50' });
+  });
+
+  test('tints the body with muted, strongly enough over a drop target to tell it apart', () => {
+    const resting = columnBodyAppearance('muted', blue, false);
+    const hovered = columnBodyAppearance('muted', blue, true);
+    expect(resting.className).toContain('bg-muted/50');
+    expect(resting.style).toBeUndefined();
+    expect(hovered.className).toContain('border-border');
+    expect(hovered.className).not.toContain('bg-muted/50');
+    expect(hovered.className).toContain('bg-muted');
+  });
+
+  test('tints the body with the column color at low opacity', () => {
+    expect(columnBodyAppearance('column', blue, false).style).toEqual({
+      backgroundColor: 'color-mix(in oklab, var(--color-blue-500) 10%, transparent)',
+    });
+  });
+
+  test('keeps the border and strengthens the column tint over a drop target', () => {
+    const hovered = columnBodyAppearance('column', blue, true);
+    expect(hovered.className).toContain('border-border');
+    expect(hovered.style).toEqual({
+      backgroundColor: 'color-mix(in oklab, var(--color-blue-500) 20%, transparent)',
+    });
+  });
+
+  test('falls back to muted for a column without a color', () => {
+    expect(columnBodyAppearance('column', {}, false)).toEqual(columnBodyAppearance('muted', {}, false));
+    expect(columnBodyAppearance('column', {}, true)).toEqual(columnBodyAppearance('muted', {}, true));
+  });
+
+  test('stretches the tinted body down to the bottom of its column', () => {
+    expect(columnBodyAppearance('muted', blue, false).className).toContain('flex-1');
+    expect(columnBodyAppearance('column', blue, false).className).toContain('flex-1');
+    expect(columnBodyAppearance('none', blue, false).className).not.toContain('flex-1');
+  });
+});
+
+describe('parseStoredBackground', () => {
+  test('returns nothing for absent storage', () => {
+    expect(parseStoredBackground(null)).toBeUndefined();
+  });
+
+  test('returns nothing for malformed JSON instead of throwing', () => {
+    expect(parseStoredBackground('{not json')).toBeUndefined();
+  });
+
+  test('returns nothing for a value that is not an object', () => {
+    expect(parseStoredBackground('"muted"')).toBeUndefined();
+    expect(parseStoredBackground('null')).toBeUndefined();
+  });
+
+  test('returns nothing for an unknown mode', () => {
+    expect(parseStoredBackground(JSON.stringify({ background: 'rainbow' }))).toBeUndefined();
+    expect(parseStoredBackground(JSON.stringify({ background: 3 }))).toBeUndefined();
+    expect(parseStoredBackground(JSON.stringify({}))).toBeUndefined();
+  });
+
+  test('keeps each valid mode', () => {
+    for (const mode of ['none', 'muted', 'column'] as const) {
+      expect(parseStoredBackground(JSON.stringify({ background: mode }))).toBe(mode);
+    }
+  });
+});
+
+describe('DEFAULT_LABELS', () => {
+  test('names the picker and each of its three options', () => {
+    expect(DEFAULT_LABELS.backgroundLabel).toBeTruthy();
+    expect(
+      new Set([DEFAULT_LABELS.backgroundNone, DEFAULT_LABELS.backgroundMuted, DEFAULT_LABELS.backgroundColumn]).size,
+    ).toBe(3);
   });
 });
