@@ -51,6 +51,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "happy-dom": "catalog:",
     "next": "catalog:",
     "typescript": "catalog:"
   }
