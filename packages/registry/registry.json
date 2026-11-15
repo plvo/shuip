@@ -146,7 +146,8 @@
       "registryDependencies": [
         "button",
         "card",
-        "input"
+        "input",
+        "select"
       ]
     },
     {

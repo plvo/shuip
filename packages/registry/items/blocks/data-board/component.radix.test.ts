@@ -754,7 +754,7 @@ describe('revealStepsFor', () => {
   });
 });
 
-import { DEFAULT_LABELS, parseStoredView } from './component.radix';
+import { columnBodyAppearance, DEFAULT_LABELS, parseStoredView } from './component.radix';
 
 describe('DEFAULT_LABELS', () => {
   test('every label is defined', () => {
@@ -803,6 +803,18 @@ describe('parseStoredView', () => {
 
   test('ignores unknown keys', () => {
     expect(parseStoredView(JSON.stringify({ nope: 1 }), known)).toEqual({});
+  });
+
+  test('keeps each valid column background', () => {
+    for (const mode of ['none', 'muted', 'column'] as const) {
+      expect(parseStoredView(JSON.stringify({ background: mode }), known).background).toBe(mode);
+    }
+  });
+
+  test('ignores an unknown column background', () => {
+    expect(parseStoredView(JSON.stringify({ background: 'rainbow' }), known)).toEqual({});
+    expect(parseStoredView(JSON.stringify({ background: 3 }), known)).toEqual({});
+    expect(parseStoredView(JSON.stringify({ background: null }), known)).toEqual({});
   });
 });
 
@@ -933,5 +945,46 @@ describe('detectBoardCollision', () => {
     expect(detect(flat, { pointer: { x: 100, y: 120 } }).map(({ data }) => data?.below)).toEqual([false]);
     expect(detect(flat, { pointer: { x: 100, y: 150 } }).map(({ data }) => data?.below)).toEqual([true]);
     expect(detect(flat, { pointer: { x: 100, y: 3 } }).map(({ data }) => data?.below)).toEqual([false]);
+  });
+});
+
+describe('columnBodyAppearance', () => {
+  const violet = { accentClassName: 'text-violet-500' };
+
+  test('leaves the body as it is with no background, and only highlights a drop target', () => {
+    expect(columnBodyAppearance('none', violet, false)).toEqual({ className: '', tintClassName: null });
+    expect(columnBodyAppearance('none', violet, true)).toEqual({
+      className: 'border-border bg-muted/50',
+      tintClassName: null,
+    });
+  });
+
+  test('tints the body with muted, strongly enough over a drop target to tell it apart', () => {
+    const resting = columnBodyAppearance('muted', violet, false);
+    const hovered = columnBodyAppearance('muted', violet, true);
+    expect(resting.className).toContain('bg-muted/50');
+    expect(resting.tintClassName).toBeNull();
+    expect(hovered.className).toContain('border-border');
+    expect(hovered.className).not.toContain('bg-muted/50');
+    expect(hovered.className).toContain('bg-muted');
+  });
+
+  test('tints with the accent in a layer, never on the body, so the accent colour reaches no text', () => {
+    const resting = columnBodyAppearance('column', violet, false);
+    expect(resting.className).not.toContain('text-violet-500');
+    expect(resting.tintClassName).toContain('text-violet-500');
+    expect(resting.tintClassName).toContain('bg-current/10');
+  });
+
+  test('keeps the border and strengthens the layer over a drop target', () => {
+    const hovered = columnBodyAppearance('column', violet, true);
+    expect(hovered.className).toContain('border-border');
+    expect(hovered.tintClassName).toContain('bg-current/20');
+    expect(hovered.tintClassName).not.toContain('bg-current/10');
+  });
+
+  test('falls back to muted for a column without an accent', () => {
+    expect(columnBodyAppearance('column', {}, false)).toEqual(columnBodyAppearance('muted', {}, false));
+    expect(columnBodyAppearance('column', {}, true)).toEqual(columnBodyAppearance('muted', {}, true));
   });
 });

@@ -63,6 +63,33 @@ export type DataBoardField<T> = {
   render?: (value: T[keyof T], item: T) => React.ReactNode;
 };
 
+export type ColumnBackground = 'none' | 'muted' | 'column';
+
+const COLUMN_BACKGROUNDS: readonly ColumnBackground[] = ['none', 'muted', 'column'];
+
+function isColumnBackground(value: unknown): value is ColumnBackground {
+  return COLUMN_BACKGROUNDS.includes(value as ColumnBackground);
+}
+
+// What a column body wears for a background. The tint of `column` is a layer
+// that carries the accent of the column, so that the accent colours the layer
+// and nothing the body holds; it is stronger over a drop target. A column
+// without an accent wears muted.
+export function columnBodyAppearance(
+  background: ColumnBackground,
+  column: Pick<DataBoardColumn, 'accentClassName'>,
+  isOver: boolean,
+): { className: string; tintClassName: string | null } {
+  if (background === 'none') return { className: isOver ? 'border-border bg-muted/50' : '', tintClassName: null };
+  if (background === 'column' && column.accentClassName) {
+    return {
+      className: isOver ? 'border-border' : '',
+      tintClassName: `${column.accentClassName} ${isOver ? 'bg-current/20' : 'bg-current/10'}`,
+    };
+  }
+  return { className: isOver ? 'border-border bg-muted' : 'bg-muted/50', tintClassName: null };
+}
+
 export const UNGROUPED_ID = '__none__';
 
 export function groupIdOf(value: unknown): string {
@@ -477,6 +504,10 @@ export type DataBoardLabels = {
   addToColumn: (label: string) => string;
   hideColumn: (label: string) => string;
   showColumn: (label: string) => string;
+  backgroundLabel: string;
+  backgroundNone: string;
+  backgroundMuted: string;
+  backgroundColumn: string;
 };
 
 export const DEFAULT_LABELS: DataBoardLabels = {
@@ -490,6 +521,10 @@ export const DEFAULT_LABELS: DataBoardLabels = {
   addToColumn: (label) => `Add to ${label}`,
   hideColumn: (label) => `Hide ${label}`,
   showColumn: (label) => `Show ${label}`,
+  backgroundLabel: 'Column background',
+  backgroundNone: 'No background',
+  backgroundMuted: 'Muted',
+  backgroundColumn: 'Column color',
 };
 
 export const STORAGE_PREFIX = 'shuip-data-board:';
@@ -498,6 +533,7 @@ export type StoredView = {
   hidden: string[];
   pageSize: number | false;
   collapsed: Record<string, boolean>;
+  background?: ColumnBackground;
 };
 
 export function parseStoredView(raw: string | null, knownColumnIds: string[]): Partial<StoredView> {
@@ -522,6 +558,9 @@ export function parseStoredView(raw: string | null, knownColumnIds: string[]): P
   if (source.collapsed && typeof source.collapsed === 'object' && !Array.isArray(source.collapsed)) {
     out.collapsed = source.collapsed;
   }
+  if (isColumnBackground(source.background)) {
+    out.background = source.background;
+  }
   return out;
 }
 
@@ -543,18 +582,22 @@ export type DataBoardView = {
   revealMore: (key: string) => void;
   isCollapsed: (groupId: string, fallback: boolean) => boolean;
   toggleCollapsed: (groupId: string, fallback: boolean) => void;
+  background: ColumnBackground;
+  setBackground: (next: ColumnBackground) => void;
 };
 
 export function useDataBoardView({
   persistKey,
   columnIds,
   defaultPageSize,
+  defaultBackground,
   hiddenColumns,
   onHiddenColumnsChange,
 }: {
   persistKey?: string;
   columnIds: string[];
   defaultPageSize: number | false;
+  defaultBackground: ColumnBackground;
   hiddenColumns?: string[];
   onHiddenColumnsChange?: (ids: string[]) => void;
 }): DataBoardView {
@@ -563,8 +606,12 @@ export function useDataBoardView({
   const [ownHidden, setOwnHidden] = React.useState<string[]>([]);
   const [pageSize, setPageSizeState] = React.useState<number | false>(defaultPageSize);
   const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>({});
+  const [background, setBackgroundState] = React.useState<ColumnBackground>(defaultBackground);
   const [revealed, setRevealed] = React.useState<Record<string, number>>({});
   const hydrated = React.useRef(false);
+  // The background reaches storage only once the user picked one: a stored view without it keeps following
+  // `defaultColumnBackground`.
+  const backgroundChosen = React.useRef(false);
 
   const controlled = hiddenColumns != null;
   const hidden = controlled ? hiddenColumns : ownHidden;
@@ -580,7 +627,7 @@ export function useDataBoardView({
   // never displayed.
   React.useEffect(() => {
     columnIdsRef.current = columnIds;
-    storedRef.current = { hidden, pageSize, collapsed };
+    storedRef.current = { hidden, pageSize, collapsed, ...(backgroundChosen.current && { background }) };
   });
 
   // Read after mount only: reading during render would make the server HTML
@@ -600,6 +647,10 @@ export function useDataBoardView({
     if (stored.hidden) setOwnHidden(stored.hidden);
     if (stored.pageSize !== undefined) setPageSizeState(stored.pageSize);
     if (stored.collapsed) setCollapsed(stored.collapsed);
+    if (stored.background) {
+      backgroundChosen.current = true;
+      setBackgroundState(stored.background);
+    }
   }, [persistKey]);
 
   const persist = (patch: Partial<StoredView>) => {
@@ -626,6 +677,12 @@ export function useDataBoardView({
     persist({ pageSize: next });
   };
 
+  const setBackground = (next: ColumnBackground) => {
+    backgroundChosen.current = true;
+    setBackgroundState(next);
+    persist({ background: next });
+  };
+
   const revealedFor = (key: string) => revealed[key] ?? 0;
 
   const revealMore = (key: string) => {
@@ -650,6 +707,8 @@ export function useDataBoardView({
     revealMore,
     isCollapsed,
     toggleCollapsed,
+    background,
+    setBackground,
   };
 }
 
@@ -796,14 +855,22 @@ export function DataBoardColumnHeader({
   );
 }
 
+// The tint of a column sits in a frame around the body, not in the body: a
+// layer in a scrolling body would scroll away with the cards and leave the rest
+// of the column bare. The frame does not scroll, and the body keeps the cards
+// as its direct children.
 export function DataBoardColumnBody({
   columnId,
   groupId,
+  accentClassName,
+  background = 'none',
   scrollable,
   children,
 }: {
   columnId: string;
   groupId?: string;
+  accentClassName?: string;
+  background?: ColumnBackground;
   scrollable?: boolean;
   children: React.ReactNode;
 }) {
@@ -811,19 +878,28 @@ export function DataBoardColumnBody({
     id: dropZoneId(columnId, groupId),
     data: dropZoneData(columnId, groupId),
   });
+  const { className, tintClassName } = columnBodyAppearance(background, { accentClassName }, isOver);
   return (
-    <div
-      ref={setNodeRef}
-      data-slot='data-board-column-body'
-      className={cn(
-        // `p-1.5` leaves room for a badge a consumer positions at
-        // `-top-1.5 -right-1.5` on a card; without it the scrollport clips it.
-        'flex w-72 shrink-0 flex-col gap-1.5 rounded-lg border border-transparent p-1.5 transition-colors',
-        scrollable && 'min-h-0 overflow-x-hidden overflow-y-auto',
-        isOver && 'border-border bg-muted/50',
-      )}
-    >
-      {children}
+    <div className={cn('relative isolate flex shrink-0', scrollable && 'min-h-0')}>
+      {tintClassName ? (
+        <div
+          aria-hidden='true'
+          className={cn('pointer-events-none absolute inset-0 -z-10 rounded-lg transition-colors', tintClassName)}
+        />
+      ) : null}
+      <div
+        ref={setNodeRef}
+        data-slot='data-board-column-body'
+        className={cn(
+          // `p-1.5` leaves room for a badge a consumer positions at
+          // `-top-1.5 -right-1.5` on a card; without it the scrollport clips it.
+          'flex w-72 shrink-0 flex-col gap-1.5 rounded-lg border border-transparent p-1.5 transition-colors',
+          scrollable && 'min-h-0 overflow-x-hidden overflow-y-auto',
+          className,
+        )}
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -930,6 +1006,9 @@ export function DataBoardToolbar({
   pageSize,
   pageSizeOptions,
   onPageSizeChange,
+  backgroundPicker,
+  background,
+  onBackgroundChange,
   labels,
 }: {
   query: string;
@@ -938,6 +1017,9 @@ export function DataBoardToolbar({
   pageSize: number | false;
   pageSizeOptions: number[];
   onPageSizeChange: (next: number) => void;
+  backgroundPicker: boolean;
+  background: ColumnBackground;
+  onBackgroundChange: (next: ColumnBackground) => void;
   labels: DataBoardLabels;
 }) {
   const showPageSize = pageSizeOptions.length > 1 && pageSize !== false;
@@ -948,9 +1030,14 @@ export function DataBoardToolbar({
     if (pageSize === false || pageSizeOptions.includes(pageSize)) return pageSizeOptions;
     return [...pageSizeOptions, pageSize].sort((a, b) => a - b);
   }, [pageSizeOptions, pageSize]);
-  if (!searchable && !showPageSize) return null;
+  if (!searchable && !showPageSize && !backgroundPicker) return null;
+  const backgroundLabels: Record<ColumnBackground, string> = {
+    none: labels.backgroundNone,
+    muted: labels.backgroundMuted,
+    column: labels.backgroundColumn,
+  };
   return (
-    <div className='flex shrink-0 items-center gap-2'>
+    <div className={cn('flex shrink-0 items-center gap-2', backgroundPicker && 'flex-wrap')}>
       {searchable ? (
         <div className='relative w-full max-w-xs'>
           <Search className='absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
@@ -963,9 +1050,32 @@ export function DataBoardToolbar({
           />
         </div>
       ) : null}
+      {backgroundPicker ? (
+        <Select
+          value={background}
+          onValueChange={(value) => {
+            if (isColumnBackground(value)) onBackgroundChange(value);
+          }}
+        >
+          <SelectTrigger size='sm' className='ml-auto w-40' aria-label={labels.backgroundLabel}>
+            <SelectValue>{backgroundLabels[background]}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {COLUMN_BACKGROUNDS.map((mode) => (
+              <SelectItem key={mode} value={mode}>
+                {backgroundLabels[mode]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : null}
       {showPageSize ? (
         <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
-          <SelectTrigger size='sm' className='ml-auto w-36' aria-label={labels.pageSizeLabel}>
+          <SelectTrigger
+            size='sm'
+            className={cn('w-36', !backgroundPicker && 'ml-auto')}
+            aria-label={labels.pageSizeLabel}
+          >
             <SelectValue>{labels.pageSizeOption(pageSize)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -1224,6 +1334,8 @@ export type DataBoardProps<T extends object> = {
   hiddenColumns?: string[];
   onHiddenColumnsChange?: (ids: string[]) => void;
   persistKey?: string;
+  defaultColumnBackground?: ColumnBackground;
+  backgroundPicker?: boolean;
   height?: number | string;
   labels?: Partial<DataBoardLabels>;
   className?: string;
@@ -1253,6 +1365,8 @@ export function DataBoard<T extends object>({
   hiddenColumns,
   onHiddenColumnsChange,
   persistKey,
+  defaultColumnBackground = 'none',
+  backgroundPicker = false,
   height,
   labels: labelOverrides,
   className,
@@ -1276,6 +1390,7 @@ export function DataBoard<T extends object>({
     persistKey,
     columnIds: columns.map((column) => column.id),
     defaultPageSize: pageSize,
+    defaultBackground: defaultColumnBackground,
     hiddenColumns,
     onHiddenColumnsChange,
   });
@@ -1468,7 +1583,14 @@ export function DataBoard<T extends object>({
         ? slotPlacement({ order: previewOrder, renderedIds: rendered.map(getId), activeId, index: preview.index })
         : undefined;
     return (
-      <DataBoardColumnBody key={column.id} columnId={column.id} groupId={groupId} scrollable={groupId == null}>
+      <DataBoardColumnBody
+        key={column.id}
+        columnId={column.id}
+        groupId={groupId}
+        accentClassName={column.accentClassName}
+        background={view.background}
+        scrollable={groupId == null}
+      >
         {rendered.length === 0 && slotBeforeId === undefined ? (
           <p className='rounded-md border border-dashed p-3 text-center text-xs text-muted-foreground'>
             {labels.empty}
@@ -1497,6 +1619,9 @@ export function DataBoard<T extends object>({
         pageSize={view.pageSize}
         pageSizeOptions={pageSizeOptions}
         onPageSizeChange={view.setPageSize}
+        backgroundPicker={backgroundPicker}
+        background={view.background}
+        onBackgroundChange={view.setBackground}
         labels={labels}
       />
 

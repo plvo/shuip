@@ -16,6 +16,7 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 - **Hybrid state**: works standalone from `defaultData`, or controlled via `data` + `onDataChange`.
 - **Global search**: filter cards across `searchableFields`.
 - **Per-column extras**: count, a `renderColumnSummary` slot, color accent, and an add button.
+- **Column backgrounds**: tint the body of every column with muted or with the column's color, optionally with a picker in the header.
 - **Ordered cards**: name a numeric field in `positionField` and each column keeps its cards sorted by it.
 
 > Without `positionField`, the card order is implicit in the `data` array order. On any move, the board emits the reordered array via `onDataChange` (and a semantic `onCardMove` event); map that to your own persistence. To store the order of cards as a number instead, see [Keeping the order of cards](#keeping-the-order-of-cards).
@@ -73,6 +74,30 @@ into one gap, the midpoint equals the position of a neighbour, and the order of 
 only the order of `data`. The board does not renumber positions for you. When the `position` of a move
 equals the position of its `beforeId` or `afterId` card, renumber that column on your side, for example
 to `1..n` or with a wide step such as `1000`, and save the new values.
+
+## Column backgrounds
+
+`defaultColumnBackground` tints the body of every column, never its header. It takes one of three
+modes, and an end user can switch between them from the header, next to the search box, when you
+pass `backgroundPicker`.
+
+| Mode | Column body |
+| --- | --- |
+| `'none'` (default) | No tint. Only the column under a held card is highlighted. |
+| `'muted'` | `bg-muted/50` on every column. |
+| `'column'` | The `color` of the column, at 10% opacity. A column without a `color` falls back to `'muted'`. |
+
+A tinted body fills its column down to the bottom. While a card is held, the column under it keeps
+its border and takes a stronger fill, in every mode.
+
+`defaultColumnBackground` is read when the board mounts, like `defaultData`. With `persistKey`, the
+choice of the picker is stored in `localStorage` under `shuip-kanban:<persistKey>` as
+`{ "background": "<mode>" }` and restored after mount, so a reload keeps it; a stored value that is
+not one of the three modes is ignored. Without `persistKey` the choice lasts for the session only.
+
+```tsx
+<Kanban<Task> defaultColumnBackground='column' backgroundPicker persistKey='tasks' {...props} />
+```
 
 ## Examples
 
@@ -141,6 +166,26 @@ to `1..n` or with a wide step such as `1000`, and save the new values.
       type: 'string?',
       default: "'Search...'",
     },
+    defaultColumnBackground: {
+      description:
+        "Background of every column body: 'none', 'muted', or 'column' (the color of the column at low opacity, muted for a column without a color). Read at mount only.",
+      type: "'none' | 'muted' | 'column'",
+      default: "'none'",
+    },
+    backgroundPicker: {
+      description: 'Shows a select in the header, next to the search box, that lets the end user switch the column background.',
+      type: 'boolean',
+      default: 'false',
+    },
+    persistKey: {
+      description:
+        'Stores the background the end user picked in localStorage under `shuip-kanban:<persistKey>` and restores it after mount. Without it the choice lasts for the session only.',
+      type: 'string?',
+    },
+    labels: {
+      description: 'Overrides the strings of the background picker.',
+      type: 'Partial<KanbanLabels>?',
+    },
     renderColumnSummary: {
       description: 'Renders an aggregate in the column header (e.g. a sum).',
       type: '(items: T[], column: KanbanColumn) => ReactNode',
@@ -161,6 +206,36 @@ to `1..n` or with a wide step such as `1000`, and save the new values.
       description:
         'Numeric field that orders the cards of each column, ascending, with ties in `data` order. On drop the board writes the new position into the moved card and reports it in `onCardMove`. Omit to keep the order of the `data` array.',
       type: 'KanbanPositionField<T>?',
+    },
+  }}
+/>
+
+### KanbanLabels
+
+`labels` takes a `Partial<KanbanLabels>`, so a consumer overrides only the keys they need. The search
+placeholder keeps its own `searchPlaceholder` prop.
+
+<TypeTable
+  type={{
+    backgroundLabel: {
+      description: 'Accessible name of the column background select.',
+      type: 'string',
+      default: "'Column background'",
+    },
+    backgroundNone: {
+      description: 'Label of the option without a background.',
+      type: 'string',
+      default: "'No background'",
+    },
+    backgroundMuted: {
+      description: 'Label of the muted option.',
+      type: 'string',
+      default: "'Muted'",
+    },
+    backgroundColumn: {
+      description: 'Label of the option that tints each column with its color.',
+      type: 'string',
+      default: "'Column color'",
     },
   }}
 />

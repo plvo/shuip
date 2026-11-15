@@ -26,6 +26,7 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 export type KanbanColumn = {
@@ -38,6 +39,60 @@ export type KanbanField<T> = {
   key: keyof T;
   label?: string;
   render?: (value: T[keyof T], item: T) => React.ReactNode;
+};
+
+export type ColumnBackground = 'none' | 'muted' | 'column';
+
+const COLUMN_BACKGROUNDS: readonly ColumnBackground[] = ['none', 'muted', 'column'];
+
+function isColumnBackground(value: unknown): value is ColumnBackground {
+  return COLUMN_BACKGROUNDS.includes(value as ColumnBackground);
+}
+
+// What the body of a column wears for a background. The tint of `column` is the
+// color of the column over a transparent base, stronger over a drop target; a
+// column without a color wears muted. A tinted body fills its column down to
+// the bottom, so that the tint is not cut short by the cards.
+export function columnBodyAppearance(
+  background: ColumnBackground,
+  column: Pick<KanbanColumn, 'color'>,
+  isOver: boolean,
+): { className: string; style?: React.CSSProperties } {
+  if (background === 'none') return { className: isOver ? 'border-border bg-muted/50' : '' };
+  const className = cn('flex-1', isOver && 'border-border');
+  if (background === 'column' && column.color) {
+    const strength = isOver ? 20 : 10;
+    return { className, style: { backgroundColor: `color-mix(in oklab, ${column.color} ${strength}%, transparent)` } };
+  }
+  return { className: cn(className, isOver ? 'bg-muted' : 'bg-muted/50') };
+}
+
+export const STORAGE_PREFIX = 'shuip-kanban:';
+
+export function parseStoredBackground(raw: string | null): ColumnBackground | undefined {
+  if (!raw) return undefined;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return undefined;
+  }
+  const background = (parsed as { background?: unknown } | null)?.background;
+  return isColumnBackground(background) ? background : undefined;
+}
+
+export type KanbanLabels = {
+  backgroundLabel: string;
+  backgroundNone: string;
+  backgroundMuted: string;
+  backgroundColumn: string;
+};
+
+export const DEFAULT_LABELS: KanbanLabels = {
+  backgroundLabel: 'Column background',
+  backgroundNone: 'No background',
+  backgroundMuted: 'Muted',
+  backgroundColumn: 'Column color',
 };
 
 const DROP_SLOT_KEY = '__drop-slot__';
@@ -509,6 +564,44 @@ function useKanbanDrag<T extends Record<string, unknown>>({
   };
 }
 
+function useColumnBackground({
+  defaultColumnBackground,
+  persistKey,
+}: {
+  defaultColumnBackground: ColumnBackground;
+  persistKey?: string;
+}) {
+  const [background, setBackgroundState] = React.useState(defaultColumnBackground);
+  const hydrated = React.useRef(false);
+
+  // Read after mount only: reading during render would make the server HTML
+  // diverge from the first client render.
+  React.useEffect(() => {
+    hydrated.current = true;
+    if (!persistKey) return;
+    let raw: string | null = null;
+    try {
+      raw = window.localStorage.getItem(STORAGE_PREFIX + persistKey);
+    } catch {
+      return;
+    }
+    const stored = parseStoredBackground(raw);
+    if (stored) setBackgroundState(stored);
+  }, [persistKey]);
+
+  const setBackground = (next: ColumnBackground) => {
+    setBackgroundState(next);
+    if (!hydrated.current || !persistKey) return;
+    try {
+      window.localStorage.setItem(STORAGE_PREFIX + persistKey, JSON.stringify({ background: next }));
+    } catch {
+      // Storage full or unavailable: the choice stays in memory for this session.
+    }
+  };
+
+  return [background, setBackground] as const;
+}
+
 export type KanbanProps<T extends Record<string, unknown>> = {
   columns: KanbanColumn[];
   data?: T[];
@@ -522,6 +615,10 @@ export type KanbanProps<T extends Record<string, unknown>> = {
   cardContent?: (item: T) => React.ReactNode;
   searchableFields?: (keyof T)[];
   searchPlaceholder?: string;
+  defaultColumnBackground?: ColumnBackground;
+  backgroundPicker?: boolean;
+  persistKey?: string;
+  labels?: Partial<KanbanLabels>;
   renderColumnSummary?: (items: T[], column: KanbanColumn) => React.ReactNode;
   onCardClick?: (item: T) => void;
   onCardAdd?: (columnId: string) => void;
@@ -542,6 +639,10 @@ export function Kanban<T extends Record<string, unknown>>({
   cardContent,
   searchableFields,
   searchPlaceholder = 'Search...',
+  defaultColumnBackground = 'none',
+  backgroundPicker,
+  persistKey,
+  labels: labelOverrides,
   renderColumnSummary,
   onCardClick,
   onCardAdd,
@@ -566,6 +667,10 @@ export function Kanban<T extends Record<string, unknown>>({
     onCardMove,
   });
 
+  const labels = React.useMemo(() => ({ ...DEFAULT_LABELS, ...labelOverrides }), [labelOverrides]);
+  const [background, setBackground] = useColumnBackground({ defaultColumnBackground, persistKey });
+
+  const searchable = Boolean(searchableFields?.length);
   const [query, setQuery] = React.useState('');
   const deferredQuery = React.useDeferredValue(query);
 
@@ -655,15 +760,22 @@ export function Kanban<T extends Record<string, unknown>>({
 
   return (
     <div className={cn('flex w-full min-w-0 flex-col gap-4', className)}>
-      {searchableFields?.length ? (
-        <div className='relative w-full max-w-xs'>
-          <Search className='absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={searchPlaceholder}
-            className='pl-8'
-          />
+      {searchable || backgroundPicker ? (
+        <div className={cn('flex w-full items-center gap-2', backgroundPicker && 'flex-wrap')}>
+          {searchable ? (
+            <div className='relative w-full max-w-xs'>
+              <Search className='absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground' />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={searchPlaceholder}
+                className='pl-8'
+              />
+            </div>
+          ) : null}
+          {backgroundPicker ? (
+            <ColumnBackgroundSelect value={background} onChange={setBackground} labels={labels} />
+          ) : null}
         </div>
       ) : null}
 
@@ -684,6 +796,7 @@ export function Kanban<T extends Record<string, unknown>>({
               <KanbanColumnView
                 key={column.id}
                 column={column}
+                background={background}
                 count={columnItems.length}
                 summary={renderColumnSummary?.(columnItems, column)}
                 onAdd={onCardAdd ? () => onCardAdd(column.id) : undefined}
@@ -715,20 +828,58 @@ export function Kanban<T extends Record<string, unknown>>({
   );
 }
 
+function ColumnBackgroundSelect({
+  value,
+  onChange,
+  labels,
+}: {
+  value: ColumnBackground;
+  onChange: (next: ColumnBackground) => void;
+  labels: KanbanLabels;
+}) {
+  const optionLabels: Record<ColumnBackground, string> = {
+    none: labels.backgroundNone,
+    muted: labels.backgroundMuted,
+    column: labels.backgroundColumn,
+  };
+  return (
+    <Select
+      value={value}
+      onValueChange={(next) => {
+        if (isColumnBackground(next)) onChange(next);
+      }}
+    >
+      <SelectTrigger size='sm' className='ml-auto w-40' aria-label={labels.backgroundLabel}>
+        <SelectValue>{optionLabels[value]}</SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {COLUMN_BACKGROUNDS.map((mode) => (
+          <SelectItem key={mode} value={mode}>
+            {optionLabels[mode]}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 function KanbanColumnView({
   column,
+  background,
   count,
   summary,
   onAdd,
   children,
 }: {
   column: KanbanColumn;
+  background: ColumnBackground;
   count: number;
   summary?: React.ReactNode;
   onAdd?: () => void;
   children: React.ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id, data: dropZoneData(column.id) });
+  const appearance = columnBodyAppearance(background, column, isOver);
   return (
     <div className='flex w-72 shrink-0 flex-col gap-3'>
       <div className='flex items-center gap-2'>
@@ -745,9 +896,10 @@ function KanbanColumnView({
       <div
         ref={setNodeRef}
         data-slot='kanban-column-body'
+        style={appearance.style}
         className={cn(
           'flex min-h-24 flex-col gap-2 rounded-lg border border-transparent p-2 transition-colors',
-          isOver && 'border-border bg-muted/50',
+          appearance.className,
         )}
       >
         {children}

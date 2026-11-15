@@ -16,7 +16,6 @@ const rootMarkdown = fs
 
 const documents = readDocuments([
   ...rootMarkdown,
-  under('.claude/CLAUDE.md'),
   ...['.claude/skills', 'apps/docs/content', 'packages/registry/items', 'packages/registry/skills'].flatMap(
     (directory) => filesUnder(under(directory), ['.md', '.mdx']),
   ),
@@ -50,7 +49,7 @@ describe('the install instructions of the docs, the README and the skills', () =
   test('are found', () => {
     expect(documents.length).toBeGreaterThan(40);
     expect(documents.map(({ name }) => name)).toEqual(
-      expect.arrayContaining(['README.md', '.claude/CLAUDE.md', '.claude/skills/creating-registry-item/SKILL.md']),
+      expect.arrayContaining(['README.md', 'AGENTS.md', '.claude/skills/creating-registry-item/SKILL.md']),
     );
   });
 
