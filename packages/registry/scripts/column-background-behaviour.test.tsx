@@ -143,6 +143,50 @@ async function whileHoveringDoing<Result>(
 let uninstallDom: () => Promise<void>;
 let createElement: typeof import('react').createElement;
 
+/** What a test does to a mounted board of one variant, and what it reads back from it. */
+function driveBoard(board: BoardDescriptor, variant: Variant) {
+  const harness = harnesses.get(board.name) as ReturnType<typeof createBoardHarness>;
+  const show = (options: MountOptions = {}) =>
+    harness.mount(loaded.get(board.name)?.[variant] as ComponentType<BoardProps>, {
+      columns: board.columns,
+      ...options,
+    });
+  const bodies = () => [...document.querySelectorAll(board.columnBody)];
+  const picker = (name: string) => document.querySelector<HTMLElement>(`[role="combobox"][aria-label="${name}"]`);
+  const click = (element: Element | null | undefined) => press(harness.inAct, element);
+  return {
+    harness,
+    show,
+    reload: async (options: MountOptions = {}) => {
+      await harness.cleanup();
+      return show(options);
+    },
+    bodies,
+    tints: () => bodies().map(board.tint),
+    picker,
+    click,
+    choose: async (name: string, option: string) => {
+      await click(picker(name));
+      await click([...document.querySelectorAll('[role="option"]')].find((item) => item.textContent === option));
+    },
+    seed: (persistKey: string, background: unknown) =>
+      window.localStorage.setItem(board.storageKey(persistKey), board.stored(background)),
+    storedView: (persistKey: string) => JSON.parse(window.localStorage.getItem(board.storageKey(persistKey)) ?? 'null'),
+  };
+}
+
+/** Lays the board out as a browser would for the length of each test, and unmounts it after. */
+function layOutEachTest(harness: ReturnType<typeof createBoardHarness>) {
+  let restoreGeometry: () => void;
+  beforeEach(() => {
+    restoreGeometry = harness.stubGeometry();
+  });
+  afterEach(async () => {
+    await harness.cleanup();
+    restoreGeometry();
+  });
+}
+
 beforeAll(async () => {
   uninstallDom = installDom();
   supportColorMix();
@@ -169,41 +213,14 @@ afterEach(() => {
 });
 
 describe.each(BOARDS)('$name column background', (board) => {
-  const harness = harnesses.get(board.name) as NonNullable<ReturnType<typeof harnesses.get>>;
-  let restoreGeometry: () => void;
-
-  beforeEach(() => {
-    restoreGeometry = harness.stubGeometry();
-  });
-
-  afterEach(async () => {
-    await harness.cleanup();
-    restoreGeometry();
-  });
+  layOutEachTest(harnesses.get(board.name) as ReturnType<typeof createBoardHarness>);
 
   describe.each(VARIANTS)('on %s', (variant) => {
+    const { harness, show, reload, bodies, tints, picker, click, choose, seed, storedView } = driveBoard(
+      board,
+      variant,
+    );
     const Board = () => loaded.get(board.name)?.[variant] as ComponentType<BoardProps>;
-    const show = (options: MountOptions = {}) => harness.mount(Board(), { columns: board.columns, ...options });
-    const reload = async (options: MountOptions = {}) => {
-      await harness.cleanup();
-      return show(options);
-    };
-
-    const bodies = () => [...document.querySelectorAll(board.columnBody)];
-    const tints = () => bodies().map(board.tint);
-    const picker = (name: string) => document.querySelector<HTMLElement>(`[role="combobox"][aria-label="${name}"]`);
-    const seed = (persistKey: string, background: unknown) =>
-      window.localStorage.setItem(board.storageKey(persistKey), board.stored(background));
-    const storedView = (persistKey: string) => {
-      const raw = window.localStorage.getItem(board.storageKey(persistKey));
-      return raw === null ? null : JSON.parse(raw);
-    };
-
-    const click = (element: Element | undefined) => press(harness.inAct, element);
-    const choose = async (name: string, option: string) => {
-      await click(picker(name) ?? undefined);
-      await click([...document.querySelectorAll('[role="option"]')].find((item) => item.textContent === option));
-    };
 
     test('shows no picker and no background unless asked', async () => {
       await show();
@@ -411,34 +428,8 @@ describe.each(BOARDS)('$name column background', (board) => {
 
 describe.each(VARIANTS)('data-board column background on %s', (variant) => {
   const board = BOARDS[1] as BoardDescriptor;
-  const harness = harnesses.get(board.name) as NonNullable<ReturnType<typeof harnesses.get>>;
-  let restoreGeometry: () => void;
-
-  beforeEach(() => {
-    restoreGeometry = harness.stubGeometry();
-  });
-
-  afterEach(async () => {
-    await harness.cleanup();
-    restoreGeometry();
-  });
-
-  const Board = () => loaded.get(board.name)?.[variant] as ComponentType<BoardProps>;
-  const show = (options: MountOptions = {}) => harness.mount(Board(), { columns: board.columns, ...options });
-  const reload = async (options: MountOptions = {}) => {
-    await harness.cleanup();
-    return show(options);
-  };
-  const bodies = () => [...document.querySelectorAll(board.columnBody)];
-  const tints = () => bodies().map(board.tint);
-  const picker = (name: string) => document.querySelector<HTMLElement>(`[role="combobox"][aria-label="${name}"]`);
-  const storedView = (persistKey: string) =>
-    JSON.parse(window.localStorage.getItem(board.storageKey(persistKey)) ?? 'null');
-  const click = (element: Element | null | undefined) => press(harness.inAct, element);
-  const choose = async (name: string, option: string) => {
-    await click(picker(name));
-    await click([...document.querySelectorAll('[role="option"]')].find((item) => item.textContent === option));
-  };
+  layOutEachTest(harnesses.get(board.name) as ReturnType<typeof createBoardHarness>);
+  const { harness, show, reload, bodies, tints, click, choose, storedView } = driveBoard(board, variant);
   const hideColumn = (label: string) => click(document.querySelector(`button[aria-label="Hide ${label}"]`));
 
   test('adds the choice to the stored view without clobbering what it holds', async () => {
