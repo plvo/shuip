@@ -354,8 +354,7 @@ describe.each(BOARDS)('$name column background', (board) => {
     });
 
     describe('the picker', () => {
-      test('switches the tint of every column body at once', async () => {
-        await show({ backgroundPicker: true });
+      const pickEachBackground = async () => {
         await choose('Column background', 'Muted');
         expect(tints()).toEqual(['muted', 'muted', 'muted']);
         await choose('Column background', 'Column color');
@@ -363,6 +362,11 @@ describe.each(BOARDS)('$name column background', (board) => {
         await choose('Column background', 'No background');
         expect(tints()).toEqual(['none', 'none', 'none']);
         expect(picker('Column background')?.textContent).toContain('No background');
+      };
+
+      test('switches the tint of every column body at once', async () => {
+        await show({ backgroundPicker: true });
+        await pickEachBackground();
       });
 
       test('writes the choice into storage and restores it after a reload', async () => {
@@ -392,14 +396,11 @@ describe.each(BOARDS)('$name column background', (board) => {
           },
           async () => {
             const { errors } = await show({ backgroundPicker: true, persistKey: 'board' });
-            await choose('Column background', 'Muted');
-            expect(tints()).toEqual(['muted', 'muted', 'muted']);
-            await choose('Column background', 'Column color');
-            expect(tints()).toEqual(['column', 'column', 'column']);
+            await pickEachBackground();
             expect(errors).toEqual([]);
           },
         );
-        expect(writes).toEqual([board.storageKey('board'), board.storageKey('board')]);
+        expect(writes).toEqual(Array(3).fill(board.storageKey('board')));
         expect(storedView('board')).toBeNull();
       });
     });
